@@ -49,5 +49,5 @@ Take a look at the main help topic:
 
     help Invoke-Build -Full
 
-Then take a look at the main demo script *.build.ps1* and other demo scripts in
-the same directory with quite a few of typical use cases and tutorial comments.
+Then take a look at the demo script *.build.ps1* and the others there with a
+number of typical use cases, problem cases, and tutorial comments.
