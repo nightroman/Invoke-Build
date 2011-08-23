@@ -2,7 +2,7 @@
 <#
 .Synopsis
 	Invokes tasks from build scripts.
-	v1.0.0.rc0 2011-08-22
+	v1.0.0.rc1 2011-08-23
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -31,12 +31,12 @@
 	The script is called directly with or without parameters, not dot-sourced.
 	It is easier to use if it is located in one of the the system path folders.
 
-	If the build script is not specified then Invoke-Build looks for the
-	.build.ps1 in the current location, then in all the parent locations.
+	If the build script is not specified then Invoke-Build looks for the file
+	".build.ps1" in the current location, then in the parent location tree.
 
 	Tasks including imported from other scripts are invoked with the current
-	location set to $BuildRoot which is the main build script root. Tasks may
-	change the current location and they do not have to care of restoring it.
+	location set to $BuildRoot which is the root of the main build script.
+	Tasks may change locations and they do not have to care of restoring.
 
 	EXPOSED FUNCTIONS
 
@@ -74,7 +74,7 @@
 
 	Dot-source it with '?', ignore possible output, then get help as usual:
 
-		PS>	. Invoke-Build ?
+		PS> . Invoke-Build ?
 		PS> help Use-Framework
 
 .Parameter Tasks
@@ -180,10 +180,10 @@ function Add-Task
 {
 	$task = $BuildList[$Name]
 	if ($task) {
-		throw @"
-Task '$Name' is added twice.
-$($MyInvocation.PositionMessage)
-$($task.Info.PositionMessage)
+		ThrowTerminatingError @"
+Task '$Name' is added twice:
+1: $(Format-PositionMessage $task.Info.PositionMessage)
+2: $(Format-PositionMessage $MyInvocation.PositionMessage)
 "@
 	}
 
@@ -289,16 +289,12 @@ function Invoke-Exec
 	${private:build-validate} = $Validate
 	Remove-Variable Command, Validate -Scope Local
 
-	try {
-		& ${private:build-command}
+	& ${private:build-command}
 
-		if (${private:build-validate} -and !(& ${private:build-validate})) {
-			throw "Invoke-Exec: " + ${private:build-command}
-		}
-	}
-	catch {
-		Out-Color Yellow ("Invoke-Exec: " + ${private:build-command})
-		throw
+	if (${private:build-validate} -and !(& ${private:build-validate})) {
+		ThrowTerminatingError @"
+Validation script {${private:build-validate}} returns false after {${private:build-command}}.
+"@
 	}
 }
 
@@ -357,7 +353,7 @@ function Use-Framework
 	if ($Framework) {
 		${private:build-path} = Join-Path "$env:windir\Microsoft.NET" $Framework
 		if (![System.IO.Directory]::Exists(${private:build-path})) {
-			throw "Invalid framework directory: ${private:build-path}"
+			ThrowTerminatingError "Invalid framework directory: ${private:build-path}."
 		}
 	}
 	else {
@@ -372,6 +368,18 @@ function Use-Framework
 	Remove-Variable Framework, Tools, Command -Scope Local
 
 	& ${private:build-command}
+}
+
+<#
+.Synopsis
+	Heals line breaks in the position message. Mostly for internal use.
+#>
+function Format-PositionMessage
+(
+	[string]$Message
+)
+{
+	$Message.Trim().Replace("`n", "`r`n")
 }
 
 <#
@@ -433,7 +441,7 @@ function Invoke-Task($Name, $Path)
 				}
 			}
 			catch {
-				Out-Color Yellow "Task ${private:build-path}[${private:build-number}/${private:build-count}]: $(${private:build-task}.Info.PositionMessage)"
+				Out-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
 				throw
 			}
 		}
@@ -443,10 +451,7 @@ function Invoke-Task($Name, $Path)
 	}
 }
 
-<#
-.Synopsis
-	For internal use.
-#>
+# For internal use.
 function Initialize-Task($Task, $Done)
 {
 	# ignore?
@@ -467,7 +472,7 @@ function Initialize-Task($Task, $Done)
 			if (!${private:build-job-task}) {
 				throw @"
 Task '$($Task.Name)': job $(${private:build-number}): task '${private:build-job}' is not found.
-$($Task.Info.PositionMessage)
+$(Format-PositionMessage $Task.Info.PositionMessage)
 "@
 			}
 
@@ -480,7 +485,7 @@ $($Task.Info.PositionMessage)
 			if ($Done.Contains(${private:build-job-task})) {
 				throw @"
 Task '$($Task.Name)': job $(${private:build-number}): cyclic reference to '${private:build-job}'.
-$($Task.Info.PositionMessage)
+$(Format-PositionMessage $Task.Info.PositionMessage)
 "@
 			}
 			Initialize-Task ${private:build-job-task} $Done
@@ -489,16 +494,13 @@ $($Task.Info.PositionMessage)
 		elseif (${private:build-job} -isnot [scriptblock]) {
 			throw @"
 Task '$($Task.Name)': job $(${private:build-number}): invalid job type.
-$($Task.Info.PositionMessage)
+$(Format-PositionMessage $Task.Info.PositionMessage)
 "@
 		}
 	}
 }
 
-<#
-.Synopsis
-	For internal use.
-#>
+# For internal use.
 function Resolve-Build
 {
 	$build = '.build.ps1'
@@ -522,6 +524,12 @@ function Resolve-Build
 	$build
 }
 
+# Call it from advanced functions.
+function ThrowTerminatingError($Message)
+{
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), '', 0, $null))
+}
+
 ### get the script
 if (!$Build) {
 	$Build = Resolve-Build
@@ -529,7 +537,7 @@ if (!$Build) {
 		if ($Tasks -and $Tasks[0] -eq '?') {
 			return
 		}
-		throw "Cannot find default '$Build' in the parent tree."
+		ThrowTerminatingError "Cannot find the default build script in the parent tree."
 	}
 }
 
@@ -575,7 +583,7 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 	foreach(${private:build-name} in ${private:build-tasks}) {
 		${private:build-task} = $BuildList[${private:build-name}]
 		if (!${private:build-task}) {
-			throw "Task ${private:build-name} is not found."
+			ThrowTerminatingError "Task ${private:build-name} is not found."
 		}
 		Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
 	}

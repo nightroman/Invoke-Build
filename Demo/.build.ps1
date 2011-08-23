@@ -62,11 +62,13 @@ task ParamsValues2 ParamsValues1, SharedValueTask1, {
 
 # Just like regular scripts, build scripts may have functions used by tasks.
 # For example, this function is used by several tasks testing various issues.
-function Test-Issue($Task, $Build, $ExpectedMessagePattern) {
+function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern) {
 	$message = ''
 	try { Invoke-Build $Task $Build }
 	catch { $message = "$_" }
-	if ($message -notlike $ExpectedMessagePattern) { throw }
+	if ($message -notlike $ExpectedMessagePattern) {
+		ThrowTerminatingError("Actual message: $message")
+	}
 	Out-Color Green "Issue '$Task' of '$Build' is tested."
 }
 
@@ -78,7 +80,7 @@ task CyclicReference {
 
 # This task ensures that tasks with the same name cannot be added twice.
 task TaskAddedTwice {
-	Test-Issue default TaskAddedTwice.build.ps1 "Task 'task1' is added twice.*"
+	Test-Issue default TaskAddedTwice.build.ps1 "Task 'task1' is added twice:*1: *2: *"
 }
 
 # This task ensures that task jobs can be either strings or script blocks.
@@ -107,7 +109,7 @@ task ExecInvokeTool {
 	Invoke-Build default ExecTestCases.build.ps1
 
 	# these builds fail, test them by Test-Issue
-	Test-Issue ExecFailsCode13 ExecTestCases.build.ps1 'Invoke-Exec:  PowerShell "exit 13"*'
+	Test-Issue ExecFailsCode13 ExecTestCases.build.ps1 'Validation script {*} returns false after {*}.'
 	Test-Issue ExecFailsBadCommand ExecTestCases.build.ps1 'Bad Command.*'
 	Test-Issue ExecFailsBadValidate ExecTestCases.build.ps1 'Bad Validate.*'
 }
