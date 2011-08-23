@@ -43,12 +43,14 @@
 		* Add-Task
 		* Out-Color
 		* Invoke-Exec
+		* Assert-True
 		* Use-Framework
 
 	EXPOSED ALIASES
 
 		* task ~ Add-Task
 		* exec ~ Invoke-Exec
+		* assert ~ Assert-True
 
 	EXPOSED VARIABLES
 
@@ -90,7 +92,7 @@
 		Tells to show preprocessed tasks and jobs instead of invoking them.
 
 .Inputs
-	None.
+	None
 
 .Outputs
 	Progress, diagnostics, and error messages, and output of tasks and tools
@@ -114,6 +116,7 @@
 	Add-Task
 	Out-Color
 	Invoke-Exec
+	Assert-True
 	Use-Framework
 	https://github.com/nightroman/Invoke-Build
 #>
@@ -136,6 +139,7 @@ param
 ### Predefined aliases
 Set-Alias task Add-Task
 Set-Alias exec Invoke-Exec
+Set-Alias assert Assert-True
 
 <#
 .Synopsis
@@ -161,10 +165,10 @@ Set-Alias exec Invoke-Exec
 		The default is $true.
 
 .Inputs
-	None.
+	None
 
 .Outputs
-	None.
+	None
 #>
 function Add-Task
 (
@@ -197,6 +201,45 @@ Task '$Name' is added twice:
 
 <#
 .Synopsis
+	Checks for the condition and throws a message if the condition is not Boolean or not $true.
+
+.Parameter Condition
+		The Boolean value to be checked.
+
+.Parameter Message
+		The message to throw on failure.
+
+.Inputs
+	None
+
+.Outputs
+	None
+#>
+function Assert-True
+(
+	[Parameter()]
+	$Condition
+	,
+	[Parameter()]
+	[string]$Message
+)
+{
+	if ($Condition -isnot [bool]) {
+		ThrowTerminatingError 'Condition is not Boolean.'
+	}
+
+	if (!$Condition) {
+		if ($Message) {
+			ThrowTerminatingError $Message
+		}
+		else {
+			ThrowTerminatingError 'Condition is not $true.'
+		}
+	}
+}
+
+<#
+.Synopsis
 	Outputs text as usual using colors if it makes sense for the output target.
 
 .Description
@@ -209,7 +252,7 @@ Task '$Name' is added twice:
 		Text to be printed using colors or just written to the output.
 
 .Inputs
-	None.
+	None
 
 .Outputs
 	[string]
@@ -264,7 +307,7 @@ if (!$Host.UI -or !$Host.UI.RawUI) {
 		Custom check of the $LastExitCode (e.g. 1-3 is fine for robocopy).
 
 .Inputs
-	None.
+	None
 
 .Outputs
 	Outputs of the Command and the tool that it calls.
@@ -322,7 +365,7 @@ Validation script {${private:build-validate}} returns false after {${private:bui
 		The script block to be invoked with temporary framework tool aliases.
 
 .Inputs
-	None.
+	None
 
 .Outputs
 	Outputs of the Command.

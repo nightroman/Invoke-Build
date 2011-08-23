@@ -13,7 +13,7 @@ task SharedValueTask1 {
 	'SharedValueTask1'
 
 	# test: the value is available
-	if (!(Get-Variable SharedValue1)) { throw }
+	assert (Test-Path Variable:\SharedValue1)
 
 	# use the value
 	"SharedValue1='$SharedValue1'"

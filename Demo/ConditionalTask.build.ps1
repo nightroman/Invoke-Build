@@ -46,15 +46,15 @@ task Conditional -If ($Configuration -eq 'Release') BeforeConditional, { $script
 task default Conditional, {
 	switch($Configuration) {
 		'Debug' {
-			if ($BeforeConditional -ne 'TODO') { throw }
-			if ($AfterConditional -ne 'TODO') { throw }
-			if ($Conditional -ne 'TODO') { throw }
+			assert ($BeforeConditional -eq 'TODO')
+			assert ($AfterConditional -eq 'TODO')
+			assert ($Conditional -eq 'TODO')
 			Out-Color Green 'Tested Debug.'
 		}
 		'Release' {
-			if ($BeforeConditional -ne 'DONE') { throw }
-			if ($AfterConditional -ne 'DONE') { throw }
-			if ($Conditional -ne 'DONE') { throw }
+			assert ($BeforeConditional -eq 'DONE')
+			assert ($AfterConditional -eq 'DONE')
+			assert ($Conditional -eq 'DONE')
 			Out-Color Green 'Tested Release.'
 		}
 		default {

@@ -13,12 +13,12 @@ task ExecWorksCode0 {
 
 task ExecWorksCode42 {
 	$script:ExecWorksCode42 = exec { PowerShell "'Code42'; exit 42" } { $LastExitCode -eq 42 }
-	if ($LastExitCode -ne 42) { throw }
+	assert ($LastExitCode -eq 42)
 }
 
 task default ExecWorksCode0, ExecWorksCode42, {
-	if ($script:ExecWorksCode0 -ne 'Code0') { throw }
-	if ($script:ExecWorksCode42 -ne 'Code42') { throw }
+	assert ($script:ExecWorksCode0 -eq 'Code0')
+	assert ($script:ExecWorksCode42 -eq 'Code42')
 }
 
 task ExecFailsCode13 {
