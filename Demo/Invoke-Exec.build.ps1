@@ -12,7 +12,7 @@ task ExecWorksCode0 {
 }
 
 task ExecWorksCode42 {
-	$script:ExecWorksCode42 = exec { PowerShell "'Code42'; exit 42" } { $LastExitCode -eq 42 }
+	$script:ExecWorksCode42 = exec { PowerShell "'Code42'; exit 42" } (40..50)
 	assert ($LastExitCode -eq 42)
 }
 
@@ -27,8 +27,4 @@ task ExecFailsCode13 {
 
 task ExecFailsBadCommand {
 	exec { throw 'Bad Command.' }
-}
-
-task ExecFailsBadValidate {
-	exec { cmd /c echo hi } { throw 'Bad Validate.' }
 }

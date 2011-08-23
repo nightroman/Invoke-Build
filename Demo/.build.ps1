@@ -67,9 +67,20 @@ function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern) {
 	try { Invoke-Build $Task $Build }
 	catch { $message = "$_" }
 	if ($message -notlike $ExpectedMessagePattern) {
-		ThrowTerminatingError("Actual message: $message")
+		ThrowTerminatingError("Actual message: [`n$message`n]")
 	}
 	Out-Color Green "Issue '$Task' of '$Build' is tested."
+}
+
+# This tasks tests Assert-True (assert).
+task Assert-True {
+	# default works fine
+	Invoke-Build default Assert-True.build.ps1
+
+	# these builds fail, test them by Test-Issue
+	Test-Issue AssertInvalid1 Assert-True.build.ps1 'Condition is not Boolean.'
+	Test-Issue AssertInvalid2 Assert-True.build.ps1 'Condition is not Boolean.'
+	Test-Issue AssertMessage Assert-True.build.ps1 'Custom assert message.'
 }
 
 # This task ensures that cyclic references are caught.
@@ -104,14 +115,26 @@ task ConditionalTask {
 }
 
 # This tasks tests Invoke-Exec (exec).
-task ExecInvokeTool {
+task ExecTestCases {
 	# default works fine and makes tests there
-	Invoke-Build default ExecTestCases.build.ps1
+	Invoke-Build default Invoke-Exec.build.ps1
 
 	# these builds fail, test them by Test-Issue
-	Test-Issue ExecFailsCode13 ExecTestCases.build.ps1 'Validation script {*} returns false after {*}.'
-	Test-Issue ExecFailsBadCommand ExecTestCases.build.ps1 'Bad Command.*'
-	Test-Issue ExecFailsBadValidate ExecTestCases.build.ps1 'Bad Validate.*'
+	Test-Issue ExecFailsCode13 Invoke-Exec.build.ps1 '$LastExitCode is 13.'
+	Test-Issue ExecFailsBadCommand Invoke-Exec.build.ps1 'Bad Command.*'
+}
+
+# This task ensures that missing tasks are caught.
+task TaskNotDefined {
+	Test-Issue default TaskNotDefined.build.ps1 "Task 'task1': job 1: task 'missing' is not defined.*"
+}
+
+# This task tests the function Use-Framework.
+task Use-Framework {
+	# works
+	Invoke-Build default Use-Framework.build.ps1
+	# fails
+	Test-Issue InvalidFramework Use-Framework.build.ps1 "Directory does not exist: '*\xyz'."
 }
 
 # Invoke-Build should expose only documented variables! If this test shows
@@ -128,6 +151,7 @@ task TestVariables {
 				'BuildRoot' { 'BuildRoot - build script root path' }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
 				# exposed but internal
+				'BuildInfo' { 'BuildInfo - data for internal use' }
 				'BuildList' { 'BuildList - list of registered tasks' }
 				'PSCmdlet' { 'PSCmdlet - core variable of a caller' }
 				# build script data
@@ -146,11 +170,14 @@ task TestVariables {
 
 # This task calls all test tasks.
 task Tests `
+	Assert-True,
 	CyclicReference,
 	TaskAddedTwice,
 	TaskInvalidJob,
 	ConditionalTask,
-	ExecInvokeTool,
+	ExecTestCases,
+	TaskNotDefined,
+	Use-Framework,
 	TestVariables
 
 # This task calls all sample and the main test task.
@@ -163,5 +190,12 @@ task default ParamsValues2, ParamsValues1, SharedTask2, {
 	"In default, script 2"
 	Invoke-Build SharedTask1 Shared.Tasks.ps1
 },
-# It is possible to have task jobs after script jobs.
-Tests
+# Tasks can be referenced between or after scripts.
+Tests,
+# Show some not yet documented information.
+{
+	Out-Color Cyan @"
+Built: $($BuildInfo.TaskBuiltCount)
+Error: $($BuildInfo.TaskErrorCount)
+"@
+}
