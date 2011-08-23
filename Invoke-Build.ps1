@@ -2,7 +2,7 @@
 <#
 .Synopsis
 	Invokes tasks from build scripts.
-	v1.0.0.rc2 2011-08-23
+	v1.0.0.rc3 2011-08-24
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -455,9 +455,9 @@ function Invoke-Task($Name, $Path)
 		${private:build-number} = 0
 
 		${private:build-task}.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-		foreach(${private:build-job} in ${private:build-task}.Jobs) {
-			++${private:build-number}
-			try {
+		try {
+			foreach(${private:build-job} in ${private:build-task}.Jobs) {
+				++${private:build-number}
 				if (${private:build-job} -is [string]) {
 					Invoke-Task ${private:build-job} ${private:build-path}
 				}
@@ -479,16 +479,18 @@ function Invoke-Task($Name, $Path)
 					}
 				}
 			}
-			catch {
-				Out-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
-				++$BuildInfo.TaskErrorCount
-				throw
-			}
+			Out-Color DarkYellow "${private:build-path} is done. $(${private:build-task}.Stopwatch.Elapsed)"
+			++$BuildInfo.TaskBuiltCount
 		}
-		${private:build-task}.Stopwatch.Stop()
-
-		Out-Color DarkYellow "${private:build-path} is done. $(${private:build-task}.Stopwatch.Elapsed)"
-		++$BuildInfo.TaskBuiltCount
+		catch {
+			Out-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
+			${private:build-task}.Error = $_
+			++$BuildInfo.TaskErrorCount
+			throw
+		}
+		finally {
+			${private:build-task}.Stopwatch.Stop()
+		}
 	}
 }
 
@@ -532,7 +534,7 @@ $(Format-PositionMessage $Task.Info.PositionMessage)
 "@
 			}
 
-			# process child task
+			# process job task
 			Initialize-Task ${private:build-job-task} $Done
 			$Done.RemoveRange(${private:build-count}, $Done.Count - ${private:build-count})
 		}
@@ -570,7 +572,7 @@ function Resolve-Build
 }
 
 # Call it from advanced functions.
-function ThrowTerminatingError($Message, $Category, $Target)
+function ThrowTerminatingError($Message, $Category = 0, $Target)
 {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
 }
