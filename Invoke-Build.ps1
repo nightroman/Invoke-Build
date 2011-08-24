@@ -2,7 +2,7 @@
 <#
 .Synopsis
 	Invokes tasks from build scripts.
-	v1.0.0.rc3 2011-08-24
+	v1.0.0.rc4 2011-08-24
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -24,27 +24,27 @@
 	*
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-	The idea is borrowed from the psake module and other similar build tools.
+	The ideas come from the psake module and many other build and make tools.
 	The goal of this script is to provide a lightweight and yet robust engine.
 	There is a number of cases and scenarios where this script works very well.
 
 	The script is called directly with or without parameters, not dot-sourced.
 	It is easier to use if it is located in one of the the system path folders.
 
-	If the build script is not specified then Invoke-Build looks for the file
-	".build.ps1" in the current location, then in the parent location tree.
-
 	Tasks including imported from other scripts are invoked with the current
 	location set to $BuildRoot which is the root of the main build script.
 	Tasks may change locations and they do not have to care of restoring.
 
+	NOTE: dot-source Invoke-Build only in order to get help for its functions.
+
 	EXPOSED FUNCTIONS
 
 		* Add-Task
-		* Out-Color
-		* Invoke-Exec
+		* Get-Error
 		* Assert-True
+		* Invoke-Exec
 		* Use-Framework
+		* Out-Color
 
 	EXPOSED ALIASES
 
@@ -54,8 +54,8 @@
 
 	EXPOSED VARIABLES
 
-	Variables used by the Invoke-Build engine should not be visible for build
-	scripts and tasks unless they are documented:
+	Variables used by the Invoke-Build should not be visible for build scripts
+	and tasks unless they are documented:
 
 	Exposed variables designed for build scripts and tasks:
 
@@ -63,28 +63,20 @@
 		* BuildRoot - build script root path
 		* WhatIf    - Invoke-Build parameter
 
-	Variables for internal use but still visible:
+	Visible but strictly for use by Invoke-Build:
 
-		* BuildInfo - data for internal use
-		* BuildList - list of registered tasks
-		* PSCmdlet  - core variable of a caller
-
-	HOW TO GET HELP
-
-	This is a little bit tricky because:
-	- the script is designed to work immediately even without parameters;
-	- it should not be dot-sourced, do this once and only for getting help.
-
-	Dot-source it with '?', ignore possible output, then get help as usual:
-
-		PS> . Invoke-Build ?
-		PS> help Use-Framework
+		* BuildInfo, BuildThis, PSCmdlet
 
 .Parameter Tasks
-		One or more tasks to be invoked. Use '?' in order to show tasks.
+		One or more tasks to be invoked. Use '?' in order to view tasks. The
+		default task is '.', just a dot.
 
 .Parameter Build
-		The script with tasks defined by the Add-Task (alias task).
+		The build script which defined build tasks by Add-Task (task).
+
+		If it is not specified then Invoke-Build looks for "*.build.ps1" files
+		in the current location. A single file is used as the build script. If
+		more than one file exists then ".build.ps1" is used as the default.
 
 .Parameter Parameters
 		The hashtable of parameters to be passed in the build script.
@@ -102,13 +94,13 @@
 	that they invoke. Basically output is a log of the entire build process.
 
 .Example
-	# Invoke the 'default' task from the default .build.ps1 script:
+	# Invoke the default (.) task from the default build script:
 	Invoke-Build
 
 .Example
-	# Show the tasks from the default .build.ps1 script and another script:
+	# Show the tasks from the default build script and another script:
 	Invoke-Build ?
-	Invoke-Build ? Some.build.ps1
+	Invoke-Build ? Another.build.ps1
 
 .Example
 	# Invoke the specified tasks from the default script with parameters:
@@ -117,17 +109,18 @@
 .Link
 	PS> . Invoke-Build ? # Then use Get-Help as usual.
 	Add-Task
-	Out-Color
-	Invoke-Exec
+	Get-Error
 	Assert-True
+	Invoke-Exec
 	Use-Framework
+	Out-Color
 	https://github.com/nightroman/Invoke-Build
 #>
 
 param
 (
 	[Parameter()]
-	[string[]]$Tasks = 'default'
+	[string[]]$Tasks = '.'
 	,
 	[Parameter()]
 	[string]$Build
@@ -161,7 +154,14 @@ Set-Alias assert Assert-True
 		The task name, any string except '?' ('?' is used to show tasks).
 
 .Parameter Jobs
-		The task jobs, existing task names and the task script block(s).
+		The task jobs. The following types are supported:
+		* [string] - existing task name
+		* [hashtable] - @{ TaskName = Option }
+		* [scriptblock] - code invoked as this task
+
+		Notation @{ TaskName = Option } references the task TaskName and
+		assigns an Option value to it. The only supported value is 1 which
+		tells to ignore TaskName failure if this is safe for other tasks.
 
 .Parameter If
 		Tells whether to invoke the task ($true) or skip it ($false).
@@ -172,6 +172,10 @@ Set-Alias assert Assert-True
 
 .Outputs
 	None
+
+.Link
+	task
+	Get-Error
 #>
 function Add-Task
 (
@@ -185,7 +189,7 @@ function Add-Task
 	[int]$If = 1
 )
 {
-	$task = $BuildList[$Name]
+	$task = $BuildThis.Tasks[$Name]
 	if ($task) {
 		ThrowTerminatingError @"
 Task '$Name' is added twice:
@@ -194,17 +198,72 @@ Task '$Name' is added twice:
 "@ InvalidOperation $Name
 	}
 
-	$BuildList.Add($Name, @{
+	$try = [System.Collections.ArrayList]@()
+	for($i = 0; $i -lt $Jobs.Count; ++$i) {
+		if ($Jobs[$i] -is [hashtable]) {
+			$hash = $Jobs[$i]
+			if ($hash.Count -ne 1) {
+				ThrowTerminatingError "Job $($i + 1)/$($Jobs.Count): hashtable should have one item." InvalidArgument $hash
+			}
+			$job = @($hash.Keys)[0]
+			$Jobs[$i] = $job
+			if (@($hash.Values)[0] -eq 1) {
+				$null = $try.Add($job)
+			}
+		}
+	}
+
+	$BuildThis.Tasks.Add($Name, @{
 		Name = $Name
 		Jobs = $Jobs
 		Info = $MyInvocation
 		If = $If
+		Try = $try
 	})
 }
 
 <#
 .Synopsis
-	Checks for a condition and throws a message if the condition is $false or not Boolean.
+	Gets an error of the specified task if the task has failed.
+
+.Description
+	This method is used when the Try list is specified for a task. The current
+	task calls Get-Error in order to analyse its job task error information.
+
+.Parameter Name
+		Name of the task which error is requested.
+
+.Inputs
+	None
+
+.Outputs
+	The error object or null if the task has no errors.
+
+.Link
+	Add-Task
+#>
+function Get-Error
+(
+	[Parameter(Mandatory = $true)]
+	[string]$Name
+)
+{
+	$task = $BuildThis.Tasks[$Name]
+	if (!$task) {
+		ThrowTerminatingError "Task '$Name' is not defined." ObjectNotFound $Name
+	}
+	$task['Error']
+}
+
+<#
+.Synopsis
+	Checks for a condition and throws a message.
+
+.Description
+	Checks for a condition and throws a message if the condition is $false or
+	not Boolean.
+
+	Assert-True has the predefined alias 'assert'.
 
 .Parameter Condition
 		The condition, exactly Boolean, in order to avoid subtle mistakes.
@@ -217,6 +276,9 @@ Task '$Name' is added twice:
 
 .Outputs
 	None
+
+.Link
+	assert
 #>
 function Assert-True
 (
@@ -238,55 +300,6 @@ function Assert-True
 		else {
 			ThrowTerminatingError 'Condition is $false.' InvalidOperation
 		}
-	}
-}
-
-<#
-.Synopsis
-	Outputs text as usual using colors if it makes sense for the output target.
-
-.Description
-	Unlike Write-Host this function also works for output redirected to a file.
-
-.Parameter Color
-		The [System.ConsoleColor] value or its string representation.
-
-.Parameter Text
-		Text to be printed using colors or just written to the output.
-
-.Inputs
-	None
-
-.Outputs
-	[string]
-#>
-function Out-Color
-(
-	[Parameter()]
-	[System.ConsoleColor]$Color
-	,
-	[Parameter()]
-	[string]$Text
-)
-{
-	$saved = $Host.UI.RawUI.ForegroundColor
-	$Host.UI.RawUI.ForegroundColor = $Color
-	$Text
-	$Host.UI.RawUI.ForegroundColor = $saved
-}
-
-# use another Out-Color if there is no UI
-if (!$Host.UI -or !$Host.UI.RawUI) {
-	function Out-Color
-	(
-		[Parameter()]
-		[System.ConsoleColor]$Color
-		,
-		[Parameter()]
-		[string]$Text
-	)
-	{
-		$Text
 	}
 }
 
@@ -320,6 +333,7 @@ if (!$Host.UI -or !$Host.UI.RawUI) {
 	exec { robocopy Source Target /mir } (0..3)
 
 .Link
+	exec
 	Use-Framework
 #>
 function Invoke-Exec
@@ -415,32 +429,81 @@ function Use-Framework
 
 <#
 .Synopsis
-	Heals line breaks in the position message. Mostly for internal use.
+	Outputs text as usual using colors if it makes sense for the output target.
+
+.Description
+	Unlike Write-Host this function also works for output redirected to a file.
+
+.Parameter Color
+		The [System.ConsoleColor] value or its string representation.
+
+.Parameter Text
+		Text to be printed using colors or just written to the output.
+
+.Inputs
+	None
+
+.Outputs
+	[string]
 #>
-function Format-PositionMessage
+function Out-Color
 (
-	[string]$Message
+	[Parameter()]
+	[System.ConsoleColor]$Color
+	,
+	[Parameter()]
+	[string]$Text
 )
+{
+	$saved = $Host.UI.RawUI.ForegroundColor
+	$Host.UI.RawUI.ForegroundColor = $Color
+	$Text
+	$Host.UI.RawUI.ForegroundColor = $saved
+}
+
+### End of the public zone. Exit if dot-sourced.
+if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
+	Write-Warning 'Dot-source Invoke-Build only in order to get help for its functions.'
+	Get-Command Add-Task, Get-Error, Assert-True, Invoke-Exec, Use-Framework, Out-Color -ea 0 |
+	Format-Table -AutoSize | Out-String
+	return
+}
+
+# Use another Out-Color if there is no UI.
+if (!$Host.UI -or !$Host.UI.RawUI) {
+	function Out-Color
+	(
+		[Parameter()]
+		[System.ConsoleColor]$Color
+		,
+		[Parameter()]
+		[string]$Text
+	)
+	{
+		$Text
+	}
+}
+
+# Heals line breaks in the position message.
+function Format-PositionMessage([string]$Message)
 {
 	$Message.Trim().Replace("`n", "`r`n")
 }
 
-<#
-.Synopsis
-	For internal use. Invokes the build task.
-
-.Description
-	This command is used internally and should not be called directly.
-	Build scripts should define standard functions shared between tasks.
-#>
+# This command is used internally and should not be called directly.
+# Build scripts should define standard functions shared between tasks.
 function Invoke-Task($Name, $Path)
 {
 	# task object
-	${private:build-task} = $BuildList[$Name]
-	Assert-True($null -ne ${private:build-task})
+	${private:build-task} = $BuildThis.Tasks[$Name]
+	Assert-True ($null -ne ${private:build-task})
 
+	# fail?
+	if (${private:build-task}.ContainsKey('Error')) {
+		throw ${private:build-task}.Error
+	}
 	# done?
-	if (${private:build-task}.ContainsKey('Stopwatch')) {
+	elseif (${private:build-task}.ContainsKey('Stopwatch')) {
 	}
 	# skip?
 	elseif (!${private:build-task}.If) {
@@ -448,7 +511,7 @@ function Invoke-Task($Name, $Path)
 	# invoke
 	else {
 		# hide variables
-		${private:build-path} = "$Path\$Name"
+		${private:build-path} = if ($Path) { "$Path\$Name" } else { $Name }
 		Remove-Variable Name, Path -Scope Local
 
 		${private:build-count} = ${private:build-task}.Jobs.Count
@@ -459,7 +522,20 @@ function Invoke-Task($Name, $Path)
 			foreach(${private:build-job} in ${private:build-task}.Jobs) {
 				++${private:build-number}
 				if (${private:build-job} -is [string]) {
-					Invoke-Task ${private:build-job} ${private:build-path}
+					try {
+						Invoke-Task ${private:build-job} ${private:build-path}
+					}
+					catch {
+						# try to survive
+						if ((${private:build-task}.Try -contains ${private:build-job}) -and (Test-TryTask ${private:build-job})) {
+							${private:build-job} = $BuildThis.Tasks[${private:build-job}]
+							Assert-True ($null -ne ${private:build-job})
+							Out-Color Red (${private:build-job}.Error | Out-String)
+						}
+						else {
+							throw
+						}
+					}
 				}
 				elseif (${private:build-job} -is [scriptblock]) {
 					# log any
@@ -469,7 +545,7 @@ function Invoke-Task($Name, $Path)
 						${private:build-job}
 					}
 					else {
-						Set-Location $BuildRoot
+						Set-Location -LiteralPath $BuildRoot
 						& ${private:build-job}
 
 						# log 2+
@@ -479,13 +555,16 @@ function Invoke-Task($Name, $Path)
 					}
 				}
 			}
-			Out-Color DarkYellow "${private:build-path} is done. $(${private:build-task}.Stopwatch.Elapsed)"
 			++$BuildInfo.TaskBuiltCount
+			Out-Color DarkYellow @"
++$($BuildInfo.TaskBuiltCount) -$($BuildInfo.TaskErrorCount) ${private:build-path} is done. $(${private:build-task}.Stopwatch.Elapsed)
+"@
 		}
 		catch {
-			Out-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
-			${private:build-task}.Error = $_
 			++$BuildInfo.TaskErrorCount
+			${private:build-task}.Error = $_
+			Out-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
+
 			throw
 		}
 		finally {
@@ -494,81 +573,106 @@ function Invoke-Task($Name, $Path)
 	}
 }
 
-# For internal use.
-function Initialize-Task($Task, $Done)
+# Gets true if the try-task failure is safe to ignore.
+function Test-TryTask([string]$TryTask)
 {
-	# ignore?
-	if (!$Task.If) {
-		Out-Color DarkGray "$($Task.Name) is ignored."
+	# fail if it is the top task
+	if ($BuildThis.Names -contains $TryTask) {
 		return
 	}
 
-	# add the task to the current list
-	${private:build-count} = 1 + $Done.Add($Task)
+	# top tasks:
+	foreach($name in $BuildThis.Names) {
+		$task = $BuildThis.Tasks[$name]
+		Assert-True ($null -ne $task)
+		if (!(Test-TryTree $task $TryTask)) {
+			return
+		}
+	}
+
+	$true
+}
+
+# Gets true if the try-task failure is safe to ignore.
+function Test-TryTree([object]$Task, [string]$TryTask)
+{
+	# ignored:
+	if (!$Task.If) {
+		$true
+		return
+	}
+
+	# in jobs:
+	if ($Task.Jobs -contains $TryTask) {
+		$Task.Try -contains $TryTask
+		return
+	}
+
+	# jobs:
+	foreach($job in $Task.Jobs) {
+		if ($job -is [string]) {
+			$task2 = $BuildThis.Tasks[$job]
+			Assert-True ($null -ne $task2)
+			if (!(Test-TryTree $task2 $TryTask)) {
+				return
+			}
+		}
+	}
+
+	$true
+}
+
+# For internal use.
+function Initialize-Task([object]$Task, [Collections.ArrayList]$Done)
+{
+	# ignore?
+	if (!$Task.If) {
+		Out-Color DarkGray "$($Task.Name) is excluded."
+		return
+	}
+
+	# add the task to the list
+	$count = 1 + $Done.Add($Task)
 
 	# process task jobs
-	${private:build-number} = 0
-	foreach(${private:build-job} in $Task.Jobs) {
-		++${private:build-number}
-		if (${private:build-job} -is [string]) {
-			${private:build-job-task} = $BuildList[${private:build-job}]
+	$number = 0
+	foreach($job in $Task.Jobs) {
+		++$number
+		if ($job -is [string]) {
+			$task2 = $BuildThis.Tasks[$job]
 
 			# missing:
-			if (!${private:build-job-task}) {
+			if (!$task2) {
 				throw @"
-Task '$($Task.Name)': job $(${private:build-number}): task '${private:build-job}' is not defined.
+Task '$($Task.Name)': Job $($number): Task '$job' is not defined.
 $(Format-PositionMessage $Task.Info.PositionMessage)
 "@
 			}
 
 			# ignore:
-			if (!${private:build-job-task}.If) {
+			if (!$task2.If) {
 				continue
 			}
 
 			# cyclic:
-			if ($Done.Contains(${private:build-job-task})) {
+			if ($Done.Contains($task2)) {
 				throw @"
-Task '$($Task.Name)': job $(${private:build-number}): cyclic reference to '${private:build-job}'.
+Task '$($Task.Name)': Job $($number): Cyclic reference to '$job'.
 $(Format-PositionMessage $Task.Info.PositionMessage)
 "@
 			}
 
 			# process job task
-			Initialize-Task ${private:build-job-task} $Done
-			$Done.RemoveRange(${private:build-count}, $Done.Count - ${private:build-count})
+			Initialize-Task $task2 $Done
+			$Done.RemoveRange($count, $Done.Count - $count)
 		}
-		elseif (${private:build-job} -isnot [scriptblock]) {
+		elseif ($job -isnot [scriptblock]) {
 			throw @"
-Task '$($Task.Name)': job $(${private:build-number}): invalid job type.
+Task '$($Task.Name)': Job $($number): Invalid job type.
 $(Format-PositionMessage $Task.Info.PositionMessage)
 "@
 		}
 	}
-}
-
-# For internal use.
-function Resolve-Build
-{
-	$build = '.build.ps1'
-	if (!(Test-Path -LiteralPath $build)) {
-		Write-Verbose "Default '$build' is not found."
-		$location = Get-Location
-		for(;;) {
-			$location = Split-Path $location
-			if (!$location) {
-				return
-			}
-			$candidate = Join-Path $location $build
-			Write-Verbose "Looking for '$candidate'"
-			if (Test-Path -LiteralPath $candidate) {
-				$build = $candidate
-				break
-			}
-		}
-	}
-	Write-Verbose "Build script : $build"
-	$build
 }
 
 # Call it from advanced functions.
@@ -577,37 +681,58 @@ function ThrowTerminatingError($Message, $Category = 0, $Target)
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
 }
 
-### get the script
-if (!$Build) {
-	$Build = Resolve-Build
-	if (!$Build) {
-		if ($Tasks -and $Tasks[0] -eq '?') {
-			return
+### resolve the build
+try {
+	if ($Build) {
+		${private:build-location} = Convert-Path (Resolve-Path -LiteralPath $Build)
+	}
+	else {
+		${private:build-location} = @(Resolve-Path '*.build.ps1')
+		if (!${private:build-location}) {
+			throw "Found no '*.build.ps1' files."
 		}
-		ThrowTerminatingError "Cannot find the default build script in the parent tree."
+		if (${private:build-location}.Count -eq 1) {
+			${private:build-location} = Convert-Path (${private:build-location}[0])
+		}
+		else {
+			${private:build-location} = foreach($_ in ${private:build-location}) {
+				if ([System.IO.Path]::GetFileName($_) -eq '.build.ps1') {
+					Convert-Path $_
+					break
+				}
+			}
+			if (!${private:build-location}) {
+				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+			}
+		}
 	}
 }
+catch {
+	ThrowTerminatingError "$_" ObjectNotFound $Build
+}
 
-### set variables
+### set main variables
+New-Variable -Option Constant -Name BuildFile -Value ${private:build-location}
+New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
+New-Variable -Option Constant -Name BuildThis -Value @{}
 ${private:build-location} = Get-Location
-New-Variable -Option Constant -Name BuildFile -Value (Resolve-Path -LiteralPath $Build)
-New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $Build)
-New-Variable -Option Constant -Name BuildList -Value @{}
+$BuildThis.Names = $Tasks
+$BuildThis.Tasks = @{}
 
 ### hide variables
 ${private:build-tasks} = $Tasks
-${private:_94abce897fdf4f18a806108b30f08c13} = $Parameters
+${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
 Remove-Variable Tasks, Build, Parameters -Scope Local
 
 Out-Color DarkYellow "Build $(${private:build-tasks} -join ', ') from $BuildFile"
 try {
-	### get the tasks
-	Set-Location $BuildRoot
-	. $BuildFile @_94abce897fdf4f18a806108b30f08c13
+	### invoke the build script (build loading)
+	Set-Location -LiteralPath $BuildRoot
+	. $BuildFile @94abce897fdf4f18a806108b30f08c13
 
 	### show the tasks
 	if (${private:build-tasks} -and ${private:build-tasks}[0] -eq '?') {
-		$BuildList.Values | .{process{
+		$BuildThis.Tasks.Values | .{process{
 			${private:build-task} = 1 | Select-Object Task, Info, File, Line
 			${private:build-task}
 			${private:build-task}.Task = $_.Name
@@ -626,24 +751,24 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		return
 	}
 
-	### initialize the tasks (build preprocess)
+	### initialize the tasks (build preprocessing)
 	foreach(${private:build-name} in ${private:build-tasks}) {
-		${private:build-task} = $BuildList[${private:build-name}]
+		${private:build-task} = $BuildThis.Tasks[${private:build-name}]
 		if (!${private:build-task}) {
-			ThrowTerminatingError "Task '${private:build-name}' is not defined."
+			ThrowTerminatingError "Task '${private:build-name}' is not defined." ObjectNotFound ${private:build-name}
 		}
 		Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
 	}
 
-	### get build info
-	if (!(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '1a9384c8-d084-4dad-9db9-66505be49d74'))) {
+	### get shared build info
+	if (!(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))) {
 		New-Variable -Option Constant -Name BuildInfo -Value @{}
-		$BuildInfo.Id = '1a9384c8-d084-4dad-9db9-66505be49d74'
+		$BuildInfo.Id = '94abce897fdf4f18a806108b30f08c13'
 		$BuildInfo.TaskBuiltCount = 0
 		$BuildInfo.TaskErrorCount = 0
 	}
 
-	### invoke the tasks (build process)
+	### invoke the tasks (build processing)
 	${private:build-stopwatch} = [System.Diagnostics.Stopwatch]::StartNew()
 	foreach(${private:build-name} in ${private:build-tasks}) {
 		Invoke-Task ${private:build-name}
@@ -655,5 +780,5 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 	}
 }
 finally {
-	Set-Location ${private:build-location}
+	Set-Location -LiteralPath ${private:build-location}
 }

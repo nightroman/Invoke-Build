@@ -13,11 +13,12 @@
 		assert { ... }
 
 	This assertion never fails because { ... } is a script block, not null
-	object which is always converted to $true where Boolean is needed, try:
+	object, which is always converted to $true where Boolean is needed, try:
 
 		[bool]{ $false }
 
 .Link
+	Invoke-Build
 	.build.ps1
 #>
 
@@ -38,7 +39,20 @@ task AssertMessage {
 	assert $false 'Custom assert message.'
 }
 
-# This task works.
-task default {
+# The default task calls the others and tests the result errors.
+# Note use of @{} for failing tasks.
+task . @{AssertInvalid1=1}, @{AssertInvalid2=1}, @{AssertMessage=1}, {
+	# silly test
 	assert $true
+
+	$e = Get-Error AssertInvalid1
+	assert ("$e" -eq 'Condition is not Boolean.')
+
+	$e = Get-Error AssertInvalid2
+	assert ("$e" -eq 'Condition is not Boolean.')
+
+	$e = Get-Error AssertMessage
+	assert ("$e" -eq 'Custom assert message.')
+
+	'Tested Assert-True.'
 }

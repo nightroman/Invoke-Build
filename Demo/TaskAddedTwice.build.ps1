@@ -1,13 +1,14 @@
 
 <#
 .Synopsis
-	Example of a build script with duplicated tasks.
+	Example of a build script with conflicting task names.
 
 .Example
-	# This fails due to duplicated tasks:
-	Invoke-Build default TaskAddedTwice.build.ps1
+	# This fails:
+	Invoke-Build . TaskAddedTwice.build.ps1
 
 .Link
+	Invoke-Build
 	.build.ps1
 #>
 

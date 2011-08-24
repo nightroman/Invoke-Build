@@ -8,15 +8,16 @@
 
 	* If build scripts change the current location they do not have to restore it.
 
-	* Tasks v2.0.50727 and v4.0.30319 are conditional (-If parameter).
+	* Tasks v2.0.50727 and v4.0.30319 are conditional (see the If parameter).
 
-	* The task v4.0.30319 shows a subtle scope issue.
+	* The task v4.0.30319 shows a subtle scope issue (artificial in here).
 
 .Link
+	Invoke-Build
 	.build.ps1
 #>
 
-# It is fine to change location and keep it changed.
+# It is fine to change the location and leave it changed.
 Set-Location "$env:windir\Microsoft.NET\Framework"
 
 # This task calls MSBuild 2.0 and tests its version.
@@ -48,10 +49,14 @@ task CurrentFramework {
 	}
 }
 
-# The default task calls "good" tasks.
-task default v2.0.50727, v4.0.30319, CurrentFramework
-
-# This task fails. Tested by .build.ps1.
+# This task fails due to invalid framework specified
 task InvalidFramework {
 	Use-Framework Framework\xyz MSBuild {}
+}
+
+# The default task calls the others and checks that InvalidFramework has failed properly.
+# InvalidFramework is referenced as @{InvalidFramework=1} to ignore its errors.
+task . v2.0.50727, v4.0.30319, CurrentFramework, @{InvalidFramework=1}, {
+	$e = Get-Error InvalidFramework
+	assert ("$e" -like "Directory does not exist: '*\xyz'.")
 }

@@ -8,23 +8,32 @@
 	argument of Invoke-Build.
 
 .Example
-	# By convention the default task of this script is called just like:
+	# By conventions the default . task of this script is called just like:
+	Invoke-Build
+
+.Link
 	Invoke-Build
 #>
 
 param
 (
-	# This value is available for all tasks ($Param1).
+	# This value is available for all tasks ($MyParam1).
 	# Build script parameters often have default values.
 	# Actual values are specified on Invoke-Build calls.
-	# It can be changed by tasks ($script:Param1 = ...).
-	$Param1 = "param 1"
+	# It can be changed by tasks ($script:MyParam1 = ...).
+	$MyParam1 = "param 1"
 )
 
-# This value is available for all tasks ($Value1).
+# This value is available for all tasks ($MyValue1).
 # Unlike parameters it is initialized internally.
-# It can be changed by tasks ($script:Value1 = ...).
-$Value1 = "value 1"
+# It can be changed by tasks ($script:MyValue1 = ...).
+$MyValue1 = "value 1"
+
+# Invoke-Build exposes $BuildFile and $BuildRoot. Test them.
+# Note: assert is the predefined alias of Assert-True.
+$MyPath = $MyInvocation.MyCommand.Path
+assert ($MyPath -eq $BuildFile)
+assert ((Split-Path $MyPath) -eq $BuildRoot)
 
 # In order to import more tasks invoke the script containing them.
 # *.tasks.ps1 files play the same role as MSBuild *.targets files.
@@ -41,14 +50,14 @@ task ParamsValues1 {
 	"In ParamsValues1"
 
 	# get parameters and values
-	"Param1='$Param1' Value1='$Value1'"
+	"MyParam1='$MyParam1' MyValue1='$MyValue1'"
 
 	# set parameters and values
-	$script:Param1 = 'new param 1'
-	$script:Value1 = 'new value 1'
+	$script:MyParam1 = 'new param 1'
+	$script:MyValue1 = 'new value 1'
 
 	# create a new value to be used by `ParamsValues2`
-	$script:NewValue1 = 42
+	$script:MyNewValue1 = 42
 }
 
 # This task depends on another task ParamsValues1. Instead of having the
@@ -57,7 +66,7 @@ task ParamsValues1 {
 # on behalf of this task. Tasks and blocks are invoked in the specified order.
 task ParamsValues2 ParamsValues1, SharedValueTask1, {
 	"In ParamsValues2"
-	"Param1='$Param1' Value1='$Value1' NewValue1='$NewValue1' SharedValue1='$SharedValue1'"
+	"MyParam1='$MyParam1' MyValue1='$MyValue1' MyNewValue1='$MyNewValue1' MySharedValue1='$MySharedValue1'"
 }
 
 # Just like regular scripts, build scripts may have functions used by tasks.
@@ -69,72 +78,59 @@ function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern) {
 	if ($message -notlike $ExpectedMessagePattern) {
 		ThrowTerminatingError("Actual message: [`n$message`n]")
 	}
-	Out-Color Green "Issue '$Task' of '$Build' is tested."
+	"Issue '$Task' of '$Build' is tested."
 }
 
-# This tasks tests Assert-True (assert).
+# This task calls tests of Assert-True (assert).
 task Assert-True {
-	# default works fine
-	Invoke-Build default Assert-True.build.ps1
+	Invoke-Build . Assert-True.build.ps1
+}
 
-	# these builds fail, test them by Test-Issue
-	Test-Issue AssertInvalid1 Assert-True.build.ps1 'Condition is not Boolean.'
-	Test-Issue AssertInvalid2 Assert-True.build.ps1 'Condition is not Boolean.'
-	Test-Issue AssertMessage Assert-True.build.ps1 'Custom assert message.'
+# This task tests conditional tasks, see ConditionalTask.build.ps1
+# It shows how to invoke a build script with parameters (Debug|Release).
+task ConditionalTask {
+	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
+	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
 }
 
 # This task ensures that cyclic references are caught.
 # Change the expected message and make the test to fail to see the task stack.
 task CyclicReference {
-	Test-Issue default CyclicReference.build.ps1 "Task 'task2': job 1: cyclic reference to 'task1'.*"
+	Test-Issue . CyclicReference.build.ps1 "Task 'task2': job 1: cyclic reference to 'task1'.*"
+}
+
+# This task calls Invoke-Exec (exec) tests.
+task Invoke-Exec {
+	Invoke-Build . Invoke-Exec.build.ps1
 }
 
 # This task ensures that tasks with the same name cannot be added twice.
 task TaskAddedTwice {
-	Test-Issue default TaskAddedTwice.build.ps1 "Task 'task1' is added twice:*1: *2: *"
+	Test-Issue . TaskAddedTwice.build.ps1 "Task 'task1' is added twice:*1: *2: *"
 }
 
 # This task ensures that task jobs can be either strings or script blocks.
 task TaskInvalidJob {
 	# this fails
-	Test-Issue default TaskInvalidJob.build.ps1 "Task 'default': job 3: invalid job type.*"
+	Test-Issue . TaskInvalidJob.build.ps1 "Task '.': job 4: invalid job type.*"
 
 	# but this works because Invoke-Build checks only tasks to be invoked
 	Test-Issue task1 TaskInvalidJob.build.ps1
 }
 
-# This task tests conditional tasks, see ConditionalTask.build.ps1
-# It shows how to invoke a build script with parameters.
-task ConditionalTask {
-	# test Debug
-	Invoke-Build default ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
-	# test Release
-	Invoke-Build default ConditionalTask.build.ps1 @{ Configuration = 'Release' }
-	# OK
-	Out-Color Green "Conditional task is tested."
-}
-
-# This tasks tests Invoke-Exec (exec).
-task ExecTestCases {
-	# default works fine and makes tests there
-	Invoke-Build default Invoke-Exec.build.ps1
-
-	# these builds fail, test them by Test-Issue
-	Test-Issue ExecFailsCode13 Invoke-Exec.build.ps1 '$LastExitCode is 13.'
-	Test-Issue ExecFailsBadCommand Invoke-Exec.build.ps1 'Bad Command.*'
-}
-
 # This task ensures that missing tasks are caught.
 task TaskNotDefined {
-	Test-Issue default TaskNotDefined.build.ps1 "Task 'task1': job 1: task 'missing' is not defined.*"
+	Test-Issue . TaskNotDefined.build.ps1 "Task 'task1': job 1: task 'missing' is not defined.*"
 }
 
-# This task tests the function Use-Framework.
+# This task tests job tasks using @{Name=1} notation.
+task TryTasks {
+	Invoke-Build . TryTasks.build.ps1
+}
+
+# This task calls tests in Use-Framework.build.ps1
 task Use-Framework {
-	# works
-	Invoke-Build default Use-Framework.build.ps1
-	# fails
-	Test-Issue InvalidFramework Use-Framework.build.ps1 "Directory does not exist: '*\xyz'."
+	Invoke-Build . Use-Framework.build.ps1
 }
 
 # Invoke-Build should expose only documented variables! If this test shows
@@ -144,21 +140,16 @@ task TestVariables {
 	# get variables in a clean session
 	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
 	Get-Variable | .{process{
-		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2)) {
+		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notlike 'My*')) {
 			switch($_.Name) {
 				# exposed by Invoke-Build
-				'BuildFile' { 'BuildFile - build script file path' }
-				'BuildRoot' { 'BuildRoot - build script root path' }
+				'BuildFile' { 'BuildFile - build script file path - ' + $BuildFile}
+				'BuildRoot' { 'BuildRoot - build script root path - ' + $BuildRoot }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
 				# exposed but internal
-				'BuildInfo' { 'BuildInfo - data for internal use' }
-				'BuildList' { 'BuildList - list of registered tasks' }
-				'PSCmdlet' { 'PSCmdlet - core variable of a caller' }
-				# build script data
-				'NewValue1' { }
-				'Param1' { }
-				'SharedValue1' { }
-				'Value1' { }
+				'BuildInfo' { 'BuildInfo - internal data' }
+				'BuildThis' { 'BuildThis - internal data' }
+				'PSCmdlet' { 'PSCmdlet - system variable' }
 				# some system data
 				'foreach' { }
 				'LASTEXITCODE' { }
@@ -171,18 +162,19 @@ task TestVariables {
 # This task calls all test tasks.
 task Tests `
 	Assert-True,
+	ConditionalTask,
 	CyclicReference,
+	Invoke-Exec,
 	TaskAddedTwice,
 	TaskInvalidJob,
-	ConditionalTask,
-	ExecTestCases,
 	TaskNotDefined,
+	TryTasks,
 	Use-Framework,
 	TestVariables
 
 # This task calls all sample and the main test task.
-# By convention it is the default task due to its name.
-task default ParamsValues2, ParamsValues1, SharedTask2, {
+# By conventions it is the default task due to its name.
+task . ParamsValues2, ParamsValues1, SharedTask2, {
 	"In default, script 1"
 },
 # It is possible to have more than one script jobs.
@@ -191,11 +183,4 @@ task default ParamsValues2, ParamsValues1, SharedTask2, {
 	Invoke-Build SharedTask1 Shared.Tasks.ps1
 },
 # Tasks can be referenced between or after scripts.
-Tests,
-# Show some not yet documented information.
-{
-	Out-Color Cyan @"
-Built: $($BuildInfo.TaskBuiltCount)
-Error: $($BuildInfo.TaskErrorCount)
-"@
-}
+Tests

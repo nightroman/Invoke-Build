@@ -25,7 +25,7 @@ script can be called from any *PowerShell* code simply as `Invoke-Build`.
 **Step 2:**
 Set the current location to the *Invoke-Build\Demo* directory:
 
-    Set-Location <your location>\Invoke-Build\Demo
+    Set-Location <your location>/Invoke-Build/Demo
 
 **Step 3:**
 Take a look at the tasks of the default *.build.ps1* build script there:
@@ -35,13 +35,13 @@ Take a look at the tasks of the default *.build.ps1* build script there:
 It shows the tasks from this script and imported from `*.tasks.ps1` scripts.
 
 **Step 4:**
-Invoke the *default* task from the default script (it tests *Invoke-Build*):
+Invoke the default (`.`) task from the default script (it tests *Invoke-Build*):
 
     Invoke-Build
 
-You should see the build process output (*Invoke-Build* testing log).
+You should see the build process output (*Invoke-Build* testing progress).
 
-This is it. The script is installed and invokes builds.
+This is it. The script is installed and invokes build scenarios.
 
 ## Next Steps
 
@@ -49,5 +49,5 @@ Take a look at the main help topic:
 
     help Invoke-Build -Full
 
-Then take a look at the demo script *.build.ps1* and the others there with a
-number of typical use cases, problem cases, and tutorial comments.
+Then take a look at the *.build.ps1* and the others in the *Demo* directory.
+They provide many typical use cases, problem cases, and tutorial comments.

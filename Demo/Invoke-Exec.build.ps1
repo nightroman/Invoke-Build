@@ -3,7 +3,11 @@
 .Synopsis
 	Examples and test cases of Invoke-Exec (exec).
 
+.Example
+	Invoke-Build . Invoke-Exec.build.ps1
+
 .Link
+	Invoke-Build
 	.build.ps1
 #>
 
@@ -16,15 +20,29 @@ task ExecWorksCode42 {
 	assert ($LastExitCode -eq 42)
 }
 
-task default ExecWorksCode0, ExecWorksCode42, {
-	assert ($script:ExecWorksCode0 -eq 'Code0')
-	assert ($script:ExecWorksCode42 -eq 'Code42')
-}
-
 task ExecFailsCode13 {
 	exec { PowerShell "exit 13" }
 }
 
 task ExecFailsBadCommand {
 	exec { throw 'Bad Command.' }
+}
+
+# The default task calls the others and tests results.
+# Note use of @{} for failing tasks.
+task . ExecWorksCode0, ExecWorksCode42, @{ExecFailsCode13=1}, @{ExecFailsBadCommand=1}, {
+
+	assert ($script:ExecWorksCode0 -eq 'Code0')
+	'Tested ExecWorksCode0'
+
+	assert ($script:ExecWorksCode42 -eq 'Code42')
+	'Tested ExecWorksCode42'
+
+	$e = Get-Error ExecFailsCode13
+	assert ("$e" -eq '$LastExitCode is 13.')
+	'Tested ExecFailsCode13'
+
+	$e = Get-Error ExecFailsBadCommand
+	assert ("$e" -like 'Bad Command.*')
+	'Tested ExecFailsBadCommand'
 }

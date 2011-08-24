@@ -5,8 +5,8 @@
 
 .Description
 	The Conditional task is typical for Debug|Release configuration scenarios.
-	In this example the task is designed to be done for Release configuration.
-	It is also typical that $Configuration is defined used as a parameter.
+	Such values as $Configuration are normally defined as parameters.
+	In this example the task is invoked for Release configuration.
 
 	The script also shows how to use script variables shared between tasks.
 
@@ -14,19 +14,20 @@
 
 .Example
 	# Debug configuration
-	Invoke-Build default ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
+	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
 
 .Example
 	# Release configuration
-	Invoke-Build default ConditionalTask.build.ps1 @{ Configuration = 'Release' }
+	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
 
 .Link
+	Invoke-Build
 	.build.ps1
 #>
 
 param
 (
-	$Configuration
+	$Configuration = 'Release'
 )
 
 $BeforeConditional = 'TODO'
@@ -43,19 +44,19 @@ task AfterConditional {
 
 task Conditional -If ($Configuration -eq 'Release') BeforeConditional, { $script:Conditional = 'DONE' }, AfterConditional
 
-task default Conditional, {
+task . Conditional, {
 	switch($Configuration) {
 		'Debug' {
 			assert ($BeforeConditional -eq 'TODO')
 			assert ($AfterConditional -eq 'TODO')
 			assert ($Conditional -eq 'TODO')
-			Out-Color Green 'Tested Debug.'
+			'Tested Debug.'
 		}
 		'Release' {
 			assert ($BeforeConditional -eq 'DONE')
 			assert ($AfterConditional -eq 'DONE')
 			assert ($Conditional -eq 'DONE')
-			Out-Color Green 'Tested Release.'
+			'Tested Release.'
 		}
 		default {
 			throw 'Invalid Configuration.'

@@ -5,12 +5,13 @@
 
 .Example
 	# This fails because the 'missing' task is missing:
-	Invoke-Build default TaskNotFound.build.ps1
+	Invoke-Build . TaskNotFound.build.ps1
 
 .Link
+	Invoke-Build
 	.build.ps1
 #>
 
 task task1 missing, {}
 
-task default task1, {}
+task . task1, {}
