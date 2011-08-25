@@ -44,6 +44,9 @@ assert ((Split-Path $MyPath) -eq $BuildRoot)
 # Mind potential variable name conflicts in the same script scope!
 . .\Values.tasks.ps1
 
+# Make the alias of MSBuild
+Use-Framework $null MSBuild
+
 # Parameters and values are just variables in the script scope.
 # Read them as $Variable. Write them as $script:Variable = ...
 task ParamsValues1 {

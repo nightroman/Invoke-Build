@@ -2,7 +2,7 @@
 <#
 .Synopsis
 	Invokes tasks from build scripts.
-	v1.0.0.rc5 2011-08-25
+	v1.0.0.rc6 2011-08-25
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -175,7 +175,6 @@ Set-Alias assert Assert-True
 	None
 
 .Link
-	task
 	Get-Error
 #>
 function Add-Task
@@ -278,9 +277,6 @@ function Get-Error
 
 .Outputs
 	None
-
-.Link
-	assert
 #>
 function Assert-True
 (
@@ -314,7 +310,7 @@ function Assert-True
 	invokes the command and checks the $LastExitCode. By default if the code is
 	not zero then the function throws a terminating error.
 
-	It is common to call .NET framework tools. See the Use-Framework function.
+	It is common to call .NET framework tools. See Use-Framework.
 
 	Invoke-Exec has the predefined alias 'exec'.
 
@@ -335,7 +331,6 @@ function Assert-True
 	exec { robocopy Source Target /mir } (0..3)
 
 .Link
-	exec
 	Use-Framework
 #>
 function Invoke-Exec
@@ -361,13 +356,17 @@ function Invoke-Exec
 
 <#
 .Synopsis
-	Sets framework tool aliases and invokes a script with them.
+	Sets framework tool aliases in the scope where it is called from.
 
 .Description
 	Invoke-Build does not change the system path in order to make framework
 	tools available by names. This approach would be not suitable for using
 	mixed framework tools simultaneously. Instead, this function is used in
-	order to set framework aliases explicitly and invoke a script with them.
+	order to set framework aliases in the scope where it is called from.
+
+	This function is often called once from a build script so that all tasks
+	use script scope aliases. But it can be called from tasks as well in order
+	to use more aliases or even use another framework.
 
 .Parameter Framework
 		The required framework directory relative to the Microsoft.NET in the
@@ -376,29 +375,21 @@ function Invoke-Exec
 		Examples: Framework\v4.0.30319, Framework\v2.0.50727, etc.
 
 .Parameter Tools
-		The framework tool names to set aliases for and also these alias names.
-
-.Parameter Command
-		An optional script to be invoked with temporary framework tool aliases.
-		If it is not provided then Use-Framework has to be dot-sourced in order
-		to make aliases available in the current scope. It is often possible to
-		do this once in a build script for all its tasks.
+		The framework tool names to set aliases for and these alias names.
 
 .Inputs
 	None
 
 .Outputs
-	Outputs of the specified command.
+	None
 
 .Example
-	# Create current framework tool aliases once in a build script:
-	. Use-Framework $null MSBuild, csc, ngen
-
-.Example
-	# Call MSBuild 4.0 (exec is Invoke-Exec alias):
-	Use-Framework Framework\v4.0.30319 MSBuild {
-		exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
-	}
+	# Use .NET 4.0 tools MSBuild, csc, ngen:
+	Use-Framework Framework\v4.0.30319 MSBuild, csc, ngen
+	...
+	# Invoke MSBuild
+	exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
+	...
 
 .Link
 	Invoke-Exec
@@ -410,33 +401,24 @@ function Use-Framework
 	,
 	[Parameter(Mandatory = $true)]
 	[string[]]$Tools
-	,
-	[Parameter()]
-	[scriptblock]$Command
 )
 {
+	if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
+		ThrowTerminatingError "Use-Framework should not be dot-sourced." InvalidOperation
+	}
+
 	if ($Framework) {
-		${private:build-path} = Join-Path "$env:windir\Microsoft.NET" $Framework
-		if (![System.IO.Directory]::Exists(${private:build-path})) {
-			ThrowTerminatingError "Directory does not exist: '${private:build-path}'." ResourceUnavailable $Framework
+		$path = Join-Path "$env:windir\Microsoft.NET" $Framework
+		if (![System.IO.Directory]::Exists($path)) {
+			ThrowTerminatingError "Directory does not exist: '$path'." InvalidArgument $Framework
 		}
 	}
 	else {
-		${private:build-path} = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
+		$path = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
 	}
 
-	foreach(${private:build-tool} in $Tools) {
-		Set-Alias ${private:build-tool} (Join-Path ${private:build-path} ${private:build-tool})
-	}
-
-	if ($Command) {
-		${private:build-command} = $Command
-		Remove-Variable Framework, Tools, Command -Scope Local
-
-		. ${private:build-command}
-	}
-	elseif ($PSCmdlet.MyInvocation.InvocationName -ne '.') {
-		ThrowTerminatingError "Use-Framework should be dot-sourced if a command is not specified."
+	foreach($name in $Tools) {
+		Set-Alias $name (Join-Path $path $name) -Scope 1
 	}
 }
 
@@ -509,7 +491,7 @@ function Invoke-Task($Name, $Path)
 {
 	# task object
 	${private:build-task} = $BuildThis.Tasks[$Name]
-	Assert-True ($null -ne ${private:build-task})
+	if (!${private:build-task}) { throw }
 
 	# task path
 	${private:build-path} = if ($Path) { "$Path\$Name" } else { $Name }
@@ -553,7 +535,7 @@ function Invoke-Task($Name, $Path)
 							else {
 								# survive but show the error
 								${private:build-job} = $BuildThis.Tasks[${private:build-job}]
-								Assert-True ($null -ne ${private:build-job})
+								if (!${private:build-job}) { throw }
 								Out-Color Red (${private:build-job}.Error | Out-String)
 							}
 						}
@@ -603,7 +585,7 @@ function Test-TryTask([string]$TryTask)
 {
 	foreach($name in $BuildThis.Names) {
 		$task = $BuildThis.Tasks[$name]
-		Assert-True ($null -ne $task)
+		if (!$task) { throw }
 		$why = Test-TryTree $task $TryTask
 		if ($why) {
 			return $why
@@ -632,7 +614,7 @@ function Test-TryTree([object]$Task, [string]$TryTask)
 	foreach($job in $Task.Jobs) {
 		if ($job -is [string]) {
 			$task2 = $BuildThis.Tasks[$job]
-			Assert-True ($null -ne $task2)
+			if (!$task2) { throw }
 			$why = Test-TryTree $task2 $TryTask
 			if ($why) {
 				return $why
