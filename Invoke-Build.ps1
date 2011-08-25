@@ -2,7 +2,7 @@
 <#
 .Synopsis
 	Invokes tasks from build scripts.
-	v1.0.0.rc5 2011-08-24
+	v1.0.0.rc5 2011-08-25
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -559,7 +559,7 @@ function Invoke-Task($Name, $Path)
 						${private:build-job}
 					}
 					else {
-						Set-Location -LiteralPath $BuildRoot
+						Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 						& ${private:build-job}
 
 						# log 2+
@@ -692,7 +692,7 @@ function ThrowTerminatingError($Message, $Category = 0, $Target)
 ### resolve the build
 try {
 	if ($Build) {
-		${private:build-location} = Convert-Path (Resolve-Path -LiteralPath $Build)
+		${private:build-location} = Convert-Path (Resolve-Path -LiteralPath $Build -ErrorAction Stop)
 	}
 	else {
 		${private:build-location} = @(Resolve-Path '*.build.ps1')
@@ -735,7 +735,7 @@ Remove-Variable Tasks, Build, Parameters -Scope Local
 Out-Color DarkYellow "Build $(${private:build-tasks} -join ', ') from $BuildFile"
 try {
 	### invoke the build script (build loading)
-	Set-Location -LiteralPath $BuildRoot
+	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	. $BuildFile @94abce897fdf4f18a806108b30f08c13
 
 	### show the tasks
@@ -788,5 +788,5 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 	}
 }
 finally {
-	Set-Location -LiteralPath ${private:build-location}
+	Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
 }
