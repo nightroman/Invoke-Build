@@ -371,8 +371,7 @@ function Invoke-Exec
 
 .Parameter Framework
 		The required framework directory relative to the Microsoft.NET in the
-		Windows directory. If it is empty then it is inferred from the current
-		runtime.
+		Windows directory. If it is empty then the current runtime is used.
 
 		Examples: Framework\v4.0.30319, Framework\v2.0.50727, etc.
 
@@ -380,7 +379,10 @@ function Invoke-Exec
 		The framework tool names to set aliases for and also these alias names.
 
 .Parameter Command
-		The script block to be invoked with temporary framework tool aliases.
+		An optional script to be invoked with temporary framework tool aliases.
+		If it is not provided then Use-Framework has to be dot-sourced in order
+		to make aliases available in the current scope. It is often possible to
+		do this once in a build script for all its tasks.
 
 .Inputs
 	None
@@ -389,7 +391,11 @@ function Invoke-Exec
 	Outputs of the specified command.
 
 .Example
-	# Call MSBuild 4.0 (exec is an alias of Invoke-Exec)
+	# Create current framework tool aliases once in a build script:
+	. Use-Framework $null MSBuild, csc, ngen
+
+.Example
+	# Call MSBuild 4.0 (exec is Invoke-Exec alias):
 	Use-Framework Framework\v4.0.30319 MSBuild {
 		exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
 	}
@@ -405,7 +411,7 @@ function Use-Framework
 	[Parameter(Mandatory = $true)]
 	[string[]]$Tools
 	,
-	[Parameter(Mandatory = $true)]
+	[Parameter()]
 	[scriptblock]$Command
 )
 {
@@ -423,10 +429,15 @@ function Use-Framework
 		Set-Alias ${private:build-tool} (Join-Path ${private:build-path} ${private:build-tool})
 	}
 
-	${private:build-command} = $Command
-	Remove-Variable Framework, Tools, Command -Scope Local
+	if ($Command) {
+		${private:build-command} = $Command
+		Remove-Variable Framework, Tools, Command -Scope Local
 
-	. ${private:build-command}
+		. ${private:build-command}
+	}
+	elseif ($PSCmdlet.MyInvocation.InvocationName -ne '.') {
+		ThrowTerminatingError "Use-Framework should be dot-sourced if a command is not specified."
+	}
 }
 
 <#
