@@ -128,6 +128,11 @@ task TryTasks {
 	Invoke-Build . TryTasks.build.ps1
 }
 
+# This task also tests @{Name=1}, some subtle cases.
+task TryTasksFails {
+	Test-Issue . TryTasksFails.build.ps1 'Error2'
+}
+
 # This task calls tests in Use-Framework.build.ps1
 task Use-Framework {
 	Invoke-Build . Use-Framework.build.ps1
@@ -169,6 +174,7 @@ task Tests `
 	TaskInvalidJob,
 	TaskNotDefined,
 	TryTasks,
+	TryTasksFails,
 	Use-Framework,
 	TestVariables
 

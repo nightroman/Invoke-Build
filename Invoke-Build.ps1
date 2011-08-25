@@ -2,7 +2,7 @@
 <#
 .Synopsis
 	Invokes tasks from build scripts.
-	v1.0.0.rc4 2011-08-24
+	v1.0.0.rc5 2011-08-24
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -107,14 +107,14 @@
 	Invoke-Build Task1, Task2 -Parameters @{ Param1 = 'Answer', Param2 = '42' }
 
 .Link
-	PS> . Invoke-Build ? # Then use Get-Help as usual.
+	https://github.com/nightroman/Invoke-Build
+	PS> . Invoke-Build # Then use Get-Help, help, man for functions
 	Add-Task
 	Get-Error
 	Assert-True
 	Invoke-Exec
 	Use-Framework
 	Out-Color
-	https://github.com/nightroman/Invoke-Build
 #>
 
 param
@@ -139,7 +139,7 @@ Set-Alias assert Assert-True
 
 <#
 .Synopsis
-	Adds the build task to the task list.
+	Adds the build task to the internal task list.
 
 .Description
 	This is the key function of build scripts. It creates build tasks, defines
@@ -151,17 +151,18 @@ Set-Alias assert Assert-True
 	Add-Task has the predefined alias 'task'.
 
 .Parameter Name
-		The task name, any string except '?' ('?' is used to show tasks).
+		The task name, any string except '?' ('?' is used to view tasks).
 
 .Parameter Jobs
 		The task jobs. The following types are supported:
 		* [string] - existing task name
-		* [hashtable] - @{ TaskName = Option }
-		* [scriptblock] - code invoked as this task
+		* [hashtable] - @{TaskName = Option}
+		* [scriptblock] - script blocks invoked for this task
 
-		Notation @{ TaskName = Option } references the task TaskName and
-		assigns an Option value to it. The only supported value is 1 which
-		tells to ignore TaskName failure if this is safe for other tasks.
+		Notation @{TaskName = Option} references the task TaskName and assigns
+		an Option to it. The only supported now option value is 1: protected
+		task call. It tells to ignore task errors if other active tasks also
+		call TaskName protected.
 
 .Parameter If
 		Tells whether to invoke the task ($true) or skip it ($false).
@@ -227,8 +228,8 @@ Task '$Name' is added twice:
 	Gets an error of the specified task if the task has failed.
 
 .Description
-	This method is used when the Try list is specified for a task. The current
-	task calls Get-Error in order to analyse its job task error information.
+	This method is used when some task jobs are protected (@{ Task = 1 }) and
+	the current task wants to analyse task errors.
 
 .Parameter Name
 		Name of the task which error is requested.
@@ -257,11 +258,12 @@ function Get-Error
 
 <#
 .Synopsis
-	Checks for a condition and throws a message.
+	Checks for a condition.
 
 .Description
-	Checks for a condition and throws a message if the condition is $false or
-	not Boolean.
+	This function checks for a condition and throws a message if the condition
+	is $false or not Boolean. In other words, the check succeeds if and only if
+	the value is exactly $true.
 
 	Assert-True has the predefined alias 'assert'.
 
@@ -269,7 +271,7 @@ function Get-Error
 		The condition, exactly Boolean, in order to avoid subtle mistakes.
 
 .Parameter Message
-		The message to throw on failure.
+		A custom message to throw on condition check failures.
 
 .Inputs
 	None
@@ -310,26 +312,26 @@ function Assert-True
 .Description
 	The passed in command is supposed to call an executable tool. This function
 	invokes the command and checks the $LastExitCode. By default if the code is
-	not zero then the function throws an error showing the failed command.
+	not zero then the function throws a terminating error.
 
-	It is common to call .NET framework tools. Use the Use-Framework function.
+	It is common to call .NET framework tools. See the Use-Framework function.
 
 	Invoke-Exec has the predefined alias 'exec'.
 
 .Parameter Command
-		The command which invokes an executable which exit code is checked.
+		The command that invokes an executable which exit code is checked.
 
 .Parameter ExitCode
-		Valid exit codes (e.g. 0..3 for robocopy).
+		Valid exit codes (e.g. 0..3 for robocopy). The default is @(0).
 
 .Inputs
 	None
 
 .Outputs
-	Outputs of the Command and the tool that it calls.
+	Outputs of the command and the tool that it invokes.
 
 .Example
-	# Call robocopy
+	# Call robocopy (0..3 are valid exit codes):
 	exec { robocopy Source Target /mir } (0..3)
 
 .Link
@@ -384,7 +386,7 @@ function Invoke-Exec
 	None
 
 .Outputs
-	Outputs of the Command.
+	Outputs of the specified command.
 
 .Example
 	# Call MSBuild 4.0 (exec is an alias of Invoke-Exec)
@@ -498,12 +500,16 @@ function Invoke-Task($Name, $Path)
 	${private:build-task} = $BuildThis.Tasks[$Name]
 	Assert-True ($null -ne ${private:build-task})
 
+	# task path
+	${private:build-path} = if ($Path) { "$Path\$Name" } else { $Name }
+
 	# fail?
 	if (${private:build-task}.ContainsKey('Error')) {
-		throw ${private:build-task}.Error
+		Out-Color Yellow "${private:build-path} failed before."
 	}
 	# done?
 	elseif (${private:build-task}.ContainsKey('Stopwatch')) {
+		Out-Color DarkYellow "${private:build-path} was done before."
 	}
 	# skip?
 	elseif (!${private:build-task}.If) {
@@ -511,7 +517,6 @@ function Invoke-Task($Name, $Path)
 	# invoke
 	else {
 		# hide variables
-		${private:build-path} = if ($Path) { "$Path\$Name" } else { $Name }
 		Remove-Variable Name, Path -Scope Local
 
 		${private:build-count} = ${private:build-task}.Jobs.Count
@@ -527,10 +532,19 @@ function Invoke-Task($Name, $Path)
 					}
 					catch {
 						# try to survive
-						if ((${private:build-task}.Try -contains ${private:build-job}) -and (Test-TryTask ${private:build-job})) {
-							${private:build-job} = $BuildThis.Tasks[${private:build-job}]
-							Assert-True ($null -ne ${private:build-job})
-							Out-Color Red (${private:build-job}.Error | Out-String)
+						if (${private:build-task}.Try -contains ${private:build-job}) {
+							${private:build-why} = Test-TryTask ${private:build-job}
+							if (${private:build-why}) {
+								# die but tell why
+								Out-Color Red ${private:build-why}
+								throw
+							}
+							else {
+								# survive but show the error
+								${private:build-job} = $BuildThis.Tasks[${private:build-job}]
+								Assert-True ($null -ne ${private:build-job})
+								Out-Color Red (${private:build-job}.Error | Out-String)
+							}
 						}
 						else {
 							throw
@@ -573,38 +587,33 @@ function Invoke-Task($Name, $Path)
 	}
 }
 
-# Gets true if the try-task failure is safe to ignore.
+# Try to find the reason why the try-task error is fatal.
 function Test-TryTask([string]$TryTask)
 {
-	# fail if it is the top task
-	if ($BuildThis.Names -contains $TryTask) {
-		return
-	}
-
-	# top tasks:
 	foreach($name in $BuildThis.Names) {
 		$task = $BuildThis.Tasks[$name]
 		Assert-True ($null -ne $task)
-		if (!(Test-TryTree $task $TryTask)) {
-			return
+		$why = Test-TryTree $task $TryTask
+		if ($why) {
+			return $why
 		}
 	}
-
-	$true
 }
 
-# Gets true if the try-task failure is safe to ignore.
+# Try to find the reason why the try-task error is fatal.
 function Test-TryTree([object]$Task, [string]$TryTask)
 {
 	# ignored:
 	if (!$Task.If) {
-		$true
 		return
 	}
 
-	# in jobs:
+	# try-task is in jobs:
 	if ($Task.Jobs -contains $TryTask) {
-		$Task.Try -contains $TryTask
+		# and it is not allowed to fail:
+		if ($Task.Try -notcontains $TryTask) {
+			"Task '$($Task.Name)' will fail due to '$TryTask'."
+		}
 		return
 	}
 
@@ -613,13 +622,12 @@ function Test-TryTree([object]$Task, [string]$TryTask)
 		if ($job -is [string]) {
 			$task2 = $BuildThis.Tasks[$job]
 			Assert-True ($null -ne $task2)
-			if (!(Test-TryTree $task2 $TryTask)) {
-				return
+			$why = Test-TryTree $task2 $TryTask
+			if ($why) {
+				return $why
 			}
 		}
 	}
-
-	$true
 }
 
 # For internal use.
