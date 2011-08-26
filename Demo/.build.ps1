@@ -99,11 +99,8 @@ task Assert-True {
 # This task tests conditional tasks, see ConditionalTask.build.ps1
 # It shows how to invoke a build script with parameters (Debug|Release).
 task ConditionalTask {
-	# Way 1: Parameters are sent like name/value pairs of remaining arguments:
-	Invoke-Build . ConditionalTask.build.ps1 -Configuration Release
-
-	# Way 2: Parameters are sent as a single argument, hashtable of parameters:
 	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
+	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
 }
 
 # This task ensures that cyclic references are caught.
@@ -161,6 +158,7 @@ task TestVariables {
 		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notlike 'My*')) {
 			switch($_.Name) {
 				# exposed by Invoke-Build
+				'BuildTask' { 'BuildTask - build task name list' }
 				'BuildFile' { 'BuildFile - build script file path - ' + $BuildFile}
 				'BuildRoot' { 'BuildRoot - build script root path - ' + $BuildRoot }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
@@ -172,6 +170,28 @@ task TestVariables {
 				'foreach' { }
 				'LASTEXITCODE' { }
 				default { Write-Warning "Unknown variable '$_'." }
+			}
+		}
+	}}
+}
+
+task TestFunctions {
+	# get functions in a clean session
+	$0 = PowerShell "Get-Command -CommandType Function | Select-Object -ExpandProperty Name"
+	Get-Command -CommandType Function | .{process{
+		if (($0 -notcontains $_.Name) -and ($_.Name -notlike 'Invoke-Build-*')) {
+			switch($_.Name) {
+				# exposed by Invoke-Build
+				'Add-Task' { 'Add-Task ~ Invoke-Build' }
+				'Assert-True' { 'Assert-True ~ Invoke-Build' }
+				'Get-Error' { 'Get-Error ~ Invoke-Build' }
+				'Invoke-Exec' { 'Invoke-Exec ~ Invoke-Build' }
+				'Use-Framework' { 'Use-Framework ~ Invoke-Build' }
+				'Write-Color' { 'Write-Color ~ Invoke-Build' }
+				'Write-Warning' { 'Write-Warning ~ Invoke-Build' }
+				# other known functions
+				'Test-Issue' { 'Test-Issue ~ Build script function.' }
+				default { Write-Warning "Unknown function '$_'." }
 			}
 		}
 	}}
@@ -189,6 +209,7 @@ task Tests `
 	TryTasks,
 	TryTasksFails,
 	Use-Framework,
+	TestFunctions,
 	TestVariables
 
 # This task calls all sample and the main test task.
@@ -206,7 +227,7 @@ Tests,
 # The last test tests not yet documented data
 {
 	# This build statistics
-	assert ($BuildThis.TaskCount -eq 18)
+	assert ($BuildThis.TaskCount -eq 19)
 	assert ($BuildThis.ErrorCount -eq 0)
 	assert ($BuildThis.WarningCount -ge 1)
 

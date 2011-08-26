@@ -6,15 +6,15 @@ Invoke-Build - Orchestrate Builds in PowerShell
 tasks from build scripts.
 
 Ideas come from the [psake](https://github.com/JamesKovacs/psake) module and
-other build tools. This script provides a lightweight and yet robust engine.
+other build tools. This script provides a simple and yet very robust engine.
 
 *Invoke-Build* is specifically designed for multiple calls in the same session.
 It never changes environment variables and the system path. It does not leave
 any variables, functions, aliases after its calls, successful or not. It also
 restores the current location. Caveat: called tasks can make such changes.
 
-Several *Invoke-Build* builds can work simultaneously in the same session: as
-nested calls and as parallel calls from background jobs or separate workspaces.
+Several *Invoke-Build* builds work simultaneously without conflicts both nested
+calls and parallel builds called from background jobs or separate workspaces.
 
 ## Quick Start
 
@@ -35,13 +35,13 @@ Take a look at the tasks of the default *.build.ps1* build script there:
 It shows the tasks from this script and imported from `*.tasks.ps1` scripts.
 
 **Step 4:**
-Invoke the default (`.`) task from the default script (it tests *Invoke-Build*):
+Invoke the default (`.`) task from the default script (it tests the engine):
 
     Invoke-Build
 
 You should see the build process output (*Invoke-Build* testing progress).
 
-This is it. The script is installed and invokes build scenarios.
+This is it. The script is installed and invokes build scripts.
 
 ## Next Steps
 
@@ -49,7 +49,7 @@ Take a look at the main help:
 
     help Invoke-Build -Full
 
-And function help, for example `Add-Task`:
+And then function help, for example `Add-Task`:
 
     . Invoke-Build
     help Add-Task -Full
@@ -58,5 +58,5 @@ Explore existing build scripts with many typical use cases, problem cases, and
 tutorial comments:
 
 * *Invoke-Build.build.ps1* - the build script of this project;
-* *Demo\.build.ps1* - the default script which calls all the tests;
-* *Demo\Xyz.build.ps1* - use and problem cases grouped by categories.
+* *Demo/.build.ps1* - the default script which calls all the tests;
+* *Demo/Xyz.build.ps1* - use and problem cases grouped by categories.

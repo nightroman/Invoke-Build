@@ -1,7 +1,7 @@
 
 <#
 .Synopsis
-	Invoke-Build v1.0.0.rc7 - Orchestrate Builds in PowerShell
+	Invoke-Build v1.0.0.rc8 - Orchestrate Builds in PowerShell
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -23,9 +23,8 @@
 	*
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-	The ideas come from the psake module and many other build and make tools.
-	The goal of this script is to provide a lightweight and yet robust engine.
-	There is a number of cases and scenarios where this script works very well.
+	The ideas come from the psake module and a few other build and make tools.
+	The goal of this script is to provide a very simple and yet robust engine.
 
 	The script is called directly with or without parameters, not dot-sourced.
 	It is easier to use if it is located in one of the the system path folders.
@@ -47,7 +46,7 @@
 		* Write-Warning [*]
 
 	[*] Write-Warning is redefined internally in order to count warnings in
-	tasks, build and other scripts. Warnings in modules are not counted.
+	tasks, build and other scripts. But warnings in modules are not counted.
 
 	EXPOSED ALIASES
 
@@ -57,34 +56,32 @@
 
 	EXPOSED VARIABLES
 
-	Variables used by the Invoke-Build should not be visible for build scripts
-	and tasks unless they are documented:
+	Only documented variables should be visible for build scripts and tasks.
 
 	Exposed variables designed for build scripts and tasks:
 
+		* BuildTask - build task name list
 		* BuildFile - build script file path
 		* BuildRoot - build script root path
 		* WhatIf    - Invoke-Build parameter
 
-	Visible but strictly for use by Invoke-Build:
+	Visible variables for internal use by Invoke-Build:
 
 		* BuildInfo, BuildThis, PSCmdlet
 
-.Parameter Tasks
-		One or more tasks to be invoked. Use '?' in order to view tasks. The
-		default task is '.', just a dot.
+.Parameter BuildTask
+		One or more tasks to be invoked. Use '?' in order to view tasks.
+		The default task is '.', just a dot.
 
-.Parameter Build
+.Parameter BuildFile
 		The build script which defined build tasks by Add-Task (task).
 
 		If it is not specified then Invoke-Build looks for "*.build.ps1" files
 		in the current location. A single file is used as the build script. If
 		more than one file exists then ".build.ps1" is used as the default.
 
-.Parameter args
-		Either a hashtable of parameters to be passed in the build script or
-		even number of remaining arguments to be treated as name/value pairs or
-		script parameters.
+.Parameter Parameters
+		The hashtable of parameters passed in the build script.
 
 .Parameter WhatIf
 		Tells to show preprocessed tasks and their jobs instead of invoking
@@ -99,21 +96,21 @@
 	that they invoke. Basically output is a log of the entire build process.
 
 .Example
-	# Invoke the default (.) task from the default build script:
+	># Invoke the default (.) task from the default build script:
 	Invoke-Build
 
 .Example
-	# Show the tasks from the default build script and another script:
+	># Show the tasks from the default build script and another script:
 	Invoke-Build ?
 	Invoke-Build ? Another.build.ps1
 
 .Example
-	# Invoke the specified tasks from the default script with parameters:
+	># Invoke the specified tasks from the default script with parameters:
 	Invoke-Build Task1, Task2 -Parameters @{ Param1 = 'Answer', Param2 = '42' }
 
 .Link
-	https://github.com/nightroman/Invoke-Build
-	PS> . Invoke-Build # Then use Get-Help, help, man for functions
+	GitHub: https://github.com/nightroman/Invoke-Build
+	PS> . Invoke-Build # then use Get-Help, help for functions
 	Add-Task
 	Get-Error
 	Assert-True
@@ -125,16 +122,16 @@
 param
 (
 	[Parameter(Position = 0)]
-	[string[]]$Tasks = '.'
+	[string[]]$BuildTask = '.'
 	,
 	[Parameter(Position = 1)]
-	[string]$Build
+	[string]$BuildFile
+	,
+	[Parameter(Position = 2)]
+	[hashtable]$Parameters = @{}
 	,
 	[Parameter()]
 	[switch]$WhatIf
-	,
-	[Parameter(ValueFromRemainingArguments = $true)]
-	$args
 )
 
 ### Predefined aliases
@@ -196,10 +193,10 @@ function Add-Task
 {
 	$task = $BuildThis.Tasks[$Name]
 	if ($task) {
-		ThrowTerminatingError @"
+		Invoke-Build-ThrowTerminatingError @"
 Task '$Name' is added twice:
-1: $(Format-PositionMessage $task.Info.PositionMessage)
-2: $(Format-PositionMessage $MyInvocation.PositionMessage)
+1: $(Invoke-Build-Format-Message $task.Info.PositionMessage)
+2: $(Invoke-Build-Format-Message $MyInvocation.PositionMessage)
 "@ InvalidOperation $Name
 	}
 
@@ -208,7 +205,7 @@ Task '$Name' is added twice:
 		if ($Jobs[$i] -is [hashtable]) {
 			$hash = $Jobs[$i]
 			if ($hash.Count -ne 1) {
-				ThrowTerminatingError "Job $($i + 1)/$($Jobs.Count): hashtable should have one item." InvalidArgument $hash
+				Invoke-Build-ThrowTerminatingError "Job $($i + 1)/$($Jobs.Count): hashtable should have one item." InvalidArgument $hash
 			}
 			$job = @($hash.Keys)[0]
 			$Jobs[$i] = $job
@@ -255,7 +252,7 @@ function Get-Error
 {
 	$task = $BuildThis.Tasks[$Name]
 	if (!$task) {
-		ThrowTerminatingError "Task '$Name' is not defined." ObjectNotFound $Name
+		Invoke-Build-ThrowTerminatingError "Task '$Name' is not defined." ObjectNotFound $Name
 	}
 	$task['Error']
 }
@@ -285,23 +282,23 @@ function Get-Error
 #>
 function Assert-True
 (
-	[Parameter(Position = 0)]
+	[Parameter()]
 	$Condition
 	,
-	[Parameter(Position = 1)]
+	[Parameter()]
 	[string]$Message
 )
 {
 	if ($Condition -isnot [bool]) {
-		ThrowTerminatingError 'Condition is not Boolean.' InvalidArgument $Condition
+		Invoke-Build-ThrowTerminatingError 'Condition is not Boolean.' InvalidArgument $Condition
 	}
 
 	if (!$Condition) {
 		if ($Message) {
-			ThrowTerminatingError $Message InvalidOperation
+			Invoke-Build-ThrowTerminatingError $Message InvalidOperation
 		}
 		else {
-			ThrowTerminatingError 'Assertion failed.' InvalidOperation
+			Invoke-Build-ThrowTerminatingError 'Assertion failed.' InvalidOperation
 		}
 	}
 }
@@ -332,7 +329,7 @@ function Assert-True
 	Outputs of the command and the tool that it invokes.
 
 .Example
-	# Call robocopy (0..3 are valid exit codes):
+	># Call robocopy (0..3 are valid exit codes):
 	exec { robocopy Source Target /mir } (0..3)
 
 .Link
@@ -340,10 +337,10 @@ function Assert-True
 #>
 function Invoke-Exec
 (
-	[Parameter(Position = 0, Mandatory = $true)]
+	[Parameter(Mandatory = $true)]
 	[scriptblock]$Command
 	,
-	[Parameter(Position = 1)]
+	[Parameter()]
 	[ValidateNotNull()]
 	[int[]]$ExitCode = @(0)
 )
@@ -355,7 +352,7 @@ function Invoke-Exec
 	. ${private:build-command}
 
 	if (${private:build-valid} -notcontains $LastExitCode) {
-		ThrowTerminatingError "Command: {${private:build-command}}: last exit code is $LastExitCode." InvalidResult $LastExitCode
+		Invoke-Build-ThrowTerminatingError "Command: {${private:build-command}}: last exit code is $LastExitCode." InvalidResult $LastExitCode
 	}
 }
 
@@ -389,7 +386,7 @@ function Invoke-Exec
 	None
 
 .Example
-	# Use .NET 4.0 tools: MSBuild, csc, ngen. Then call MSBuild.
+	># Use .NET 4.0 tools: MSBuild, csc, ngen. Then call MSBuild.
 	Use-Framework Framework\v4.0.30319 MSBuild, csc, ngen
 	exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
 
@@ -406,13 +403,13 @@ function Use-Framework
 )
 {
 	if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
-		ThrowTerminatingError "Use-Framework should not be dot-sourced." InvalidOperation
+		Invoke-Build-ThrowTerminatingError "Use-Framework should not be dot-sourced." InvalidOperation
 	}
 
 	if ($Framework) {
 		$path = Join-Path "$env:windir\Microsoft.NET" $Framework
 		if (![System.IO.Directory]::Exists($path)) {
-			ThrowTerminatingError "Directory does not exist: '$path'." InvalidArgument $Framework
+			Invoke-Build-ThrowTerminatingError "Directory does not exist: '$path'." InvalidArgument $Framework
 		}
 	}
 	else {
@@ -481,7 +478,7 @@ if (!$Host.UI -or !$Host.UI.RawUI) {
 	}
 }
 
-# Redefines Write-Warning to count messages
+# Redefines Write-Warning to collect warning messages.
 function Write-Warning([string]$Message)
 {
 	$Message = "WARNING: " + $Message
@@ -492,14 +489,14 @@ function Write-Warning([string]$Message)
 }
 
 # Heals line breaks in the position message.
-function Format-PositionMessage([string]$Message)
+function Invoke-Build-Format-Message([string]$Message)
 {
 	$Message.Trim().Replace("`n", "`r`n")
 }
 
 # This command is used internally and should not be called directly.
 # Build scripts should define standard functions shared between tasks.
-function Invoke-Task($Name, $Path)
+function Invoke-Build-Invoke-Task($Name, $Path)
 {
 	# task object
 	${private:build-task} = $BuildThis.Tasks[$Name]
@@ -536,12 +533,12 @@ function Invoke-Task($Name, $Path)
 				++${private:build-number}
 				if (${private:build-job} -is [string]) {
 					try {
-						Invoke-Task ${private:build-job} ${private:build-path}
+						Invoke-Build-Invoke-Task ${private:build-job} ${private:build-path}
 					}
 					catch {
 						# try to survive
 						if (${private:build-task}.Try -contains ${private:build-job}) {
-							${private:build-why} = Test-TryTask ${private:build-job}
+							${private:build-why} = Invoke-Build-Approve-Task ${private:build-job}
 							if (${private:build-why}) {
 								# die but tell why
 								Write-Color Red ${private:build-why}
@@ -584,7 +581,7 @@ function Invoke-Task($Name, $Path)
 			++$BuildThis.ErrorCount
 			${private:build-task}.Error = $_
 			$null = $BuildInfo.Messages.Add("ERROR: Task ${private:build-path}: $_")
-			Write-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
+			Write-Color Yellow (Invoke-Build-Format-Message ${private:build-task}.Info.PositionMessage)
 
 			throw
 		}
@@ -594,21 +591,21 @@ function Invoke-Task($Name, $Path)
 	}
 }
 
-# Try to find the reason why the try-task error is fatal.
-function Test-TryTask([string]$TryTask)
+# Gets null to survive or a reason to die on protected task errors.
+function Invoke-Build-Approve-Task([string]$TryTask)
 {
-	foreach($name in $BuildThis.Names) {
+	foreach($name in $BuildTask) {
 		$task = $BuildThis.Tasks[$name]
 		if (!$task) { throw }
-		$why = Test-TryTree $task $TryTask
+		$why = Invoke-Build-Approve-Tree $task $TryTask
 		if ($why) {
 			return $why
 		}
 	}
 }
 
-# Try to find the reason why the try-task error is fatal.
-function Test-TryTree([object]$Task, [string]$TryTask)
+# Gets null to survive or a reason to die on protected task errors.
+function Invoke-Build-Approve-Tree([object]$Task, [string]$TryTask)
 {
 	# ignored:
 	if (!$Task.If) {
@@ -629,7 +626,7 @@ function Test-TryTree([object]$Task, [string]$TryTask)
 		if ($job -is [string]) {
 			$task2 = $BuildThis.Tasks[$job]
 			if (!$task2) { throw }
-			$why = Test-TryTree $task2 $TryTask
+			$why = Invoke-Build-Approve-Tree $task2 $TryTask
 			if ($why) {
 				return $why
 			}
@@ -637,8 +634,8 @@ function Test-TryTree([object]$Task, [string]$TryTask)
 	}
 }
 
-# For internal use.
-function Initialize-Task([object]$Task, [Collections.ArrayList]$Done)
+# Preprocessing of a task.
+function Invoke-Build-Initialize-Task([object]$Task, [Collections.ArrayList]$Done)
 {
 	# ignore?
 	if (!$Task.If) {
@@ -660,7 +657,7 @@ function Initialize-Task([object]$Task, [Collections.ArrayList]$Done)
 			if (!$task2) {
 				throw @"
 Task '$($Task.Name)': Job $($number): Task '$job' is not defined.
-$(Format-PositionMessage $Task.Info.PositionMessage)
+$(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 "@
 			}
 
@@ -673,31 +670,31 @@ $(Format-PositionMessage $Task.Info.PositionMessage)
 			if ($Done.Contains($task2)) {
 				throw @"
 Task '$($Task.Name)': Job $($number): Cyclic reference to '$job'.
-$(Format-PositionMessage $Task.Info.PositionMessage)
+$(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 "@
 			}
 
 			# process job task
-			Initialize-Task $task2 $Done
+			Invoke-Build-Initialize-Task $task2 $Done
 			$Done.RemoveRange($count, $Done.Count - $count)
 		}
 		elseif ($job -isnot [scriptblock]) {
 			throw @"
 Task '$($Task.Name)': Job $($number): Invalid job type.
-$(Format-PositionMessage $Task.Info.PositionMessage)
+$(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 "@
 		}
 	}
 }
 
-# Call it from advanced functions.
-function ThrowTerminatingError($Message, $Category = 0, $Target)
+# Use from advanced functions to show the caller error location.
+function Invoke-Build-ThrowTerminatingError($Message, $Category = 0, $Target)
 {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
 }
 
 # Writes build information.
-function Write-Info([hashtable]$Info)
+function Invoke-Build-Write-Info([hashtable]$Info)
 {
 	if ($Info.ErrorCount) {
 		$color = 'Red'
@@ -713,10 +710,10 @@ $($Info.TaskCount) tasks, $($Info.ErrorCount) errors, $($Info.WarningCount) warn
 "@
 }
 
-### resolve the build
+### Resolve the file
 try {
-	if ($Build) {
-		${private:build-location} = Convert-Path (Resolve-Path -LiteralPath $Build -ErrorAction Stop)
+	if ($BuildFile) {
+		${private:build-location} = Convert-Path (Resolve-Path -LiteralPath $BuildFile -ErrorAction Stop)
 	}
 	else {
 		${private:build-location} = @(Resolve-Path '*.build.ps1')
@@ -740,37 +737,11 @@ try {
 	}
 }
 catch {
-	ThrowTerminatingError "$_" ObjectNotFound $Build
+	Invoke-Build-ThrowTerminatingError "$_" ObjectNotFound $BuildFile
 }
+$BuildFile = ${private:build-location}
 
-function private:BuildConvertArgs($Array)
-{
-	if (($Array.Count -eq 1)) {
-		if ($Array[0] -is [hashtable]) {
-			$Array[0]
-			return
-		}
-		$Array = @($Array[0])
-	}
-
-	if ($Array.Count % 2) {
-		ThrowTerminatingError "Expected even number or remaining arguments or a hashtable." InvalidArgument
-	}
-
-	$parameters = @{}
-	for($index = 0; $index -lt $Array.Count; $index += 2) {
-		if ($Array[$index] -isnot [string]) {
-			ThrowTerminatingError "Remaining argument [$index] should be a string." InvalidArgument $Array[$index]
-		}
-		$parameters[$Array[$index]] = $Array[$index + 1]
-	}
-	$parameters
-}
-
-### make parameters
-${private:94abce897fdf4f18a806108b30f08c13} = if ($args) { BuildConvertArgs $args } else { @{} }
-
-### set the variables
+### Set the variables
 ${private:build-first} = !(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))
 if (${private:build-first}) {
 	New-Variable -Option Constant -Name BuildInfo -Value @{}
@@ -781,10 +752,10 @@ if (${private:build-first}) {
 	$BuildInfo.Messages = [System.Collections.ArrayList]@()
 	$BuildInfo.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 }
-New-Variable -Option Constant -Name BuildFile -Value ${private:build-location}
+Set-Variable -Option ReadOnly -Name BuildTask
+Set-Variable -Option ReadOnly -Name BuildFile
 New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
 New-Variable -Option Constant -Name BuildThis -Value @{}
-$BuildThis.Names = $Tasks
 $BuildThis.Tasks = @{}
 $BuildThis.TaskCount = 0
 $BuildThis.ErrorCount = 0
@@ -792,18 +763,18 @@ $BuildThis.WarningCount = 0
 $BuildThis.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 ${private:build-location} = Get-Location
 
-### hide variables
-${private:build-tasks} = $Tasks
-Remove-Variable Tasks, Build, Args -Scope Local
+### Hide some variables
+${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
+Remove-Variable Parameters -Scope Local
 
-Write-Color DarkYellow "Build $(${private:build-tasks} -join ', ') from $BuildFile"
+Write-Color DarkYellow "Build $($BuildTask -join ', ') from $BuildFile"
 try {
-	### invoke the build script (build loading)
+	### Invoke the file (build loading)
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	. $BuildFile @94abce897fdf4f18a806108b30f08c13
 
-	### show the tasks
-	if (${private:build-tasks} -and ${private:build-tasks}[0] -eq '?') {
+	### View the tasks
+	if ($BuildTask -and $BuildTask[0] -eq '?') {
 		$BuildThis.Tasks.Values | .{process{
 			${private:build-task} = 1 | Select-Object Task, Info, File, Line
 			${private:build-task}
@@ -823,27 +794,27 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		return
 	}
 
-	### initialize the tasks (build preprocessing)
-	foreach(${private:build-name} in ${private:build-tasks}) {
+	### Initialize (build preprocessing)
+	foreach(${private:build-name} in $BuildTask) {
 		${private:build-task} = $BuildThis.Tasks[${private:build-name}]
 		if (!${private:build-task}) {
-			ThrowTerminatingError "Task '${private:build-name}' is not defined." ObjectNotFound ${private:build-name}
+			Invoke-Build-ThrowTerminatingError "Task '${private:build-name}' is not defined." ObjectNotFound ${private:build-name}
 		}
-		Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
+		Invoke-Build-Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
 	}
 
-	### invoke the tasks (build processing)
-	foreach(${private:build-name} in ${private:build-tasks}) {
-		Invoke-Task ${private:build-name}
+	### Invoke the tasks (build processing)
+	foreach(${private:build-name} in $BuildTask) {
+		Invoke-Build-Invoke-Task ${private:build-name}
 	}
 	if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
-		Write-Info $BuildThis
+		Invoke-Build-Write-Info $BuildThis
 	}
 }
 finally {
 	Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
 	$BuildInfo.Messages
 	if (${private:build-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
-		Write-Info $BuildInfo
+		Invoke-Build-Write-Info $BuildInfo
 	}
 }
