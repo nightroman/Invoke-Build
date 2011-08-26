@@ -1,16 +1,18 @@
 
 <#
 .Synopsis
-	Example of a scripts with imported tasks (like MSBuild *.targets)
+	Example of a script with imported tasks (like MSBuild .targets file).
 
 .Description
-	See .build.ps1, line with .\SharedTasks.tasks.ps1 and comments there.
+	See .build.ps1, the line with SharedTasks.tasks.ps1 and comments.
 #>
 
+# Just writes a string
 task SharedTask1 {
 	'In SharedTask1'
 }
 
+# Depends on SharedTask1 and writes another string
 task SharedTask2 SharedTask1, {
 	'In SharedTask2'
 }

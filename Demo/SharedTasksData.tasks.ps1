@@ -1,11 +1,11 @@
 
 <#
 .Synopsis
-	Example of a script with imported tasks and data (like MSBuild *.targets).
+	Example of imported tasks and data (like MSBuild .targets file).
 
 .Description
-	See .build.ps1, line with . .\SharedTasksData.tasks.ps1 and comments there.
-	It is also used by TryTasks.build.ps1 and TryTasksFails.build.ps1.
+	See .build.ps1, the line with SharedTasksData.tasks.ps1 and comments.
+	It is also imported by TryTasks.build.ps1 and TryTasksFails.build.ps1.
 #>
 
 $MySharedValue1 = 'shared 1'

@@ -1,32 +1,39 @@
 
 <#
 .Synopsis
-	Example build script with a few use cases and tutorial comments.
+	Example/test build script with a few use cases and tutorial comments.
 
 .Description
-	Build scripts can use parameters. They are passed in as the Parameters
-	argument of Invoke-Build.
+	This build script invokes tests of typical use/problem cases. Most of them
+	are grouped by categories in the *.build.ps1 files in this directory. But
+	this script shows a few points of interest as well.
+
+	The build shows many errors and warnings because that is what it basically
+	tests. But the build itself should not fail, all errors should be caught.
 
 .Example
-	# By conventions the default . task of this script is called just like:
 	Invoke-Build
+	Assuming Invoke-Build.ps1 is in the system path and the current location is
+	the Demo directory this command invokes the . task from this build script.
 
 .Link
-	Invoke-Build
+	Invoke-Build.ps1
 #>
 
+# Build scripts can use parameters passed is as:
+# PS> Invoke-Build ... -Parameters @{...}
 param
 (
 	# This value is available for all tasks ($MyParam1).
 	# Build script parameters often have default values.
 	# Actual values are specified on Invoke-Build calls.
-	# It can be changed by tasks ($script:MyParam1 = ...).
+	# Values can be changed by tasks ($script:MyParam1 = ...).
 	$MyParam1 = "param 1"
 )
 
 # This value is available for all tasks ($MyValue1).
 # Unlike parameters it is initialized internally.
-# It can be changed by tasks ($script:MyValue1 = ...).
+# Values can be changed by tasks ($script:MyValue1 = ...).
 $MyValue1 = "value 1"
 
 # Invoke-Build exposes $BuildFile and $BuildRoot. Test them.
@@ -92,8 +99,11 @@ task Assert-True {
 # This task tests conditional tasks, see ConditionalTask.build.ps1
 # It shows how to invoke a build script with parameters (Debug|Release).
 task ConditionalTask {
+	# Way 1: Parameters are sent like name/value pairs of remaining arguments:
+	Invoke-Build . ConditionalTask.build.ps1 -Configuration Release
+
+	# Way 2: Parameters are sent as a single argument, hashtable of parameters:
 	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
-	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
 }
 
 # This task ensures that cyclic references are caught.
@@ -192,4 +202,16 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 	Invoke-Build SharedTask1 SharedTasks.tasks.ps1
 },
 # Tasks can be referenced between or after scripts.
-Tests
+Tests,
+# The last test tests not yet documented data
+{
+	# This build statistics
+	assert ($BuildThis.TaskCount -eq 18)
+	assert ($BuildThis.ErrorCount -eq 0)
+	assert ($BuildThis.WarningCount -ge 1)
+
+	# Cumulative build statistics
+	assert ($BuildInfo.TaskCount -ge $BuildThis.TaskCount)
+	assert ($BuildInfo.ErrorCount -ge $BuildThis.ErrorCount)
+	assert ($BuildInfo.WarningCount -ge $BuildThis.WarningCount)
+}

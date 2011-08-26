@@ -1,7 +1,7 @@
 
 <#
 .Synopsis
-	Invoke-Build v1.0.0.rc6 - Orchestrate Builds in PowerShell
+	Invoke-Build v1.0.0.rc7 - Orchestrate Builds in PowerShell
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -46,7 +46,8 @@
 		* Write-Color
 		* Write-Warning [*]
 
-	[*] Write-Warning is redefined internally in order to count warnings.
+	[*] Write-Warning is redefined internally in order to count warnings in
+	tasks, build and other scripts. Warnings in modules are not counted.
 
 	EXPOSED ALIASES
 
@@ -80,8 +81,10 @@
 		in the current location. A single file is used as the build script. If
 		more than one file exists then ".build.ps1" is used as the default.
 
-.Parameter Parameters
-		The hashtable of parameters to be passed in the build script.
+.Parameter args
+		Either a hashtable of parameters to be passed in the build script or
+		even number of remaining arguments to be treated as name/value pairs or
+		script parameters.
 
 .Parameter WhatIf
 		Tells to show preprocessed tasks and their jobs instead of invoking
@@ -121,17 +124,17 @@
 
 param
 (
-	[Parameter()]
+	[Parameter(Position = 0)]
 	[string[]]$Tasks = '.'
 	,
-	[Parameter()]
+	[Parameter(Position = 1)]
 	[string]$Build
 	,
 	[Parameter()]
-	[hashtable]$Parameters = @{}
-	,
-	[Parameter()]
 	[switch]$WhatIf
+	,
+	[Parameter(ValueFromRemainingArguments = $true)]
+	$args
 )
 
 ### Predefined aliases
@@ -481,9 +484,11 @@ if (!$Host.UI -or !$Host.UI.RawUI) {
 # Redefines Write-Warning to count messages
 function Write-Warning([string]$Message)
 {
+	$Message = "WARNING: " + $Message
+	Write-Color Yellow $Message
 	++$BuildInfo.WarningCount
 	++$BuildThis.WarningCount
-	Write-Color Yellow ("WARNING: " + $Message)
+	$null = $BuildInfo.Messages.Add($Message)
 }
 
 # Heals line breaks in the position message.
@@ -572,12 +577,13 @@ function Invoke-Task($Name, $Path)
 					}
 				}
 			}
-			Write-Color DarkYellow "${private:build-path} is done. $(${private:build-task}.Stopwatch.Elapsed)"
+			Write-Color DarkYellow "${private:build-path} is done, $(${private:build-task}.Stopwatch.Elapsed)."
 		}
 		catch {
 			++$BuildInfo.ErrorCount
 			++$BuildThis.ErrorCount
 			${private:build-task}.Error = $_
+			$null = $BuildInfo.Messages.Add("ERROR: Task ${private:build-path}: $_")
 			Write-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
 
 			throw
@@ -690,6 +696,23 @@ function ThrowTerminatingError($Message, $Category = 0, $Target)
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
 }
 
+# Writes build information.
+function Write-Info([hashtable]$Info)
+{
+	if ($Info.ErrorCount) {
+		$color = 'Red'
+	}
+	elseif ($Info.WarningCount) {
+		$color = 'Yellow'
+	}
+	else {
+		$color = 'Green'
+	}
+	Write-Color $color @"
+$($Info.TaskCount) tasks, $($Info.ErrorCount) errors, $($Info.WarningCount) warnings, $($Info.Stopwatch.Elapsed).
+"@
+}
+
 ### resolve the build
 try {
 	if ($Build) {
@@ -720,13 +743,42 @@ catch {
 	ThrowTerminatingError "$_" ObjectNotFound $Build
 }
 
+function private:BuildConvertArgs($Array)
+{
+	if (($Array.Count -eq 1)) {
+		if ($Array[0] -is [hashtable]) {
+			$Array[0]
+			return
+		}
+		$Array = @($Array[0])
+	}
+
+	if ($Array.Count % 2) {
+		ThrowTerminatingError "Expected even number or remaining arguments or a hashtable." InvalidArgument
+	}
+
+	$parameters = @{}
+	for($index = 0; $index -lt $Array.Count; $index += 2) {
+		if ($Array[$index] -isnot [string]) {
+			ThrowTerminatingError "Remaining argument [$index] should be a string." InvalidArgument $Array[$index]
+		}
+		$parameters[$Array[$index]] = $Array[$index + 1]
+	}
+	$parameters
+}
+
+### make parameters
+${private:94abce897fdf4f18a806108b30f08c13} = if ($args) { BuildConvertArgs $args } else { @{} }
+
 ### set the variables
-if (!(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))) {
+${private:build-first} = !(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))
+if (${private:build-first}) {
 	New-Variable -Option Constant -Name BuildInfo -Value @{}
 	$BuildInfo.Id = '94abce897fdf4f18a806108b30f08c13'
 	$BuildInfo.TaskCount = 0
 	$BuildInfo.ErrorCount = 0
 	$BuildInfo.WarningCount = 0
+	$BuildInfo.Messages = [System.Collections.ArrayList]@()
 	$BuildInfo.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 }
 New-Variable -Option Constant -Name BuildFile -Value ${private:build-location}
@@ -742,8 +794,7 @@ ${private:build-location} = Get-Location
 
 ### hide variables
 ${private:build-tasks} = $Tasks
-${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
-Remove-Variable Tasks, Build, Parameters -Scope Local
+Remove-Variable Tasks, Build, Args -Scope Local
 
 Write-Color DarkYellow "Build $(${private:build-tasks} -join ', ') from $BuildFile"
 try {
@@ -785,15 +836,14 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 	foreach(${private:build-name} in ${private:build-tasks}) {
 		Invoke-Task ${private:build-name}
 	}
-	Write-Color DarkYellow @"
-$($BuildThis.TaskCount) tasks, $($BuildThis.ErrorCount) errors, $($BuildThis.WarningCount) warnings, $($BuildThis.Stopwatch.Elapsed).
-"@
+	if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
+		Write-Info $BuildThis
+	}
 }
 finally {
 	Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
-	if ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount)) {
-		Write-Color DarkYellow @"
-$($BuildInfo.TaskCount) tasks, $($BuildInfo.ErrorCount) errors, $($BuildInfo.WarningCount) warnings, $($BuildInfo.Stopwatch.Elapsed).
-"@
+	$BuildInfo.Messages
+	if (${private:build-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
+		Write-Info $BuildInfo
 	}
 }

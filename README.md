@@ -45,9 +45,18 @@ This is it. The script is installed and invokes build scenarios.
 
 ## Next Steps
 
-Take a look at the main help topic:
+Take a look at the main help:
 
     help Invoke-Build -Full
 
-Then take a look at the *.build.ps1* and the others in the *Demo* directory.
-They provide many typical use cases, problem cases, and tutorial comments.
+And function help, for example `Add-Task`:
+
+    . Invoke-Build
+    help Add-Task -Full
+
+Explore existing build scripts with many typical use cases, problem cases, and
+tutorial comments:
+
+* *Invoke-Build.build.ps1* - the build script of this project;
+* *Demo\.build.ps1* - the default script which calls all the tests;
+* *Demo\Xyz.build.ps1* - use and problem cases grouped by categories.
