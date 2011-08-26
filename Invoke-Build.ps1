@@ -1,8 +1,7 @@
 
 <#
 .Synopsis
-	Invokes tasks from build scripts.
-	v1.0.0.rc6 2011-08-25
+	Invoke-Build v1.0.0.rc6 - Orchestrate Builds in PowerShell
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -44,7 +43,10 @@
 		* Assert-True
 		* Invoke-Exec
 		* Use-Framework
-		* Out-Color
+		* Write-Color
+		* Write-Warning [*]
+
+	[*] Write-Warning is redefined internally in order to count warnings.
 
 	EXPOSED ALIASES
 
@@ -114,7 +116,7 @@
 	Assert-True
 	Invoke-Exec
 	Use-Framework
-	Out-Color
+	Write-Color
 #>
 
 param
@@ -296,7 +298,7 @@ function Assert-True
 			ThrowTerminatingError $Message InvalidOperation
 		}
 		else {
-			ThrowTerminatingError 'Condition is $false.' InvalidOperation
+			ThrowTerminatingError 'Assertion failed.' InvalidOperation
 		}
 	}
 }
@@ -350,7 +352,7 @@ function Invoke-Exec
 	. ${private:build-command}
 
 	if (${private:build-valid} -notcontains $LastExitCode) {
-		ThrowTerminatingError "`$LastExitCode is $LastExitCode." InvalidResult $LastExitCode
+		ThrowTerminatingError "Command: {${private:build-command}}: last exit code is $LastExitCode." InvalidResult $LastExitCode
 	}
 }
 
@@ -384,12 +386,9 @@ function Invoke-Exec
 	None
 
 .Example
-	# Use .NET 4.0 tools MSBuild, csc, ngen:
+	# Use .NET 4.0 tools: MSBuild, csc, ngen. Then call MSBuild.
 	Use-Framework Framework\v4.0.30319 MSBuild, csc, ngen
-	...
-	# Invoke MSBuild
 	exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
-	...
 
 .Link
 	Invoke-Exec
@@ -441,7 +440,7 @@ function Use-Framework
 .Outputs
 	[string]
 #>
-function Out-Color
+function Write-Color
 (
 	[Parameter()]
 	[System.ConsoleColor]$Color
@@ -459,14 +458,14 @@ function Out-Color
 ### End of the public zone. Exit if dot-sourced.
 if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
 	Write-Warning 'Dot-source Invoke-Build only in order to get help for its functions.'
-	Get-Command Add-Task, Get-Error, Assert-True, Invoke-Exec, Use-Framework, Out-Color -ea 0 |
+	Get-Command Add-Task, Get-Error, Assert-True, Invoke-Exec, Use-Framework, Write-Color -ea 0 |
 	Format-Table -AutoSize | Out-String
 	return
 }
 
-# Use another Out-Color if there is no UI.
+# Use another Write-Color if there is no UI.
 if (!$Host.UI -or !$Host.UI.RawUI) {
-	function Out-Color
+	function Write-Color
 	(
 		[Parameter()]
 		[System.ConsoleColor]$Color
@@ -477,6 +476,14 @@ if (!$Host.UI -or !$Host.UI.RawUI) {
 	{
 		$Text
 	}
+}
+
+# Redefines Write-Warning to count messages
+function Write-Warning([string]$Message)
+{
+	++$BuildInfo.WarningCount
+	++$BuildThis.WarningCount
+	Write-Color Yellow ("WARNING: " + $Message)
 }
 
 # Heals line breaks in the position message.
@@ -498,17 +505,20 @@ function Invoke-Task($Name, $Path)
 
 	# fail?
 	if (${private:build-task}.ContainsKey('Error')) {
-		Out-Color Yellow "${private:build-path} failed before."
+		Write-Color Yellow "${private:build-path} failed before."
 	}
 	# done?
 	elseif (${private:build-task}.ContainsKey('Stopwatch')) {
-		Out-Color DarkYellow "${private:build-path} was done before."
+		Write-Color DarkYellow "${private:build-path} was done before."
 	}
 	# skip?
 	elseif (!${private:build-task}.If) {
 	}
 	# invoke
 	else {
+		++$BuildInfo.TaskCount
+		++$BuildThis.TaskCount
+
 		# hide variables
 		Remove-Variable Name, Path -Scope Local
 
@@ -529,14 +539,14 @@ function Invoke-Task($Name, $Path)
 							${private:build-why} = Test-TryTask ${private:build-job}
 							if (${private:build-why}) {
 								# die but tell why
-								Out-Color Red ${private:build-why}
+								Write-Color Red ${private:build-why}
 								throw
 							}
 							else {
 								# survive but show the error
 								${private:build-job} = $BuildThis.Tasks[${private:build-job}]
 								if (!${private:build-job}) { throw }
-								Out-Color Red (${private:build-job}.Error | Out-String)
+								Write-Color Red (${private:build-job}.Error | Out-String)
 							}
 						}
 						else {
@@ -546,7 +556,7 @@ function Invoke-Task($Name, $Path)
 				}
 				elseif (${private:build-job} -is [scriptblock]) {
 					# log any
-					Out-Color DarkYellow "${private:build-path}[${private:build-number}/${private:build-count}]:"
+					Write-Color DarkYellow "${private:build-path}[${private:build-number}/${private:build-count}]:"
 
 					if ($WhatIf) {
 						${private:build-job}
@@ -557,20 +567,18 @@ function Invoke-Task($Name, $Path)
 
 						# log 2+
 						if (${private:build-task}.Jobs.Count -ge 2) {
-							Out-Color DarkYellow "${private:build-path}[${private:build-number}/${private:build-count}] is done."
+							Write-Color DarkYellow "${private:build-path}[${private:build-number}/${private:build-count}] is done."
 						}
 					}
 				}
 			}
-			++$BuildInfo.TaskBuiltCount
-			Out-Color DarkYellow @"
-+$($BuildInfo.TaskBuiltCount) -$($BuildInfo.TaskErrorCount) ${private:build-path} is done. $(${private:build-task}.Stopwatch.Elapsed)
-"@
+			Write-Color DarkYellow "${private:build-path} is done. $(${private:build-task}.Stopwatch.Elapsed)"
 		}
 		catch {
-			++$BuildInfo.TaskErrorCount
+			++$BuildInfo.ErrorCount
+			++$BuildThis.ErrorCount
 			${private:build-task}.Error = $_
-			Out-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
+			Write-Color Yellow (Format-PositionMessage ${private:build-task}.Info.PositionMessage)
 
 			throw
 		}
@@ -628,7 +636,7 @@ function Initialize-Task([object]$Task, [Collections.ArrayList]$Done)
 {
 	# ignore?
 	if (!$Task.If) {
-		Out-Color DarkGray "$($Task.Name) is excluded."
+		Write-Color DarkGray "$($Task.Name) is excluded."
 		return
 	}
 
@@ -712,20 +720,32 @@ catch {
 	ThrowTerminatingError "$_" ObjectNotFound $Build
 }
 
-### set main variables
+### set the variables
+if (!(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))) {
+	New-Variable -Option Constant -Name BuildInfo -Value @{}
+	$BuildInfo.Id = '94abce897fdf4f18a806108b30f08c13'
+	$BuildInfo.TaskCount = 0
+	$BuildInfo.ErrorCount = 0
+	$BuildInfo.WarningCount = 0
+	$BuildInfo.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+}
 New-Variable -Option Constant -Name BuildFile -Value ${private:build-location}
 New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
 New-Variable -Option Constant -Name BuildThis -Value @{}
-${private:build-location} = Get-Location
 $BuildThis.Names = $Tasks
 $BuildThis.Tasks = @{}
+$BuildThis.TaskCount = 0
+$BuildThis.ErrorCount = 0
+$BuildThis.WarningCount = 0
+$BuildThis.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+${private:build-location} = Get-Location
 
 ### hide variables
 ${private:build-tasks} = $Tasks
 ${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
 Remove-Variable Tasks, Build, Parameters -Scope Local
 
-Out-Color DarkYellow "Build $(${private:build-tasks} -join ', ') from $BuildFile"
+Write-Color DarkYellow "Build $(${private:build-tasks} -join ', ') from $BuildFile"
 try {
 	### invoke the build script (build loading)
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
@@ -761,25 +781,19 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
 	}
 
-	### get shared build info
-	if (!(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))) {
-		New-Variable -Option Constant -Name BuildInfo -Value @{}
-		$BuildInfo.Id = '94abce897fdf4f18a806108b30f08c13'
-		$BuildInfo.TaskBuiltCount = 0
-		$BuildInfo.TaskErrorCount = 0
-	}
-
 	### invoke the tasks (build processing)
-	${private:build-stopwatch} = [System.Diagnostics.Stopwatch]::StartNew()
 	foreach(${private:build-name} in ${private:build-tasks}) {
 		Invoke-Task ${private:build-name}
 	}
-
-	### total elapsed time
-	if (${private:build-tasks}.Count -ge 2) {
-		Out-Color DarkYellow ${private:build-stopwatch}.Elapsed
-	}
+	Write-Color DarkYellow @"
+$($BuildThis.TaskCount) tasks, $($BuildThis.ErrorCount) errors, $($BuildThis.WarningCount) warnings, $($BuildThis.Stopwatch.Elapsed).
+"@
 }
 finally {
 	Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
+	if ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount)) {
+		Write-Color DarkYellow @"
+$($BuildInfo.TaskCount) tasks, $($BuildInfo.ErrorCount) errors, $($BuildInfo.WarningCount) warnings, $($BuildInfo.Stopwatch.Elapsed).
+"@
+	}
 }

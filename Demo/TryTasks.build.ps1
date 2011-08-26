@@ -1,81 +1,67 @@
 
 <#
 .Synopsis
-	Example of job tasks using @{Task=1} notation.
+	Example of protected task jobs (@{Task=1} notation).
 
 .Link
 	Invoke-Build
 	.build.ps1
 #>
 
-$CountError1 = 0
-$CountError2 = 0
+# Import tasks Error1 and Error2 (dot-sourced because imported with data).
+. .\SharedTasksData.tasks.ps1
 
-# this task fails (but increments its call counter)
-task Error1 {
-	++$script:CountError1
-	"In Error1"
-	throw "Error1"
-}
-
-# and this task fails (but updates its counter, too)
-task Error2 {
-	++$script:CountError2
-	"In Error2"
-	throw "Error2"
-}
-
-# this task has two references to failing tasks with options to ignore errors
+# This task has two protected references to failing tasks.
 task Survives1 @(
-	# tells to call the task Error1 and ignore its failure
-	@{Error1 = 1}
-	# code invoked after the task Error1
+	# Tells to call the task Error1 and ignore its errors
+	@{Error1=1}
+	# Code invoked after the task Error1
 	{
 		"After Error1"
 
 		$error1 = Get-Error Error1
-		assert ($CountError1 -eq 1)
+		assert ($MyCountError1 -eq 1)
 		assert ("$error1" -eq "Error1")
 
 		$error2 = Get-Error Error2
-		assert ($CountError2 -eq 0)
+		assert ($MyCountError2 -eq 0)
 		assert ($null -eq $error2)
 	}
-	# tells to call the task Error2 and ignore its failure
-	@{Error2 = 1}
-	# code invoked after the task Error2
+	# Tells to call the task Error2 and ignore its errors
+	@{Error2=1}
+	# Code invoked after the task Error2
 	{
 		"After Error2"
 
 		$error2 = Get-Error Error2
-		assert ($CountError2 -eq 1)
+		assert ($MyCountError2 -eq 1)
 		assert ("$error2" -eq "Error2")
 	}
 )
 
-# this task is almost the same, it checks that failed tasks are not called
+# Similar task. It checks that failed tasks are not called again.
 task Survives2 @(
 	# tells to call the task Error1 and ignore its failure
-	@{Error1 = 1}
+	@{Error1=1}
 	# code invoked after the task Error1
 	{
 		"After Error1"
 
 		$error1 = Get-Error Error1
-		assert ($CountError1 -eq 1)
+		assert ($MyCountError1 -eq 1)
 		assert ("$error1" -eq "Error1")
 	}
 	# tells to call the task Error2 and ignore its failure
-	@{Error2 = 1}
+	@{Error2=1}
 	# code invoked after the task Error2
 	{
 		"After Error2"
 
 		$error2 = Get-Error Error2
-		assert ($CountError2 -eq 1)
+		assert ($MyCountError2 -eq 1)
 		assert ("$error2" -eq "Error2")
 	}
 )
 
-# the default task calls the tests
+# The default task calls the tests.
 task . Survives1, Survives2

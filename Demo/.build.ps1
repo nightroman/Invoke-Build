@@ -37,15 +37,15 @@ assert ((Split-Path $MyPath) -eq $BuildRoot)
 
 # In order to import more tasks invoke the script containing them.
 # *.tasks.ps1 files play the same role as MSBuild *.targets files.
-.\Shared.tasks.ps1
+.\SharedTasks.tasks.ps1
 
 # It is not typical but imported tasks may have parameters and values
 # as well. In this case the *.tasks.ps1 script has to be dot-sourced.
 # Mind potential variable name conflicts in the same script scope!
-. .\Values.tasks.ps1
+. .\SharedTasksData.tasks.ps1
 
-# Make the alias of MSBuild
-Use-Framework $null MSBuild
+# Test warning
+Write-Warning "Ignore this warning."
 
 # Parameters and values are just variables in the script scope.
 # Read them as $Variable. Write them as $script:Variable = ...
@@ -189,7 +189,7 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 # It is possible to have more than one script jobs.
 {
 	"In default, script 2"
-	Invoke-Build SharedTask1 Shared.Tasks.ps1
+	Invoke-Build SharedTask1 SharedTasks.tasks.ps1
 },
 # Tasks can be referenced between or after scripts.
 Tests
