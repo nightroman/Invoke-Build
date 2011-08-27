@@ -20,7 +20,7 @@
 	Invoke-Build.ps1
 #>
 
-# Build scripts can use parameters passed is as:
+# Build scripts can use parameters passed in as
 # PS> Invoke-Build ... -Parameters @{...}
 param
 (
@@ -175,6 +175,7 @@ task TestVariables {
 	}}
 }
 
+# The task shows unwanted functions potentially introduced by Invoke-Build.
 task TestFunctions {
 	# get functions in a clean session
 	$0 = PowerShell "Get-Command -CommandType Function | Select-Object -ExpandProperty Name"
@@ -189,6 +190,7 @@ task TestFunctions {
 				'Use-Framework' { 'Use-Framework ~ Invoke-Build' }
 				'Write-Color' { 'Write-Color ~ Invoke-Build' }
 				'Write-Warning' { 'Write-Warning ~ Invoke-Build' }
+				'Invoke-Task' { 'Build ~ Invoke-Build' }
 				# other known functions
 				'Test-Issue' { 'Test-Issue ~ Build script function.' }
 				default { Write-Warning "Unknown function '$_'." }

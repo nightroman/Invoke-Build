@@ -57,6 +57,6 @@ And then function help, for example `Add-Task`:
 Explore existing build scripts with many typical use cases, problem cases, and
 tutorial comments:
 
-* *Invoke-Build.build.ps1* - the build script of this project;
+* *Build.ps1* - the build script of this project;
 * *Demo/.build.ps1* - the default script which calls all the tests;
 * *Demo/Xyz.build.ps1* - use and problem cases grouped by categories.

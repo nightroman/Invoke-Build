@@ -1,7 +1,7 @@
 
 <#
 .Synopsis
-	Invoke-Build v1.0.0.rc8 - Orchestrate Builds in PowerShell
+	Invoke-Build v1.0.0.rc9 - Orchestrate Builds in PowerShell
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -26,14 +26,19 @@
 	The ideas come from the psake module and a few other build and make tools.
 	The goal of this script is to provide a very simple and yet robust engine.
 
-	The script is called directly with or without parameters, not dot-sourced.
-	It is easier to use if it is located in one of the the system path folders.
+	Installation: just copy Invoke-Build.ps1 to any directory of the $env:path.
 
-	Tasks including imported from other scripts are invoked with the current
-	location set to $BuildRoot which is the root of the main build script.
-	Tasks may change locations and they do not have to care of restoring.
+	Build scripts depending on use cases or just preferences may have one of
+	two forms: "classic" scripts which called by Invoke-Build and "master"
+	scripts that dot-source Invoke-Build and Invoke-Task.
 
-	NOTE: dot-source Invoke-Build only in order to get help for its functions.
+	Build scripts consists of parameters script variables and tasks defined by
+	Add-Task (task). Tasks including imported from other scripts are invoked
+	with the current location set to the $BuildRoot which is the root of the
+	main build script. Tasks may change the location and leave it changed.
+
+	Dot-source Invoke-Build only in order to get help for its functions from
+	the command line or in order to load the engine into master build scripts.
 
 	EXPOSED FUNCTIONS
 
@@ -43,9 +48,12 @@
 		* Invoke-Exec
 		* Use-Framework
 		* Write-Color
-		* Write-Warning [*]
+		* Invoke-Task [1]
+		* Write-Warning [2]
 
-	[*] Write-Warning is redefined internally in order to count warnings in
+	[1] Invoke-Task function is called once from master build scripts.
+
+	[2] Write-Warning is redefined internally in order to count warnings in
 	tasks, build and other scripts. But warnings in modules are not counted.
 
 	EXPOSED ALIASES
@@ -110,25 +118,25 @@
 
 .Link
 	GitHub: https://github.com/nightroman/Invoke-Build
-	PS> . Invoke-Build # then use Get-Help, help for functions
 	Add-Task
 	Get-Error
 	Assert-True
 	Invoke-Exec
 	Use-Framework
 	Write-Color
+	Invoke-Task
 #>
 
 param
 (
 	[Parameter(Position = 0)]
-	[string[]]$BuildTask = '.'
+	[string[]]$BuildTask
 	,
 	[Parameter(Position = 1)]
 	[string]$BuildFile
 	,
 	[Parameter(Position = 2)]
-	[hashtable]$Parameters = @{}
+	[hashtable]$Parameters
 	,
 	[Parameter()]
 	[switch]$WhatIf
@@ -193,7 +201,7 @@ function Add-Task
 {
 	$task = $BuildThis.Tasks[$Name]
 	if ($task) {
-		Invoke-Build-ThrowTerminatingError @"
+		Invoke-Build-Error @"
 Task '$Name' is added twice:
 1: $(Invoke-Build-Format-Message $task.Info.PositionMessage)
 2: $(Invoke-Build-Format-Message $MyInvocation.PositionMessage)
@@ -205,7 +213,7 @@ Task '$Name' is added twice:
 		if ($Jobs[$i] -is [hashtable]) {
 			$hash = $Jobs[$i]
 			if ($hash.Count -ne 1) {
-				Invoke-Build-ThrowTerminatingError "Job $($i + 1)/$($Jobs.Count): hashtable should have one item." InvalidArgument $hash
+				Invoke-Build-Error "Job $($i + 1)/$($Jobs.Count): hashtable should have one item." InvalidArgument $hash
 			}
 			$job = @($hash.Keys)[0]
 			$Jobs[$i] = $job
@@ -252,7 +260,7 @@ function Get-Error
 {
 	$task = $BuildThis.Tasks[$Name]
 	if (!$task) {
-		Invoke-Build-ThrowTerminatingError "Task '$Name' is not defined." ObjectNotFound $Name
+		Invoke-Build-Error "Task '$Name' is not defined." ObjectNotFound $Name
 	}
 	$task['Error']
 }
@@ -290,15 +298,15 @@ function Assert-True
 )
 {
 	if ($Condition -isnot [bool]) {
-		Invoke-Build-ThrowTerminatingError 'Condition is not Boolean.' InvalidArgument $Condition
+		Invoke-Build-Error 'Condition is not Boolean.' InvalidArgument $Condition
 	}
 
 	if (!$Condition) {
 		if ($Message) {
-			Invoke-Build-ThrowTerminatingError $Message InvalidOperation
+			Invoke-Build-Error $Message InvalidOperation
 		}
 		else {
-			Invoke-Build-ThrowTerminatingError 'Assertion failed.' InvalidOperation
+			Invoke-Build-Error 'Assertion failed.' InvalidOperation
 		}
 	}
 }
@@ -352,7 +360,7 @@ function Invoke-Exec
 	. ${private:build-command}
 
 	if (${private:build-valid} -notcontains $LastExitCode) {
-		Invoke-Build-ThrowTerminatingError "Command: {${private:build-command}}: last exit code is $LastExitCode." InvalidResult $LastExitCode
+		Invoke-Build-Error "Command: {${private:build-command}}: last exit code is $LastExitCode." InvalidResult $LastExitCode
 	}
 }
 
@@ -403,13 +411,13 @@ function Use-Framework
 )
 {
 	if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
-		Invoke-Build-ThrowTerminatingError "Use-Framework should not be dot-sourced." InvalidOperation
+		Invoke-Build-Error "Use-Framework should not be dot-sourced." InvalidOperation
 	}
 
 	if ($Framework) {
 		$path = Join-Path "$env:windir\Microsoft.NET" $Framework
 		if (![System.IO.Directory]::Exists($path)) {
-			Invoke-Build-ThrowTerminatingError "Directory does not exist: '$path'." InvalidArgument $Framework
+			Invoke-Build-Error "Directory does not exist: '$path'." InvalidArgument $Framework
 		}
 	}
 	else {
@@ -455,12 +463,144 @@ function Write-Color
 	$Host.UI.RawUI.ForegroundColor = $saved
 }
 
+<#
+.Synopsis
+	Invokes build preprocessing and build tasks.
+
+.Description
+	The function is called from master build scripts, normally as the last
+	command. In contrast to classic slave scripts master scripts are invoked
+	directly as regular scripts, not by Invoke-Build.
+
+	The advantage of master scripts is that they are much easier to call. This
+	is especially true when they have a lot of parameters. The price is quite
+	low, just a couple of dot-sourced calls in the beginning and the end.
+
+	A trivial master build script without own parameters may look like this:
+
+		# Script Build.ps1
+
+		. Invoke-Build $args
+		task task1 ...
+		task task2 ...
+		. Invoke-Task
+
+	Such a script is invoked directly with task arguments. Examples:
+
+		.\Build.ps1 ?
+		.\Build.ps1 task1
+		.\Build.ps1 task1 task2
+
+	More realistic master scripts with own parameters and WhatIf look like:
+
+		# Script Build.ps1
+
+		param
+		(
+			[string[]]$BuildTask, # to be passed in Invoke-Build
+			[...]$Parameter1,     # own script parameter 1
+			[...]$Parameter2,     # own script parameter 2
+			...
+			[switch]$WhatIf       # Invoke-Build option
+		)
+
+		. Invoke-Build $BuildTask -WhatIf:$WhatIf
+		task task1 ...
+		task task2 ...
+		. Invoke-Task
+
+	It is invoked directly with task names and optional parameters and WhatIf:
+
+		.\Build.ps1 ?
+		.\Build.ps1 task1, task2 'Answer' 42
+		.\Build.ps1 task2 -Parameter2 42 -WhatIf
+
+.Inputs
+	None
+
+.Outputs
+	Various build messages: progress, diagnostics, warnings, errors, etc.
+
+.Link
+	Invoke-Build
+#>
+function Invoke-Task
+{
+	# no parameters
+	[CmdletBinding()]param()
+
+	if ($PSCmdlet.MyInvocation.InvocationName -ne '.') {
+		Invoke-Build-Error "Invoke-Task has to be dot-sourced." InvalidOperation
+	}
+
+	Write-Color DarkYellow "Build $($BuildTask -join ', ') from $BuildFile"
+	try {
+		### View the tasks
+		if ($BuildTask[0] -eq '?') {
+			$BuildThis.Tasks.Values | .{process{
+				${private:build-task} = 1 | Select-Object Task, Info, File, Line
+				${private:build-task}
+				${private:build-task}.Task = $_.Name
+				${private:build-file} = $_.Info.ScriptName
+				${private:build-task}.File = ${private:build-file}
+				${private:build-task}.Line = $_.Info.ScriptLineNumber
+				if (${private:build-file} -like "$BuildRoot\*") {
+					${private:build-file} = ${private:build-file}.Substring($BuildRoot.Length + 1)
+				}
+				${private:build-task}.Info = @"
+$(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:build-file}):$(${private:build-task}.Line)
+"@
+			}} |
+			Sort-Object File, Line |
+			Format-Table Task, Info -AutoSize -Wrap
+			return
+		}
+
+		### Initialize (build preprocessing)
+		foreach(${private:build-name} in $BuildTask) {
+			${private:build-task} = $BuildThis.Tasks[${private:build-name}]
+			if (!${private:build-task}) {
+				Invoke-Build-Error "Task '${private:build-name}' is not defined." ObjectNotFound ${private:build-name}
+			}
+			Invoke-Build-Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
+		}
+
+		### Invoke the tasks (build processing)
+		foreach(${private:build-name} in $BuildTask) {
+			Invoke-Build-Invoke-Task ${private:build-name}
+		}
+		if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
+			Invoke-Build-Write-Info $BuildThis
+		}
+	}
+	finally {
+		Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
+		$BuildInfo.Messages
+		if (${private:build-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
+			Invoke-Build-Write-Info $BuildInfo
+		}
+	}
+}
+
+# For advanced functions to show the caller error location.
+function Invoke-Build-Error($Message, $Category = 0, $Target)
+{
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
+}
+
 ### End of the public zone. Exit if dot-sourced.
-if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
-	Write-Warning 'Dot-source Invoke-Build only in order to get help for its functions.'
-	Get-Command Add-Task, Get-Error, Assert-True, Invoke-Exec, Use-Framework, Write-Color -ea 0 |
-	Format-Table -AutoSize | Out-String
-	return
+${private:build-sourced} = $PSCmdlet.MyInvocation.InvocationName -eq '.'
+if (${private:build-sourced}) {
+	if (!$PSCmdlet.MyInvocation.ScriptName) {
+		Write-Warning 'Dot-source Invoke-Build only in order to get help for its functions.'
+		Get-Command Add-Task, Get-Error, Assert-True, Invoke-Exec, Use-Framework, Write-Color, Build -ea 0 |
+		Format-Table -AutoSize | Out-String
+		return
+	}
+	if ($BuildFile -or $Parameters) {
+		Invoke-Build-Error "Dot-sourced Invoke-Build does not allow parameters BuildFile and Parameters." InvalidOperation
+	}
+	$BuildFile = $PSCmdlet.MyInvocation.ScriptName
 }
 
 # Use another Write-Color if there is no UI.
@@ -687,12 +827,6 @@ $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 	}
 }
 
-# Use from advanced functions to show the caller error location.
-function Invoke-Build-ThrowTerminatingError($Message, $Category = 0, $Target)
-{
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
-}
-
 # Writes build information.
 function Invoke-Build-Write-Info([hashtable]$Info)
 {
@@ -711,35 +845,37 @@ $($Info.TaskCount) tasks, $($Info.ErrorCount) errors, $($Info.WarningCount) warn
 }
 
 ### Resolve the file
-try {
-	if ($BuildFile) {
-		${private:build-location} = Convert-Path (Resolve-Path -LiteralPath $BuildFile -ErrorAction Stop)
-	}
-	else {
-		${private:build-location} = @(Resolve-Path '*.build.ps1')
-		if (!${private:build-location}) {
-			throw "Found no '*.build.ps1' files."
-		}
-		if (${private:build-location}.Count -eq 1) {
-			${private:build-location} = Convert-Path (${private:build-location}[0])
+if (!${private:build-sourced}) {
+	try {
+		if ($BuildFile) {
+			${private:build-location} = Convert-Path (Resolve-Path -LiteralPath $BuildFile -ErrorAction Stop)
 		}
 		else {
-			${private:build-location} = foreach($_ in ${private:build-location}) {
-				if ([System.IO.Path]::GetFileName($_) -eq '.build.ps1') {
-					Convert-Path $_
-					break
-				}
-			}
+			${private:build-location} = @(Resolve-Path '*.build.ps1')
 			if (!${private:build-location}) {
-				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+				throw "Found no '*.build.ps1' files."
+			}
+			if (${private:build-location}.Count -eq 1) {
+				${private:build-location} = Convert-Path (${private:build-location}[0])
+			}
+			else {
+				${private:build-location} = foreach($_ in ${private:build-location}) {
+					if ([System.IO.Path]::GetFileName($_) -eq '.build.ps1') {
+						Convert-Path $_
+						break
+					}
+				}
+				if (!${private:build-location}) {
+					throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+				}
 			}
 		}
 	}
+	catch {
+		Invoke-Build-Error "$_" ObjectNotFound $BuildFile
+	}
+	$BuildFile = ${private:build-location}
 }
-catch {
-	Invoke-Build-ThrowTerminatingError "$_" ObjectNotFound $BuildFile
-}
-$BuildFile = ${private:build-location}
 
 ### Set the variables
 ${private:build-first} = !(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))
@@ -752,6 +888,7 @@ if (${private:build-first}) {
 	$BuildInfo.Messages = [System.Collections.ArrayList]@()
 	$BuildInfo.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 }
+if (!$BuildTask) { $BuildTask = @('.') }
 Set-Variable -Option ReadOnly -Name BuildTask
 Set-Variable -Option ReadOnly -Name BuildFile
 New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
@@ -767,54 +904,11 @@ ${private:build-location} = Get-Location
 ${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
 Remove-Variable Parameters -Scope Local
 
-Write-Color DarkYellow "Build $($BuildTask -join ', ') from $BuildFile"
-try {
-	### Invoke the file (build loading)
-	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+### Set location to the build root for all calls
+Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+
+### Invoke the file and tasks
+if (!${private:build-sourced}) {
 	. $BuildFile @94abce897fdf4f18a806108b30f08c13
-
-	### View the tasks
-	if ($BuildTask -and $BuildTask[0] -eq '?') {
-		$BuildThis.Tasks.Values | .{process{
-			${private:build-task} = 1 | Select-Object Task, Info, File, Line
-			${private:build-task}
-			${private:build-task}.Task = $_.Name
-			${private:build-file} = $_.Info.ScriptName
-			${private:build-task}.File = ${private:build-file}
-			${private:build-task}.Line = $_.Info.ScriptLineNumber
-			if (${private:build-file} -like "$BuildRoot\*") {
-				${private:build-file} = ${private:build-file}.Substring($BuildRoot.Length + 1)
-			}
-			${private:build-task}.Info = @"
-$(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:build-file}):$(${private:build-task}.Line)
-"@
-		}} |
-		Sort-Object File, Line |
-		Format-Table Task, Info -AutoSize -Wrap
-		return
-	}
-
-	### Initialize (build preprocessing)
-	foreach(${private:build-name} in $BuildTask) {
-		${private:build-task} = $BuildThis.Tasks[${private:build-name}]
-		if (!${private:build-task}) {
-			Invoke-Build-ThrowTerminatingError "Task '${private:build-name}' is not defined." ObjectNotFound ${private:build-name}
-		}
-		Invoke-Build-Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
-	}
-
-	### Invoke the tasks (build processing)
-	foreach(${private:build-name} in $BuildTask) {
-		Invoke-Build-Invoke-Task ${private:build-name}
-	}
-	if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
-		Invoke-Build-Write-Info $BuildThis
-	}
-}
-finally {
-	Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
-	$BuildInfo.Messages
-	if (${private:build-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
-		Invoke-Build-Write-Info $BuildInfo
-	}
+	. Invoke-Task
 }
