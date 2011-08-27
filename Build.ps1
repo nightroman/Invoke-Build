@@ -20,8 +20,8 @@
 	ABOUT LOCATIONS
 
 	The command `. Invoke-Build ...` sets the current location to this script
-	directory. This is also done on for every task. As a result, for example,
-	the .zip file is always created in this directory.
+	directory. This is also done on every task. As a result, for example, the
+	.zip file is always created in this directory.
 
 	The original location is restored when `. Invoke-Task` has completed.
 	Mind this if the script continues after that (not typical but why not).
@@ -31,12 +31,21 @@
 	This script is used in the development and included into the published
 	archive only as an example. It may not work in some environments, for
 	example it requires 7z.exe and Invoke-Build.ps1 in the system path.
+
+.Example
+	># As far as it is a master script, it is called directly:
+
+	.\Build.ps1 ?          # Show tasks and their relations
+	.\Build.ps1 zip        # Invoke the Zip and related tasks
+	.\Build.ps1 . -WhatIf  # Show what if the . task is called
+
+.Link
+	Invoke-Build
 #>
 
 # For a simple script like this one command without param() would be enough:
-#  . Invoke-Build $args
-# The script still uses param(...) just in order to show how it works. Try:
-#  .\Build.ps1 . -WhatIf
+# . Invoke-Build $args
+# The script still uses param(...) just in order to show how it works.
 param
 (
 	$BuildTask,
@@ -91,5 +100,5 @@ task . Test, Zip, {
 }
 
 # Master script step 2: Invoke build tasks. This is often the last command but
-# this is not a requirement, for example script can do some post-build steps.
+# this is not a requirement, for example script can do some post-build jobs.
 . Invoke-Task
