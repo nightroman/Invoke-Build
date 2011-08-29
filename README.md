@@ -47,12 +47,12 @@ This is it. The script is installed and invokes build scripts.
 
 Take a look at this help:
 
-    help Invoke-Build -Full
+    help Invoke-Build -full
 
-And then at functions help, for example `Add-Task`:
+And then at functions help, for example `Add-BuildTask` (`task`):
 
     . Invoke-Build
-    help Add-Task -Full
+    help task -full
 
 Explore existing build scripts with many typical use cases, problem cases, and
 tutorial comments:
