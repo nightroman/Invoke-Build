@@ -151,6 +151,14 @@ task Use-Framework {
 task TestVariables {
 	# get variables in a clean session
 	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
+	$0 += @(
+		'BuildInfo' # internal data
+		'BuildThis' # internal data
+		# system
+		'foreach'
+		'LASTEXITCODE'
+		'PSCmdlet'
+	)
 	Get-Variable | .{process{
 		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notlike 'My*')) {
 			switch($_.Name) {
@@ -159,13 +167,6 @@ task TestVariables {
 				'BuildFile' { 'BuildFile - build script file path - ' + $BuildFile}
 				'BuildRoot' { 'BuildRoot - build script root path - ' + $BuildRoot }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
-				# exposed but internal
-				'BuildInfo' { 'BuildInfo - internal data' }
-				'BuildThis' { 'BuildThis - internal data' }
-				'PSCmdlet' { 'PSCmdlet - system variable' }
-				# some system data
-				'foreach' { }
-				'LASTEXITCODE' { }
 				default { Write-Warning "Unknown variable '$_'." }
 			}
 		}

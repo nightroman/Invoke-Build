@@ -199,7 +199,7 @@ function Add-BuildTask
 	[object[]]$Jobs
 	,
 	[Parameter()]
-	[int]$If = 1
+	[bool]$If = $true
 )
 {
 	$task = $BuildThis.Tasks[$Name]
