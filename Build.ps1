@@ -15,18 +15,7 @@
 	low, just a couple of dot-sourced calls in the beginning and the end:
 
 		. Invoke-Build $BuildTask
-		. Build
-
-	ABOUT LOCATIONS
-
-	The command `. Invoke-Build ...` sets the current location to this script
-	directory. This is also done on every task. As a result, for example, the
-	.zip file is always created in this directory.
-
-	The original location is restored when `. Invoke-Task` has completed.
-	Mind this if the script continues after that (not typical but why not).
-
-	SCRIPT MAY NOT WORK
+		. Start-Build
 
 	This script is used in the development and included into the published
 	archive only as an example. It may not work in some environments, for
@@ -72,16 +61,13 @@ task Git-Status -If (Test-Path .git) {
 	}
 }
 
-# Copy Invoke-Build.ps1 from its working location to the project home
+# Copy Invoke-Build.ps1 from its working location to the project home.
+# Assert: fail if the project file is newer, it is not supposed to be.
 task Update-Script {
-	Copy-Item (Get-Command Invoke-Build.ps1).Definition .
-}
-
-# Take $script:Version string from Invoke-Build.ps1
-task Version {
-	$text = [System.IO.File]::ReadAllText("$BuildRoot\Invoke-Build.ps1")
-	assert ($text -match '\s*Invoke-Build\s+(v\d+\.\d+\.\d+(\.\w+)?)\s+')
-	$script:Version = $matches[1]
+	$target = Get-Item Invoke-Build.ps1 -ErrorAction 0
+	$source = Get-Item (Get-Command Invoke-Build.ps1).Definition
+	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
+	Copy-Item $source.FullName .
 }
 
 # Test Demo scripts
@@ -89,16 +75,16 @@ task Test {
 	Invoke-Build . Demo\.build.ps1
 }
 
-# Make the zip using the latest script and its version string
-task Zip Update-Script, Version, Git-Status, {
-	exec { & 7z a Invoke-Build.$script:Version.zip * '-x!.git' }
+# Make the zip using the latest script and its version
+task Zip Update-Script, Git-Status, {
+	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git' }
 }
 
 # The default task is a super test. It tests all and clean.
 task . Test, Zip, {
-	Remove-Item Invoke-Build.$script:Version.zip
+	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
 }
 
 # Master script step 2: Invoke build tasks. This is often the last command but
-# this is not a requirement, for example script can do some post-build jobs.
-. Invoke-Task
+# this is not a requirement, for example scripts can do some post-build jobs.
+. Start-Build

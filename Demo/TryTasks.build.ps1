@@ -19,11 +19,11 @@ task Survives1 @(
 	{
 		"After Error1"
 
-		$error1 = Get-Error Error1
+		$error1 = error Error1
 		assert ($MyCountError1 -eq 1)
 		assert ("$error1" -eq "Error1")
 
-		$error2 = Get-Error Error2
+		$error2 = error Error2
 		assert ($MyCountError2 -eq 0)
 		assert ($null -eq $error2)
 	}
@@ -33,7 +33,7 @@ task Survives1 @(
 	{
 		"After Error2"
 
-		$error2 = Get-Error Error2
+		$error2 = error Error2
 		assert ($MyCountError2 -eq 1)
 		assert ("$error2" -eq "Error2")
 	}
@@ -47,7 +47,7 @@ task Survives2 @(
 	{
 		"After Error1"
 
-		$error1 = Get-Error Error1
+		$error1 = error Error1
 		assert ($MyCountError1 -eq 1)
 		assert ("$error1" -eq "Error1")
 	}
@@ -57,11 +57,16 @@ task Survives2 @(
 	{
 		"After Error2"
 
-		$error2 = Get-Error Error2
+		$error2 = error Error2
 		assert ($MyCountError2 -eq 1)
 		assert ("$error2" -eq "Error2")
 	}
 )
 
+# Survives3, Survives4 cover a case with a shared job list (there was an issue)
+$JobList = @{Error1=1}, @{Error2=1}
+task Survives3 $JobList
+task Survives4 $JobList
+
 # The default task calls the tests.
-task . Survives1, Survives2
+task . Survives1, Survives2, Survives3, Survives4

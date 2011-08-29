@@ -81,12 +81,12 @@ task ParamsValues2 ParamsValues1, SharedValueTask1, {
 
 # Just like regular scripts, build scripts may have functions used by tasks.
 # For example, this function is used by several tasks testing various issues.
-function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern) {
+function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern, $Parameters = @{}) {
 	$message = ''
-	try { Invoke-Build $Task $Build }
+	try { Invoke-Build $Task $Build $Parameters }
 	catch { $message = "$_" }
 	if ($message -notlike $ExpectedMessagePattern) {
-		ThrowTerminatingError("Actual message: [`n$message`n]")
+		Invoke-BuildError "Expected pattern: [`n$ExpectedMessagePattern`n]`n Actual message: [`n$message`n]"
 	}
 	"Issue '$Task' of '$Build' is tested."
 }
@@ -109,7 +109,7 @@ task CyclicReference {
 	Test-Issue . CyclicReference.build.ps1 "Task 'task2': job 1: cyclic reference to 'task1'.*"
 }
 
-# This task calls Invoke-Exec (exec) tests.
+# This task calls Invoke-BuildExec (exec) tests.
 task Invoke-Exec {
 	Invoke-Build . Invoke-Exec.build.ps1
 }
@@ -121,11 +121,8 @@ task TaskAddedTwice {
 
 # This task ensures that task jobs can be either strings or script blocks.
 task TaskInvalidJob {
-	# this fails
-	Test-Issue . TaskInvalidJob.build.ps1 "Task '.': job 4: invalid job type.*"
-
-	# but this works because Invoke-Build checks only tasks to be invoked
-	Test-Issue task1 TaskInvalidJob.build.ps1
+	Test-Issue InvalidJobType TaskInvalidJob.build.ps1 "Task 'InvalidJobType': Job 4/4: Invalid job type." @{Test = 'InvalidJobType'}
+	Test-Issue InvalidJobValue TaskInvalidJob.build.ps1 "Task 'InvalidJobValue': Job 1/1: Hashtable should have one item." @{Test = 'InvalidJobValue'}
 }
 
 # This task ensures that missing tasks are caught.
@@ -177,23 +174,27 @@ task TestVariables {
 
 # The task shows unwanted functions potentially introduced by Invoke-Build.
 task TestFunctions {
-	# get functions in a clean session
-	$0 = PowerShell "Get-Command -CommandType Function | Select-Object -ExpandProperty Name"
+	$list = PowerShell "Get-Command -CommandType Function | Select-Object -ExpandProperty Name"
+	$list += 'Test-Issue'
+	$exposed = @(
+		'Add-BuildTask'
+		'Assert-BuildTrue'
+		'Get-BuildError'
+		'Get-BuildVersion'
+		'Invoke-BuildError'
+		'Invoke-BuildExec'
+		'Start-Build'
+		'Use-BuildFramework'
+		'Write-BuildText'
+		'Write-Warning'
+	)
 	Get-Command -CommandType Function | .{process{
-		if (($0 -notcontains $_.Name) -and ($_.Name -notlike 'Invoke-Build-*')) {
-			switch($_.Name) {
-				# exposed by Invoke-Build
-				'Add-Task' { 'Add-Task ~ Invoke-Build' }
-				'Assert-True' { 'Assert-True ~ Invoke-Build' }
-				'Get-Error' { 'Get-Error ~ Invoke-Build' }
-				'Invoke-Exec' { 'Invoke-Exec ~ Invoke-Build' }
-				'Use-Framework' { 'Use-Framework ~ Invoke-Build' }
-				'Write-Color' { 'Write-Color ~ Invoke-Build' }
-				'Write-Warning' { 'Write-Warning ~ Invoke-Build' }
-				'Invoke-Task' { 'Build ~ Invoke-Build' }
-				# other known functions
-				'Test-Issue' { 'Test-Issue ~ Build script function.' }
-				default { Write-Warning "Unknown function '$_'." }
+		if (($list -notcontains $_.Name) -and ($_.Name -notlike 'Invoke-Build-*')) {
+			if ($exposed -contains $_.Name) {
+				"Function $($_.Name) is one of Invoke-Build."
+			}
+			else {
+				Write-Warning "Unknown function '$_'."
 			}
 		}
 	}}

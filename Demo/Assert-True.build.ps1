@@ -50,16 +50,16 @@ task . @{AssertDefault=1}, @{AssertMessage=1}, @{AssertInvalid1=1}, @{AssertInva
 	# silly test
 	assert $true
 
-	$e = Get-Error AssertDefault
+	$e = error AssertDefault
 	assert ("$e" -eq 'Assertion failed.')
 
-	$e = Get-Error AssertMessage
+	$e = error AssertMessage
 	assert ("$e" -eq 'Custom assert message.')
 
-	$e = Get-Error AssertInvalid1
+	$e = error AssertInvalid1
 	assert ("$e" -eq 'Condition is not Boolean.')
 
-	$e = Get-Error AssertInvalid2
+	$e = error AssertInvalid2
 	assert ("$e" -eq 'Condition is not Boolean.')
 
 	'Tested Assert-True.'

@@ -6,7 +6,7 @@ Invoke-Build - Orchestrate Builds in PowerShell
 tasks from build scripts.
 
 Ideas come from the [psake](https://github.com/JamesKovacs/psake) module and
-other build tools. This script provides a simple and yet very robust engine.
+other build tools. This script provides a very simple and yet robust engine.
 
 *Invoke-Build* is specifically designed for multiple calls in the same session.
 It never changes environment variables and the system path. It does not leave
@@ -23,9 +23,9 @@ Copy *Invoke-Build.ps1* to one of the system path directories. As a result, the
 script can be called from any *PowerShell* code simply as `Invoke-Build`.
 
 **Step 2:**
-Set the current location to the *Invoke-Build\Demo* directory:
+Set the current location to the *Demo* directory:
 
-    Set-Location <your location>/Invoke-Build/Demo
+    Set-Location <path>/Demo
 
 **Step 3:**
 Take a look at the tasks of the default *.build.ps1* build script there:
@@ -45,11 +45,11 @@ This is it. The script is installed and invokes build scripts.
 
 ## Next Steps
 
-Take a look at the main help:
+Take a look at this help:
 
     help Invoke-Build -Full
 
-And then function help, for example `Add-Task`:
+And then at functions help, for example `Add-Task`:
 
     . Invoke-Build
     help Add-Task -Full
