@@ -148,7 +148,7 @@ Set-Alias task Add-BuildTask
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.1'
+	[System.Version]'1.0.2'
 }
 
 <#
@@ -178,8 +178,9 @@ function Get-BuildVersion
 		call TaskName as protected.
 
 .Parameter If
-		Tells whether to invoke the task ($true) or skip it ($false).
-		The default is $true.
+		Tells whether to invoke the task ($true) or skip it ($false). The
+		default is $true. The value is either a script block evaluated on
+		the task invocation or a Boolean constant.
 
 .Inputs
 	None
@@ -199,7 +200,7 @@ function Add-BuildTask
 	[object[]]$Jobs
 	,
 	[Parameter()]
-	[bool]$If = $true
+	[object]$If = $true
 )
 {
 	$task = $BuildThis.Tasks[$Name]
@@ -297,7 +298,7 @@ function Get-BuildError
 		The condition (exactly Boolean, in order to avoid subtle mistakes).
 
 .Parameter Message
-		A custom message to throw on condition check failures.
+		A user friendly message describing the assertion condition.
 
 .Inputs
 	None
@@ -320,7 +321,7 @@ function Assert-BuildTrue
 
 	if (!$Condition) {
 		if ($Message) {
-			Invoke-BuildError $Message InvalidOperation
+			Invoke-BuildError "Assertion failed: $Message" InvalidOperation
 		}
 		else {
 			Invoke-BuildError 'Assertion failed.' InvalidOperation
@@ -658,6 +659,23 @@ function Invoke-Build-Format-Message([string]$Message)
 	$Message.Trim().Replace("`n", "`r`n")
 }
 
+# Evaluates the If condition of the task
+function Invoke-Build-If([object]$Task)
+{
+	${private:build-if} = $Task.If
+	if (${private:build-if} -is [scriptblock]) {
+		try {
+			& ${private:build-if}
+		}
+		catch {
+			throw
+		}
+	}
+	else {
+		${private:build-if}
+	}
+}
+
 # This command is used internally and should not be called directly.
 # Build scripts should define standard functions shared between tasks.
 function Invoke-Build-Task($Name, $Path)
@@ -678,7 +696,7 @@ function Invoke-Build-Task($Name, $Path)
 		Write-BuildText DarkYellow "${private:build-path} was done before."
 	}
 	# skip?
-	elseif (!${private:build-task}.If) {
+	elseif (!(Invoke-Build-If ${private:build-task})) {
 	}
 	# invoke
 	else {

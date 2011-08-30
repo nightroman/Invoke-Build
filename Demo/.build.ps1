@@ -101,6 +101,7 @@ task Assert-True {
 task ConditionalTask {
 	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
 	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
+	Invoke-Build TestScriptCondition ConditionalTask.build.ps1
 }
 
 # This task ensures that cyclic references are caught.

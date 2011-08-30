@@ -54,7 +54,7 @@ task . @{AssertDefault=1}, @{AssertMessage=1}, @{AssertInvalid1=1}, @{AssertInva
 	assert ("$e" -eq 'Assertion failed.')
 
 	$e = error AssertMessage
-	assert ("$e" -eq 'Custom assert message.')
+	assert ("$e" -eq 'Assertion failed: Custom assert message.')
 
 	$e = error AssertInvalid1
 	assert ("$e" -eq 'Condition is not Boolean.')
