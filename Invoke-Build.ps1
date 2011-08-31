@@ -148,7 +148,7 @@ Set-Alias task Add-BuildTask
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.2'
+	[System.Version]'1.0.3'
 }
 
 <#
@@ -180,7 +180,7 @@ function Get-BuildVersion
 .Parameter If
 		Tells whether to invoke the task ($true) or skip it ($false). The
 		default is $true. The value is either a script block evaluated on
-		the task invocation or a Boolean constant.
+		the task invocation or a value treated as Boolean.
 
 .Inputs
 	None
@@ -668,6 +668,8 @@ function Invoke-Build-If([object]$Task)
 			& ${private:build-if}
 		}
 		catch {
+			$BuildThis.Fatal = $true
+			$Task.Error = $_
 			throw
 		}
 	}
@@ -718,7 +720,11 @@ function Invoke-Build-Task($Name, $Path)
 						Invoke-Build-Task ${private:build-job} ${private:build-path}
 					}
 					catch {
-						# die if the task is not protected
+						# fatal (e.g. task -If failed)
+						if ($BuildThis['Fatal']) {
+							throw
+						}
+						# die if not protected
 						if (${private:build-task}.Try -notcontains ${private:build-job}) {
 							throw
 						}
@@ -729,8 +735,8 @@ function Invoke-Build-Task($Name, $Path)
 							Write-BuildText Red ${private:build-why}
 							throw
 						}
+						# survive, show the error
 						else {
-							# show the error and survive
 							${private:build-job} = $BuildThis.Tasks[${private:build-job}]
 							if (!${private:build-job}) { throw }
 							Write-BuildText Red (${private:build-job}.Error | Out-String)

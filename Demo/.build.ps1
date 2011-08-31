@@ -139,6 +139,7 @@ task TryTasks {
 # This task also tests @{Name=1}, some subtle cases.
 task TryTasksFails {
 	Test-Issue . TryTasksFails.build.ps1 'Error2'
+	Test-Issue TestScriptConditionFails TryTasksFails.build.ps1 'Attempted to divide by zero.'
 }
 
 # This task calls tests in Use-Framework.build.ps1

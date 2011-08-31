@@ -4,7 +4,7 @@
 	Example of protected task jobs (@{Task=1} notation).
 
 .Description
-	This test is similar to TryTasks.build.ps1 but shows a subtle failure.
+	This test is similar to TryTasks.build.ps1 but shows subtle failures.
 
 .Link
 	Invoke-Build
@@ -49,3 +49,8 @@ task Fails @(
 # This task calls the tests and fails due to issues in the Fails. Even
 # protected call does not help: Fails is not prepared for errors in Error2.
 task . AlmostSurvives, @{Fails=1}
+
+# Another case when a protected error is fatal. It is the case when the If
+# script fails. The build fails as well because it is a programming issue.
+task ScriptConditionFails -If { 1/$null } {}
+task TestScriptConditionFails @{ScriptConditionFails=1}

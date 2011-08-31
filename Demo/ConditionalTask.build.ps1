@@ -15,6 +15,9 @@
 
 	The script also shows how to use script variables shared between tasks.
 
+.Notes
+	A case of If block errors is tested in TryTasksFails.build.ps1.
+
 .Example
 	# Debug configuration
 	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
