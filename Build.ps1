@@ -70,14 +70,50 @@ task Update-Script {
 	Copy-Item $source.FullName .
 }
 
-# Test Demo scripts
-task Test {
-	Invoke-Build . Demo\.build.ps1
-}
-
 # Make the zip using the latest script and its version
 task Zip Update-Script, Git-Status, {
-	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git' }
+	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!Test-Output.*' }
+}
+
+# Tests Demo scripts and compares the output with expected. It creates and
+# keeps Invoke-Build-Test.log in $env:TEMP. Then it compares it with a new
+# output file in this directory. If they are the same then the new file is
+# removed. Otherwise an application $env:MERGE is started.
+task Test {
+	# invoke tests, get the output
+	$output = Invoke-Build . Demo\.build.ps1 | Out-String -Width:9999
+
+	# process and save the output
+	$outputPath = 'Invoke-Build-Test.log'
+	$samplePath = "$env:TEMP\Invoke-Build-Test.log"
+	$output = $output -replace '\d\d:\d\d:\d\d\.\d+', '00:00:00.0000'
+	Set-Content $outputPath $output
+
+	# compare outputs
+	$toCopy = $false
+	if (Test-Path $samplePath) {
+		$sample = (Get-Content $samplePath) -join "`r`n"
+		if ($output -ceq $sample) {
+			Write-BuildText Green 'The result is expected.'
+			Remove-Item $outputPath
+		}
+		else {
+			Write-Warning 'The result is not the same as expected.'
+			if ($env:MERGE) {
+				& $env:MERGE $outputPath $samplePath
+			}
+			$toCopy = 1 -eq (Read-Host 'Save the result as expected? [1] Yes [Enter] No')
+		}
+	}
+	else {
+		$toCopy = $true
+	}
+
+	### copy actual to expected
+	if ($toCopy) {
+		Write-BuildText Cyan 'Saving the result as expected.'
+		Move-Item $outputPath $samplePath -Force
+	}
 }
 
 # The default task is a super test. It tests all and clean.

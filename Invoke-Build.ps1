@@ -148,7 +148,7 @@ Set-Alias task Add-BuildTask
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.3'
+	[System.Version]'1.0.4'
 }
 
 <#
