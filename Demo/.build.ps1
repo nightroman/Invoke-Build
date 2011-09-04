@@ -110,6 +110,11 @@ task CyclicReference {
 	Test-Issue . CyclicReference.build.ps1 "Task 'task2': job 1: cyclic reference to 'task1'.*"
 }
 
+# This task calls incremental build tests.
+task Incremental {
+	Invoke-Build . Incremental.build.ps1
+}
+
 # This task calls Invoke-BuildExec (exec) tests.
 task Invoke-Exec {
 	Invoke-Build . Invoke-Exec.build.ps1
@@ -132,19 +137,22 @@ task TaskNotDefined {
 }
 
 # This task tests job tasks using @{Name=1} notation.
-task TryTasks {
-	Invoke-Build . TryTasks.build.ps1
-}
-
-# This task also tests @{Name=1}, some subtle cases.
-task TryTasksFails {
-	Test-Issue . TryTasksFails.build.ps1 'Error2'
-	Test-Issue TestScriptConditionFails TryTasksFails.build.ps1 'Attempted to divide by zero.'
+task ProtectedTasks {
+	Invoke-Build . ProtectedTasks.build.ps1
 }
 
 # This task calls tests in Use-Framework.build.ps1
 task Use-Framework {
 	Invoke-Build . Use-Framework.build.ps1
+}
+
+# This task tests fatal runtime errors.
+task FatalCases {
+	Test-Issue TestAlmostSurvives FatalCases.build.ps1 'Error2'
+	Test-Issue TestScriptConditionFails FatalCases.build.ps1 'If fails.'
+	Test-Issue TestInputsFails FatalCases.build.ps1 'Inputs fails.'
+	Test-Issue TestOutputsFails FatalCases.build.ps1 'Outputs fails.'
+	Test-Issue TestInputsOutputsMismatch FatalCases.build.ps1 'Different input and output counts: 1 and 0.'
 }
 
 # Invoke-Build should expose only documented variables! If this test shows
@@ -208,12 +216,13 @@ task Tests `
 	Assert-True,
 	ConditionalTask,
 	CyclicReference,
+	FatalCases,
+	Incremental,
 	Invoke-Exec,
+	ProtectedTasks,
 	TaskAddedTwice,
 	TaskInvalidJob,
 	TaskNotDefined,
-	TryTasks,
-	TryTasksFails,
 	Use-Framework,
 	TestFunctions,
 	TestVariables
@@ -233,7 +242,7 @@ Tests,
 # The last test tests not yet documented data
 {
 	# This build statistics
-	assert ($BuildThis.TaskCount -eq 19)
+	assert ($BuildThis.TaskCount -eq 20)
 	assert ($BuildThis.ErrorCount -eq 0)
 	assert ($BuildThis.WarningCount -ge 1)
 

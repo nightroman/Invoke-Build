@@ -1,10 +1,17 @@
 
 <#
 .Synopsis
-	Example of protected task jobs (@{Task=1} notation).
+	Tests fatal runtime errors.
 
 .Description
-	This test is similar to TryTasks.build.ps1 but shows subtle failures.
+	Fatal runtime errors are:
+	* Errors in task script jobs (if task calls are not protected);
+	* Errors in task If scripts (always);
+	* Errors in task Inputs scripts (always);
+	* Errors in task Outputs scripts (always);
+
+	All problem cases are called using protected task jobs (@{Task=1} notation)
+	in order to make sure that even protected calls cannot hide fatal errors.
 
 .Link
 	Invoke-Build
@@ -48,9 +55,21 @@ task Fails @(
 
 # This task calls the tests and fails due to issues in the Fails. Even
 # protected call does not help: Fails is not prepared for errors in Error2.
-task . AlmostSurvives, @{Fails=1}
+task TestAlmostSurvives AlmostSurvives, @{Fails=1}
 
 # Another case when a protected error is fatal. It is the case when the If
 # script fails. The build fails as well because it is a programming issue.
-task ScriptConditionFails -If { 1/$null } {}
-task TestScriptConditionFails @{ScriptConditionFails=1}
+task ScriptConditionFails -If { throw "If fails." } { throw 'Unexpected.' }
+task TestScriptConditionFails @{ScriptConditionFails=1}, { throw 'Unexpected.' }
+
+# Fatal case: the Inputs script fails.
+task InputsFails -Inputs { throw 'Inputs fails.' } -Outputs {} { throw 'Unexpected.' }
+task TestInputsFails @{InputsFails=1}, { throw 'Unexpected.' }
+
+# Fatal case: the Outputs script fails.
+task OutputsFails -Outputs { throw 'Outputs fails.' } -Inputs { '.build.ps1' } { throw 'Unexpected.' }
+task TestOutputsFails @{OutputsFails=1}, { throw 'Unexpected.' }
+
+# Fatal case: Inputs and Outputs (scriptblock) have different number of items
+task InputsOutputsMismatch -Inputs { '.build.ps1' } -Outputs { } { throw 'Unexpected.' }
+task TestInputsOutputsMismatch @{InputsOutputsMismatch=1}, { throw 'Unexpected.' }

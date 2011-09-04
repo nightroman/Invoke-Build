@@ -168,9 +168,9 @@ function Get-BuildVersion
 
 .Parameter Jobs
 		The task jobs. The following types are supported:
-		* [string] - existing task name
-		* [hashtable] - @{TaskName = Option}
-		* [scriptblock] - script blocks invoked for this task
+		* [string] - task jobs, existing task names;
+		* [hashtable] - task jobs with options, @{TaskName = Option};
+		* [scriptblock] - script jobs, script blocks invoked for this task.
 
 		Notation @{TaskName = Option} references the task TaskName and assigns
 		an Option to it. The only supported now option value is 1: protected
@@ -180,7 +180,32 @@ function Get-BuildVersion
 .Parameter If
 		Tells whether to invoke the task ($true) or skip it ($false). The
 		default is $true. The value is either a script block evaluated on
-		the task invocation or a value treated as Boolean.
+		task invocation or a value treated as Boolean.
+
+.Parameter Inputs
+		File system items or literal paths used as input for full or partial
+		incremental build, or a script which gets them. Paths (as strings) are
+		resolved to file system items. All input items must exist. All or some
+		input items (it depends on Outputs) are piped to the task script jobs.
+
+		The script jobs are not invoked if all the Outputs are up-to-date or if
+		the Inputs is not null and yet empty. But task jobs are always invoked.
+
+		Inputs and Outputs are processed on the first script job invocation.
+		Thus, for example, a preceding task job can prepare the Inputs items.
+
+.Parameter Outputs
+		Literal output paths. There are two forms:
+
+		1) [string[]] is for full incremental build. If there are missing items
+		then the scripts are invoked. Otherwise they are invoked if the minimum
+		output time is less than the maximum input time. All input items are
+		piped to the task scripts.
+
+		2) [scriptblock] is for partial incremental build. All input items are
+		piped to the Outputs script which gets exactly one path for each input
+		item. Then input and output times are compared and only input items
+		with out-of-date output, if any, are piped to the task script jobs.
 
 .Inputs
 	None
@@ -201,6 +226,12 @@ function Add-BuildTask
 	,
 	[Parameter()]
 	[object]$If = $true
+	,
+	[Parameter()]
+	[object]$Inputs
+	,
+	[Parameter()]
+	[object]$Outputs
 )
 {
 	$task = $BuildThis.Tasks[$Name]
@@ -210,6 +241,10 @@ Task '$Name' is added twice:
 1: $(Invoke-Build-Format-Message $task.Info.PositionMessage)
 2: $(Invoke-Build-Format-Message $MyInvocation.PositionMessage)
 "@ InvalidOperation $Name
+	}
+
+	if (($null -eq $Inputs) -ne ($null -eq $Outputs)) {
+		Invoke-BuildError "Task '$Name': Inputs and Outputs should be both null or not null."
 	}
 
 	$jobList = [System.Collections.ArrayList]@()
@@ -247,6 +282,8 @@ Task '$Name' is added twice:
 		Try = $tryList
 		If = $If
 		Info = $MyInvocation
+		Inputs = $Inputs
+		Outputs = $Outputs
 	})
 }
 
@@ -594,14 +631,15 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		foreach(${private:build-name} in $BuildTask) {
 			Invoke-Build-Task ${private:build-name}
 		}
+		$BuildThis.Messages
 		if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
 			Invoke-Build-Write-Info $BuildThis
 		}
 	}
 	finally {
 		Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
-		$BuildInfo.Messages
 		if (${private:build-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
+			$BuildInfo.Messages
 			Invoke-Build-Write-Info $BuildInfo
 		}
 	}
@@ -613,13 +651,13 @@ function Invoke-BuildError($Message, $Category = 0, $Target)
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
 }
 
-### End of the public zone. Exit if dot-sourced.
+### End of the public zone. Exit if dot-sourced from the command line.
 ${private:build-sourced} = $PSCmdlet.MyInvocation.InvocationName -eq '.'
 if (${private:build-sourced}) {
 	if (!$PSCmdlet.MyInvocation.ScriptName) {
-		Write-Warning 'Invoke-Build is dot-sourced in order to get help for its functions.'
-		Get-Command Add-BuildTask, Get-BuildError, Assert-BuildTrue, Invoke-BuildExec, Use-BuildFramework, Write-BuildText, Build -ea 0 |
-		Format-Table -AutoSize | Out-String
+		Write-Warning 'Invoke-Build is dot-sourced in order to get its command help.'
+		Get-Command task, Add-BuildTask, error, Get-BuildError, assert, Assert-BuildTrue, exec, Invoke-BuildExec, framework, Use-BuildFramework,
+		Get-BuildVersion, Write-BuildText, Start-Build | Format-Table -AutoSize | Out-String
 		return
 	}
 	if ($BuildFile -or $Parameters) {
@@ -651,6 +689,7 @@ function Write-Warning([string]$Message)
 	++$BuildInfo.WarningCount
 	++$BuildThis.WarningCount
 	$null = $BuildInfo.Messages.Add($Message)
+	$null = $BuildThis.Messages.Add($Message)
 }
 
 # Heals line breaks in the position message.
@@ -662,19 +701,91 @@ function Invoke-Build-Format-Message([string]$Message)
 # Evaluates the If condition of the task
 function Invoke-Build-If([object]$Task)
 {
-	${private:build-if} = $Task.If
-	if (${private:build-if} -is [scriptblock]) {
-		try {
-			& ${private:build-if}
+	${private:build-task} = $Task
+	Remove-Variable Task -Scope Local
+
+	try {
+		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+		& ${private:build-task}.If
+	}
+	catch {
+		${private:build-task}.Error = $_
+		$BuildThis.Fatal = $true
+		throw
+	}
+}
+
+# Evaluates Inputs and Outputs and gets a reason to skip.
+function Invoke-Build-IO([object]$Task)
+{
+	${private:build-task} = $Task
+	Remove-Variable Task -Scope Local
+
+	try {
+		# evaluate inputs
+		${private:build-inputs} = ${private:build-task}.Inputs
+		if (${private:build-inputs} -is [scriptblock]) {
+			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+			${private:build-inputs} = @(& ${private:build-inputs})
 		}
-		catch {
-			$BuildThis.Fatal = $true
-			$Task.Error = $_
-			throw
+		${private:build-inputs} = @(${private:build-inputs} | .{process{
+			if ($_ -isnot [System.IO.FileSystemInfo]) {
+				$_ = Get-Item -LiteralPath $_ -ErrorAction Stop
+			}
+			$_
+		}})
+
+		# no input:
+		if (!${private:build-inputs}) {
+			'Skipping because there is no input.'
+			return
+		}
+
+		# evaluate outputs
+		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+		if (${private:build-task}.Outputs -is [scriptblock]) {
+			${private:build-outputs} = @(${private:build-inputs} | & ${private:build-task}.Outputs)
+			if (${private:build-inputs}.Count -ne ${private:build-outputs}.Count) {
+				throw "Different input and output counts: $(${private:build-inputs}.Count) and $(${private:build-outputs}.Count)."
+			}
+
+			# filter inputs
+			${private:build-task}.Inputs = .{
+				$index = -1
+				foreach($out in ${private:build-outputs}) {
+					++$index
+					$in = ${private:build-inputs}[$index]
+					if (!(Test-Path -LiteralPath $out) -or ($in.LastWriteTime -gt (Get-Item -LiteralPath $out -ErrorAction Stop).LastWriteTime)) {
+						$in
+					}
+				}
+			}
+
+			if (!${private:build-task}.Inputs) {
+				'Skipping because all outputs are up-to-date with respect to the inputs.'
+			}
+		}
+		else {
+			${private:build-task}.Inputs = ${private:build-inputs}
+
+			foreach($out in ${private:build-task}.Outputs) {
+				if (!(Test-Path -LiteralPath $out -ErrorAction Stop)) {
+					return
+				}
+			}
+
+			$inTime = ${private:build-inputs} | .{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum
+			$outTime = Get-Item -LiteralPath (${private:build-task}.Outputs) -ErrorAction Stop | .{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Minimum
+
+			if ($inTime.Maximum -le $outTime.Minimum) {
+				'Skipping because all outputs are up-to-date with respect to the inputs.'
+			}
 		}
 	}
-	else {
-		${private:build-if}
+	catch {
+		${private:build-task}.Error = $_
+		$BuildThis.Fatal = $true
+		throw
 	}
 }
 
@@ -682,97 +793,128 @@ function Invoke-Build-If([object]$Task)
 # Build scripts should define standard functions shared between tasks.
 function Invoke-Build-Task($Name, $Path)
 {
-	# task object
+	# the task
 	${private:build-task} = $BuildThis.Tasks[$Name]
 	if (!${private:build-task}) { throw }
 
 	# task path
 	${private:build-path} = if ($Path) { "$Path\$Name" } else { $Name }
 
-	# fail?
+	# failed? (before done)
 	if (${private:build-task}.ContainsKey('Error')) {
 		Write-BuildText Yellow "${private:build-path} failed before."
+		return
 	}
+
 	# done?
-	elseif (${private:build-task}.ContainsKey('Stopwatch')) {
+	if (${private:build-task}.ContainsKey('Stopwatch')) {
 		Write-BuildText DarkYellow "${private:build-path} was done before."
+		return
 	}
-	# skip?
-	elseif (!(Invoke-Build-If ${private:build-task})) {
+
+	# hide variables
+	Remove-Variable Name, Path -Scope Local
+
+	# condition?
+	${private:build-if} = ${private:build-task}.If
+	if (${private:build-if} -is [scriptblock]) {
+		if (!(Invoke-Build-If ${private:build-task})) {
+			return
+		}
 	}
+	elseif (!${private:build-if}) {
+		return
+	}
+
 	# invoke
-	else {
-		++$BuildInfo.TaskCount
-		++$BuildThis.TaskCount
+	++$BuildInfo.TaskCount
+	++$BuildThis.TaskCount
 
-		# hide variables
-		Remove-Variable Name, Path -Scope Local
+	${private:build-count} = ${private:build-task}.Jobs.Count
+	${private:build-number} = 0
 
-		${private:build-count} = ${private:build-task}.Jobs.Count
-		${private:build-number} = 0
-
-		${private:build-task}.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-		try {
-			foreach(${private:build-job} in ${private:build-task}.Jobs) {
-				++${private:build-number}
-				if (${private:build-job} -is [string]) {
-					try {
-						Invoke-Build-Task ${private:build-job} ${private:build-path}
-					}
-					catch {
-						# fatal (e.g. task -If failed)
-						if ($BuildThis['Fatal']) {
-							throw
-						}
-						# die if not protected
-						if (${private:build-task}.Try -notcontains ${private:build-job}) {
-							throw
-						}
-						# try to survive
-						${private:build-why} = Invoke-Build-Approve-Task ${private:build-job}
-						if (${private:build-why}) {
-							# tell why and die
-							Write-BuildText Red ${private:build-why}
-							throw
-						}
-						# survive, show the error
-						else {
-							${private:build-job} = $BuildThis.Tasks[${private:build-job}]
-							if (!${private:build-job}) { throw }
-							Write-BuildText Red (${private:build-job}.Error | Out-String)
-						}
-					}
+	${private:build-task}.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+	try {
+		${private:build-do-input} = $true
+		${private:build-no-input} = $null
+		foreach(${private:build-job} in ${private:build-task}.Jobs) {
+			++${private:build-number}
+			if (${private:build-job} -is [string]) {
+				try {
+					Invoke-Build-Task ${private:build-job} ${private:build-path}
 				}
-				elseif (${private:build-job} -is [scriptblock]) {
-					${private:build-title} = "${private:build-path} (${private:build-number}/${private:build-count})"
-					Write-BuildText DarkYellow "${private:build-title}:"
-
-					if ($WhatIf) {
-						${private:build-job}
+				catch {
+					# fatal (e.g. task -If failed)
+					if ($BuildThis['Fatal']) {
+						throw
 					}
+					# die if not protected
+					if (${private:build-task}.Try -notcontains ${private:build-job}) {
+						throw
+					}
+					# try to survive
+					${private:build-why} = Invoke-Build-Approve-Task ${private:build-job}
+					if (${private:build-why}) {
+						# tell why and die
+						Write-BuildText Red ${private:build-why}
+						throw
+					}
+					# survive, show the error
 					else {
-						Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-						& ${private:build-job}
-
-						if (${private:build-task}.Jobs.Count -ge 2) {
-							Write-BuildText DarkYellow "${private:build-title} is done."
-						}
+						${private:build-job} = $BuildThis.Tasks[${private:build-job}]
+						if (!${private:build-job}) { throw }
+						Write-BuildText Red (${private:build-job}.Error | Out-String)
 					}
 				}
 			}
-			Write-BuildText DarkYellow "${private:build-path} is done, $(${private:build-task}.Stopwatch.Elapsed)."
+			elseif (${private:build-job} -is [scriptblock]) {
+				${private:build-title} = "${private:build-path} (${private:build-number}/${private:build-count})"
+				Write-BuildText DarkYellow "${private:build-title}:"
+
+				if ($WhatIf) {
+					${private:build-job}
+					continue
+				}
+
+				if (${private:build-do-input}) {
+					${private:build-do-input} = $false
+					if ($null -ne ${private:build-task}.Inputs) {
+						${private:build-no-input} = Invoke-Build-IO ${private:build-task}
+					}
+				}
+
+				if (${private:build-no-input}) {
+					Write-BuildText DarkYellow ${private:build-no-input}
+				}
+				else {
+					Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+					if (${private:build-task}.Inputs) {
+						${private:build-task}.Inputs | & ${private:build-job}
+					}
+					else {
+						& ${private:build-job}
+					}
+
+					if (${private:build-task}.Jobs.Count -ge 2) {
+						Write-BuildText DarkYellow "${private:build-title} is done."
+					}
+				}
+			}
 		}
-		catch {
-			++$BuildInfo.ErrorCount
-			++$BuildThis.ErrorCount
-			${private:build-task}.Error = $_
-			$null = $BuildInfo.Messages.Add("ERROR: Task ${private:build-path}: $_")
-			Write-BuildText Yellow (Invoke-Build-Format-Message ${private:build-task}.Info.PositionMessage)
-			throw
-		}
-		finally {
-			${private:build-task}.Stopwatch.Stop()
-		}
+		Write-BuildText DarkYellow "${private:build-path} is done, $(${private:build-task}.Stopwatch.Elapsed)."
+	}
+	catch {
+		++$BuildInfo.ErrorCount
+		++$BuildThis.ErrorCount
+		${private:build-task}.Error = $_
+		${private:build-message} = "ERROR: Task ${private:build-path}: $_"
+		$null = $BuildInfo.Messages.Add(${private:build-message})
+		$null = $BuildThis.Messages.Add(${private:build-message})
+		Write-BuildText Yellow (Invoke-Build-Format-Message ${private:build-task}.Info.PositionMessage) #???
+		throw
+	}
+	finally {
+		${private:build-task}.Stopwatch.Stop()
 	}
 }
 
@@ -932,6 +1074,7 @@ $BuildThis.Tasks = @{}
 $BuildThis.TaskCount = 0
 $BuildThis.ErrorCount = 0
 $BuildThis.WarningCount = 0
+$BuildThis.Messages = [System.Collections.ArrayList]@()
 $BuildThis.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 ### Hide variables
