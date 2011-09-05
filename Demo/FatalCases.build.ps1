@@ -59,17 +59,21 @@ task TestAlmostSurvives AlmostSurvives, @{Fails=1}
 
 # Another case when a protected error is fatal. It is the case when the If
 # script fails. The build fails as well because it is a programming issue.
-task ScriptConditionFails -If { throw "If fails." } { throw 'Unexpected.' }
-task TestScriptConditionFails @{ScriptConditionFails=1}, { throw 'Unexpected.' }
+task ScriptConditionFails -If { throw "If fails." } { throw }
+task TestScriptConditionFails @{ScriptConditionFails=1}, { throw }
 
 # Fatal case: the Inputs script fails.
-task InputsFails -Inputs { throw 'Inputs fails.' } -Outputs {} { throw 'Unexpected.' }
-task TestInputsFails @{InputsFails=1}, { throw 'Unexpected.' }
+task InputsFails -Inputs { throw 'Inputs fails.' } -Outputs {} { throw }
+task TestInputsFails @{InputsFails=1}, { throw }
 
 # Fatal case: the Outputs script fails.
-task OutputsFails -Outputs { throw 'Outputs fails.' } -Inputs { '.build.ps1' } { throw 'Unexpected.' }
-task TestOutputsFails @{OutputsFails=1}, { throw 'Unexpected.' }
+task OutputsFails -Outputs { throw 'Outputs fails.' } -Inputs { '.build.ps1' } { throw }
+task TestOutputsFails @{OutputsFails=1}, { throw }
 
 # Fatal case: Inputs and Outputs (scriptblock) have different number of items
-task InputsOutputsMismatch -Inputs { '.build.ps1' } -Outputs { } { throw 'Unexpected.' }
-task TestInputsOutputsMismatch @{InputsOutputsMismatch=1}, { throw 'Unexpected.' }
+task InputsOutputsMismatch -Inputs { '.build.ps1' } -Outputs { } { throw }
+task TestInputsOutputsMismatch @{InputsOutputsMismatch=1}, { throw }
+
+# Fatal case: one of the Inputs items is missing.
+task MissingInputsItems -Inputs { 'missing' } -Outputs {} { throw }
+task TestMissingInputsItems @{MissingInputsItems=1}, { throw }

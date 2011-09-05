@@ -24,7 +24,7 @@
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 	The ideas come from the psake module and a few other build and make tools.
-	The goal of this script is to provide a very simple and yet robust engine.
+	The goal of this script is to provide an easy to use and yet robust engine.
 
 	Installation: just copy Invoke-Build.ps1 to any directory of the $env:path.
 
@@ -144,11 +144,11 @@ Set-Alias task Add-BuildTask
 
 <#
 .Synopsis
-	Gets the Invoke-Build version.
+	Gets Invoke-Build version.
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.4'
+	[System.Version]'1.0.5'
 }
 
 <#
@@ -268,11 +268,11 @@ Task '$Name' is added twice:
 				}
 			}
 		}
-		elseif (($job -isnot [string]) -and($job -isnot [scriptblock])) {
-			Invoke-BuildError "Task '$Name': Job $($index + 1)/$($Jobs.Count): Invalid job type." InvalidArgument $job
+		elseif (($job -is [string]) -or ($job -is [scriptblock])) {
+			$null = $jobList.Add($job)
 		}
 		else {
-			$null = $jobList.Add($job)
+			Invoke-BuildError "Task '$Name': Job $($index + 1)/$($Jobs.Count): Invalid job type." InvalidArgument $job
 		}
 	}
 
@@ -408,14 +408,14 @@ function Invoke-BuildExec
 	[int[]]$ExitCode = @(0)
 )
 {
-	${private:build-command} = $Command
-	${private:build-valid} = $ExitCode
-	Remove-Variable Command, ExitCode -Scope Local
+	${private:-command} = $Command
+	${private:-valid} = $ExitCode
+	Remove-Variable Command, ExitCode
 
-	. ${private:build-command}
+	. ${private:-command}
 
-	if (${private:build-valid} -notcontains $LastExitCode) {
-		Invoke-BuildError "Command: {${private:build-command}}: last exit code is $LastExitCode." InvalidResult $LastExitCode
+	if (${private:-valid} -notcontains $LastExitCode) {
+		Invoke-BuildError "Command: {${private:-command}}: Last exit code is $LastExitCode." InvalidResult $LastExitCode
 	}
 }
 
@@ -430,8 +430,8 @@ function Invoke-BuildExec
 	order to set framework aliases in the scope where it is called from.
 
 	This function is often called once from a build script so that all tasks
-	use script scope aliases. But it can be called from tasks as well in order
-	to use more aliases or even use another framework.
+	use script scope aliases. But it can be called from tasks in order to use
+	more aliases or even another framework.
 
 .Parameter Framework
 		The required framework directory relative to the Microsoft.NET in the
@@ -440,8 +440,8 @@ function Invoke-BuildExec
 		Examples: Framework\v4.0.30319, Framework\v2.0.50727, etc.
 
 .Parameter Tools
-		The framework tool names to set aliases for. These names become alias
-		names and should be using exactly as specified.
+		The framework tool names to set aliases for. These names also become
+		alias names and they should be used exactly as specified.
 
 .Inputs
 	None
@@ -600,17 +600,17 @@ function Start-Build
 		### View the tasks
 		if ($BuildTask[0] -eq '?') {
 			$BuildThis.Tasks.Values | .{process{
-				${private:build-task} = 1 | Select-Object Task, Info, File, Line
-				${private:build-task}
-				${private:build-task}.Task = $_.Name
-				${private:build-file} = $_.Info.ScriptName
-				${private:build-task}.File = ${private:build-file}
-				${private:build-task}.Line = $_.Info.ScriptLineNumber
-				if (${private:build-file} -like "$BuildRoot\*") {
-					${private:build-file} = ${private:build-file}.Substring($BuildRoot.Length + 1)
+				${private:-task} = 1 | Select-Object Task, Info, File, Line
+				${private:-task}
+				${private:-task}.Task = $_.Name
+				${private:-file} = $_.Info.ScriptName
+				${private:-task}.File = ${private:-file}
+				${private:-task}.Line = $_.Info.ScriptLineNumber
+				if (${private:-file} -like "$BuildRoot\*") {
+					${private:-file} = ${private:-file}.Substring($BuildRoot.Length + 1)
 				}
-				${private:build-task}.Info = @"
-$(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:build-file}):$(${private:build-task}.Line)
+				${private:-task}.Info = @"
+$(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:-file}):$(${private:-task}.Line)
 "@
 			}} |
 			Sort-Object File, Line |
@@ -619,17 +619,17 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		}
 
 		### Initialize (build preprocessing)
-		foreach(${private:build-name} in $BuildTask) {
-			${private:build-task} = $BuildThis.Tasks[${private:build-name}]
-			if (!${private:build-task}) {
-				Invoke-BuildError "Task '${private:build-name}' is not defined." ObjectNotFound ${private:build-name}
+		foreach(${private:-name} in $BuildTask) {
+			${private:-task} = $BuildThis.Tasks[${private:-name}]
+			if (!${private:-task}) {
+				Invoke-BuildError "Task '${private:-name}' is not defined." ObjectNotFound ${private:-name}
 			}
-			Invoke-Build-Initialize-Task ${private:build-task} ([System.Collections.ArrayList]@())
+			Invoke-Build-Initialize-Task ${private:-task} ([System.Collections.ArrayList]@())
 		}
 
 		### Invoke the tasks (build processing)
-		foreach(${private:build-name} in $BuildTask) {
-			Invoke-Build-Task ${private:build-name}
+		foreach(${private:-name} in $BuildTask) {
+			Invoke-Build-Task ${private:-name}
 		}
 		$BuildThis.Messages
 		if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
@@ -637,8 +637,8 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		}
 	}
 	finally {
-		Set-Location -LiteralPath ${private:build-location} -ErrorAction Stop
-		if (${private:build-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
+		Set-Location -LiteralPath ${private:-location} -ErrorAction Stop
+		if (${private:-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
 			$BuildInfo.Messages
 			Invoke-Build-Write-Info $BuildInfo
 		}
@@ -652,8 +652,8 @@ function Invoke-BuildError($Message, $Category = 0, $Target)
 }
 
 ### End of the public zone. Exit if dot-sourced from the command line.
-${private:build-sourced} = $PSCmdlet.MyInvocation.InvocationName -eq '.'
-if (${private:build-sourced}) {
+${private:-sourced} = $PSCmdlet.MyInvocation.InvocationName -eq '.'
+if (${private:-sourced}) {
 	if (!$PSCmdlet.MyInvocation.ScriptName) {
 		Write-Warning 'Invoke-Build is dot-sourced in order to get its command help.'
 		Get-Command task, Add-BuildTask, error, Get-BuildError, assert, Assert-BuildTrue, exec, Invoke-BuildExec, framework, Use-BuildFramework,
@@ -666,22 +666,12 @@ if (${private:build-sourced}) {
 	$BuildFile = $PSCmdlet.MyInvocation.ScriptName
 }
 
-# Use another Write-BuildText if there is no UI.
+# Use this Write-BuildText without UI.
 if (!$Host.UI -or !$Host.UI.RawUI) {
-	function Write-BuildText
-	(
-		[Parameter()]
-		[System.ConsoleColor]$Color
-		,
-		[Parameter()]
-		[string]$Text
-	)
-	{
-		$Text
-	}
+	function Write-BuildText([Parameter()][System.ConsoleColor]$Color, [Parameter()][string]$Text) { $Text }
 }
 
-# Redefines Write-Warning to collect warning messages.
+# Replaces Write-Warning to collect warnings.
 function Write-Warning([string]$Message)
 {
 	$Message = "WARNING: " + $Message
@@ -698,92 +688,102 @@ function Invoke-Build-Format-Message([string]$Message)
 	$Message.Trim().Replace("`n", "`r`n")
 }
 
-# Evaluates the If condition of the task
+# Evaluates the If condition of the task.
 function Invoke-Build-If([object]$Task)
 {
-	${private:build-task} = $Task
-	Remove-Variable Task -Scope Local
+	${private:-task} = $Task
+	Remove-Variable Task
 
 	try {
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		& ${private:build-task}.If
+		& ${private:-task}.If
 	}
 	catch {
-		${private:build-task}.Error = $_
+		${private:-task}.Error = $_
 		$BuildThis.Fatal = $true
 		throw
 	}
 }
 
-# Evaluates Inputs and Outputs and gets a reason to skip.
+# Makes Inputs and Outputs and gets a reason to skip.
 function Invoke-Build-IO([object]$Task)
 {
-	${private:build-task} = $Task
-	Remove-Variable Task -Scope Local
+	${private:-task} = $Task
+	Remove-Variable Task
 
 	try {
-		# evaluate inputs
-		${private:build-inputs} = ${private:build-task}.Inputs
-		if (${private:build-inputs} -is [scriptblock]) {
+		${private:-inputs} = ${private:-task}.Inputs
+
+		# invoke inputs
+		if (${private:-inputs} -is [scriptblock]) {
 			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-			${private:build-inputs} = @(& ${private:build-inputs})
+			${private:-inputs} = @(& ${private:-inputs})
 		}
-		${private:build-inputs} = @(${private:build-inputs} | .{process{
-			if ($_ -isnot [System.IO.FileSystemInfo]) {
-				$_ = Get-Item -LiteralPath $_ -ErrorAction Stop
-			}
-			$_
-		}})
+
+		# to input items
+		try {
+			${private:-inputs} = @(${private:-inputs} | .{process{
+				if ($_ -isnot [System.IO.FileSystemInfo]) {
+					$_ = Get-Item -LiteralPath $_ -Force -ErrorAction Stop
+				}
+				$_
+			}})
+		}
+		catch {
+			throw "Task '$(${private:-task}.Name)': Error on resolving inputs: $_"
+		}
 
 		# no input:
-		if (!${private:build-inputs}) {
+		if (!${private:-inputs}) {
 			'Skipping because there is no input.'
 			return
 		}
 
 		# evaluate outputs
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		if (${private:build-task}.Outputs -is [scriptblock]) {
-			${private:build-outputs} = @(${private:build-inputs} | & ${private:build-task}.Outputs)
-			if (${private:build-inputs}.Count -ne ${private:build-outputs}.Count) {
-				throw "Different input and output counts: $(${private:build-inputs}.Count) and $(${private:build-outputs}.Count)."
+		if (${private:-task}.Outputs -is [scriptblock]) {
+			${private:-outputs} = @(${private:-inputs} | & ${private:-task}.Outputs)
+			if (${private:-inputs}.Count -ne ${private:-outputs}.Count) {
+				throw "Task '$(${private:-task}.Name)': Different input and output counts: $(${private:-inputs}.Count) and $(${private:-outputs}.Count)."
 			}
 
-			# filter inputs
-			${private:build-task}.Inputs = .{
-				$index = -1
-				foreach($out in ${private:build-outputs}) {
-					++$index
-					$in = ${private:build-inputs}[$index]
-					if (!(Test-Path -LiteralPath $out) -or ($in.LastWriteTime -gt (Get-Item -LiteralPath $out -ErrorAction Stop).LastWriteTime)) {
-						$in
+			${private:-task}.Inputs = .{
+				${private:-index} = -1
+				foreach(${private:-out} in ${private:-outputs}) {
+					++${private:-index}
+					${private:-in} = ${private:-inputs}[${private:-index}]
+					if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force -ErrorAction Stop).LastWriteTime)) {
+						${private:-in}
 					}
 				}
 			}
 
-			if (!${private:build-task}.Inputs) {
+			if (!${private:-task}.Inputs) {
 				'Skipping because all outputs are up-to-date with respect to the inputs.'
 			}
 		}
 		else {
-			${private:build-task}.Inputs = ${private:build-inputs}
+			${private:-task}.Inputs = ${private:-inputs}
 
-			foreach($out in ${private:build-task}.Outputs) {
-				if (!(Test-Path -LiteralPath $out -ErrorAction Stop)) {
+			foreach(${private:-out} in ${private:-task}.Outputs) {
+				if (!(Test-Path -LiteralPath ${private:-out} -ErrorAction Stop)) {
 					return
 				}
 			}
 
-			$inTime = ${private:build-inputs} | .{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum
-			$outTime = Get-Item -LiteralPath (${private:build-task}.Outputs) -ErrorAction Stop | .{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Minimum
+			${private:-time1} = ${private:-inputs} |
+			.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum
 
-			if ($inTime.Maximum -le $outTime.Minimum) {
+			${private:-time2} = Get-Item -LiteralPath ${private:-task}.Outputs -Force -ErrorAction Stop |
+			.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Minimum
+
+			if (${private:-time1}.Maximum -le ${private:-time2}.Minimum) {
 				'Skipping because all outputs are up-to-date with respect to the inputs.'
 			}
 		}
 	}
 	catch {
-		${private:build-task}.Error = $_
+		${private:-task}.Error = $_
 		$BuildThis.Fatal = $true
 		throw
 	}
@@ -794,35 +794,35 @@ function Invoke-Build-IO([object]$Task)
 function Invoke-Build-Task($Name, $Path)
 {
 	# the task
-	${private:build-task} = $BuildThis.Tasks[$Name]
-	if (!${private:build-task}) { throw }
+	${private:-task} = $BuildThis.Tasks[$Name]
+	if (!${private:-task}) { throw }
 
 	# task path
-	${private:build-path} = if ($Path) { "$Path\$Name" } else { $Name }
+	${private:-path} = if ($Path) { "$Path\$Name" } else { $Name }
 
-	# failed? (before done)
-	if (${private:build-task}.ContainsKey('Error')) {
-		Write-BuildText Yellow "${private:build-path} failed before."
+	# 1) failed?
+	if (${private:-task}.ContainsKey('Error')) {
+		Write-BuildText Yellow "${private:-path} failed before."
 		return
 	}
 
-	# done?
-	if (${private:build-task}.ContainsKey('Stopwatch')) {
-		Write-BuildText DarkYellow "${private:build-path} was done before."
+	# 2) done?
+	if (${private:-task}.ContainsKey('Stopwatch')) {
+		Write-BuildText DarkYellow "${private:-path} was done before."
 		return
 	}
 
-	# hide variables
-	Remove-Variable Name, Path -Scope Local
+	# hide
+	Remove-Variable Name, Path
 
 	# condition?
-	${private:build-if} = ${private:build-task}.If
-	if (${private:build-if} -is [scriptblock]) {
-		if (!(Invoke-Build-If ${private:build-task})) {
+	${private:-if} = ${private:-task}.If
+	if (${private:-if} -is [scriptblock]) {
+		if (!(Invoke-Build-If ${private:-task})) {
 			return
 		}
 	}
-	elseif (!${private:build-if}) {
+	elseif (!${private:-if}) {
 		return
 	}
 
@@ -830,95 +830,94 @@ function Invoke-Build-Task($Name, $Path)
 	++$BuildInfo.TaskCount
 	++$BuildThis.TaskCount
 
-	${private:build-count} = ${private:build-task}.Jobs.Count
-	${private:build-number} = 0
+	${private:-count} = ${private:-task}.Jobs.Count
+	${private:-number} = 0
 
-	${private:build-task}.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+	${private:-task}.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 	try {
-		${private:build-do-input} = $true
-		${private:build-no-input} = $null
-		foreach(${private:build-job} in ${private:build-task}.Jobs) {
-			++${private:build-number}
-			if (${private:build-job} -is [string]) {
+		${private:-do-input} = $true
+		${private:-no-input} = $null
+		foreach(${private:-job} in ${private:-task}.Jobs) {
+			++${private:-number}
+			if (${private:-job} -is [string]) {
 				try {
-					Invoke-Build-Task ${private:build-job} ${private:build-path}
+					Invoke-Build-Task ${private:-job} ${private:-path}
 				}
 				catch {
-					# fatal (e.g. task -If failed)
+					# fatal
 					if ($BuildThis['Fatal']) {
 						throw
 					}
 					# die if not protected
-					if (${private:build-task}.Try -notcontains ${private:build-job}) {
+					if (${private:-task}.Try -notcontains ${private:-job}) {
 						throw
 					}
-					# try to survive
-					${private:build-why} = Invoke-Build-Approve-Task ${private:build-job}
-					if (${private:build-why}) {
-						# tell why and die
-						Write-BuildText Red ${private:build-why}
+					# try to survive, die
+					${private:-why} = Invoke-Build-Approve-Task ${private:-job}
+					if (${private:-why}) {
+						Write-BuildText Red ${private:-why}
 						throw
 					}
-					# survive, show the error
+					# survive
 					else {
-						${private:build-job} = $BuildThis.Tasks[${private:build-job}]
-						if (!${private:build-job}) { throw }
-						Write-BuildText Red (${private:build-job}.Error | Out-String)
+						${private:-job} = $BuildThis.Tasks[${private:-job}]
+						if (!${private:-job}) { throw }
+						Write-BuildText Red (${private:-job}.Error | Out-String)
 					}
 				}
 			}
-			elseif (${private:build-job} -is [scriptblock]) {
-				${private:build-title} = "${private:build-path} (${private:build-number}/${private:build-count})"
-				Write-BuildText DarkYellow "${private:build-title}:"
+			else {
+				${private:-title} = "${private:-path} (${private:-number}/${private:-count})"
+				Write-BuildText DarkYellow "${private:-title}:"
 
 				if ($WhatIf) {
-					${private:build-job}
+					${private:-job}
 					continue
 				}
 
-				if (${private:build-do-input}) {
-					${private:build-do-input} = $false
-					if ($null -ne ${private:build-task}.Inputs) {
-						${private:build-no-input} = Invoke-Build-IO ${private:build-task}
+				if (${private:-do-input}) {
+					${private:-do-input} = $false
+					if ($null -ne ${private:-task}.Inputs) {
+						${private:-no-input} = Invoke-Build-IO ${private:-task}
 					}
 				}
 
-				if (${private:build-no-input}) {
-					Write-BuildText DarkYellow ${private:build-no-input}
+				if (${private:-no-input}) {
+					Write-BuildText DarkYellow ${private:-no-input}
 				}
 				else {
 					Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-					if (${private:build-task}.Inputs) {
-						${private:build-task}.Inputs | & ${private:build-job}
+					if (${private:-task}.Inputs) {
+						${private:-task}.Inputs | & ${private:-job}
 					}
 					else {
-						& ${private:build-job}
+						& ${private:-job}
 					}
 
-					if (${private:build-task}.Jobs.Count -ge 2) {
-						Write-BuildText DarkYellow "${private:build-title} is done."
+					if (${private:-task}.Jobs.Count -ge 2) {
+						Write-BuildText DarkYellow "${private:-title} is done."
 					}
 				}
 			}
 		}
-		Write-BuildText DarkYellow "${private:build-path} is done, $(${private:build-task}.Stopwatch.Elapsed)."
+		Write-BuildText DarkYellow "${private:-path} is done, $(${private:-task}.Stopwatch.Elapsed)."
 	}
 	catch {
 		++$BuildInfo.ErrorCount
 		++$BuildThis.ErrorCount
-		${private:build-task}.Error = $_
-		${private:build-message} = "ERROR: Task ${private:build-path}: $_"
-		$null = $BuildInfo.Messages.Add(${private:build-message})
-		$null = $BuildThis.Messages.Add(${private:build-message})
-		Write-BuildText Yellow (Invoke-Build-Format-Message ${private:build-task}.Info.PositionMessage) #???
+		${private:-task}.Error = $_
+		${private:-text} = "ERROR: Task ${private:-path}: $_"
+		$null = $BuildInfo.Messages.Add(${private:-text})
+		$null = $BuildThis.Messages.Add(${private:-text})
+		Write-BuildText Yellow (Invoke-Build-Format-Message ${private:-task}.Info.PositionMessage)
 		throw
 	}
 	finally {
-		${private:build-task}.Stopwatch.Stop()
+		${private:-task}.Stopwatch.Stop()
 	}
 }
 
-# Gets null to survive or a reason to die on protected task errors.
+# Gets a reason to die on protected task errors.
 function Invoke-Build-Approve-Task([string]$TryTask)
 {
 	foreach($name in $BuildTask) {
@@ -931,7 +930,7 @@ function Invoke-Build-Approve-Task([string]$TryTask)
 	}
 }
 
-# Gets null to survive or a reason to die on protected task errors.
+# Gets a reason to die on protected task errors.
 function Invoke-Build-Approve-Tree([object]$Task, [string]$TryTask)
 {
 	# ignored:
@@ -939,7 +938,7 @@ function Invoke-Build-Approve-Tree([object]$Task, [string]$TryTask)
 		return
 	}
 
-	# try-task is in jobs:
+	# the task is in jobs:
 	if ($Task.Jobs -contains $TryTask) {
 		# and it is not protected
 		if ($Task.Try -notcontains $TryTask) {
@@ -1025,23 +1024,23 @@ $($Info.TaskCount) tasks, $($Info.ErrorCount) errors, $($Info.WarningCount) warn
 "@
 }
 
-### Resolve the file
-if (!${private:build-sourced}) {
+### Resolve the script
+if (!${private:-sourced}) {
 	try {
 		if ($BuildFile) {
-			${private:build-location} = Resolve-Path -LiteralPath $BuildFile -ErrorAction Stop
+			${private:-location} = Resolve-Path -LiteralPath $BuildFile -ErrorAction Stop
 		}
 		else {
-			${private:build-location} = @(Resolve-Path '*.build.ps1')
-			if (!${private:build-location}) {
+			${private:-location} = @(Resolve-Path '*.build.ps1')
+			if (!${private:-location}) {
 				throw "Found no '*.build.ps1' files."
 			}
-			if (${private:build-location}.Count -eq 1) {
-				${private:build-location} = ${private:build-location}[0]
+			if (${private:-location}.Count -eq 1) {
+				${private:-location} = ${private:-location}[0]
 			}
 			else {
-				${private:build-location} = ${private:build-location} -match '\\\.build\.ps1$'
-				if (!${private:build-location}) {
+				${private:-location} = ${private:-location} -match '\\\.build\.ps1$'
+				if (!${private:-location}) {
 					throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
 				}
 			}
@@ -1050,42 +1049,44 @@ if (!${private:build-sourced}) {
 	catch {
 		Invoke-BuildError "$_" ObjectNotFound $BuildFile
 	}
-	$BuildFile = Convert-Path ${private:build-location}
+	$BuildFile = Convert-Path ${private:-location}
 }
 
 ### Set the variables
-${private:build-location} = Get-Location
-${private:build-first} = !(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))
-if (${private:build-first}) {
-	New-Variable -Option Constant -Name BuildInfo -Value @{}
-	$BuildInfo.Id = '94abce897fdf4f18a806108b30f08c13'
-	$BuildInfo.TaskCount = 0
-	$BuildInfo.ErrorCount = 0
-	$BuildInfo.WarningCount = 0
-	$BuildInfo.Messages = [System.Collections.ArrayList]@()
-	$BuildInfo.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+${private:-first} = !(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))
+${private:-location} = Get-Location
+if (${private:-first}) {
+	New-Variable -Option Constant -Name BuildInfo -Value @{
+		Id = '94abce897fdf4f18a806108b30f08c13'
+		TaskCount = 0
+		ErrorCount = 0
+		WarningCount = 0
+		Messages = [System.Collections.ArrayList]@()
+		Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+	}
 }
 if (!$BuildTask) { $BuildTask = @('.') }
 Set-Variable -Option ReadOnly -Name BuildTask
 Set-Variable -Option ReadOnly -Name BuildFile
 New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
-New-Variable -Option Constant -Name BuildThis -Value @{}
-$BuildThis.Tasks = @{}
-$BuildThis.TaskCount = 0
-$BuildThis.ErrorCount = 0
-$BuildThis.WarningCount = 0
-$BuildThis.Messages = [System.Collections.ArrayList]@()
-$BuildThis.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+New-Variable -Option Constant -Name BuildThis -Value @{
+	Tasks = @{}
+	TaskCount = 0
+	ErrorCount = 0
+	WarningCount = 0
+	Messages = [System.Collections.ArrayList]@()
+	Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+}
 
 ### Hide variables
 ${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
-Remove-Variable Parameters -Scope Local
+Remove-Variable Parameters
 
-### Set location to the build root
+### Set location to the root (sourced needs this, too)
 Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 
 ### Invoke the file and tasks
-if (!${private:build-sourced}) {
+if (!${private:-sourced}) {
 	. $BuildFile @94abce897fdf4f18a806108b30f08c13
 	. Start-Build
 }

@@ -100,7 +100,7 @@ task Test {
 		else {
 			Write-Warning 'The result is not the same as expected.'
 			if ($env:MERGE) {
-				& $env:MERGE $outputPath $samplePath
+				& $env:MERGE $samplePath $outputPath
 			}
 			$toCopy = 1 -eq (Read-Host 'Save the result as expected? [1] Yes [Enter] No')
 		}
@@ -119,6 +119,13 @@ task Test {
 # The default task is a super test. It tests all and clean.
 task . Test, Zip, {
 	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
+}
+
+# Calls the tests infinitely.
+task Loop {
+	for(;;) {
+		Invoke-Build . Demo\.build.ps1
+	}
 }
 
 # Master script step 2: Invoke build tasks. This is often the last command but

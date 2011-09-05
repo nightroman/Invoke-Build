@@ -96,18 +96,12 @@ task Assert-True {
 	Invoke-Build . Assert-True.build.ps1
 }
 
-# This task tests conditional tasks, see ConditionalTask.build.ps1
+# This task tests conditional tasks, see ConditionalTasks.build.ps1
 # It shows how to invoke a build script with parameters (Debug|Release).
-task ConditionalTask {
-	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
-	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
-	Invoke-Build TestScriptCondition ConditionalTask.build.ps1
-}
-
-# This task ensures that cyclic references are caught.
-# Change the expected message and make the test to fail to see the task stack.
-task CyclicReference {
-	Test-Issue . CyclicReference.build.ps1 "Task 'task2': job 1: cyclic reference to 'task1'.*"
+task ConditionalTasks {
+	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Debug' }
+	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Release' }
+	Invoke-Build TestScriptCondition ConditionalTasks.build.ps1
 }
 
 # This task calls incremental build tests.
@@ -115,25 +109,14 @@ task Incremental {
 	Invoke-Build . Incremental.build.ps1
 }
 
+# This task calls invalid task tests.
+task InvalidTasks {
+	Invoke-Build . InvalidTasks.build.ps1
+}
+
 # This task calls Invoke-BuildExec (exec) tests.
 task Invoke-Exec {
 	Invoke-Build . Invoke-Exec.build.ps1
-}
-
-# This task ensures that tasks with the same name cannot be added twice.
-task TaskAddedTwice {
-	Test-Issue . TaskAddedTwice.build.ps1 "Task 'task1' is added twice:*1: *2: *"
-}
-
-# This task ensures that task jobs can be either strings or script blocks.
-task TaskInvalidJob {
-	Test-Issue InvalidJobType TaskInvalidJob.build.ps1 "Task 'InvalidJobType': Job 4/4: Invalid job type." @{Test = 'InvalidJobType'}
-	Test-Issue InvalidJobValue TaskInvalidJob.build.ps1 "Task 'InvalidJobValue': Job 1/1: Hashtable should have one item." @{Test = 'InvalidJobValue'}
-}
-
-# This task ensures that missing tasks are caught.
-task TaskNotDefined {
-	Test-Issue . TaskNotDefined.build.ps1 "Task 'task1': job 1: task 'missing' is not defined.*"
 }
 
 # This task tests job tasks using @{Name=1} notation.
@@ -152,7 +135,8 @@ task FatalCases {
 	Test-Issue TestScriptConditionFails FatalCases.build.ps1 'If fails.'
 	Test-Issue TestInputsFails FatalCases.build.ps1 'Inputs fails.'
 	Test-Issue TestOutputsFails FatalCases.build.ps1 'Outputs fails.'
-	Test-Issue TestInputsOutputsMismatch FatalCases.build.ps1 'Different input and output counts: 1 and 0.'
+	Test-Issue TestInputsOutputsMismatch FatalCases.build.ps1 "Task 'InputsOutputsMismatch': Different input and output counts: 1 and 0."
+	Test-Issue TestMissingInputsItems FatalCases.build.ps1 "Task 'MissingInputsItems': Error on resolving inputs: Cannot find path 'missing' because it does not exist."
 }
 
 # Invoke-Build should expose only documented variables! If this test shows
@@ -214,15 +198,12 @@ task TestFunctions {
 # This task calls all test tasks.
 task Tests `
 	Assert-True,
-	ConditionalTask,
-	CyclicReference,
+	ConditionalTasks,
 	FatalCases,
 	Incremental,
+	InvalidTasks,
 	Invoke-Exec,
 	ProtectedTasks,
-	TaskAddedTwice,
-	TaskInvalidJob,
-	TaskNotDefined,
 	Use-Framework,
 	TestFunctions,
 	TestVariables
@@ -242,7 +223,7 @@ Tests,
 # The last test tests not yet documented data
 {
 	# This build statistics
-	assert ($BuildThis.TaskCount -eq 20)
+	assert ($BuildThis.TaskCount -eq 17)
 	assert ($BuildThis.ErrorCount -eq 0)
 	assert ($BuildThis.WarningCount -ge 1)
 

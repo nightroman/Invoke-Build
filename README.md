@@ -6,15 +6,26 @@ Invoke-Build - Orchestrate Builds in PowerShell
 tasks from build scripts.
 
 Ideas come from the [psake](https://github.com/JamesKovacs/psake) module and
-other build tools. This script provides a very simple and yet robust engine.
+other build tools. This script provides an easy to use and yet robust engine.
+
+Build scripts are *PowerShell* scripts that define tasks. Tasks consist of jobs
+(references to other tasks and own scripts), conditions (Boolean expressions or
+scripts), and inputs and outputs for incremental and partial incremental builds
+(path lists or equivalent scripts).
+
+Build scripts may have one of two forms: *classic* scripts are called by
+`Invoke-Build`, *master* scripts dot-source `Invoke-Build` and `Start-Build`
+themselves. Classic scripts are slightly easier to compose. Master scripts are
+easier to use, sometimes significantly, especially with many parameters.
 
 *Invoke-Build* is specifically designed for multiple calls in the same session.
 It never changes environment variables and the system path. It does not leave
 any variables, functions, aliases after its calls, successful or not. It also
-restores the current location. Caveat: called tasks can make such changes.
+restores the current location. Caveat: build tasks can make such changes.
 
-Several *Invoke-Build* builds work simultaneously without conflicts both nested
-calls and parallel builds called from background jobs or separate workspaces.
+Simultaneous *Invoke-Build* calls in the same session work without conflicts:
+both nested calls and parallel builds called from background jobs or separate
+workspaces.
 
 ## Quick Start
 
