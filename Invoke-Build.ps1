@@ -184,27 +184,27 @@ function Get-BuildVersion
 
 .Parameter Inputs
 		File system items or literal paths used as input for full or partial
-		incremental build, or a script which gets them. Paths (as strings) are
-		resolved to file system items. All input items must exist. All or some
-		input items (it depends on Outputs) are piped to the task script jobs.
+		incremental build, or a script which gets them. All input items must
+		exist. All items are finally resolved to full paths and all or some of
+		them (it depends on Outputs) are piped to the task script jobs.
 
 		The script jobs are not invoked if all the Outputs are up-to-date or if
 		the Inputs is not null and yet empty. But task jobs are always invoked.
 
 		Inputs and Outputs are processed on the first script job invocation.
-		Thus, for example, a preceding task job can prepare the Inputs items.
+		Thus, preceding task jobs can actually prepare the Inputs items.
 
 .Parameter Outputs
 		Literal output paths. There are two forms:
 
 		1) [string[]] is for full incremental build. If there are missing items
 		then the scripts are invoked. Otherwise they are invoked if the minimum
-		output time is less than the maximum input time. All input items are
+		output time is less than the maximum input time. All input paths are
 		piped to the task scripts.
 
-		2) [scriptblock] is for partial incremental build. All input items are
-		piped to the Outputs script which gets exactly one path for each input
-		item. Then input and output times are compared and only input items
+		2) [scriptblock] is for partial incremental build. All input paths are
+		piped to the Outputs script which gets exactly one path for each input.
+		Then input and output time stamps are compared and only input paths
 		with out-of-date output, if any, are piped to the task script jobs.
 
 .Inputs
@@ -727,21 +727,23 @@ function Invoke-Build-IO([object]$Task)
 			${private:-inputs} = @(& ${private:-inputs})
 		}
 
-		# to input items
+		# resolve to paths and items
+		${private:-paths} = [System.Collections.ArrayList]@()
 		try {
-			${private:-inputs} = @(${private:-inputs} | .{process{
-				if ($_ -isnot [System.IO.FileSystemInfo]) {
-					$_ = Get-Item -LiteralPath $_ -Force -ErrorAction Stop
+			${private:-inputs} = foreach(${private:-in} in ${private:-inputs}) {
+				if (${private:-in} -isnot [System.IO.FileSystemInfo]) {
+					${private:-in} = Get-Item -LiteralPath ${private:-in} -Force -ErrorAction Stop
 				}
-				$_
-			}})
+				$null = ${private:-paths}.Add(${private:-in}.FullName)
+				${private:-in}
+			}
 		}
 		catch {
 			throw "Task '$(${private:-task}.Name)': Error on resolving inputs: $_"
 		}
 
 		# no input:
-		if (!${private:-inputs}) {
+		if (!${private:-paths}) {
 			'Skipping because there is no input.'
 			return
 		}
@@ -749,19 +751,17 @@ function Invoke-Build-IO([object]$Task)
 		# evaluate outputs
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		if (${private:-task}.Outputs -is [scriptblock]) {
-			${private:-outputs} = @(${private:-inputs} | & ${private:-task}.Outputs)
-			if (${private:-inputs}.Count -ne ${private:-outputs}.Count) {
-				throw "Task '$(${private:-task}.Name)': Different input and output counts: $(${private:-inputs}.Count) and $(${private:-outputs}.Count)."
+			${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
+			if (${private:-paths}.Count -ne ${private:-outputs}.Count) {
+				throw "Task '$(${private:-task}.Name)': Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
 			}
 
-			${private:-task}.Inputs = .{
-				${private:-index} = -1
-				foreach(${private:-out} in ${private:-outputs}) {
-					++${private:-index}
-					${private:-in} = ${private:-inputs}[${private:-index}]
-					if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force -ErrorAction Stop).LastWriteTime)) {
-						${private:-in}
-					}
+			${private:-index} = -1
+			${private:-task}.Inputs = foreach(${private:-in} in ${private:-inputs}) {
+				++${private:-index}
+				${private:-out} = ${private:-outputs}[${private:-index}]
+				if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force -ErrorAction Stop).LastWriteTime)) {
+					${private:-paths}[${private:-index}]
 				}
 			}
 
@@ -770,7 +770,7 @@ function Invoke-Build-IO([object]$Task)
 			}
 		}
 		else {
-			${private:-task}.Inputs = ${private:-inputs}
+			${private:-task}.Inputs = ${private:-paths}
 
 			foreach(${private:-out} in ${private:-task}.Outputs) {
 				if (!(Test-Path -LiteralPath ${private:-out} -ErrorAction Stop)) {

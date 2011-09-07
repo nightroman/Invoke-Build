@@ -1,14 +1,20 @@
-Invoke-Build - Release Notes
-============================
+Invoke-Build Release Notes
+==========================
 
 ## v1.0.6
 
-**Breaking change:** `Use-BuildFramework` (alias `framework`) is transformed
-into `Use-BuildAlias` (alias `use`). For .NET frameworks it works as it used
-to, only the command names have to be updated. But now it can be used with any
-tool directory, not necessarily .NET (for example a directory with scripts).
+**Breaking changes**
 
-## v1.0.4
+`Use-BuildFramework` (alias `framework`) is transformed into `Use-BuildAlias`
+(alias `use`). For .NET frameworks it works as it used to, only the command
+names have to be updated. But now it can be used with any tool directory, not
+necessarily .NET (for example a directory with scripts).
+
+Incremental build: full input paths are piped, not file system items. It just
+looks more practically useful to deal with full paths. Example: *Build.ps1*,
+task `ConvertMarkdown`.
+
+## v1.0.4, v1.0.5
 
 Added support of incremental and partial incremental builds with new task
 parameters `Inputs` and `Outputs`.

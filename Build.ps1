@@ -45,42 +45,51 @@ param
 # Then scripts do what they want but the goal is to create a few tasks.
 . Invoke-Build $BuildTask -WhatIf:$WhatIf
 
-# Invoke-Build does not change system settings, scripts do:
+# Invoke-Build does not change any settings, scripts do:
 Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
 
-# Required tools (to fail if missing):
+# Required tools (to fail if missing).
 Set-Alias 7z @(Get-Command 7z)[0].Definition
 
-# Warns about not empty git status if .git exists.
-# NOTE: The task is not invoked if .git is missing.
-task Git-Status -If (Test-Path .git) {
+# Example of partial incremental build. Fails without Convert-Markdown.ps1. But
+# the Zip task calls it protected and should still do its job, partially.
+# * Input is all markdown files.
+# * Output transforms input paths into output paths. [*]
+# * And the job is to process each out-of-date input. [*]
+# [*] Note use of 'process' blocks in scripts.
+task ConvertMarkdown `
+-Inputs { Get-ChildItem -Filter *.md } `
+-Outputs {process{ [System.IO.Path]::ChangeExtension($_, 'htm') }} `
+{process{
+	Convert-Markdown.ps1 $_ ([System.IO.Path]::ChangeExtension($_, 'htm'))
+}}
+
+# Example of a conditional task. It warns about not empty git status if .git
+# exists. The task is not invoked if .git is missing due to the condition.
+task GitStatus -If (Test-Path .git) {
 	$status = exec { git status -s }
 	if ($status) {
 		Write-Warning "Git status: $($status -join ', ')"
 	}
 }
 
-# Copy Invoke-Build.ps1 from its working location to the project home.
-# Assert: fail if the project file is newer, it is not supposed to be.
-task Update-Script {
+# Example of 'assert'. Copies Invoke-Build.ps1 from its working location to the
+# project home. Fails if the project file is newer, it is not supposed to be.
+task UpdateScript {
 	$target = Get-Item Invoke-Build.ps1 -ErrorAction 0
 	$source = Get-Item (Get-Command Invoke-Build.ps1).Definition
 	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
 	Copy-Item $source.FullName .
 }
 
-# Requires Convert-Markdown.ps1
-task Convert-Markdown `
--Inputs 'README.md', 'Release Notes.md' `
--Outputs { 'README.htm', 'Release Notes.htm' } `
-{process{
-	Convert-Markdown.ps1 $_.FullName ([System.IO.Path]::ChangeExtension($_.FullName, 'htm'))
-}}
-
-# Make the zip using the latest script and its version
-task Zip Update-Script, Convert-Markdown, Git-Status, {
-	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!*.md' '-x!Test-Output.*' }
+# Example of a protected task call and use of 'error'. Makes the zip using HTML
+# files, the latest script, etc. Calls ConvertMarkdown protected because it may
+# fail. Then checks for an error and amends the command if needed.
+task Zip @{ConvertMarkdown=1}, UpdateScript, GitStatus, {
+	$exclude = if (error ConvertMarkdown) {} else {'-x!*.md'}
+	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!Test-Output.*' $exclude }
+	Remove-Item *.htm
 }
 
 # Tests Demo scripts and compares the output with expected. It creates and

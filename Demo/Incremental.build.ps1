@@ -2,6 +2,10 @@
 <#
 .Synopsis
 	Tests of full incremental and partial incremental tasks.
+
+.Description
+	These examples are just tests. For a real example of partial incremental
+	build with dynamic input and output see Build.ps1, task ConvertMarkdown.
 #>
 
 ### Make a few temporary old and new files
@@ -49,8 +53,7 @@ task FullIncrementalOneMissing -Inputs { 'Incremental.build.ps1' } -Outputs 'mis
 	++$script:FullIncrementalOneMissing
 	$items = @($input)
 	assert ($items.Count -eq 1)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq 'Incremental.build.ps1')
+	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
 }
 
 # One missing output item.
@@ -60,8 +63,7 @@ task PartIncrementalOneMissing -Inputs { 'Incremental.build.ps1' } -Outputs { 'm
 	++$script:PartIncrementalOneMissing
 	$items = @($input)
 	assert ($items.Count -eq 1)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq 'Incremental.build.ps1')
+	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
 }
 
 # One out-of-date item.
@@ -71,8 +73,7 @@ task FullIncrementalOneOutOfDate -Inputs { 'Incremental.build.ps1' } -Outputs $o
 	++$script:FullIncrementalOneOutOfDate
 	$items = @($input)
 	assert ($items.Count -eq 1)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq 'Incremental.build.ps1')
+	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
 }
 
 # One out-of-date item.
@@ -82,8 +83,7 @@ task PartIncrementalOneOutOfDate -Inputs { 'Incremental.build.ps1' } -Outputs { 
 	++$script:PartIncrementalOneOutOfDate
 	$items = @($input)
 	assert ($items.Count -eq 1)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq 'Incremental.build.ps1')
+	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
 }
 
 # 2+ outputs are up-to-date.
@@ -106,10 +106,8 @@ task FullIncrementalTwoMissing -Inputs { 'Incremental.build.ps1'; '.build.ps1' }
 	++$script:FullIncrementalTwoMissing
 	$items = @($input)
 	assert ($items.Count -eq 2)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq 'Incremental.build.ps1')
-	assert ($items[1] -is [System.IO.FileInfo])
-	assert ($items[1].Name -eq '.build.ps1')
+	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($items[1] -like '*\Demo\.build.ps1')
 }
 
 # One output item is missing.
@@ -120,8 +118,7 @@ task PartIncrementalTwoMissing -Inputs Incremental.build.ps1, .build.ps1 -Output
 	++$script:PartIncrementalTwoMissing
 	$items = @($input)
 	assert ($items.Count -eq 1)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq '.build.ps1')
+	assert ($items[0] -like '*\Demo\.build.ps1')
 }
 
 # One output item is out-of-date.
@@ -131,10 +128,8 @@ task FullIncrementalTwoOutOfDate -Inputs { 'Incremental.build.ps1'; '.build.ps1'
 	++$script:FullIncrementalTwoOutOfDate
 	$items = @($input)
 	assert ($items.Count -eq 2)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq 'Incremental.build.ps1')
-	assert ($items[1] -is [System.IO.FileInfo])
-	assert ($items[1].Name -eq '.build.ps1')
+	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($items[1] -like '*\Demo\.build.ps1')
 }
 
 # One output item is out-of-date.
@@ -144,8 +139,7 @@ task PartIncrementalTwoOutOfDate -Inputs { 'Incremental.build.ps1'; '.build.ps1'
 	++$script:PartIncrementalTwoOutOfDate
 	$items = @($input)
 	assert ($items.Count -eq 1)
-	assert ($items[0] -is [System.IO.FileInfo])
-	assert ($items[0].Name -eq '.build.ps1')
+	assert ($items[0] -like '*\Demo\.build.ps1')
 }
 
 # The default task calls all test tasks and then checks the expected results.
