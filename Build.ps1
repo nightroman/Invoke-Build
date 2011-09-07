@@ -70,9 +70,17 @@ task Update-Script {
 	Copy-Item $source.FullName .
 }
 
+# Requires Convert-Markdown.ps1
+task Convert-Markdown `
+-Inputs 'README.md', 'Release Notes.md' `
+-Outputs { 'README.htm', 'Release Notes.htm' } `
+{process{
+	Convert-Markdown.ps1 $_.FullName ([System.IO.Path]::ChangeExtension($_.FullName, 'htm'))
+}}
+
 # Make the zip using the latest script and its version
-task Zip Update-Script, Git-Status, {
-	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!Test-Output.*' }
+task Zip Update-Script, Convert-Markdown, Git-Status, {
+	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!*.md' '-x!Test-Output.*' }
 }
 
 # Tests Demo scripts and compares the output with expected. It creates and

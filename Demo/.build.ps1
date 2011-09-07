@@ -179,7 +179,7 @@ task TestFunctions {
 		'Invoke-BuildError'
 		'Invoke-BuildExec'
 		'Start-Build'
-		'Use-BuildFramework'
+		'Use-BuildAlias'
 		'Write-BuildText'
 		'Write-Warning'
 	)

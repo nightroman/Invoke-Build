@@ -46,7 +46,7 @@
 		* Get-BuildVersion
 		* Invoke-BuildExec (exec)
 		* Start-Build [1]
-		* Use-BuildFramework (framework)
+		* Use-BuildAlias (use)
 		* Write-BuildText
 		* Write-Warning [2]
 
@@ -116,7 +116,7 @@
 	Get-BuildError
 	Invoke-BuildExec
 	Start-Build
-	Use-BuildFramework
+	Use-BuildAlias
 	Write-BuildText
 #>
 
@@ -139,8 +139,8 @@ param
 Set-Alias assert Assert-BuildTrue
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
-Set-Alias framework Use-BuildFramework
 Set-Alias task Add-BuildTask
+Set-Alias use Use-BuildAlias
 
 <#
 .Synopsis
@@ -148,7 +148,7 @@ Set-Alias task Add-BuildTask
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.5'
+	[System.Version]'1.0.6'
 }
 
 <#
@@ -375,7 +375,7 @@ function Assert-BuildTrue
 	invokes the command and checks the $LastExitCode. By default if the code is
 	not zero then the function throws a terminating error.
 
-	It is common to call .NET framework tools. See Use-BuildFramework.
+	It is common to call .NET framework tools. See Use-BuildAlias.
 
 	Invoke-BuildExec has the predefined alias 'exec'.
 
@@ -396,7 +396,7 @@ function Assert-BuildTrue
 	exec { robocopy Source Target /mir } (0..3)
 
 .Link
-	Use-BuildFramework
+	Use-BuildAlias
 #>
 function Invoke-BuildExec
 (
@@ -429,19 +429,21 @@ function Invoke-BuildExec
 	mixed framework tools simultaneously. Instead, this function is used in
 	order to set framework aliases in the scope where it is called from.
 
-	This function is often called once from a build script so that all tasks
-	use script scope aliases. But it can be called from tasks in order to use
-	more aliases or even another framework.
+	This function is often called from a build script and all tasks use script
+	scope aliases. But it can be called from tasks in order to use more tools
+	including other frameworks or tool directories.
 
-.Parameter Framework
-		The required framework directory relative to the Microsoft.NET in the
-		Windows directory. If it is empty then the current runtime is used.
+.Parameter Path
+		The tool directory. Null or empty assumes the current .NET runtime
+		directory. If it starts with 'Framework' then it is assumed to be
+		relative to Microsoft.NET in the Windows directory. Otherwise it is
+		used literally, it can be any directory with any tools.
 
-		Examples: Framework\v4.0.30319, Framework\v2.0.50727, etc.
+		Examples: Framework\v4.0.30319, Framework\v2.0.50727, C:\Tools, etc.
 
-.Parameter Tools
-		The framework tool names to set aliases for. These names also become
-		alias names and they should be used exactly as specified.
+.Parameter Name
+		The tool names to set aliases for. These names also become alias names
+		and they should be used exactly as specified.
 
 .Inputs
 	None
@@ -451,37 +453,42 @@ function Invoke-BuildExec
 
 .Example
 	># Use .NET 4.0 tools MSBuild, csc, ngen. Then call MSBuild.
-	framework Framework\v4.0.30319 MSBuild, csc, ngen
+	use Framework\v4.0.30319 MSBuild, csc, ngen
 	exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
 
 .Link
 	Invoke-BuildExec
 #>
-function Use-BuildFramework
+function Use-BuildAlias
 (
 	[Parameter()]
-	[string]$Framework
+	[string]$Path
 	,
 	[Parameter(Mandatory = $true)]
-	[string[]]$Tools
+	[string[]]$Name
 )
 {
 	if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
-		Invoke-BuildError "Use-BuildFramework should not be dot-sourced." InvalidOperation
+		Invoke-BuildError "Use-BuildAlias should not be dot-sourced." InvalidOperation
 	}
 
-	if ($Framework) {
-		$path = Join-Path "$env:windir\Microsoft.NET" $Framework
-		if (![System.IO.Directory]::Exists($path)) {
-			Invoke-BuildError "Directory does not exist: '$path'." InvalidArgument $Framework
+	if ($Path) {
+		if ($Path.StartsWith('Framework', [System.StringComparison]::OrdinalIgnoreCase)) {
+			$Path = Join-Path "$env:windir\Microsoft.NET" $Path
+			if (![System.IO.Directory]::Exists($Path)) {
+				Invoke-BuildError "Directory does not exist: '$Path'." InvalidArgument
+			}
+		}
+		else {
+			$Path = Convert-Path (Resolve-Path -LiteralPath $Path)
 		}
 	}
 	else {
-		$path = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
+		$Path = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
 	}
 
-	foreach($name in $Tools) {
-		Set-Alias $name (Join-Path $path $name) -Scope 1
+	foreach($it in $Name) {
+		Set-Alias $it (Join-Path $Path $it) -Scope 1
 	}
 }
 
@@ -656,7 +663,7 @@ ${private:-sourced} = $PSCmdlet.MyInvocation.InvocationName -eq '.'
 if (${private:-sourced}) {
 	if (!$PSCmdlet.MyInvocation.ScriptName) {
 		Write-Warning 'Invoke-Build is dot-sourced in order to get its command help.'
-		Get-Command task, Add-BuildTask, error, Get-BuildError, assert, Assert-BuildTrue, exec, Invoke-BuildExec, framework, Use-BuildFramework,
+		Get-Command task, Add-BuildTask, error, Get-BuildError, assert, Assert-BuildTrue, exec, Invoke-BuildExec, use, Use-BuildAlias,
 		Get-BuildVersion, Write-BuildText, Start-Build | Format-Table -AutoSize | Out-String
 		return
 	}
