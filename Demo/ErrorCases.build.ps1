@@ -1,17 +1,14 @@
 
 <#
 .Synopsis
-	Tests fatal runtime errors.
+	Tests runtime errors.
 
 .Description
-	Fatal runtime errors are:
+	Tested in here runtime errors:
 	* Errors in task script jobs (if task calls are not protected);
-	* Errors in task If scripts (always);
-	* Errors in task Inputs scripts (always);
-	* Errors in task Outputs scripts (always);
-
-	All problem cases are called using protected task jobs (@{Task=1} notation)
-	in order to make sure that even protected calls cannot hide fatal errors.
+	* Errors in task If scripts;
+	* Errors in task Inputs scripts;
+	* Errors in task Outputs scripts.
 
 .Link
 	Invoke-Build
@@ -57,23 +54,17 @@ task Fails @(
 # protected call does not help: Fails is not prepared for errors in Error2.
 task TestAlmostSurvives AlmostSurvives, @{Fails=1}
 
-# Another case when a protected error is fatal. It is the case when the If
-# script fails. The build fails as well because it is a programming issue.
+# Error: the If script fails.
 task ScriptConditionFails -If { throw "If fails." } { throw }
-task TestScriptConditionFails @{ScriptConditionFails=1}, { throw }
 
-# Fatal case: the Inputs script fails.
+# Error: the Inputs script fails.
 task InputsFails -Inputs { throw 'Inputs fails.' } -Outputs {} { throw }
-task TestInputsFails @{InputsFails=1}, { throw }
 
-# Fatal case: the Outputs script fails.
+# Error: the Outputs script fails.
 task OutputsFails -Outputs { throw 'Outputs fails.' } -Inputs { '.build.ps1' } { throw }
-task TestOutputsFails @{OutputsFails=1}, { throw }
 
-# Fatal case: Inputs and Outputs (scriptblock) have different number of items
+# Error: Inputs and Outputs (script) have different number of items
 task InputsOutputsMismatch -Inputs { '.build.ps1' } -Outputs { } { throw }
-task TestInputsOutputsMismatch @{InputsOutputsMismatch=1}, { throw }
 
-# Fatal case: one of the Inputs items is missing.
+# Error: one of the Inputs items is missing.
 task MissingInputsItems -Inputs { 'missing' } -Outputs {} { throw }
-task TestMissingInputsItems @{MissingInputsItems=1}, { throw }

@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.7
+
+Task errors in `If`, `Inputs`, and `Outputs` are not treated as build fatal if
+a tasks is called protected. Really, they are not different from other task job
+errors, any can be either a programming bug or a build issue. A task that calls
+a culprit task can analyse its errors by `error` and decide to fail or not.
+
 ## v1.0.6
 
 **Breaking changes**

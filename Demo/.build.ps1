@@ -129,14 +129,14 @@ task Use-Framework {
 	Invoke-Build . Use-Framework.build.ps1
 }
 
-# This task tests fatal runtime errors.
-task FatalCases {
-	Test-Issue TestAlmostSurvives FatalCases.build.ps1 'Error2'
-	Test-Issue TestScriptConditionFails FatalCases.build.ps1 'If fails.'
-	Test-Issue TestInputsFails FatalCases.build.ps1 'Inputs fails.'
-	Test-Issue TestOutputsFails FatalCases.build.ps1 'Outputs fails.'
-	Test-Issue TestInputsOutputsMismatch FatalCases.build.ps1 "Task 'InputsOutputsMismatch': Different input and output counts: 1 and 0."
-	Test-Issue TestMissingInputsItems FatalCases.build.ps1 "Task 'MissingInputsItems': Error on resolving inputs: Cannot find path 'missing' because it does not exist."
+# This task tests runtime errors.
+task ErrorCases {
+	Test-Issue TestAlmostSurvives ErrorCases.build.ps1 'Error2'
+	Test-Issue ScriptConditionFails ErrorCases.build.ps1 'If fails.'
+	Test-Issue InputsFails ErrorCases.build.ps1 'Inputs fails.'
+	Test-Issue OutputsFails ErrorCases.build.ps1 'Outputs fails.'
+	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Task 'InputsOutputsMismatch': Different input and output counts: 1 and 0."
+	Test-Issue MissingInputsItems ErrorCases.build.ps1 "Task 'MissingInputsItems': Error on resolving inputs: Cannot find path 'missing' because it does not exist."
 }
 
 # Invoke-Build should expose only documented variables! If this test shows
@@ -199,7 +199,7 @@ task TestFunctions {
 task Tests `
 	Assert-True,
 	ConditionalTasks,
-	FatalCases,
+	ErrorCases,
 	Incremental,
 	InvalidTasks,
 	Invoke-Exec,

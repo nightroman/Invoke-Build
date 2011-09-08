@@ -148,7 +148,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.6'
+	[System.Version]'1.0.7'
 }
 
 <#
@@ -474,7 +474,7 @@ function Use-BuildAlias
 
 	if ($Path) {
 		if ($Path.StartsWith('Framework', [System.StringComparison]::OrdinalIgnoreCase)) {
-			$Path = Join-Path "$env:windir\Microsoft.NET" $Path
+			$Path = "$env:windir\Microsoft.NET\$Path"
 			if (![System.IO.Directory]::Exists($Path)) {
 				Invoke-BuildError "Directory does not exist: '$Path'." InvalidArgument
 			}
@@ -673,7 +673,7 @@ if (${private:-sourced}) {
 	$BuildFile = $PSCmdlet.MyInvocation.ScriptName
 }
 
-# Use this Write-BuildText without UI.
+# With no UI use this Write-BuildText.
 if (!$Host.UI -or !$Host.UI.RawUI) {
 	function Write-BuildText([Parameter()][System.ConsoleColor]$Color, [Parameter()][string]$Text) { $Text }
 }
@@ -707,92 +707,84 @@ function Invoke-Build-If([object]$Task)
 	}
 	catch {
 		${private:-task}.Error = $_
-		$BuildThis.Fatal = $true
 		throw
 	}
 }
 
-# Makes Inputs and Outputs and gets a reason to skip.
+# Evaluates Inputs and Outputs and gets a reason to skip.
 function Invoke-Build-IO([object]$Task)
 {
 	${private:-task} = $Task
 	Remove-Variable Task
 
-	try {
-		${private:-inputs} = ${private:-task}.Inputs
+	${private:-inputs} = ${private:-task}.Inputs
 
-		# invoke inputs
-		if (${private:-inputs} -is [scriptblock]) {
-			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-			${private:-inputs} = @(& ${private:-inputs})
-		}
-
-		# resolve to paths and items
-		${private:-paths} = [System.Collections.ArrayList]@()
-		try {
-			${private:-inputs} = foreach(${private:-in} in ${private:-inputs}) {
-				if (${private:-in} -isnot [System.IO.FileSystemInfo]) {
-					${private:-in} = Get-Item -LiteralPath ${private:-in} -Force -ErrorAction Stop
-				}
-				$null = ${private:-paths}.Add(${private:-in}.FullName)
-				${private:-in}
-			}
-		}
-		catch {
-			throw "Task '$(${private:-task}.Name)': Error on resolving inputs: $_"
-		}
-
-		# no input:
-		if (!${private:-paths}) {
-			'Skipping because there is no input.'
-			return
-		}
-
-		# evaluate outputs
+	# invoke inputs
+	if (${private:-inputs} -is [scriptblock]) {
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		if (${private:-task}.Outputs -is [scriptblock]) {
-			${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
-			if (${private:-paths}.Count -ne ${private:-outputs}.Count) {
-				throw "Task '$(${private:-task}.Name)': Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
+		${private:-inputs} = @(& ${private:-inputs})
+	}
+
+	# resolve to paths and items
+	${private:-paths} = [System.Collections.ArrayList]@()
+	try {
+		${private:-inputs} = foreach(${private:-in} in ${private:-inputs}) {
+			if (${private:-in} -isnot [System.IO.FileSystemInfo]) {
+				${private:-in} = Get-Item -LiteralPath ${private:-in} -Force -ErrorAction Stop
 			}
-
-			${private:-index} = -1
-			${private:-task}.Inputs = foreach(${private:-in} in ${private:-inputs}) {
-				++${private:-index}
-				${private:-out} = ${private:-outputs}[${private:-index}]
-				if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force -ErrorAction Stop).LastWriteTime)) {
-					${private:-paths}[${private:-index}]
-				}
-			}
-
-			if (!${private:-task}.Inputs) {
-				'Skipping because all outputs are up-to-date with respect to the inputs.'
-			}
-		}
-		else {
-			${private:-task}.Inputs = ${private:-paths}
-
-			foreach(${private:-out} in ${private:-task}.Outputs) {
-				if (!(Test-Path -LiteralPath ${private:-out} -ErrorAction Stop)) {
-					return
-				}
-			}
-
-			${private:-time1} = ${private:-inputs} |
-			.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum
-
-			${private:-time2} = Get-Item -LiteralPath ${private:-task}.Outputs -Force -ErrorAction Stop |
-			.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Minimum
-
-			if (${private:-time1}.Maximum -le ${private:-time2}.Minimum) {
-				'Skipping because all outputs are up-to-date with respect to the inputs.'
-			}
+			$null = ${private:-paths}.Add(${private:-in}.FullName)
+			${private:-in}
 		}
 	}
 	catch {
-		${private:-task}.Error = $_
-		$BuildThis.Fatal = $true
-		throw
+		throw "Task '$(${private:-task}.Name)': Error on resolving inputs: $_"
+	}
+
+	# no input:
+	if (!${private:-paths}) {
+		'Skipping because there is no input.'
+		return
+	}
+
+	# evaluate outputs
+	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+	if (${private:-task}.Outputs -is [scriptblock]) {
+		${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
+		if (${private:-paths}.Count -ne ${private:-outputs}.Count) {
+			throw "Task '$(${private:-task}.Name)': Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
+		}
+
+		${private:-index} = -1
+		${private:-task}.Inputs = foreach(${private:-in} in ${private:-inputs}) {
+			++${private:-index}
+			${private:-out} = ${private:-outputs}[${private:-index}]
+			if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force -ErrorAction Stop).LastWriteTime)) {
+				${private:-paths}[${private:-index}]
+			}
+		}
+
+		if (!${private:-task}.Inputs) {
+			'Skipping because all outputs are up-to-date with respect to the inputs.'
+		}
+	}
+	else {
+		${private:-task}.Inputs = ${private:-paths}
+
+		foreach(${private:-out} in ${private:-task}.Outputs) {
+			if (!(Test-Path -LiteralPath ${private:-out} -ErrorAction Stop)) {
+				return
+			}
+		}
+
+		${private:-time1} = ${private:-inputs} |
+		.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum
+
+		${private:-time2} = Get-Item -LiteralPath ${private:-task}.Outputs -Force -ErrorAction Stop |
+		.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Minimum
+
+		if (${private:-time1}.Maximum -le ${private:-time2}.Minimum) {
+			'Skipping because all outputs are up-to-date with respect to the inputs.'
+		}
 	}
 }
 
@@ -851,10 +843,6 @@ function Invoke-Build-Task($Name, $Path)
 					Invoke-Build-Task ${private:-job} ${private:-path}
 				}
 				catch {
-					# fatal
-					if ($BuildThis['Fatal']) {
-						throw
-					}
 					# die if not protected
 					if (${private:-task}.Try -notcontains ${private:-job}) {
 						throw

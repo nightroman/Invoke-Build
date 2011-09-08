@@ -16,7 +16,7 @@
 	The script also shows how to use script variables shared between tasks.
 
 .Notes
-	A case of If block errors is tested in FatalCases.build.ps1.
+	A case of If block errors is tested in ErrorCases.build.ps1.
 
 .Example
 	# Debug configuration

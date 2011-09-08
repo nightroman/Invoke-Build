@@ -5,7 +5,7 @@
 
 .Description
 	See .build.ps1, the line with SharedTasksData.tasks.ps1 and comments.
-	It is also imported by ProtectedTasks.build.ps1 and FatalCases.build.ps1.
+	It is also imported by ProtectedTasks.build.ps1 and ErrorCases.build.ps1.
 #>
 
 $MySharedValue1 = 'shared 1'
