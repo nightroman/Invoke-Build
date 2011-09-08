@@ -57,12 +57,12 @@ Set-Alias 7z @(Get-Command 7z)[0].Definition
 # * Input is all markdown files.
 # * Output transforms input paths into output paths. [*]
 # * And the job is to process each out-of-date input. [*]
-# [*] Note use of 'process' blocks in scripts.
+# [*] Note use of 'process' blocks and variables $_ and $$ there.
 task ConvertMarkdown `
 -Inputs { Get-ChildItem -Filter *.md } `
 -Outputs {process{ [System.IO.Path]::ChangeExtension($_, 'htm') }} `
 {process{
-	Convert-Markdown.ps1 $_ ([System.IO.Path]::ChangeExtension($_, 'htm'))
+	Convert-Markdown.ps1 $_ $$
 }}
 
 # Example of a conditional task. It warns about not empty git status if .git
@@ -133,15 +133,25 @@ task Test {
 	}
 }
 
-# The default task is a super test. It tests all and clean.
-task . Test, Zip, {
-	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
-}
-
 # Calls the tests infinitely.
 task Loop {
 	for(;;) {
 		Invoke-Build . Demo\.build.ps1
+	}
+}
+
+# The default task is a super test. It tests all and clean.
+task . Test, Zip, {
+	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
+
+	if (!(error ConvertMarkdown)) {
+		# This script statistics
+		assert ($BuildThis.TaskCount -eq 6) $BuildThis.TaskCount
+		assert ($BuildThis.ErrorCount -eq 0) $BuildThis.ErrorCount
+
+		# Cumulative build statistics
+		assert ($BuildInfo.TaskCount -eq 89) $BuildInfo.TaskCount
+		assert ($BuildInfo.ErrorCount -eq 18) $BuildInfo.ErrorCount
 	}
 }
 

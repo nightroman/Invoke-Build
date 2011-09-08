@@ -51,9 +51,9 @@ task PartIncrementalOneUpToDate -Inputs { 'Incremental.build.ps1' } -Outputs { '
 $FullIncrementalOneMissing = 0
 task FullIncrementalOneMissing -Inputs { 'Incremental.build.ps1' } -Outputs 'missing' {
 	++$script:FullIncrementalOneMissing
-	$items = @($input)
-	assert ($items.Count -eq 1)
-	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Inputs.Count -eq 1)
+	assert ($Inputs[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Outputs -eq 'missing')
 }
 
 # One missing output item.
@@ -61,9 +61,10 @@ task FullIncrementalOneMissing -Inputs { 'Incremental.build.ps1' } -Outputs 'mis
 $PartIncrementalOneMissing = 0
 task PartIncrementalOneMissing -Inputs { 'Incremental.build.ps1' } -Outputs { 'missing' } {
 	++$script:PartIncrementalOneMissing
-	$items = @($input)
-	assert ($items.Count -eq 1)
-	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Inputs.Count -eq 1)
+	assert ($Inputs[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Outputs.Count -eq 1)
+	assert ($Outputs[0] -eq 'missing')
 }
 
 # One out-of-date item.
@@ -71,9 +72,9 @@ task PartIncrementalOneMissing -Inputs { 'Incremental.build.ps1' } -Outputs { 'm
 $FullIncrementalOneOutOfDate = 0
 task FullIncrementalOneOutOfDate -Inputs { 'Incremental.build.ps1' } -Outputs $old1 {
 	++$script:FullIncrementalOneOutOfDate
-	$items = @($input)
-	assert ($items.Count -eq 1)
-	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Inputs.Count -eq 1)
+	assert ($Inputs[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Outputs -eq $old1)
 }
 
 # One out-of-date item.
@@ -81,9 +82,10 @@ task FullIncrementalOneOutOfDate -Inputs { 'Incremental.build.ps1' } -Outputs $o
 $PartIncrementalOneOutOfDate = 0
 task PartIncrementalOneOutOfDate -Inputs { 'Incremental.build.ps1' } -Outputs { $old1 } {
 	++$script:PartIncrementalOneOutOfDate
-	$items = @($input)
-	assert ($items.Count -eq 1)
-	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Inputs.Count -eq 1)
+	assert ($Inputs[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Outputs.Count -eq 1)
+	assert ($Outputs[0] -like $old1)
 }
 
 # 2+ outputs are up-to-date.
@@ -104,10 +106,12 @@ task PartIncrementalTwoUpToDate -Inputs { 'Incremental.build.ps1'; '.build.ps1' 
 $FullIncrementalTwoMissing = 0
 task FullIncrementalTwoMissing -Inputs { 'Incremental.build.ps1'; '.build.ps1' } -Outputs 'missing', $new2 {
 	++$script:FullIncrementalTwoMissing
-	$items = @($input)
-	assert ($items.Count -eq 2)
-	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
-	assert ($items[1] -like '*\Demo\.build.ps1')
+	assert ($Inputs.Count -eq 2)
+	assert ($Inputs[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Inputs[1] -like '*\Demo\.build.ps1')
+	assert ($Outputs.Count -eq 2)
+	assert ($Outputs[0] -eq 'missing')
+	assert ($Outputs[1] -eq $new2)
 }
 
 # One output item is missing.
@@ -116,9 +120,10 @@ task FullIncrementalTwoMissing -Inputs { 'Incremental.build.ps1'; '.build.ps1' }
 $PartIncrementalTwoMissing = 0
 task PartIncrementalTwoMissing -Inputs Incremental.build.ps1, .build.ps1 -Outputs { $new1, 'missing' } {
 	++$script:PartIncrementalTwoMissing
-	$items = @($input)
-	assert ($items.Count -eq 1)
-	assert ($items[0] -like '*\Demo\.build.ps1')
+	assert ($Inputs.Count -eq 1)
+	assert ($Inputs[0] -like '*\Demo\.build.ps1')
+	assert ($Outputs.Count -eq 1)
+	assert ($Outputs[0] -eq 'missing')
 }
 
 # One output item is out-of-date.
@@ -126,21 +131,29 @@ task PartIncrementalTwoMissing -Inputs Incremental.build.ps1, .build.ps1 -Output
 $FullIncrementalTwoOutOfDate = 0
 task FullIncrementalTwoOutOfDate -Inputs { 'Incremental.build.ps1'; '.build.ps1' } -Outputs $new1, $old2 {
 	++$script:FullIncrementalTwoOutOfDate
-	$items = @($input)
-	assert ($items.Count -eq 2)
-	assert ($items[0] -like '*\Demo\Incremental.build.ps1')
-	assert ($items[1] -like '*\Demo\.build.ps1')
+	assert ($Inputs.Count -eq 2)
+	assert ($Inputs[0] -like '*\Demo\Incremental.build.ps1')
+	assert ($Inputs[1] -like '*\Demo\.build.ps1')
+	assert ($Outputs.Count -eq 2)
+	assert ($Outputs[0] -eq $new1)
+	assert ($Outputs[1] -eq $old2)
 }
 
 # One output item is out-of-date.
 # Only items with out-of-date output are piped (1).
 $PartIncrementalTwoOutOfDate = 0
-task PartIncrementalTwoOutOfDate -Inputs { 'Incremental.build.ps1'; '.build.ps1' } -Outputs { $new1, $old2 } {
+task PartIncrementalTwoOutOfDate `
+-Inputs { 'Incremental.build.ps1'; '.build.ps1' } `
+-Outputs { $new1, $old2 } `
+{process{
 	++$script:PartIncrementalTwoOutOfDate
-	$items = @($input)
-	assert ($items.Count -eq 1)
-	assert ($items[0] -like '*\Demo\.build.ps1')
-}
+	assert ($Inputs.Count -eq 1)
+	assert ($Inputs[0] -like '*\Demo\.build.ps1')
+	assert ($Outputs.Count -eq 1)
+	assert ($Outputs[0] -eq $old2)
+	assert($_ -like '*\Demo\.build.ps1')
+	assert($$ -eq $old2)
+}}
 
 # The default task calls all test tasks and then checks the expected results.
 task . `

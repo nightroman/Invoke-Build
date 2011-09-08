@@ -8,6 +8,10 @@ a tasks is called protected. Really, they are not different from other task job
 errors, any can be either a programming bug or a build issue. A task that calls
 a culprit task can analyse its errors by `error` and decide to fail or not.
 
+Introduced automatic helper variables for incremental task scripts. See the
+`task` help, tests in *Incremental.build.ps1*, and the task `ConvertMarkdown`
+in *Build.ps1*.
+
 ## v1.0.6
 
 **Breaking changes**

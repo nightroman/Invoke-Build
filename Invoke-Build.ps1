@@ -189,23 +189,32 @@ function Get-BuildVersion
 		them (it depends on Outputs) are piped to the task script jobs.
 
 		The script jobs are not invoked if all the Outputs are up-to-date or if
-		the Inputs is not null and yet empty. But task jobs are always invoked.
+		the Inputs is not null and yet empty. But dependent tasks are invoked.
 
 		Inputs and Outputs are processed on the first script job invocation.
-		Thus, preceding task jobs can actually prepare the Inputs items.
+		Thus, preceding task jobs can for example create the Inputs files.
 
 .Parameter Outputs
 		Literal output paths. There are two forms:
 
-		1) [string[]] is for full incremental build. If there are missing items
-		then the scripts are invoked. Otherwise they are invoked if the minimum
-		output time is less than the maximum input time. All input paths are
-		piped to the task scripts.
+		1) [string] or [string[]] is for full incremental build. If there are
+		missing items then the scripts are invoked. Otherwise they are invoked
+		if the minimum output time is less than the maximum input time. All
+		input paths are piped to the task scripts.
+		* Automatic variables for script jobs:
+		- [System.Collections.ArrayList]$Inputs - evaluated Inputs, full paths
+		- $Outputs - exactly the Outputs value, i.e. [string] or [string[]]
 
 		2) [scriptblock] is for partial incremental build. All input paths are
 		piped to the Outputs script which gets exactly one path for each input.
 		Then input and output time stamps are compared and only input paths
 		with out-of-date output, if any, are piped to the task script jobs.
+		* Automatic variables for script jobs:
+		- [System.Collections.ArrayList]$Inputs - evaluated Inputs, full paths
+		- [System.Collections.ArrayList]$Outputs - paths transformed by Outputs
+		* In addition inside process{} blocks:
+		- $_ - the current full input path
+		- $$ - the current output path (returned by the Outputs script)
 
 .Inputs
 	None
@@ -749,25 +758,34 @@ function Invoke-Build-IO([object]$Task)
 	# evaluate outputs
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	if (${private:-task}.Outputs -is [scriptblock]) {
+		${private:-task}.Partial = $true
 		${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
 		if (${private:-paths}.Count -ne ${private:-outputs}.Count) {
 			throw "Task '$(${private:-task}.Name)': Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
 		}
 
 		${private:-index} = -1
-		${private:-task}.Inputs = foreach(${private:-in} in ${private:-inputs}) {
+		${private:-inputs2} = [System.Collections.ArrayList]@()
+		${private:-outputs2} = [System.Collections.ArrayList]@()
+		foreach(${private:-in} in ${private:-inputs}) {
 			++${private:-index}
 			${private:-out} = ${private:-outputs}[${private:-index}]
 			if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force -ErrorAction Stop).LastWriteTime)) {
-				${private:-paths}[${private:-index}]
+				$null = ${private:-inputs2}.Add(${private:-paths}[${private:-index}])
+				$null = ${private:-outputs2}.Add(${private:-out})
 			}
 		}
 
-		if (!${private:-task}.Inputs) {
+		if (${private:-inputs2}) {
+			${private:-task}.Inputs = ${private:-inputs2}
+			${private:-task}.Outputs = ${private:-outputs2}
+		}
+		else {
 			'Skipping because all outputs are up-to-date with respect to the inputs.'
 		}
 	}
 	else {
+		${private:-task}.Partial = $false
 		${private:-task}.Inputs = ${private:-paths}
 
 		foreach(${private:-out} in ${private:-task}.Outputs) {
@@ -883,7 +901,19 @@ function Invoke-Build-Task($Name, $Path)
 				else {
 					Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 					if (${private:-task}.Inputs) {
-						${private:-task}.Inputs | & ${private:-job}
+						$Inputs = ${private:-task}.Inputs
+						$Outputs = ${private:-task}.Outputs
+						if (${private:-task}.Partial) {
+							${private:-index} = -1
+							$Inputs | .{process{
+								++${private:-index}
+								$$ = $Outputs[${private:-index}]
+								$_
+							}} | & ${private:-job}
+						}
+						else {
+							$Inputs | & ${private:-job}
+						}
 					}
 					else {
 						& ${private:-job}
