@@ -3,6 +3,9 @@
 .Synopsis
 	Example of protected task jobs (@{Task=1} notation).
 
+.Example
+	Invoke-Build . ProtectedTasks.build.ps1
+
 .Link
 	Invoke-Build
 	.build.ps1

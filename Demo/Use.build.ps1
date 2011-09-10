@@ -12,6 +12,9 @@
 
 	* Use of several frameworks simultaneously.
 
+.Example
+	Invoke-Build . Use.build.ps1
+
 .Link
 	Invoke-Build
 	.build.ps1

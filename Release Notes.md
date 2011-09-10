@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.8
+
+Simplified `assert`. Minor engine and test tweaks.
+
 ## v1.0.7
 
 Task errors in `If`, `Inputs`, and `Outputs` are not treated as build fatal if

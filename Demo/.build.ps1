@@ -37,7 +37,7 @@ param
 $MyValue1 = "value 1"
 
 # Invoke-Build exposes $BuildFile and $BuildRoot. Test them.
-# Note: assert is the predefined alias of Assert-True.
+# Note: assert is the predefined alias of Assert-BuildTrue.
 $MyPath = $MyInvocation.MyCommand.Path
 assert ($MyPath -eq $BuildFile)
 assert ((Split-Path $MyPath) -eq $BuildRoot)
@@ -91,9 +91,9 @@ function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern, $Parame
 	"Issue '$Task' of '$Build' is tested."
 }
 
-# This task calls tests of Assert-True (assert).
-task Assert-True {
-	Invoke-Build . Assert-True.build.ps1
+# This task calls tests of assert.
+task Assert {
+	Invoke-Build . Assert.build.ps1
 }
 
 # This task tests conditional tasks, see ConditionalTasks.build.ps1
@@ -102,6 +102,11 @@ task ConditionalTasks {
 	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Debug' }
 	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Release' }
 	Invoke-Build TestScriptCondition ConditionalTasks.build.ps1
+}
+
+# This task calls Invoke-BuildExec (exec) tests.
+task Exec {
+	Invoke-Build . Exec.build.ps1
 }
 
 # This task calls incremental build tests.
@@ -114,19 +119,14 @@ task InvalidTasks {
 	Invoke-Build . InvalidTasks.build.ps1
 }
 
-# This task calls Invoke-BuildExec (exec) tests.
-task Invoke-Exec {
-	Invoke-Build . Invoke-Exec.build.ps1
-}
-
 # This task tests job tasks using @{Name=1} notation.
 task ProtectedTasks {
 	Invoke-Build . ProtectedTasks.build.ps1
 }
 
-# This task calls tests in Use-Framework.build.ps1
-task Use-Framework {
-	Invoke-Build . Use-Framework.build.ps1
+# This task tests Use-BuildAlias (use).
+task Use {
+	Invoke-Build . Use.build.ps1
 }
 
 # This task tests runtime errors.
@@ -197,14 +197,14 @@ task TestFunctions {
 
 # This task calls all test tasks.
 task Tests `
-	Assert-True,
+	Assert,
 	ConditionalTasks,
 	ErrorCases,
+	Exec,
 	Incremental,
 	InvalidTasks,
-	Invoke-Exec,
 	ProtectedTasks,
-	Use-Framework,
+	Use,
 	TestFunctions,
 	TestVariables
 
@@ -219,16 +219,4 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 	Invoke-Build SharedTask1 SharedTasks.tasks.ps1
 },
 # Tasks can be referenced between or after scripts.
-Tests,
-# The last test tests not yet documented data
-{
-	# This build statistics
-	assert ($BuildThis.TaskCount -eq 17)
-	assert ($BuildThis.ErrorCount -eq 0)
-	assert ($BuildThis.WarningCount -ge 1)
-
-	# Cumulative build statistics
-	assert ($BuildInfo.TaskCount -ge $BuildThis.TaskCount)
-	assert ($BuildInfo.ErrorCount -ge $BuildThis.ErrorCount)
-	assert ($BuildInfo.WarningCount -ge $BuildThis.WarningCount)
-}
+Tests

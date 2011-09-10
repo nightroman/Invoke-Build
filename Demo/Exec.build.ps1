@@ -4,7 +4,7 @@
 	Examples and test cases of Invoke-Exec (exec).
 
 .Example
-	Invoke-Build . Invoke-Exec.build.ps1
+	Invoke-Build . Exec.build.ps1
 
 .Link
 	Invoke-Build

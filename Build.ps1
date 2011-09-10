@@ -140,18 +140,21 @@ task Loop {
 	}
 }
 
-# The default task is a super test. It tests all and clean.
+# The default task. It tests all and cleans.
 task . Test, Zip, {
+	# remove zip
 	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
 
+	# check the current and total build counters
 	if (!(error ConvertMarkdown)) {
-		# This script statistics
+		# current
 		assert ($BuildThis.TaskCount -eq 6) $BuildThis.TaskCount
 		assert ($BuildThis.ErrorCount -eq 0) $BuildThis.ErrorCount
-
-		# Cumulative build statistics
-		assert ($BuildInfo.TaskCount -eq 89) $BuildInfo.TaskCount
-		assert ($BuildInfo.ErrorCount -eq 18) $BuildInfo.ErrorCount
+		# total
+		assert ($BuildInfo.TaskCount -eq 87) $BuildInfo.TaskCount
+		assert ($BuildInfo.ErrorCount -eq 16) $BuildInfo.ErrorCount
+		assert ($BuildInfo.WarningCount -ge 1)
+		assert ($BuildInfo.WarningCount -ge $BuildThis.WarningCount)
 	}
 }
 

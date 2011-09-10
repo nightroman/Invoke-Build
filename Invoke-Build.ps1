@@ -148,7 +148,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.7'
+	[System.Version]'1.0.8'
 }
 
 <#
@@ -334,14 +334,12 @@ function Get-BuildError
 	Checks for a condition.
 
 .Description
-	This function checks for a condition and throws a message if the condition
-	is $false or not Boolean. In other words, the check succeeds if and only if
-	the value is exactly $true.
+	It checks for a condition and if it is not true throws a message.
 
 	Assert-BuildTrue has the predefined alias 'assert'.
 
 .Parameter Condition
-		The condition (exactly Boolean, in order to avoid subtle mistakes).
+		The condition.
 
 .Parameter Message
 		A user friendly message describing the assertion condition.
@@ -361,10 +359,6 @@ function Assert-BuildTrue
 	[string]$Message
 )
 {
-	if ($Condition -isnot [bool]) {
-		Invoke-BuildError 'Condition is not Boolean.' InvalidArgument $Condition
-	}
-
 	if (!$Condition) {
 		if ($Message) {
 			Invoke-BuildError "Assertion failed: $Message" InvalidOperation
@@ -604,7 +598,6 @@ function Write-BuildText
 #>
 function Start-Build
 {
-	# no parameters
 	[CmdletBinding()]param()
 
 	if ($PSCmdlet.MyInvocation.InvocationName -ne '.') {
@@ -628,22 +621,20 @@ function Start-Build
 				${private:-task}.Info = @"
 $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:-file}):$(${private:-task}.Line)
 "@
-			}} |
-			Sort-Object File, Line |
-			Format-Table Task, Info -AutoSize -Wrap
+			}} | Sort-Object File, Line | Format-Table Task, Info -AutoSize -Wrap
 			return
 		}
 
-		### Initialize (build preprocessing)
+		### Preprocess tasks
 		foreach(${private:-name} in $BuildTask) {
 			${private:-task} = $BuildThis.Tasks[${private:-name}]
 			if (!${private:-task}) {
 				Invoke-BuildError "Task '${private:-name}' is not defined." ObjectNotFound ${private:-name}
 			}
-			Invoke-Build-Initialize-Task ${private:-task} ([System.Collections.ArrayList]@())
+			Invoke-Build-Preprocess ${private:-task} ([System.Collections.ArrayList]@())
 		}
 
-		### Invoke the tasks (build processing)
+		### Process tasks
 		foreach(${private:-name} in $BuildTask) {
 			Invoke-Build-Task ${private:-name}
 		}
@@ -814,7 +805,7 @@ function Invoke-Build-Task($Name, $Path)
 	${private:-task} = $BuildThis.Tasks[$Name]
 	if (!${private:-task}) { throw }
 
-	# task path
+	# the path
 	${private:-path} = if ($Path) { "$Path\$Name" } else { $Name }
 
 	# 1) failed?
@@ -829,7 +820,6 @@ function Invoke-Build-Task($Name, $Path)
 		return
 	}
 
-	# hide
 	Remove-Variable Name, Path
 
 	# condition?
@@ -849,11 +839,11 @@ function Invoke-Build-Task($Name, $Path)
 
 	${private:-count} = ${private:-task}.Jobs.Count
 	${private:-number} = 0
+	${private:-do-input} = $true
+	${private:-no-input} = $false
 
 	${private:-task}.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 	try {
-		${private:-do-input} = $true
-		${private:-no-input} = $null
 		foreach(${private:-job} in ${private:-task}.Jobs) {
 			++${private:-number}
 			if (${private:-job} -is [string]) {
@@ -866,7 +856,7 @@ function Invoke-Build-Task($Name, $Path)
 						throw
 					}
 					# try to survive, die
-					${private:-why} = Invoke-Build-Approve-Task ${private:-job}
+					${private:-why} = Invoke-Build-Try-Task ${private:-job}
 					if (${private:-why}) {
 						Write-BuildText Red ${private:-why}
 						throw
@@ -900,7 +890,7 @@ function Invoke-Build-Task($Name, $Path)
 				}
 				else {
 					Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-					if (${private:-task}.Inputs) {
+					if ($null -eq ${private:-no-input}) {
 						$Inputs = ${private:-task}.Inputs
 						$Outputs = ${private:-task}.Outputs
 						if (${private:-task}.Partial) {
@@ -943,12 +933,10 @@ function Invoke-Build-Task($Name, $Path)
 }
 
 # Gets a reason to die on protected task errors.
-function Invoke-Build-Approve-Task([string]$TryTask)
+function Invoke-Build-Try-Task([string]$TryTask)
 {
 	foreach($name in $BuildTask) {
-		$task = $BuildThis.Tasks[$name]
-		if (!$task) { throw }
-		$why = Invoke-Build-Approve-Tree $task $TryTask
+		$why = Invoke-Build-Try-Tree $name $TryTask
 		if ($why) {
 			return $why
 		}
@@ -956,28 +944,28 @@ function Invoke-Build-Approve-Task([string]$TryTask)
 }
 
 # Gets a reason to die on protected task errors.
-function Invoke-Build-Approve-Tree([object]$Task, [string]$TryTask)
+function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
 {
+	$task1 = $BuildThis.Tasks[$Task]
+	if (!$task1) { throw }
+
 	# ignored:
-	if (!$Task.If) {
+	if (!$task1.If) {
 		return
 	}
 
-	# the task is in jobs:
-	if ($Task.Jobs -contains $TryTask) {
-		# and it is not protected
-		if ($Task.Try -notcontains $TryTask) {
-			"Task '$($Task.Name)' will fail due to '$TryTask'."
+	# has the culprit:
+	if ($task1.Jobs -contains $TryTask) {
+		if ($task1.Try -notcontains $TryTask) {
+			"Fatal: Task '$Task' calls failed '$TryTask' not protected."
 		}
 		return
 	}
 
-	# jobs:
-	foreach($job in $Task.Jobs) {
+	# process job tasks:
+	foreach($job in $task1.Jobs) {
 		if ($job -is [string]) {
-			$task2 = $BuildThis.Tasks[$job]
-			if (!$task2) { throw }
-			$why = Invoke-Build-Approve-Tree $task2 $TryTask
+			$why = Invoke-Build-Try-Tree $job $TryTask
 			if ($why) {
 				return $why
 			}
@@ -985,8 +973,8 @@ function Invoke-Build-Approve-Tree([object]$Task, [string]$TryTask)
 	}
 }
 
-# Preprocessing of a task.
-function Invoke-Build-Initialize-Task([object]$Task, [Collections.ArrayList]$Done)
+# Preprocesses the task tree.
+function Invoke-Build-Preprocess([object]$Task, [Collections.ArrayList]$Done)
 {
 	# ignore?
 	if (!$Task.If) {
@@ -1012,11 +1000,6 @@ $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 "@
 			}
 
-			# ignore:
-			if (!$task2.If) {
-				continue
-			}
-
 			# cyclic:
 			if ($Done.Contains($task2)) {
 				throw @"
@@ -1025,8 +1008,8 @@ $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 "@
 			}
 
-			# process job task
-			Invoke-Build-Initialize-Task $task2 $Done
+			# recur
+			Invoke-Build-Preprocess $task2 $Done
 			$Done.RemoveRange($count, $Done.Count - $count)
 		}
 	}
@@ -1110,7 +1093,7 @@ Remove-Variable Parameters
 ### Set location to the root (sourced needs this, too)
 Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 
-### Invoke the file and tasks
+### Invoke the script and tasks
 if (!${private:-sourced}) {
 	. $BuildFile @94abce897fdf4f18a806108b30f08c13
 	. Start-Build

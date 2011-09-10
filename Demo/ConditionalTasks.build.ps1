@@ -19,11 +19,11 @@
 	A case of If block errors is tested in ErrorCases.build.ps1.
 
 .Example
-	# Debug configuration
+	># Debug configuration
 	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
 
 .Example
-	# Release configuration
+	># Release configuration
 	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
 
 .Link

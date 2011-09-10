@@ -6,6 +6,9 @@
 .Description
 	These examples are just tests. For a real example of partial incremental
 	build with dynamic input and output see Build.ps1, task ConvertMarkdown.
+
+.Example
+	Invoke-Build . Incremental.build.ps1
 #>
 
 ### Make a few temporary old and new files
