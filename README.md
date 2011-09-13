@@ -2,11 +2,10 @@
 Invoke-Build - Orchestrate Builds in PowerShell
 ===============================================
 
-*Invoke-Build.ps1* is a standalone *Windows PowerShell* script used to invoke
-tasks from build scripts.
-
-Ideas come from the [psake](https://github.com/JamesKovacs/psake) module and
-other build tools. This script provides an easy to use and yet robust engine.
+This script provides an easy to use and robust build engine with build scripts
+written in [*PowerShell*](http://en.wikipedia.org/wiki/Powershell) and concepts
+similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild) and
+[*psake*](https://github.com/psake/psake).
 
 Build scripts are *PowerShell* scripts that define tasks. Tasks consist of jobs
 (references to other tasks and own scripts), conditions (Boolean expressions or
@@ -26,6 +25,23 @@ restores the current location. Caveat: build tasks can make such changes.
 Simultaneous *Invoke-Build* calls in the same session work without conflicts:
 both nested calls and parallel builds called from background jobs or separate
 workspaces.
+
+## Comparison with MSBuild
+
+*Invoke-Build* PowerShell scripts and *MSBuild* XML scripts are quite
+different. But the concepts of these build tools are almost the same:
+
+    MSBuild                      Invoke-Build
+    -------                      ------------
+    Default build script         A single *.build.ps1 or .build.ps1
+    DefaultTargets               "." task is the default
+    Import                       Dot-source or invoke
+    Target                       Task
+    Condition                    -If
+    Inputs, Outputs              -Inputs, -Outputs
+    DependsOnTargets             -Jobs, referenced task names
+    Tasks                        -Jobs, PowerShell script blocks
+    AfterTargets, BeforeTargets  -After, -Before
 
 ## Quick Start
 

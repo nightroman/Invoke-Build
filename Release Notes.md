@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.9
+
+Tasks support `After` and `Before` parameters, analogues of `AfterTargets` and
+`BeforeTargets` of *MSBuild* targets. *Invoke-Build* tasks becomes very similar
+to *MSBuild* targets, see
+[Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild).
+
 ## v1.0.8
 
 Simplified `assert`. Minor engine and test tweaks.

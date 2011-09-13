@@ -91,6 +91,11 @@ function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern, $Parame
 	"Issue '$Task' of '$Build' is tested."
 }
 
+# This task tests After and Before tasks.
+task Alter {
+	Invoke-Build . Alter.build.ps1
+}
+
 # This task calls tests of assert.
 task Assert {
 	Invoke-Build . Assert.build.ps1
@@ -197,6 +202,7 @@ task TestFunctions {
 
 # This task calls all test tasks.
 task Tests `
+	Alter,
 	Assert,
 	ConditionalTasks,
 	ErrorCases,

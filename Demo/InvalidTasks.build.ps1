@@ -58,7 +58,7 @@ task CyclicReference {
 
 # The tested task has three valid jobs and one invalid (42 ~ [int]).
 task InvalidJobType {
-	Test "Task '.': Job 4/4: Invalid job type." {
+	Test "Task '.': Invalid job type." {
 		task task1 {}
 		task task2 {}
 		task . @(
@@ -72,7 +72,7 @@ task InvalidJobType {
 
 # The tested task uses valid job type but its value is invalid.
 task InvalidJobValue {
-	Test "Task '.': Job 1/1: Hashtable should have one item." {
+	Test "Task '.': Hashtable task reference should have one item." {
 		task . @(
 			@{ task2 = 1; task1 = 1 }
 		)

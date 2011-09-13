@@ -23,8 +23,8 @@
 	*
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-	The ideas come from the psake module and a few other build and make tools.
-	The goal of this script is to provide an easy to use and yet robust engine.
+	This script provides an easy to use and robust build engine with build
+	scripts written in PowerShell and concepts similar to MSBuild and psake.
 
 	Installation: just copy Invoke-Build.ps1 to any directory of the $env:path.
 
@@ -148,7 +148,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.8'
+	[System.Version]'1.0.9'
 }
 
 <#
@@ -216,6 +216,18 @@ function Get-BuildVersion
 		- $_ - the current full input path
 		- $$ - the current output path (returned by the Outputs script)
 
+.Parameter After
+		Tells to invoke this task after the specified tasks defined as names or
+		constructs @{Task=1}. In the latter case this extra task is called
+		protected (see the parameter Jobs).
+
+		After and Before are used in order to alter build task jobs in special
+		cases, normally when direct changes in task jobs are not suitable.
+
+.Parameter Before
+		Tells to invoke this task before the specified tasks. See the parameter
+		After for details.
+
 .Inputs
 	None
 
@@ -241,6 +253,12 @@ function Add-BuildTask
 	,
 	[Parameter()]
 	[object]$Outputs
+	,
+	[Parameter()]
+	[object[]]$After
+	,
+	[Parameter()]
+	[object[]]$Before
 )
 {
 	$task = $BuildThis.Tasks[$Name]
@@ -257,31 +275,21 @@ Task '$Name' is added twice:
 	}
 
 	$jobList = [System.Collections.ArrayList]@()
-	$tryList = $null
+	$tryList = [System.Collections.ArrayList]@()
 
-	$index = -1
 	foreach($job in $Jobs) {
-		++$index
-		if ($job -is [hashtable]) {
-			if ($job.Count -ne 1) {
-				Invoke-BuildError "Task '$Name': Job $($index + 1)/$($Jobs.Count): Hashtable should have one item." InvalidArgument $job
-			}
-			$string = @($job.Keys)[0]
-			$null = $jobList.Add($string)
-			if (@($job.Values)[0] -eq 1) {
-				if ($tryList) {
-					$null = $tryList.Add($string)
-				}
-				else {
-					$tryList = [System.Collections.ArrayList]@($string)
-				}
+		$name2, $data = Invoke-Build-Reference $Name $job
+		if ($data) {
+			$null = $jobList.Add($name2)
+			if (1 -eq $data) {
+				$null = $tryList.Add($name2)
 			}
 		}
 		elseif (($job -is [string]) -or ($job -is [scriptblock])) {
 			$null = $jobList.Add($job)
 		}
 		else {
-			Invoke-BuildError "Task '$Name': Job $($index + 1)/$($Jobs.Count): Invalid job type." InvalidArgument $job
+			Invoke-BuildError "Task '$Name': Invalid job type." InvalidArgument $job
 		}
 	}
 
@@ -293,6 +301,8 @@ Task '$Name' is added twice:
 		Info = $MyInvocation
 		Inputs = $Inputs
 		Outputs = $Outputs
+		After = $After
+		Before = $Before
 	})
 }
 
@@ -606,6 +616,17 @@ function Start-Build
 
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ $BuildFile"
 	try {
+		### After/Before
+		foreach(${private:-task} in $BuildThis.Tasks.Values) {
+			${private:-list} = ${private:-task}.After
+			if (${private:-list}) {
+				Invoke-Build-Alter ${private:-task}.Name ${private:-list} -After
+			}
+			${private:-list} = ${private:-task}.Before
+			if (${private:-list}) {
+				Invoke-Build-Alter ${private:-task}.Name ${private:-list}
+			}
+		}
 		### View the tasks
 		if ($BuildTask[0] -eq '?') {
 			$BuildThis.Tasks.Values | .{process{
@@ -652,7 +673,7 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 	}
 }
 
-# For advanced functions to show the caller error location.
+# For advanced functions to show caller locations in errors.
 function Invoke-BuildError($Message, $Category = 0, $Target)
 {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
@@ -687,6 +708,45 @@ function Write-Warning([string]$Message)
 	++$BuildThis.WarningCount
 	$null = $BuildInfo.Messages.Add($Message)
 	$null = $BuildThis.Messages.Add($Message)
+}
+
+# Adds the task to the referenced task jobs.
+function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
+{
+	foreach($ref in $Refs) {
+		$name, $data = Invoke-Build-Reference $TaskName $ref
+
+		$task = $BuildThis.Tasks[$name]
+		if (!$task) {
+			Invoke-BuildError "Task '$TaskName': Task '$name' is not defined." InvalidArgument $ref
+		}
+
+		if ($After) {
+			$null = $task.Jobs.Add($TaskName)
+		}
+		else {
+			$task.Jobs.Insert(0, $TaskName)
+		}
+
+		if (1 -eq $data) {
+			$null = $task.Try.Add($TaskName)
+		}
+	}
+}
+
+# Gets the task name and data.
+function Invoke-Build-Reference([string]$Task, $Ref)
+{
+	if ($Ref -is [hashtable]) {
+		if ($Ref.Count -ne 1) {
+			Invoke-BuildError "Task '$Task': Hashtable task reference should have one item." InvalidArgument $Ref
+		}
+		@($Ref.Keys)[0]
+		@($Ref.Values)[0]
+	}
+	else {
+		$Ref
+	}
 }
 
 # Heals line breaks in the position message.
