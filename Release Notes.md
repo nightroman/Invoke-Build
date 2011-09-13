@@ -4,8 +4,12 @@ Invoke-Build Release Notes
 ## v1.0.9
 
 Tasks support `After` and `Before` parameters, analogues of `AfterTargets` and
-`BeforeTargets` of *MSBuild* targets. *Invoke-Build* tasks becomes very similar
-to *MSBuild* targets, see
+`BeforeTargets` of *MSBuild* targets.
+
+If build tasks are not specified and the "." task does not exist then the first
+added task is invoked.
+
+At this point *Invoke-Build* concepts become quite similar to *MSBuild*, see
 [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild).
 
 ## v1.0.8

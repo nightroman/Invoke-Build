@@ -72,7 +72,7 @@
 
 .Parameter BuildTask
 		One or more tasks to be invoked. Use '?' in order to view tasks.
-		The default task is '.', just a dot.
+		The default task is "." if it exists otherwise the first added task.
 
 .Parameter BuildFile
 		The build script which defines build tasks by Add-BuildTask (task).
@@ -616,6 +616,19 @@ function Start-Build
 
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ $BuildFile"
 	try {
+		### The first task
+		if (!$BuildTask) {
+			if (!$BuildThis.Tasks) {
+				Invoke-BuildError "There is no task in the script."
+			}
+			if ($BuildThis.Tasks.Contains('.')) {
+				$BuildTask = '.'
+			}
+			else {
+				$BuildTask = $BuildThis.Tasks.Item(0).Name
+			}
+		}
+
 		### After/Before
 		foreach(${private:-task} in $BuildThis.Tasks.Values) {
 			${private:-list} = ${private:-task}.After
@@ -630,19 +643,17 @@ function Start-Build
 		### View the tasks
 		if ($BuildTask[0] -eq '?') {
 			$BuildThis.Tasks.Values | .{process{
-				${private:-task} = 1 | Select-Object Task, Info, File, Line
-				${private:-task}
+				${private:-task} = 1 | Select-Object Task, Info
 				${private:-task}.Task = $_.Name
 				${private:-file} = $_.Info.ScriptName
-				${private:-task}.File = ${private:-file}
-				${private:-task}.Line = $_.Info.ScriptLineNumber
 				if (${private:-file} -like "$BuildRoot\*") {
 					${private:-file} = ${private:-file}.Substring($BuildRoot.Length + 1)
 				}
 				${private:-task}.Info = @"
-$(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:-file}):$(${private:-task}.Line)
+$(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:-file}):$($_.Info.ScriptLineNumber)
 "@
-			}} | Sort-Object File, Line | Format-Table Task, Info -AutoSize -Wrap
+				${private:-task}
+			}} | Format-Table Task, Info -AutoSize -Wrap | Out-String
 			return
 		}
 
@@ -1133,12 +1144,9 @@ if (${private:-first}) {
 		Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 	}
 }
-if (!$BuildTask) { $BuildTask = @('.') }
-Set-Variable -Option ReadOnly -Name BuildTask
-Set-Variable -Option ReadOnly -Name BuildFile
 New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
 New-Variable -Option Constant -Name BuildThis -Value @{
-	Tasks = @{}
+	Tasks = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	TaskCount = 0
 	ErrorCount = 0
 	WarningCount = 0

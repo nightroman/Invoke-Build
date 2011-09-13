@@ -34,7 +34,8 @@ different. But the concepts of these build tools are almost the same:
     MSBuild                      Invoke-Build
     -------                      ------------
     Default build script         A single *.build.ps1 or .build.ps1
-    DefaultTargets               "." task is the default
+    InitialTargets               Whatever build scripts invoke
+    DefaultTargets               The "." task is the default
     Import                       Dot-source or invoke
     Target                       Task
     Condition                    -If
@@ -42,6 +43,8 @@ different. But the concepts of these build tools are almost the same:
     DependsOnTargets             -Jobs, referenced task names
     Tasks                        -Jobs, PowerShell script blocks
     AfterTargets, BeforeTargets  -After, -Before
+
+[More...](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
 
 ## Quick Start
 
