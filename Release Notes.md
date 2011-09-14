@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.10
+
+`Before` tasks are added before the first script job. `After` tasks are added
+after the last script job. If there is not a script job they are just added.
+This logic allows to to reproduce MSBuild scenarios.
+
 ## v1.0.9
 
 Tasks support `After` and `Before` parameters, analogues of `AfterTargets` and

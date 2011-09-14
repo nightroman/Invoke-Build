@@ -1,6 +1,6 @@
 
-Invoke-Build - Orchestrate Builds in PowerShell
-===============================================
+Invoke-Build - Build Automation in PowerShell
+=============================================
 
 This script provides an easy to use and robust build engine with build scripts
 written in [*PowerShell*](http://en.wikipedia.org/wiki/Powershell) and concepts

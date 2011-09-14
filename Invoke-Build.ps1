@@ -1,12 +1,10 @@
 
 <#
 .Synopsis
-	Invoke-Build - Orchestrate Builds in PowerShell
+	Invoke-Build - Build Automation in PowerShell
 
 .Description
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	*
-	* Invoke-Build - Orchestrate Builds in PowerShell
 	* Copyright (c) 2011 Roman Kuzmin
 	*
 	* Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +18,6 @@
 	* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 	* See the License for the specific language governing permissions and
 	* limitations under the License.
-	*
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 	This script provides an easy to use and robust build engine with build
@@ -148,7 +145,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.9'
+	[System.Version]'1.0.10'
 }
 
 <#
@@ -217,16 +214,21 @@ function Get-BuildVersion
 		- $$ - the current output path (returned by the Outputs script)
 
 .Parameter After
-		Tells to invoke this task after the specified tasks defined as names or
-		constructs @{Task=1}. In the latter case this extra task is called
-		protected (see the parameter Jobs).
+		Tells to add this task to the specified task job lists. The task is
+		added after the last script jobs, if any, otherwise to the end of job
+		lists.
+
+		Altered tasks are defined as names or constructs @{Task=1}. In the
+		latter case this extra task is called protected (see the parameter
+		Jobs).
 
 		After and Before are used in order to alter build task jobs in special
 		cases, normally when direct changes in task jobs are not suitable.
 
 .Parameter Before
-		Tells to invoke this task before the specified tasks. See the parameter
-		After for details.
+		Tells to add this task to the specified task job lists. It is added
+		before the first script jobs, if any, otherwise to the end of the job
+		lists. See the parameter After for details.
 
 .Inputs
 	None
@@ -616,33 +618,36 @@ function Start-Build
 
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ $BuildFile"
 	try {
+		${private:-tasks} = $BuildThis.Tasks
+
 		### The first task
 		if (!$BuildTask) {
-			if (!$BuildThis.Tasks) {
+			if (!${private:-tasks}) {
 				Invoke-BuildError "There is no task in the script."
 			}
-			if ($BuildThis.Tasks.Contains('.')) {
+			if (${private:-tasks}.Contains('.')) {
 				$BuildTask = '.'
 			}
 			else {
-				$BuildTask = $BuildThis.Tasks.Item(0).Name
+				$BuildTask = ${private:-tasks}.Item(0).Name
 			}
 		}
 
-		### After/Before
-		foreach(${private:-task} in $BuildThis.Tasks.Values) {
-			${private:-list} = ${private:-task}.After
-			if (${private:-list}) {
-				Invoke-Build-Alter ${private:-task}.Name ${private:-list} -After
-			}
+		### Alter task jobs
+		foreach(${private:-task} in ${private:-tasks}.Values) {
 			${private:-list} = ${private:-task}.Before
 			if (${private:-list}) {
 				Invoke-Build-Alter ${private:-task}.Name ${private:-list}
 			}
+			${private:-list} = ${private:-task}.After
+			if (${private:-list}) {
+				Invoke-Build-Alter ${private:-task}.Name ${private:-list} -After
+			}
 		}
+
 		### View the tasks
 		if ($BuildTask[0] -eq '?') {
-			$BuildThis.Tasks.Values | .{process{
+			${private:-tasks}.Values | .{process{
 				${private:-task} = 1 | Select-Object Task, Info
 				${private:-task}.Task = $_.Name
 				${private:-file} = $_.Info.ScriptName
@@ -659,7 +664,7 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 
 		### Preprocess tasks
 		foreach(${private:-name} in $BuildTask) {
-			${private:-task} = $BuildThis.Tasks[${private:-name}]
+			${private:-task} = ${private:-tasks}[${private:-name}]
 			if (!${private:-task}) {
 				Invoke-BuildError "Task '${private:-name}' is not defined." ObjectNotFound ${private:-name}
 			}
@@ -670,12 +675,15 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		foreach(${private:-name} in $BuildTask) {
 			Invoke-Build-Task ${private:-name}
 		}
+
+		### Summary
 		$BuildThis.Messages
 		if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
 			Invoke-Build-Write-Info $BuildThis
 		}
 	}
 	finally {
+		### Results
 		Set-Location -LiteralPath ${private:-location} -ErrorAction Stop
 		if (${private:-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
 			$BuildInfo.Messages
@@ -732,12 +740,25 @@ function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
 			Invoke-BuildError "Task '$TaskName': Task '$name' is not defined." InvalidArgument $ref
 		}
 
+		$jobs = $task.Jobs
+		$index = $jobs.Count
 		if ($After) {
-			$null = $task.Jobs.Add($TaskName)
+			for($$ = $index - 1; $$ -ge 0; --$$) {
+				if ($jobs[$$] -is [scriptblock]) {
+					$index = $$ + 1
+					break
+				}
+			}
 		}
 		else {
-			$task.Jobs.Insert(0, $TaskName)
+			for($$ = 0; $$ -lt $index; ++$$) {
+				if ($jobs[$$] -is [scriptblock]) {
+					$index = $$
+					break
+				}
+			}
 		}
+		$task.Jobs.Insert($index, $TaskName)
 
 		if (1 -eq $data) {
 			$null = $task.Try.Add($TaskName)
@@ -1153,15 +1174,11 @@ New-Variable -Option Constant -Name BuildThis -Value @{
 	Messages = [System.Collections.ArrayList]@()
 	Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 }
-
-### Hide variables
 ${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
 Remove-Variable Parameters
 
-### Set location to the root (sourced needs this, too)
+### Invoke the script and tasks or just wait for tasks
 Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-
-### Invoke the script and tasks
 if (!${private:-sourced}) {
 	. $BuildFile @94abce897fdf4f18a806108b30f08c13
 	. Start-Build

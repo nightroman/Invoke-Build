@@ -13,7 +13,9 @@
 
 # These tasks are to be altered below. Imagine for example that they are in
 # another script dot-sourced in here and we do not want or can modify it.
-task Task1 { 'In Task1' }
+task PreTask1 { 'In PreTask1' }
+task PostTask1 { 'In PostTask1' }
+task Task1 PreTask1, { 'In Task1' }, PostTask1
 task Task2 { 'In Task2' }
 task Task3 { 'In Task3' }
 
