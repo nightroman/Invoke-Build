@@ -145,7 +145,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.10'
+	[System.Version]'1.0.11'
 }
 
 <#
@@ -300,11 +300,11 @@ Task '$Name' is added twice:
 		Jobs = $jobList
 		Try = $tryList
 		If = $If
-		Info = $MyInvocation
 		Inputs = $Inputs
 		Outputs = $Outputs
 		After = $After
 		Before = $Before
+		Info = $MyInvocation
 	})
 }
 
@@ -313,8 +313,8 @@ Task '$Name' is added twice:
 	Gets an error of the specified task if the task has failed.
 
 .Description
-	This method is used when some task jobs are protected (@{ Task = 1 }) and
-	the current task wants to analyse task errors.
+	This method is used when some dependent tasks are referenced as @{Task=1}
+	(protected) and the current task script is about to analyse their errors.
 
 .Parameter Task
 		Name of the task which error is requested.
@@ -383,12 +383,12 @@ function Assert-BuildTrue
 
 <#
 .Synopsis
-	Invokes the command and checks the $LastExitCode.
+	Invokes the command and checks for the $LastExitCode.
 
 .Description
 	The passed in command is supposed to call an executable tool. This function
-	invokes the command and checks the $LastExitCode. By default if the code is
-	not zero then the function throws a terminating error.
+	invokes the command and checks for the $LastExitCode. By default if the
+	code is not zero then the function throws a terminating error.
 
 	It is common to call .NET framework tools. See Use-BuildAlias.
 
@@ -398,7 +398,7 @@ function Assert-BuildTrue
 		The command that invokes an executable which exit code is checked.
 
 .Parameter ExitCode
-		Valid exit codes (e.g. 0..3 for robocopy). The default is @(0).
+		Valid exit codes (e.g. 0..3 for robocopy). The default is 0.
 
 .Inputs
 	None
@@ -454,7 +454,7 @@ function Invoke-BuildExec
 		relative to Microsoft.NET in the Windows directory. Otherwise it is
 		used literally, it can be any directory with any tools.
 
-		Examples: Framework\v4.0.30319, Framework\v2.0.50727, C:\Tools, etc.
+		Examples: Framework\v4.0.30319, Framework\v2.0.50727, C:\Scripts, etc.
 
 .Parameter Name
 		The tool names to set aliases for. These names also become alias names
@@ -495,7 +495,7 @@ function Use-BuildAlias
 			}
 		}
 		else {
-			$Path = Convert-Path (Resolve-Path -LiteralPath $Path)
+			$Path = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop)
 		}
 	}
 	else {
@@ -708,7 +708,7 @@ if (${private:-sourced}) {
 		return
 	}
 	if ($BuildFile -or $Parameters) {
-		Invoke-BuildError "Dot-sourced Invoke-Build does not allow parameters BuildFile and Parameters." InvalidOperation
+		Invoke-BuildError "Dot-sourced Invoke-Build does not accept BuildFile and Parameters." InvalidOperation
 	}
 	$BuildFile = $PSCmdlet.MyInvocation.ScriptName
 }
@@ -758,8 +758,8 @@ function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
 				}
 			}
 		}
-		$task.Jobs.Insert($index, $TaskName)
 
+		$task.Jobs.Insert($index, $TaskName)
 		if (1 -eq $data) {
 			$null = $task.Try.Add($TaskName)
 		}
@@ -889,16 +889,15 @@ function Invoke-Build-IO([object]$Task)
 	}
 }
 
-# This command is used internally and should not be called directly.
-# Build scripts should define standard functions shared between tasks.
+# This is used internally and should not be called directly.
 function Invoke-Build-Task($Name, $Path)
 {
 	# the task
 	${private:-task} = $BuildThis.Tasks[$Name]
 	if (!${private:-task}) { throw }
 
-	# the path
-	${private:-path} = if ($Path) { "$Path\$Name" } else { $Name }
+	# the path, use the original name
+	${private:-path} = if ($Path) { "$Path\$(${private:-task}.Name)" } else { ${private:-task}.Name }
 
 	# 1) failed?
 	if (${private:-task}.ContainsKey('Error')) {

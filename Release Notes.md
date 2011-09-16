@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.11
+
+Task names are logged exactly as they are defined by `task`, not as referenced
+by the parameters or other tasks.
+
+Use-BuildAlias uses -ErrorAction Stop and fails if a directory is missing.
+
 ## v1.0.10
 
 `Before` tasks are added before the first script job. `After` tasks are added
