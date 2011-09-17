@@ -1,12 +1,18 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.12
+
+Amended error messages in `Use-BuildAlias`.
+
+More tests in *Use.build.ps1*.
+
 ## v1.0.11
 
 Task names are logged exactly as they are defined by `task`, not as referenced
 by the parameters or other tasks.
 
-Use-BuildAlias uses -ErrorAction Stop and fails if a directory is missing.
+`Use-BuildAlias` uses `-ErrorAction Stop` and fails if a directory is missing.
 
 ## v1.0.10
 

@@ -2,6 +2,8 @@
 Invoke-Build - Build Automation in PowerShell
 =============================================
 
+![MSBuild and Invoke-Build](https://github.com/downloads/nightroman/Invoke-Build/ProjectVsScript.png)
+
 This script provides an easy to use and robust build engine with build scripts
 written in [*PowerShell*](http://en.wikipedia.org/wiki/Powershell) and concepts
 similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild) and

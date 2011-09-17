@@ -145,7 +145,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.11'
+	[System.Version]'1.0.12'
 }
 
 <#
@@ -489,21 +489,24 @@ function Use-BuildAlias
 
 	if ($Path) {
 		if ($Path.StartsWith('Framework', [System.StringComparison]::OrdinalIgnoreCase)) {
-			$Path = "$env:windir\Microsoft.NET\$Path"
-			if (![System.IO.Directory]::Exists($Path)) {
-				Invoke-BuildError "Directory does not exist: '$Path'." InvalidArgument
+			$dir = "$env:windir\Microsoft.NET\$Path"
+			if (![System.IO.Directory]::Exists($dir)) {
+				Invoke-BuildError "Directory does not exist: '$dir'." InvalidArgument $Path
 			}
 		}
 		else {
-			$Path = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop)
+			if (!(Test-Path -LiteralPath $Path)) {
+				Invoke-BuildError "Directory does not exist: '$Path'." InvalidArgument $Path
+			}
+			$dir = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop)
 		}
 	}
 	else {
-		$Path = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
+		$dir = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
 	}
 
 	foreach($it in $Name) {
-		Set-Alias $it (Join-Path $Path $it) -Scope 1
+		Set-Alias $it (Join-Path $dir $it) -Scope 1
 	}
 }
 

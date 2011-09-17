@@ -49,21 +49,43 @@ task CurrentFramework {
 	$version
 }
 
-# This task fails due to invalid framework specified.
+# The directory path used for aliased commands should be resolved.
+task ResolvedPath {
+	use . MyTestAlias
+	$path = (Get-Command MyTestAlias).Definition
+	assert ($path -like '?:\*\MyTestAlias')
+}
+
+# This task fails due to the invalid framework specified.
 task InvalidFramework {
 	use Framework\xyz MSBuild
 }
 
-# This task fails because Use-BuildAlias (use) should not be dot-sourced.
+# This task fails due to the invalid directory specified.
+task InvalidDirectory {
+	use \MissingScripts MyScript
+}
+
+# This task fails because `use` should not be dot-sourced.
 task DoNotDotSource {
 	. use $null MSBuild
 }
 
 # The default task calls the others and checks that InvalidFramework and
 # DoNotDotSource have failed. Failing tasks are referenced as @{Task=1}.
-task . v2.0.50727, v4.0.30319, CurrentFramework, @{InvalidFramework=1}, @{DoNotDotSource=1}, {
+task . `
+v2.0.50727,
+v4.0.30319,
+CurrentFramework,
+ResolvedPath,
+@{InvalidFramework=1},
+@{InvalidDirectory=1},
+@{DoNotDotSource=1}, {
 	$e = error InvalidFramework
 	assert ("$e" -like "Directory does not exist: '*\xyz'.")
+
+	$e = error InvalidDirectory
+	assert ("$e" -eq "Directory does not exist: '\MissingScripts'.")
 
 	$e = error DoNotDotSource
 	assert ("$e" -like "Use-BuildAlias should not be dot-sourced.")
