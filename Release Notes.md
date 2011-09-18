@@ -1,6 +1,11 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.13
+
+Empty/dummy tasks with no jobs are allowed (just like MSBuild empty targets
+with no dependencies and tasks). They are used in rare but possible scenarios.
+
 ## v1.0.12
 
 Amended error messages in `Use-BuildAlias`.

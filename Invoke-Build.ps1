@@ -145,7 +145,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.12'
+	[System.Version]'1.0.13'
 }
 
 <#
@@ -244,7 +244,7 @@ function Add-BuildTask
 	[Parameter(Position = 0, Mandatory = $true)]
 	[string]$Name
 	,
-	[Parameter(Position = 1, Mandatory = $true)]
+	[Parameter(Position = 1)]
 	[object[]]$Jobs
 	,
 	[Parameter()]
@@ -279,19 +279,21 @@ Task '$Name' is added twice:
 	$jobList = [System.Collections.ArrayList]@()
 	$tryList = [System.Collections.ArrayList]@()
 
-	foreach($job in $Jobs) {
-		$name2, $data = Invoke-Build-Reference $Name $job
-		if ($data) {
-			$null = $jobList.Add($name2)
-			if (1 -eq $data) {
-				$null = $tryList.Add($name2)
+	if ($Jobs) {
+		foreach($job in $Jobs) {
+			$name2, $data = Invoke-Build-Reference $Name $job
+			if ($data) {
+				$null = $jobList.Add($name2)
+				if (1 -eq $data) {
+					$null = $tryList.Add($name2)
+				}
 			}
-		}
-		elseif (($job -is [string]) -or ($job -is [scriptblock])) {
-			$null = $jobList.Add($job)
-		}
-		else {
-			Invoke-BuildError "Task '$Name': Invalid job type." InvalidArgument $job
+			elseif (($job -is [string]) -or ($job -is [scriptblock])) {
+				$null = $jobList.Add($job)
+			}
+			else {
+				Invoke-BuildError "Task '$Name': Invalid job type." InvalidArgument $job
+			}
 		}
 	}
 

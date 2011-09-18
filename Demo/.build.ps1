@@ -54,6 +54,10 @@ assert ((Split-Path $MyPath) -eq $BuildRoot)
 # Test warning
 Write-Warning "Ignore this warning."
 
+# Test empty tasks. They are rare but possible.
+task Dummy1
+task Dummy2 $null
+
 # Parameters and values are just variables in the script scope.
 # Read them as $Variable. Write them as $script:Variable = ...
 task ParamsValues1 {
@@ -157,6 +161,7 @@ task TestVariables {
 		'foreach'
 		'LASTEXITCODE'
 		'PSCmdlet'
+		'this'
 	)
 	Get-Variable | .{process{
 		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notlike 'My*')) {
@@ -202,6 +207,8 @@ task TestFunctions {
 
 # This task calls all test tasks.
 task Tests `
+	Dummy1,
+	Dummy2,
 	Alter,
 	Assert,
 	ConditionalTasks,

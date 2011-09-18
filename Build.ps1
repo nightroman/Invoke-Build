@@ -49,21 +49,22 @@ param
 Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
 
-# Required tools (to fail if missing).
+# Requires: 7z.exe
 Set-Alias 7z @(Get-Command 7z)[0].Definition
 
-# Example of partial incremental build. Fails without Convert-Markdown.ps1. But
-# the Zip task calls it protected and should still do its job, partially.
-# * Input is all markdown files.
-# * Output transforms input paths into output paths. [*]
-# * And the job is to process each out-of-date input. [*]
-# [*] Note use of 'process' blocks and variables $_ and $$ there.
-task ConvertMarkdown `
--Inputs { Get-ChildItem -Filter *.md } `
--Outputs {process{ [System.IO.Path]::ChangeExtension($_, 'htm') }} `
-{process{
-	Convert-Markdown.ps1 $_ $$
-}}
+# Example of imported tasks and a case of empty dummy tasks created on errors.
+# Import markdown tasks. Requires <https://gist.github.com/1223828>.
+try { Markdown.tasks.ps1 }
+catch { task ConvertMarkdown; task RemoveMarkdownHtml }
+
+# Example of using imported tasks (ConvertMarkdown, RemoveMarkdownHtml) and an
+# application (7z.exe). It also shows a dependent task referenced after the
+# script job.
+# The task prepares files, archives them, and then cleans.
+task Zip ConvertMarkdown, UpdateScript, GitStatus, {
+	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!Test-Output.*' '-x!*.md' }
+},
+RemoveMarkdownHtml
 
 # Example of a conditional task. It warns about not empty git status if .git
 # exists. The task is not invoked if .git is missing due to the condition.
@@ -81,15 +82,6 @@ task UpdateScript {
 	$source = Get-Item (Get-Command Invoke-Build.ps1).Definition
 	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
 	Copy-Item $source.FullName .
-}
-
-# Example of a protected task call and use of 'error'. Makes the zip using HTML
-# files, the latest script, etc. Calls ConvertMarkdown protected because it may
-# fail. Then checks for an error and amends the command if needed.
-task Zip @{ConvertMarkdown=1}, UpdateScript, GitStatus, {
-	$exclude = if (error ConvertMarkdown) {} else {'-x!*.md'}
-	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!Test-Output.*' $exclude }
-	Remove-Item *.htm
 }
 
 # Tests Demo scripts and compares the output with expected. It creates and
@@ -148,10 +140,10 @@ task . Test, Zip, {
 	# check the current and total build counters
 	if (!(error ConvertMarkdown)) {
 		# current
-		assert ($BuildThis.TaskCount -eq 6) $BuildThis.TaskCount
+		assert ($BuildThis.TaskCount -eq 7) $BuildThis.TaskCount
 		assert ($BuildThis.ErrorCount -eq 0) $BuildThis.ErrorCount
 		# total
-		assert ($BuildInfo.TaskCount -eq 100) $BuildInfo.TaskCount
+		assert ($BuildInfo.TaskCount -eq 103) $BuildInfo.TaskCount
 		assert ($BuildInfo.ErrorCount -eq 19) $BuildInfo.ErrorCount
 		assert ($BuildInfo.WarningCount -ge 1)
 		assert ($BuildInfo.WarningCount -ge $BuildThis.WarningCount)
