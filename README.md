@@ -96,6 +96,7 @@ tutorial comments:
 ## See Also
 
 * [How It Works](https://github.com/nightroman/Invoke-Build/wiki/How-It-Works)
-* [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
+* [Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks)
 * [Partial Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks)
+* [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
 * [Build Scripts in Projects](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
