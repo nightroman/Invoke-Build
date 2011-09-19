@@ -148,6 +148,10 @@ task ErrorCases {
 	Test-Issue MissingInputsItems ErrorCases.build.ps1 "Task 'MissingInputsItems': Error on resolving inputs: Cannot find path 'missing' because it does not exist."
 }
 
+task TestDefaultParameter {
+	Invoke-Build TestDefaultParameter ConditionalTasks.build.ps1
+}
+
 # Invoke-Build should expose only documented variables! If this test shows
 # warnings about unknown variables (very likely) and they are presumably
 # created by Invoke-Build (less likely), please let the author know.
@@ -218,6 +222,7 @@ task Tests `
 	InvalidTasks,
 	ProtectedTasks,
 	Use,
+	TestDefaultParameter,
 	TestFunctions,
 	TestVariables
 

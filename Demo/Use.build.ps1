@@ -53,7 +53,7 @@ task CurrentFramework {
 task ResolvedPath {
 	use . MyTestAlias
 	$path = (Get-Command MyTestAlias).Definition
-	assert ($path -like '?:\*\MyTestAlias')
+	assert (($path -like '?:\*\MyTestAlias') -or ($path -like '\\*\MyTestAlias'))
 }
 
 # This task fails due to the invalid framework specified.

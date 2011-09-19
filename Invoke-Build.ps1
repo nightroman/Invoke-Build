@@ -145,7 +145,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.13'
+	[System.Version]'1.0.14'
 }
 
 <#
@@ -1184,6 +1184,10 @@ Remove-Variable Parameters
 ### Invoke the script and tasks or just wait for tasks
 Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 if (!${private:-sourced}) {
-	. $BuildFile @94abce897fdf4f18a806108b30f08c13
+	if (${private:94abce897fdf4f18a806108b30f08c13}) {
+		. $BuildFile @94abce897fdf4f18a806108b30f08c13
+	} else {
+		. $BuildFile
+	}
 	. Start-Build
 }

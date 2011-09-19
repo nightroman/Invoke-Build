@@ -40,6 +40,11 @@ $BeforeConditional = 'TODO'
 $AfterConditional = 'TODO'
 $Conditional = 'TODO'
 
+# Test of the default parameter value (called from .build.ps1)
+task TestDefaultParameter {
+	assert ($Configuration -eq 'Release')
+}
+
 # These tasks are referenced by the Conditional
 task BeforeConditional { $script:BeforeConditional = 'DONE' }
 task AfterConditional { $script:AfterConditional = 'DONE' }

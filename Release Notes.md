@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.14
+
+Fixed a bug dealing with splatting and the first parameter default value.
+
 ## v1.0.13
 
 Empty/dummy tasks with no jobs are allowed (just like MSBuild empty targets
