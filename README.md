@@ -92,3 +92,10 @@ tutorial comments:
 * *Build.ps1* - the build script of this project;
 * *Demo/.build.ps1* - the default script which calls all the tests;
 * *Demo/Xyz.build.ps1* - use and problem cases grouped by categories.
+
+## See Also
+
+* [How It Works](https://github.com/nightroman/Invoke-Build/wiki/How-It-Works)
+* [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
+* [Partial Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks)
+* [Build Scripts in Projects](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)

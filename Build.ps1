@@ -53,7 +53,7 @@ $ErrorActionPreference = 'Stop'
 Set-Alias 7z @(Get-Command 7z)[0].Definition
 
 # Example of imported tasks and a case of empty dummy tasks created on errors.
-# Import markdown tasks. Requires <https://gist.github.com/1223828>.
+# <https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks>
 try { Markdown.tasks.ps1 }
 catch { task ConvertMarkdown; task RemoveMarkdownHtml }
 
