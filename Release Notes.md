@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.15
+
+Introduced the function `Get-BuildProperty` and its alias `property`.
+
+Amended the error message on a build script with no tasks.
+
 ## v1.0.14
 
 Fixed a bug dealing with splatting and the first parameter default value.

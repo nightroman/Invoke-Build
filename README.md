@@ -30,14 +30,15 @@ workspaces.
 
 ## Comparison with MSBuild
 
-*Invoke-Build* PowerShell scripts and *MSBuild* XML scripts are quite
-different. But the concepts of these build tools are almost the same:
+*Invoke-Build* PowerShell scripts and *MSBuild* XML scripts use different
+syntax. But build flow, scripts structure, and concepts are very similar:
 
     MSBuild                      Invoke-Build
     -------                      ------------
     Default build script         A single *.build.ps1 or .build.ps1
-    InitialTargets               Whatever build scripts invoke
-    DefaultTargets               The "." task is the default
+    InitialTargets               Whatever a build script invokes
+    DefaultTargets               The . or the first added task
+    Properties                   Script/environment variables
     Import                       Dot-source or invoke
     Target                       Task
     Condition                    -If

@@ -68,3 +68,8 @@ task InputsOutputsMismatch -Inputs { '.build.ps1' } -Outputs { } { throw }
 
 # Error: one of the Inputs items is missing.
 task MissingInputsItems -Inputs { 'missing' } -Outputs {} { throw }
+
+# Error: missing property
+task MissingProperty {
+	$MissingProperty = property MissingProperty
+}

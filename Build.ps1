@@ -143,8 +143,8 @@ task . Test, Zip, {
 		assert ($BuildThis.TaskCount -eq 7) $BuildThis.TaskCount
 		assert ($BuildThis.ErrorCount -eq 0) $BuildThis.ErrorCount
 		# total
-		assert ($BuildInfo.TaskCount -eq 105) $BuildInfo.TaskCount
-		assert ($BuildInfo.ErrorCount -eq 19) $BuildInfo.ErrorCount
+		assert ($BuildInfo.TaskCount -eq 109) $BuildInfo.TaskCount
+		assert ($BuildInfo.ErrorCount -eq 20) $BuildInfo.ErrorCount
 		assert ($BuildInfo.WarningCount -ge 1)
 		assert ($BuildInfo.WarningCount -ge $BuildThis.WarningCount)
 	}

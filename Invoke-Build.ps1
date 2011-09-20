@@ -40,6 +40,7 @@
 		* Add-BuildTask (task)
 		* Assert-BuildTrue (assert)
 		* Get-BuildError (error)
+		* Get-BuildProperty (property)
 		* Get-BuildVersion
 		* Invoke-BuildExec (exec)
 		* Start-Build [1]
@@ -111,6 +112,7 @@
 	Add-BuildTask
 	Assert-BuildTrue
 	Get-BuildError
+	Get-BuildProperty
 	Invoke-BuildExec
 	Start-Build
 	Use-BuildAlias
@@ -136,6 +138,7 @@ param
 Set-Alias assert Assert-BuildTrue
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
+Set-Alias property Get-BuildProperty
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 
@@ -145,7 +148,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.14'
+	[System.Version]'1.0.15'
 }
 
 <#
@@ -341,6 +344,66 @@ function Get-BuildError
 		Invoke-BuildError "Task '$Task' is not defined." ObjectNotFound $Task
 	}
 	$it['Error']
+}
+
+<#
+.Synopsis
+	Gets PowerShell or environment variable value or the default value.
+
+.Description
+	A build property is a value of either PowerShell or environment variable.
+
+	If the PowerShell variable with the specified name exists then its value is
+	returned. Otherwise, if the environment variable with this name exists then
+	its value is returned. Otherwise, the default value is returned or an error
+	is thrown.
+
+.Parameter Name
+		PowerShell or environment variable name.
+
+.Parameter Value
+		Default value to be returned if the property is not found. Omitted or
+		null value requires the specified property to be defined. If it is not
+		then an error is thrown.
+
+.Inputs
+	None
+
+.Outputs
+	Requested property value.
+
+.Example
+	># Inherit the existing value or throw an error
+	$OutputPath = property OutputPath
+
+.Example
+	># Get an existing value or use the default
+	$WarningLevel = property WarningLevel 4
+#>
+function Get-BuildProperty
+(
+	[Parameter(Mandatory = $true)]
+	[string]$Name
+	,
+	[Parameter()]
+	$Value
+)
+{
+	if (Test-Path "Variable:\$Name") {
+		Get-Variable $Name -ValueOnly
+	}
+	else {
+		$variable = [System.Environment]::GetEnvironmentVariable($Name)
+		if ($variable) {
+			$variable
+		}
+		elseif ($null -ne $Value) {
+			$Value
+		}
+		else {
+			Invoke-BuildError "PowerShell or environment variable '$Name' is not defined." ObjectNotFound $Name
+		}
+	}
 }
 
 <#
@@ -627,7 +690,7 @@ function Start-Build
 
 		### The first task
 		if (!$BuildTask) {
-			if (!${private:-tasks}) {
+			if (!${private:-tasks}.Count) {
 				Invoke-BuildError "There is no task in the script."
 			}
 			if (${private:-tasks}.Contains('.')) {
@@ -708,7 +771,9 @@ ${private:-sourced} = $PSCmdlet.MyInvocation.InvocationName -eq '.'
 if (${private:-sourced}) {
 	if (!$PSCmdlet.MyInvocation.ScriptName) {
 		Write-Warning 'Invoke-Build is dot-sourced in order to get its command help.'
-		Get-Command task, Add-BuildTask, error, Get-BuildError, assert, Assert-BuildTrue, exec, Invoke-BuildExec, use, Use-BuildAlias,
+		Get-Command `
+		task, Add-BuildTask, error, Get-BuildError, property, Get-BuildProperty,
+		assert, Assert-BuildTrue, exec, Invoke-BuildExec, use, Use-BuildAlias,
 		Get-BuildVersion, Write-BuildText, Start-Build | Format-Table -AutoSize | Out-String
 		return
 	}

@@ -95,17 +95,17 @@ function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern, $Parame
 	"Issue '$Task' of '$Build' is tested."
 }
 
-# This task tests After and Before tasks.
+# Test After and Before tasks.
 task Alter {
 	Invoke-Build . Alter.build.ps1
 }
 
-# This task calls tests of assert.
+# Test assert.
 task Assert {
 	Invoke-Build . Assert.build.ps1
 }
 
-# This task tests conditional tasks, see ConditionalTasks.build.ps1
+# Test conditional tasks.
 # It shows how to invoke a build script with parameters (Debug|Release).
 task ConditionalTasks {
 	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Debug' }
@@ -113,32 +113,45 @@ task ConditionalTasks {
 	Invoke-Build TestScriptCondition ConditionalTasks.build.ps1
 }
 
-# This task calls Invoke-BuildExec (exec) tests.
+# Test exec.
 task Exec {
 	Invoke-Build . Exec.build.ps1
 }
 
-# This task calls incremental build tests.
+# Test incremental tasks.
 task Incremental {
 	Invoke-Build . Incremental.build.ps1
 }
 
-# This task calls invalid task tests.
+# Test invalid tasks.
 task InvalidTasks {
 	Invoke-Build . InvalidTasks.build.ps1
 }
 
-# This task tests job tasks using @{Name=1} notation.
+# Tests property.
+task Property {
+	Invoke-Build . Property.build.ps1
+}
+
+# Test protected tasks (@{Task=1} notation).
 task ProtectedTasks {
 	Invoke-Build . ProtectedTasks.build.ps1
 }
 
-# This task tests Use-BuildAlias (use).
+# Test use.
 task Use {
 	Invoke-Build . Use.build.ps1
 }
 
-# This task tests runtime errors.
+# Test an empty build file.
+task Empty {
+	# no task is specified
+	Test-Issue @() Empty.build.ps1 'There is no task in the script.'
+	# a task is specified
+	Test-Issue Missing Empty.build.ps1 "Task 'Missing' is not defined."
+}
+
+# Test runtime errors.
 task ErrorCases {
 	Test-Issue TestAlmostSurvives ErrorCases.build.ps1 'Error2'
 	Test-Issue ScriptConditionFails ErrorCases.build.ps1 'If fails.'
@@ -146,13 +159,15 @@ task ErrorCases {
 	Test-Issue OutputsFails ErrorCases.build.ps1 'Outputs fails.'
 	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Task 'InputsOutputsMismatch': Different input and output counts: 1 and 0."
 	Test-Issue MissingInputsItems ErrorCases.build.ps1 "Task 'MissingInputsItems': Error on resolving inputs: Cannot find path 'missing' because it does not exist."
+	Test-Issue MissingProperty ErrorCases.build.ps1 "PowerShell or environment variable 'MissingProperty' is not defined."
 }
 
+# Test/cover the default parameter.
 task TestDefaultParameter {
 	Invoke-Build TestDefaultParameter ConditionalTasks.build.ps1
 }
 
-# Invoke-Build should expose only documented variables! If this test shows
+# Invoke-Build should expose only documented variables. If this test shows
 # warnings about unknown variables (very likely) and they are presumably
 # created by Invoke-Build (less likely), please let the author know.
 task TestVariables {
@@ -189,6 +204,7 @@ task TestFunctions {
 		'Add-BuildTask'
 		'Assert-BuildTrue'
 		'Get-BuildError'
+		'Get-BuildProperty'
 		'Get-BuildVersion'
 		'Invoke-BuildError'
 		'Invoke-BuildExec'
@@ -216,10 +232,12 @@ task Tests `
 	Alter,
 	Assert,
 	ConditionalTasks,
+	Empty,
 	ErrorCases,
 	Exec,
 	Incremental,
 	InvalidTasks,
+	Property,
 	ProtectedTasks,
 	Use,
 	TestDefaultParameter,
