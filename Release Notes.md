@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.16
+
+Enforced terminating error when ErrorActionPreference is Continue.
+
 ## v1.0.15
 
 Introduced the function `Get-BuildProperty` and its alias `property`.

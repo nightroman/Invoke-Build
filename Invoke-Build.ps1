@@ -148,7 +148,7 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.15'
+	[System.Version]'1.0.16'
 }
 
 <#
@@ -749,6 +749,10 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
 			Invoke-Build-Write-Info $BuildThis
 		}
+	}
+	catch {
+		$ErrorActionPreference = 'Stop'
+		throw
 	}
 	finally {
 		### Results

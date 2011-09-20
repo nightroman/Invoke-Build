@@ -167,33 +167,18 @@ task TestDefaultParameter {
 	Invoke-Build TestDefaultParameter ConditionalTasks.build.ps1
 }
 
-# Invoke-Build should expose only documented variables. If this test shows
-# warnings about unknown variables (very likely) and they are presumably
-# created by Invoke-Build (less likely), please let the author know.
-task TestVariables {
-	# get variables in a clean session
-	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
-	$0 += @(
-		'BuildInfo' # internal data
-		'BuildThis' # internal data
-		# system
-		'foreach'
-		'LASTEXITCODE'
-		'PSCmdlet'
-		'this'
-	)
-	Get-Variable | .{process{
-		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notlike 'My*')) {
-			switch($_.Name) {
-				# exposed by Invoke-Build
-				'BuildTask' { 'BuildTask - build task name list' }
-				'BuildFile' { 'BuildFile - build script file path - ' + $BuildFile}
-				'BuildRoot' { 'BuildRoot - build script root path - ' + $BuildRoot }
-				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
-				default { Write-Warning "Unknown variable '$_'." }
-			}
-		}
-	}}
+# Test exit codes on errors.
+task TestExitCode {
+	# continue on errors and use -NoProfile to ensure this, too
+	$ErrorActionPreference = 'Continue'
+
+	# missing file
+	PowerShell.exe -NoProfile Invoke-Build.ps1 Foo MissingFile
+	assert ($LastExitCode -eq 1)
+
+	# missing task
+	PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Empty.build.ps1
+	assert ($LastExitCode -eq 1)
 }
 
 # The task shows unwanted functions potentially introduced by Invoke-Build.
@@ -225,6 +210,35 @@ task TestFunctions {
 	}}
 }
 
+# Invoke-Build should expose only documented variables. If this test shows
+# warnings about unknown variables (very likely) and they are presumably
+# created by Invoke-Build (less likely), please let the author know.
+task TestVariables {
+	# get variables in a clean session
+	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
+	$0 += @(
+		'BuildInfo' # internal data
+		'BuildThis' # internal data
+		# system
+		'foreach'
+		'LASTEXITCODE'
+		'PSCmdlet'
+		'this'
+	)
+	Get-Variable | .{process{
+		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notlike 'My*')) {
+			switch($_.Name) {
+				# exposed by Invoke-Build
+				'BuildTask' { 'BuildTask - build task name list' }
+				'BuildFile' { 'BuildFile - build script file path - ' + $BuildFile}
+				'BuildRoot' { 'BuildRoot - build script root path - ' + $BuildRoot }
+				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
+				default { Write-Warning "Unknown variable '$_'." }
+			}
+		}
+	}}
+}
+
 # This task calls all test tasks.
 task Tests `
 	Dummy1,
@@ -241,6 +255,7 @@ task Tests `
 	ProtectedTasks,
 	Use,
 	TestDefaultParameter,
+	TestExitCode,
 	TestFunctions,
 	TestVariables
 
