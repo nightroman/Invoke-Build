@@ -173,11 +173,14 @@ task TestExitCode {
 	$ErrorActionPreference = 'Continue'
 
 	# missing file
-	PowerShell.exe -NoProfile Invoke-Build.ps1 Foo MissingFile
+	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 Foo MissingFile
 	assert ($LastExitCode -eq 1)
 
 	# missing task
-	PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Empty.build.ps1
+	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Empty.build.ps1
+	assert ($LastExitCode -eq 1)
+
+	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 AssertDefault Assert.build.ps1
 	assert ($LastExitCode -eq 1)
 }
 
@@ -193,7 +196,6 @@ task TestFunctions {
 		'Get-BuildVersion'
 		'Invoke-BuildError'
 		'Invoke-BuildExec'
-		'Start-Build'
 		'Use-BuildAlias'
 		'Write-BuildText'
 		'Write-Warning'

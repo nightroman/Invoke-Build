@@ -14,11 +14,6 @@ Build scripts are *PowerShell* scripts that define tasks. Tasks consist of jobs
 scripts), and inputs and outputs for incremental and partial incremental builds
 (path lists or equivalent scripts).
 
-Build scripts may have one of two forms: *classic* scripts are called by
-`Invoke-Build`, *master* scripts dot-source `Invoke-Build` and `Start-Build`
-themselves. Classic scripts are slightly easier to compose. Master scripts are
-easier to use, sometimes significantly, especially with many parameters.
-
 *Invoke-Build* is specifically designed for multiple calls in the same session.
 It never changes environment variables and the system path. It does not leave
 any variables, functions, aliases after its calls, successful or not. It also

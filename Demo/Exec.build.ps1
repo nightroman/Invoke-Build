@@ -39,7 +39,7 @@ task . ExecWorksCode0, ExecWorksCode42, @{ExecFailsCode13=1}, @{ExecFailsBadComm
 	'Tested ExecWorksCode42'
 
 	$e = error ExecFailsCode13
-	assert ("$e" -eq 'Command: { PowerShell "exit 13" }: Last exit code is 13.')
+	assert ("$e" -eq 'The command { PowerShell "exit 13" } exited with code 13.')
 	'Tested ExecFailsCode13'
 
 	$e = error ExecFailsBadCommand

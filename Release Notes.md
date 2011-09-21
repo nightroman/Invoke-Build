@@ -3,7 +3,13 @@ Invoke-Build Release Notes
 
 ## v1.0.16
 
-Enforced terminating error when ErrorActionPreference is Continue.
+Build scripts and task scripts are now invoked with `$ErrorActionPreference`
+set to `Stop`. Otherwise it is too easy to miss serious errors. Scripts and
+tasks can set their own local `$ErrorActionPreference`.
+
+Dropped support of *master* scripts and removed related function `Start-Build`.
+Master scripts have pros and cons but after all they are basically not better
+than classic scripts.
 
 ## v1.0.15
 
