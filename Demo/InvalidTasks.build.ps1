@@ -63,7 +63,7 @@ task InvalidJobType {
 		task task2 {}
 		task . @(
 			'task1'        # [string] - task name
-			@{ task2 = 1 } # [hashtable] - tells ignore errors in task2
+			@{ task2 = 1 } # [hashtable] - tells to ignore task2 errors
 			{ $x = 123 }   # [scriptblock] - code invoked as this task
 			42             # all other types are invalid
 		)

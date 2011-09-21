@@ -61,24 +61,21 @@
 
 		* BuildInfo, BuildThis, PSCmdlet
 
-.Parameter BuildTask
+.Parameter Task
 		One or more tasks to be invoked. Use '?' in order to view tasks.
-		The default task is "." if it exists otherwise the first added task.
+		The default task is '.' if it exists, otherwise the first added task.
 
-.Parameter BuildFile
-		The build script which defines build tasks by Add-BuildTask (task).
+.Parameter Script
+		A build script. It is either a relative path or a script block which
+		dot-sources a script with parameters or a script located in the path.
 
 		If it is not specified then Invoke-Build looks for "*.build.ps1" files
-		in the current location. A single file is used as the build script. If
-		there are more files then ".build.ps1" is used as the default.
-
-.Parameter Parameters
-		The hashtable of parameters passed in the build script.
+		in the current location. A single file is used as the script. If there
+		are more files then ".build.ps1" is used as the default.
 
 .Parameter WhatIf
 		Tells to show preprocessed tasks and their jobs instead of invoking
-		them. $WhatIf can be used in build scripts but not in tasks because
-		tasks are not invoked when $WhatIf is true.
+		them. $WhatIf can be used in build scripts but not in tasks.
 
 .Inputs
 	None
@@ -88,17 +85,30 @@
 	that they invoke. Basically output is a log of the entire build process.
 
 .Example
-	># Invoke the default (.) task from the default build script:
+	># Invoke the default task in the default script:
 	Invoke-Build
 
 .Example
-	># Show the tasks from the default build script and another script:
-	Invoke-Build ?
-	Invoke-Build ? Another.build.ps1
+	># Invoke the specified task in the specified script:
+	Invoke-Build Build C:\Projects\Project\Project.build.ps1
 
 .Example
-	># Invoke the specified tasks from the default script with parameters:
-	Invoke-Build Task1, Task2 -Parameters @{ Param1 = 'Answer', Param2 = '42' }
+	># Invoke the tasks in the script with parameters:
+	Invoke-Build Build, Test { . .\Project.build.ps1 -Log log.txt -Mode 4 }
+
+.Example
+	># How to invoke scripts located in the path.
+
+	# Invoke a script somewhere in the path:
+	Invoke-Build Task { . Project.build.ps1 }
+
+	# Compare: this script is in the current location:
+	Invoke-Build Task Project.build.ps1
+
+.Example
+	># Show the tasks from the default script and specified script:
+	Invoke-Build ?
+	Invoke-Build ? Project.build.ps1
 
 .Link
 	GitHub: https://github.com/nightroman/Invoke-Build
@@ -114,13 +124,10 @@
 param
 (
 	[Parameter(Position = 0)]
-	[string[]]$BuildTask
+	[string[]]$Task
 	,
 	[Parameter(Position = 1)]
-	[string]$BuildFile
-	,
-	[Parameter(Position = 2)]
-	[hashtable]$Parameters
+	[object]$Script
 	,
 	[Parameter()]
 	[switch]$WhatIf
@@ -140,20 +147,18 @@ Set-Alias use Use-BuildAlias
 #>
 function Get-BuildVersion
 {
-	[System.Version]'1.0.16'
+	[System.Version]'1.0.17'
 }
 
 <#
 .Synopsis
-	Adds the build task to the internal task list.
+	(task) Defines a build task and adds it to the internal task list.
 
 .Description
 	This is the key function of build scripts. It creates build tasks, defines
 	dependencies and invocation order, and adds the tasks to the internal list.
 
 	Caution: Add-BuildTask is called from build scripts, not from their tasks.
-
-	Add-BuildTask has the predefined alias 'task'.
 
 .Parameter Name
 		The task name, any string except '?' ('?' is used to view tasks).
@@ -307,7 +312,7 @@ Task '$Name' is added twice:
 
 <#
 .Synopsis
-	Gets an error of the specified task if the task has failed.
+	(error) Gets an error of the specified task if the task has failed.
 
 .Description
 	This method is used when some dependent tasks are referenced as @{Task=1}
@@ -340,7 +345,7 @@ function Get-BuildError
 
 <#
 .Synopsis
-	Gets PowerShell or environment variable value or the default value.
+	(property) Gets PowerShell/environment variable or a default value.
 
 .Description
 	A build property is a value of either PowerShell or environment variable.
@@ -400,12 +405,10 @@ function Get-BuildProperty
 
 <#
 .Synopsis
-	Checks for a condition.
+	(assert) Checks for a condition.
 
 .Description
 	It checks for a condition and if it is not true throws a message.
-
-	Assert-BuildTrue has the predefined alias 'assert'.
 
 .Parameter Condition
 		The condition.
@@ -440,7 +443,7 @@ function Assert-BuildTrue
 
 <#
 .Synopsis
-	Invokes the command and checks for the $LastExitCode.
+	(exec) Invokes the command and checks for the $LastExitCode.
 
 .Description
 	The passed in command is supposed to call an executable tool. This function
@@ -448,8 +451,6 @@ function Assert-BuildTrue
 	code is not zero then the function throws a terminating error.
 
 	It is common to call .NET framework tools. See Use-BuildAlias.
-
-	Invoke-BuildExec has the predefined alias 'exec'.
 
 .Parameter Command
 		The command that invokes an executable which exit code is checked.
@@ -493,7 +494,7 @@ function Invoke-BuildExec
 
 <#
 .Synopsis
-	Sets framework tool aliases in the scope where it is called from.
+	(use) Sets framework/directory tool aliases.
 
 .Description
 	Invoke-Build does not change the system path in order to make framework
@@ -609,11 +610,9 @@ function Invoke-BuildError($Message, $Category = 0, $Target)
 
 ### End of the public zone. Exit if dot-sourced.
 if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
-	Write-Warning 'Invoke-Build is dot-sourced in order to get its command help.'
-	Get-Command `
-	task, Add-BuildTask, error, Get-BuildError, property, Get-BuildProperty,
-	assert, Assert-BuildTrue, exec, Invoke-BuildExec, use, Use-BuildAlias,
-	Get-BuildVersion, Write-BuildText | Format-Table -AutoSize | Out-String
+	Write-Warning 'Invoke-Build is dot-sourced only in order to get its command help.'
+	'Add-BuildTask','Get-BuildProperty','Get-BuildError','Assert-BuildTrue','Invoke-BuildExec','Use-BuildAlias','Get-BuildVersion','Write-BuildText' |
+	%{ Get-Help $_ } | Format-Table Name, Synopsis -AutoSize
 	return
 }
 
@@ -1031,30 +1030,56 @@ $($Info.TaskCount) tasks, $($Info.ErrorCount) errors, $($Info.WarningCount) warn
 $ErrorActionPreference = 'Stop'
 
 ### Resolve the script
-try {
-	if ($BuildFile) {
-		${private:-location} = Resolve-Path -LiteralPath $BuildFile -ErrorAction Stop
-	}
-	else {
-		${private:-location} = @(Resolve-Path '*.build.ps1')
-		if (!${private:-location}) {
-			throw "Found no '*.build.ps1' files."
+if ($Script -is [scriptblock]) {
+	${private:-command} = $Script
+	try {
+		${private:-tokens} = [System.Management.Automation.PSParser]::Tokenize($Script, [ref]$null)
+		if (${private:-tokens}.Count -lt 2 -or ${private:-tokens}[0].Content -ne '.') {
+			throw "Expected { . <script> [<parameters>] }"
 		}
-		if (${private:-location}.Count -eq 1) {
-			${private:-location} = ${private:-location}[0]
+		$Script = ${private:-tokens}[1]
+		if (($Script.Type -eq 'Command') -or ($Script.Type -eq 'String')) {
+			$Script = $Script.Content
+		}
+		elseif ($Script.Type -eq 'Variable') {
+			$Script = Get-Variable $Script.Content -ValueOnly
 		}
 		else {
-			${private:-location} = ${private:-location} -match '\\\.build\.ps1$'
+			throw "Expected script token type: Command, String, or Variable. Actual type: $($Script.Type)."
+		}
+		$BuildFile = @(Get-Command $Script -CommandType ExternalScript)[0].Definition
+	}
+	catch {
+		Invoke-BuildError "Invalid Script: $_" InvalidArgument ${private:-command}
+	}
+}
+else {
+	try {
+		if ($Script) {
+			${private:-location} = Resolve-Path -LiteralPath $Script -ErrorAction Stop
+		}
+		else {
+			${private:-location} = @(Resolve-Path '*.build.ps1')
 			if (!${private:-location}) {
-				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+				throw "Found no '*.build.ps1' files."
+			}
+			if (${private:-location}.Count -eq 1) {
+				${private:-location} = ${private:-location}[0]
+			}
+			else {
+				${private:-location} = ${private:-location} -match '\\\.build\.ps1$'
+				if (!${private:-location}) {
+					throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+				}
 			}
 		}
 	}
+	catch {
+		Invoke-BuildError "$_" ObjectNotFound $Script
+	}
+	$BuildFile = Convert-Path ${private:-location}
+	${private:-command} = $BuildFile
 }
-catch {
-	Invoke-BuildError "$_" ObjectNotFound $BuildFile
-}
-$BuildFile = Convert-Path ${private:-location}
 
 ### Set the variables
 ${private:-first} = !(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))
@@ -1078,17 +1103,13 @@ New-Variable -Option Constant -Name BuildThis -Value @{
 	Messages = [System.Collections.ArrayList]@()
 	Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 }
-${private:94abce897fdf4f18a806108b30f08c13} = $Parameters
-Remove-Variable Parameters
+$BuildTask = $Task
+Remove-Variable Task, Script
 
 ### Invoke the script and restore error preference
-Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ $BuildFile"
+Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ ${private:-command}"
 Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-if (${private:94abce897fdf4f18a806108b30f08c13}) {
-	. $BuildFile @94abce897fdf4f18a806108b30f08c13
-} else {
-	. $BuildFile
-}
+. ${private:-command}
 $ErrorActionPreference = 'Stop'
 
 try {
@@ -1137,17 +1158,17 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 	}
 
 	### Preprocess tasks
-	foreach(${private:-name} in $BuildTask) {
-		${private:-task} = ${private:-tasks}[${private:-name}]
+	foreach(${private:-it} in $BuildTask) {
+		${private:-task} = ${private:-tasks}[${private:-it}]
 		if (!${private:-task}) {
-			Invoke-BuildError "Task '${private:-name}' is not defined." ObjectNotFound ${private:-name}
+			Invoke-BuildError "Task '${private:-it}' is not defined." ObjectNotFound ${private:-it}
 		}
 		Invoke-Build-Preprocess ${private:-task} ([System.Collections.ArrayList]@())
 	}
 
 	### Process tasks
-	foreach(${private:-name} in $BuildTask) {
-		Invoke-Build-Task ${private:-name}
+	foreach(${private:-it} in $BuildTask) {
+		Invoke-Build-Task ${private:-it}
 	}
 
 	### Summary

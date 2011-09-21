@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.17
+
+**Breaking changes**
+
+Revised *Invoke-Build* parameters. New approach makes it easier to invoke build
+scripts with many parameters. It also enables TabExpansion of script parameters
+and ability to invoke tasks in scripts located somewhere in the path.
+
 ## v1.0.16
 
 Build scripts and task scripts are now invoked with `$ErrorActionPreference`

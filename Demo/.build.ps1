@@ -21,7 +21,7 @@
 #>
 
 # Build scripts can use parameters passed in as
-# PS> Invoke-Build ... -Parameters @{...}
+# PS> Invoke-Build ... { . <script> <parameters> }
 param
 (
 	# This value is available for all tasks ($MyParam1).
@@ -85,14 +85,14 @@ task ParamsValues2 ParamsValues1, SharedValueTask1, {
 
 # Just like regular scripts, build scripts may have functions used by tasks.
 # For example, this function is used by several tasks testing various issues.
-function Test-Issue([Parameter()]$Task, $Build, $ExpectedMessagePattern, $Parameters = @{}) {
+function Test-Issue([Parameter()]$Task, $Script, $ExpectedMessagePattern) {
 	$message = ''
-	try { Invoke-Build $Task $Build $Parameters }
+	try { Invoke-Build $Task $Script }
 	catch { $message = "$_" }
 	if ($message -notlike $ExpectedMessagePattern) {
 		Invoke-BuildError "Expected pattern: [`n$ExpectedMessagePattern`n]`n Actual message: [`n$message`n]"
 	}
-	"Issue '$Task' of '$Build' is tested."
+	"Issue '$Task' of '$Script' is tested."
 }
 
 # Test After and Before tasks.
@@ -108,8 +108,8 @@ task Assert {
 # Test conditional tasks.
 # It shows how to invoke a build script with parameters (Debug|Release).
 task ConditionalTasks {
-	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Debug' }
-	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Release' }
+	Invoke-Build . { . .\ConditionalTasks.build.ps1 Debug }
+	Invoke-Build . { . .\ConditionalTasks.build.ps1 Release }
 	Invoke-Build TestScriptCondition ConditionalTasks.build.ps1
 }
 
