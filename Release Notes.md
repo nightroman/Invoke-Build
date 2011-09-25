@@ -1,6 +1,17 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.18
+
+Documentation moved to the external file *Invoke-Build.ps1-Help.xml*. It should
+be copied to the same directory where *Invoke-Build.ps1* is located.
+
+New parameter `Result`, the optional name of variable to be created with build
+statistics: invoked task list, messages, error count, and warning count. It can
+be used for analysis of failed tasks and their errors, task durations, and etc.
+
+Slightly changed build result messages.
+
 ## v1.0.17
 
 **Breaking changes**

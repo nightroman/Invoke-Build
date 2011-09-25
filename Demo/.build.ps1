@@ -184,6 +184,17 @@ task TestExitCode {
 	assert ($LastExitCode -eq 1)
 }
 
+# Test the Script parameter issues.
+task TestScriptParameter {
+	$var = '.\MissingScript.ps1'
+	Test-Issue . {} "Invalid Script. The first token should be the . operator."
+	Test-Issue . { . } "Invalid Script. The second token should be Command, String, or Variable. Actual type: NewLine."
+	Test-Issue . { . 42 } "Invalid Script. The second token should be Command, String, or Variable. Actual type: Number."
+	Test-Issue . { . .\MissingScript.ps1 } "Invalid Script. The term '.\MissingScript.ps1' is not recognized as *"
+	Test-Issue . { . '.\MissingScript.ps1' } "Invalid Script. The term '.\MissingScript.ps1' is not recognized as *"
+	Test-Issue . { . $var } "Invalid Script. The term '.\MissingScript.ps1' is not recognized as *"
+}
+
 # The task shows unwanted functions potentially introduced by Invoke-Build.
 task TestFunctions {
 	$list = PowerShell "Get-Command -CommandType Function | Select-Object -ExpandProperty Name"
@@ -219,8 +230,9 @@ task TestVariables {
 	# get variables in a clean session
 	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
 	$0 += @(
+		'BuildData' # internal data
 		'BuildInfo' # internal data
-		'BuildThis' # internal data
+		'result' # for the caller
 		# system
 		'foreach'
 		'LASTEXITCODE'
@@ -258,8 +270,29 @@ task Tests `
 	Use,
 	TestDefaultParameter,
 	TestExitCode,
+	TestScriptParameter,
 	TestFunctions,
 	TestVariables
+
+# Show all help.
+task ShowHelp {
+	@(
+		'Invoke-Build'
+		'Add-BuildTask'
+		'Assert-BuildTrue'
+		'Get-BuildError'
+		'Get-BuildProperty'
+		'Get-BuildVersion'
+		'Invoke-BuildError'
+		'Invoke-BuildExec'
+		'Use-BuildAlias'
+		'Write-BuildText'
+	) | %{
+		'#'*77
+		Get-Help -Full $_
+	} |
+	Out-String -Width 80
+}
 
 # This task calls all sample and the main test task.
 # By conventions it is the default task due to its name.
@@ -272,4 +305,6 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 	Invoke-Build SharedTask1 SharedTasks.tasks.ps1
 },
 # Tasks can be referenced between or after scripts.
-Tests
+Tests,
+ShowHelp
+

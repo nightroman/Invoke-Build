@@ -1,126 +1,24 @@
 
 <#
-.Synopsis
-	Invoke-Build - Build Automation in PowerShell
-
-.Description
-	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-	* Copyright (c) 2011 Roman Kuzmin
-	*
-	* Licensed under the Apache License, Version 2.0 (the "License");
-	* you may not use this file except in compliance with the License.
-	* You may obtain a copy of the License at
-	*
-	* http://www.apache.org/licenses/LICENSE-2.0
-	*
-	* Unless required by applicable law or agreed to in writing, software
-	* distributed under the License is distributed on an "AS IS" BASIS,
-	* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	* See the License for the specific language governing permissions and
-	* limitations under the License.
-	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-
-	This script provides an easy to use and robust build engine with build
-	scripts written in PowerShell and concepts similar to MSBuild and psake.
-
-	Installation: just copy Invoke-Build.ps1 to any directory of the $env:path.
-
-	Build scripts define parameters, variables, and tasks. Scripts and tasks
-	are invoked with the current location set to the $BuildRoot which is the
-	directory of the main build script. $ErrorActionPreference is Stop.
-
-	Dot-source Invoke-Build only in order to get help for its functions.
-
-	EXPOSED FUNCTIONS AND ALIASES
-
-		* Add-BuildTask (task)
-		* Assert-BuildTrue (assert)
-		* Get-BuildError (error)
-		* Get-BuildProperty (property)
-		* Get-BuildVersion
-		* Invoke-BuildExec (exec)
-		* Use-BuildAlias (use)
-		* Write-BuildText
-		* Write-Warning [1]
-
-	[1] Write-Warning is redefined internally in order to count warnings in
-	tasks, build and other scripts. But warnings in modules are not counted.
-
-	EXPOSED VARIABLES
-
-	Only documented variables should be visible for build scripts and tasks.
-
-	Exposed variables designed for build scripts and tasks:
-
-		* BuildTask - invoked task names
-		* BuildFile - build script file path
-		* BuildRoot - build script root path
-		* WhatIf    - Invoke-Build parameter
-
-	Variables for internal use by Invoke-Build:
-
-		* BuildInfo, BuildThis, PSCmdlet
-
-.Parameter Task
-		One or more tasks to be invoked. Use '?' in order to view tasks.
-		The default task is '.' if it exists, otherwise the first added task.
-
-.Parameter Script
-		A build script. It is either a relative path or a script block which
-		dot-sources a script with parameters or a script located in the path.
-
-		If it is not specified then Invoke-Build looks for "*.build.ps1" files
-		in the current location. A single file is used as the script. If there
-		are more files then ".build.ps1" is used as the default.
-
-.Parameter WhatIf
-		Tells to show preprocessed tasks and their jobs instead of invoking
-		them. $WhatIf can be used in build scripts but not in tasks.
-
-.Inputs
-	None
-
-.Outputs
-	Progress, diagnostics, and error messages, and output of tasks and tools
-	that they invoke. Basically output is a log of the entire build process.
-
-.Example
-	># Invoke the default task in the default script:
-	Invoke-Build
-
-.Example
-	># Invoke the specified task in the specified script:
-	Invoke-Build Build C:\Projects\Project\Project.build.ps1
-
-.Example
-	># Invoke the tasks in the script with parameters:
-	Invoke-Build Build, Test { . .\Project.build.ps1 -Log log.txt -Mode 4 }
-
-.Example
-	># How to invoke scripts located in the path.
-
-	# Invoke a script somewhere in the path:
-	Invoke-Build Task { . Project.build.ps1 }
-
-	# Compare: this script is in the current location:
-	Invoke-Build Task Project.build.ps1
-
-.Example
-	># Show the tasks from the default script and specified script:
-	Invoke-Build ?
-	Invoke-Build ? Project.build.ps1
-
-.Link
-	GitHub: https://github.com/nightroman/Invoke-Build
-	Add-BuildTask
-	Assert-BuildTrue
-	Get-BuildError
-	Get-BuildProperty
-	Invoke-BuildExec
-	Use-BuildAlias
-	Write-BuildText
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* Invoke-Build.ps1 - Build Automation in PowerShell
+* Copyright (c) 2011 Roman Kuzmin
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 #>
 
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 param
 (
 	[Parameter(Position = 0)]
@@ -128,6 +26,9 @@ param
 	,
 	[Parameter(Position = 1)]
 	[object]$Script
+	,
+	[Parameter()]
+	[string]$Result
 	,
 	[Parameter()]
 	[switch]$WhatIf
@@ -141,104 +42,13 @@ Set-Alias property Get-BuildProperty
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 
-<#
-.Synopsis
-	Gets Invoke-Build version.
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.17'
+	[System.Version]'1.0.18'
 }
 
-<#
-.Synopsis
-	(task) Defines a build task and adds it to the internal task list.
-
-.Description
-	This is the key function of build scripts. It creates build tasks, defines
-	dependencies and invocation order, and adds the tasks to the internal list.
-
-	Caution: Add-BuildTask is called from build scripts, not from their tasks.
-
-.Parameter Name
-		The task name, any string except '?' ('?' is used to view tasks).
-
-.Parameter Jobs
-		The task jobs. The following types are supported:
-		* [string] - task jobs, existing task names;
-		* [hashtable] - task jobs with options, @{TaskName = Option};
-		* [scriptblock] - script jobs, script blocks invoked for this task.
-
-		Notation @{TaskName = Option} references the task TaskName and assigns
-		an Option to it. The only supported now option value is 1: protected
-		task call. It tells to ignore task errors if other active tasks also
-		call TaskName as protected.
-
-.Parameter If
-		Tells whether to invoke the task ($true) or skip it ($false). The
-		default is $true. The value is either a script block evaluated on
-		task invocation or a value treated as Boolean.
-
-.Parameter Inputs
-		File system items or literal paths used as input for full or partial
-		incremental build, or a script which gets them. All input items must
-		exist. All items are finally resolved to full paths and all or some of
-		them (it depends on Outputs) are piped to the task script jobs.
-
-		The script jobs are not invoked if all the Outputs are up-to-date or if
-		the Inputs is not null and yet empty. But dependent tasks are invoked.
-
-		Inputs and Outputs are processed on the first script job invocation.
-		Thus, preceding task jobs can for example create the Inputs files.
-
-.Parameter Outputs
-		Literal output paths. There are two forms:
-
-		1) [string] or [string[]] is for full incremental build. If there are
-		missing items then the scripts are invoked. Otherwise they are invoked
-		if the minimum output time is less than the maximum input time. All
-		input paths are piped to the task scripts.
-		* Automatic variables for script jobs:
-		- [System.Collections.ArrayList]$Inputs - evaluated Inputs, full paths
-		- $Outputs - exactly the Outputs value, i.e. [string] or [string[]]
-
-		2) [scriptblock] is for partial incremental build. All input paths are
-		piped to the Outputs script which gets exactly one path for each input.
-		Then input and output time stamps are compared and only input paths
-		with out-of-date output, if any, are piped to the task script jobs.
-		* Automatic variables for script jobs:
-		- [System.Collections.ArrayList]$Inputs - evaluated Inputs, full paths
-		- [System.Collections.ArrayList]$Outputs - paths transformed by Outputs
-		* In addition inside process{} blocks:
-		- $_ - the current full input path
-		- $$ - the current output path (returned by the Outputs script)
-
-.Parameter After
-		Tells to add this task to the specified task job lists. The task is
-		added after the last script jobs, if any, otherwise to the end of job
-		lists.
-
-		Altered tasks are defined as names or constructs @{Task=1}. In the
-		latter case this extra task is called protected (see the parameter
-		Jobs).
-
-		After and Before are used in order to alter build task jobs in special
-		cases, normally when direct changes in task jobs are not suitable.
-
-.Parameter Before
-		Tells to add this task to the specified task job lists. It is added
-		before the first script jobs, if any, otherwise to the end of the job
-		lists. See the parameter After for details.
-
-.Inputs
-	None
-
-.Outputs
-	None
-
-.Link
-	Get-BuildError
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
 (
 	[Parameter(Position = 0, Mandatory = $true)]
@@ -263,7 +73,7 @@ function Add-BuildTask
 	[object[]]$Before
 )
 {
-	$task = $BuildThis.Tasks[$Name]
+	$task = $BuildData[$Name]
 	if ($task) {
 		Invoke-BuildError @"
 Task '$Name' is added twice:
@@ -297,7 +107,7 @@ Task '$Name' is added twice:
 		}
 	}
 
-	$BuildThis.Tasks.Add($Name, @{
+	$BuildData.Add($Name, (New-Object PSObject -Property @{
 		Name = $Name
 		Jobs = $jobList
 		Try = $tryList
@@ -307,76 +117,28 @@ Task '$Name' is added twice:
 		After = $After
 		Before = $Before
 		Info = $MyInvocation
-	})
+		Error = $null
+		Started = $null
+		Elapsed = $null
+		Partial = $false
+	}))
 }
 
-<#
-.Synopsis
-	(error) Gets an error of the specified task if the task has failed.
-
-.Description
-	This method is used when some dependent tasks are referenced as @{Task=1}
-	(protected) and the current task script is about to analyse their errors.
-
-.Parameter Task
-		Name of the task which error is requested.
-
-.Inputs
-	None
-
-.Outputs
-	The error object or null if the task has no errors.
-
-.Link
-	Add-BuildTask
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildError
 (
 	[Parameter(Mandatory = $true)]
 	[string]$Task
 )
 {
-	$it = $BuildThis.Tasks[$Task]
+	$it = $BuildData[$Task]
 	if (!$it) {
 		Invoke-BuildError "Task '$Task' is not defined." ObjectNotFound $Task
 	}
-	$it['Error']
+	$it.Error
 }
 
-<#
-.Synopsis
-	(property) Gets PowerShell/environment variable or a default value.
-
-.Description
-	A build property is a value of either PowerShell or environment variable.
-
-	If the PowerShell variable with the specified name exists then its value is
-	returned. Otherwise, if the environment variable with this name exists then
-	its value is returned. Otherwise, the default value is returned or an error
-	is thrown.
-
-.Parameter Name
-		PowerShell or environment variable name.
-
-.Parameter Value
-		Default value to be returned if the property is not found. Omitted or
-		null value requires the specified property to be defined. If it is not
-		then an error is thrown.
-
-.Inputs
-	None
-
-.Outputs
-	Requested property value.
-
-.Example
-	># Inherit the existing value or throw an error
-	$OutputPath = property OutputPath
-
-.Example
-	># Get an existing value or use the default
-	$WarningLevel = property WarningLevel 4
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildProperty
 (
 	[Parameter(Mandatory = $true)]
@@ -403,25 +165,7 @@ function Get-BuildProperty
 	}
 }
 
-<#
-.Synopsis
-	(assert) Checks for a condition.
-
-.Description
-	It checks for a condition and if it is not true throws a message.
-
-.Parameter Condition
-		The condition.
-
-.Parameter Message
-		A user friendly message describing the assertion condition.
-
-.Inputs
-	None
-
-.Outputs
-	None
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Assert-BuildTrue
 (
 	[Parameter()]
@@ -441,36 +185,7 @@ function Assert-BuildTrue
 	}
 }
 
-<#
-.Synopsis
-	(exec) Invokes the command and checks for the $LastExitCode.
-
-.Description
-	The passed in command is supposed to call an executable tool. This function
-	invokes the command and checks for the $LastExitCode. By default if the
-	code is not zero then the function throws a terminating error.
-
-	It is common to call .NET framework tools. See Use-BuildAlias.
-
-.Parameter Command
-		The command that invokes an executable which exit code is checked.
-
-.Parameter ExitCode
-		Valid exit codes (e.g. 0..3 for robocopy). The default is 0.
-
-.Inputs
-	None
-
-.Outputs
-	Outputs of the command and the tool that it invokes.
-
-.Example
-	># Call robocopy (0..3 are valid exit codes):
-	exec { robocopy Source Target /mir } (0..3)
-
-.Link
-	Use-BuildAlias
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Invoke-BuildExec
 (
 	[Parameter(Mandatory = $true)]
@@ -492,46 +207,7 @@ function Invoke-BuildExec
 	}
 }
 
-<#
-.Synopsis
-	(use) Sets framework/directory tool aliases.
-
-.Description
-	Invoke-Build does not change the system path in order to make framework
-	tools available by names. This approach would be not suitable for using
-	mixed framework tools simultaneously. Instead, this function is used in
-	order to set framework aliases in the scope where it is called from.
-
-	This function is often called from a build script and all tasks use script
-	scope aliases. But it can be called from tasks in order to use more tools
-	including other frameworks or tool directories.
-
-.Parameter Path
-		The tool directory. Null or empty assumes the current .NET runtime
-		directory. If it starts with 'Framework' then it is assumed to be
-		relative to Microsoft.NET in the Windows directory. Otherwise it is
-		used literally, it can be any directory with any tools.
-
-		Examples: Framework\v4.0.30319, Framework\v2.0.50727, C:\Scripts, etc.
-
-.Parameter Name
-		The tool names to set aliases for. These names also become alias names
-		and they should be used exactly as specified.
-
-.Inputs
-	None
-
-.Outputs
-	None
-
-.Example
-	># Use .NET 4.0 tools MSBuild, csc, ngen. Then call MSBuild.
-	use Framework\v4.0.30319 MSBuild, csc, ngen
-	exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
-
-.Link
-	Invoke-BuildExec
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Use-BuildAlias
 (
 	[Parameter()]
@@ -568,25 +244,7 @@ function Use-BuildAlias
 	}
 }
 
-<#
-.Synopsis
-	Writes text using colors (if this makes sense for the output target).
-
-.Description
-	Unlike Write-Host this function is suitable for output sent to a file.
-
-.Parameter Color
-		The [System.ConsoleColor] value or its string representation.
-
-.Parameter Text
-		Text to be printed using colors or just sent to the output.
-
-.Inputs
-	None
-
-.Outputs
-	[string]
-#>
+#.ExternalHelp Invoke-Build.ps1-Help.xml
 function Write-BuildText
 (
 	[Parameter()]
@@ -627,9 +285,9 @@ function Write-Warning([string]$Message)
 	$Message = "WARNING: " + $Message
 	Write-BuildText Yellow $Message
 	++$BuildInfo.WarningCount
-	++$BuildThis.WarningCount
+	++$BuildInfo.AllWarningCount
 	$null = $BuildInfo.Messages.Add($Message)
-	$null = $BuildThis.Messages.Add($Message)
+	$null = $BuildInfo.AllMessages.Add($Message)
 }
 
 # Adds the task to the referenced task jobs.
@@ -638,7 +296,7 @@ function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
 	foreach($ref in $Refs) {
 		$name, $data = Invoke-Build-Reference $TaskName $ref
 
-		$task = $BuildThis.Tasks[$name]
+		$task = $BuildData[$name]
 		if (!$task) {
 			Invoke-BuildError "Task '$TaskName': Task '$name' is not defined." InvalidArgument $ref
 		}
@@ -771,7 +429,6 @@ function Invoke-Build-IO([object]$Task)
 		}
 	}
 	else {
-		${private:-task}.Partial = $false
 		${private:-task}.Inputs = ${private:-paths}
 
 		foreach(${private:-out} in ${private:-task}.Outputs) {
@@ -796,20 +453,20 @@ function Invoke-Build-IO([object]$Task)
 function Invoke-Build-Task($Name, $Path)
 {
 	# the task
-	${private:-task} = $BuildThis.Tasks[$Name]
+	${private:-task} = $BuildData[$Name]
 	if (!${private:-task}) { throw }
 
 	# the path, use the original name
 	${private:-path} = if ($Path) { "$Path\$(${private:-task}.Name)" } else { ${private:-task}.Name }
 
 	# 1) failed?
-	if (${private:-task}.ContainsKey('Error')) {
+	if (${private:-task}.Error) {
 		Write-BuildText Yellow "${private:-path} failed before."
 		return
 	}
 
 	# 2) done?
-	if (${private:-task}.ContainsKey('Stopwatch')) {
+	if (${private:-task}.Started) {
 		Write-BuildText DarkYellow "${private:-path} was done before."
 		return
 	}
@@ -827,16 +484,12 @@ function Invoke-Build-Task($Name, $Path)
 		return
 	}
 
-	# invoke
-	++$BuildInfo.TaskCount
-	++$BuildThis.TaskCount
-
+	# start
+	${private:-task}.Started = [System.DateTime]::Now
 	${private:-count} = ${private:-task}.Jobs.Count
 	${private:-number} = 0
 	${private:-do-input} = $true
 	${private:-no-input} = $false
-
-	${private:-task}.Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 	try {
 		foreach(${private:-job} in ${private:-task}.Jobs) {
 			++${private:-number}
@@ -857,7 +510,7 @@ function Invoke-Build-Task($Name, $Path)
 					}
 					# survive
 					else {
-						${private:-job} = $BuildThis.Tasks[${private:-job}]
+						${private:-job} = $BuildData[${private:-job}]
 						if (!${private:-job}) { throw }
 						Write-BuildText Red (${private:-job}.Error | Out-String)
 					}
@@ -909,20 +562,25 @@ function Invoke-Build-Task($Name, $Path)
 				}
 			}
 		}
-		Write-BuildText DarkYellow "${private:-path} is done, $(${private:-task}.Stopwatch.Elapsed)."
+
+		${private:-elapsed} = [System.DateTime]::Now - ${private:-task}.Started
+		${private:-task}.Elapsed = ${private:-elapsed}
+		Write-BuildText DarkYellow "${private:-path} is done, ${private:-elapsed}."
 	}
 	catch {
-		++$BuildInfo.ErrorCount
-		++$BuildThis.ErrorCount
+		${private:-task}.Elapsed = [System.DateTime]::Now - ${private:-task}.Started
 		${private:-task}.Error = $_
+		++$BuildInfo.ErrorCount
+		++$BuildInfo.AllErrorCount
 		${private:-text} = "ERROR: Task ${private:-path}: $_"
 		$null = $BuildInfo.Messages.Add(${private:-text})
-		$null = $BuildThis.Messages.Add(${private:-text})
+		$null = $BuildInfo.AllMessages.Add(${private:-text})
 		Write-BuildText Yellow (Invoke-Build-Format-Message ${private:-task}.Info.PositionMessage)
 		throw
 	}
 	finally {
-		${private:-task}.Stopwatch.Stop()
+		$null = $BuildInfo.Tasks.Add(${private:-task})
+		$null = $BuildInfo.AllTasks.Add(${private:-task})
 	}
 }
 
@@ -940,7 +598,7 @@ function Invoke-Build-Try-Task([string]$TryTask)
 # Gets a reason to die on protected task errors.
 function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
 {
-	$task1 = $BuildThis.Tasks[$Task]
+	$task1 = $BuildData[$Task]
 	if (!$task1) { throw }
 
 	# ignored:
@@ -984,7 +642,7 @@ function Invoke-Build-Preprocess([object]$Task, [Collections.ArrayList]$Done)
 	foreach($job in $Task.Jobs) {
 		++$number
 		if ($job -is [string]) {
-			$task2 = $BuildThis.Tasks[$job]
+			$task2 = $BuildData[$job]
 
 			# missing:
 			if (!$task2) {
@@ -1010,19 +668,27 @@ $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 }
 
 # Writes build information.
-function Invoke-Build-Write-Info([hashtable]$Info)
+function Invoke-Build-Write-Info($OK, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
 {
-	if ($Info.ErrorCount) {
+	if (!$OK) {
+		$done = 'Build FAILED'
 		$color = 'Red'
 	}
-	elseif ($Info.WarningCount) {
+	elseif ($ErrorCount) {
+		$done = 'Build completed with errors'
+		$color = 'Red'
+	}
+	elseif ($WarningCount) {
+		$done = 'Build succeded with warnings'
 		$color = 'Yellow'
 	}
 	else {
+		$done = 'Build succeded'
 		$color = 'Green'
 	}
+
 	Write-BuildText $color @"
-$($Info.TaskCount) tasks, $($Info.ErrorCount) errors, $($Info.WarningCount) warnings, $($Info.Stopwatch.Elapsed).
+$done. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed.
 "@
 }
 
@@ -1033,11 +699,10 @@ $ErrorActionPreference = 'Stop'
 if ($Script -is [scriptblock]) {
 	${private:-command} = $Script
 	try {
-		${private:-tokens} = [System.Management.Automation.PSParser]::Tokenize($Script, [ref]$null)
-		if (${private:-tokens}.Count -lt 2 -or ${private:-tokens}[0].Content -ne '.') {
-			throw "Expected { . <script> [<parameters>] }"
+		${private:-it}, $Script, $null = [System.Management.Automation.PSParser]::Tokenize($Script, [ref]$null)
+		if (!${private:-it} -or ${private:-it}.Type -ne 'Operator' -or ${private:-it}.Content -ne '.') {
+			throw "The first token should be the . operator."
 		}
-		$Script = ${private:-tokens}[1]
 		if (($Script.Type -eq 'Command') -or ($Script.Type -eq 'String')) {
 			$Script = $Script.Content
 		}
@@ -1045,12 +710,12 @@ if ($Script -is [scriptblock]) {
 			$Script = Get-Variable $Script.Content -ValueOnly
 		}
 		else {
-			throw "Expected script token type: Command, String, or Variable. Actual type: $($Script.Type)."
+			throw "The second token should be Command, String, or Variable. Actual type: $($Script.Type)."
 		}
 		$BuildFile = @(Get-Command $Script -CommandType ExternalScript)[0].Definition
 	}
 	catch {
-		Invoke-BuildError "Invalid Script: $_" InvalidArgument ${private:-command}
+		Invoke-BuildError "Invalid Script. $_" InvalidArgument ${private:-command}
 	}
 }
 else {
@@ -1082,29 +747,35 @@ else {
 }
 
 ### Set the variables
-${private:-first} = !(Test-Path Variable:\BuildInfo) -or ($BuildInfo -isnot [hashtable] -or ($BuildInfo['Id'] -ne '94abce897fdf4f18a806108b30f08c13'))
 ${private:-location} = Get-Location
-if (${private:-first}) {
-	New-Variable -Option Constant -Name BuildInfo -Value @{
-		Id = '94abce897fdf4f18a806108b30f08c13'
-		TaskCount = 0
-		ErrorCount = 0
-		WarningCount = 0
-		Messages = [System.Collections.ArrayList]@()
-		Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+${private:-parent} = Get-Variable '[B]uildInfo'
+if (${private:-parent}) {
+	if (${private:-parent}.Description -ne 'cf62724c-bbc2-4ade-a925-ea0e73598492') {
+		${private:-parent} = $null
+	}
+	else {
+		${private:-parent} = ${private:-parent}.Value
 	}
 }
-New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
-New-Variable -Option Constant -Name BuildThis -Value @{
-	Tasks = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
-	TaskCount = 0
-	ErrorCount = 0
-	WarningCount = 0
-	Messages = [System.Collections.ArrayList]@()
-	Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+New-Variable -Name BuildData -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
+New-Variable -Name BuildInfo -Option Constant -Description cf62724c-bbc2-4ade-a925-ea0e73598492 -Value (New-Object PSObject)
+$BuildInfo |
+Add-Member -MemberType NoteProperty -Name Tasks -Value ([System.Collections.ArrayList]@()) -PassThru |
+Add-Member -MemberType NoteProperty -Name AllTasks -Value ([System.Collections.ArrayList]@()) -PassThru |
+Add-Member -MemberType NoteProperty -Name Messages -Value ([System.Collections.ArrayList]@()) -PassThru |
+Add-Member -MemberType NoteProperty -Name AllMessages -Value ([System.Collections.ArrayList]@()) -PassThru |
+Add-Member -MemberType NoteProperty -Name ErrorCount -Value 0 -PassThru |
+Add-Member -MemberType NoteProperty -Name AllErrorCount -Value 0 -PassThru |
+Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
+Add-Member -MemberType NoteProperty -Name AllWarningCount -Value 0 -PassThru |
+Add-Member -MemberType NoteProperty -Name Started -Value ([System.DateTime]::Now) -PassThru |
+Add-Member -MemberType NoteProperty -Name Elapsed -Value $null
+if ($Result) {
+	New-Variable -Scope 1 $Result $BuildInfo -Force
 }
+New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
 $BuildTask = $Task
-Remove-Variable Task, Script
+Remove-Variable Task, Script, Result
 
 ### Invoke the script and restore error preference
 Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ ${private:-command}"
@@ -1113,23 +784,21 @@ Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 $ErrorActionPreference = 'Stop'
 
 try {
-	${private:-tasks} = $BuildThis.Tasks
-
 	### The first task
 	if (!$BuildTask) {
-		if (!${private:-tasks}.Count) {
+		if (!$BuildData.Count) {
 			Invoke-BuildError "There is no task in the script."
 		}
-		if (${private:-tasks}.Contains('.')) {
+		if ($BuildData.Contains('.')) {
 			$BuildTask = '.'
 		}
 		else {
-			$BuildTask = ${private:-tasks}.Item(0).Name
+			$BuildTask = $BuildData.Item(0).Name
 		}
 	}
 
 	### Alter task jobs
-	foreach(${private:-task} in ${private:-tasks}.Values) {
+	foreach(${private:-task} in $BuildData.Values) {
 		${private:-list} = ${private:-task}.Before
 		if (${private:-list}) {
 			Invoke-Build-Alter ${private:-task}.Name ${private:-list}
@@ -1142,7 +811,7 @@ try {
 
 	### View the tasks
 	if ($BuildTask[0] -eq '?') {
-		${private:-tasks}.Values | .{process{
+		$BuildData.Values | .{process{
 			${private:-task} = 1 | Select-Object Task, Info
 			${private:-task}.Task = $_.Name
 			${private:-file} = $_.Info.ScriptName
@@ -1159,7 +828,7 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 
 	### Preprocess tasks
 	foreach(${private:-it} in $BuildTask) {
-		${private:-task} = ${private:-tasks}[${private:-it}]
+		${private:-task} = $BuildData[${private:-it}]
 		if (!${private:-task}) {
 			Invoke-BuildError "Task '${private:-it}' is not defined." ObjectNotFound ${private:-it}
 		}
@@ -1171,17 +840,30 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 		Invoke-Build-Task ${private:-it}
 	}
 
-	### Summary
-	$BuildThis.Messages
-	if (($BuildThis.TaskCount -ge 2) -or ($BuildThis.ErrorCount) -or ($BuildThis.WarningCount)) {
-		Invoke-Build-Write-Info $BuildThis
-	}
+	$OK = $true
+}
+catch {
+	$OK = $false
+	throw
 }
 finally {
-	### Results
 	Set-Location -LiteralPath ${private:-location} -ErrorAction Stop
-	if (${private:-first} -and ($($BuildInfo.TaskCount) -ne $($BuildThis.TaskCount))) {
-		$BuildInfo.Messages
-		Invoke-Build-Write-Info $BuildInfo
+
+	### Results
+	$BuildInfo.Elapsed = [System.DateTime]::Now - $BuildInfo.Started
+	$BuildInfo.Messages
+	Invoke-Build-Write-Info $OK $BuildInfo.Tasks.Count $BuildInfo.ErrorCount $BuildInfo.WarningCount $BuildInfo.Elapsed
+
+	if (${private:-parent}) {
+		${private:-parent}.AllTasks.AddRange($BuildInfo.AllTasks)
+		${private:-parent}.AllMessages.AddRange($BuildInfo.AllMessages)
+		${private:-parent}.AllErrorCount += $BuildInfo.AllErrorCount
+		${private:-parent}.AllWarningCount += $BuildInfo.AllWarningCount
+	}
+	else {
+		if ($BuildInfo.AllTasks.Count -ne $BuildInfo.Tasks.Count) {
+			$BuildInfo.AllMessages
+			Invoke-Build-Write-Info $OK $BuildInfo.AllTasks.Count $BuildInfo.AllErrorCount $BuildInfo.AllWarningCount $BuildInfo.Elapsed
+		}
 	}
 }

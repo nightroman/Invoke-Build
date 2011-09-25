@@ -7,9 +7,6 @@
 	There is nothing to compile in this project. But Invoke-Build is suitable
 	for automating all operations on project files, not just classic builds.
 
-	This script is used in the development and included into the package only
-	as a tutorial example. It may not work properly in some environments.
-
 .Link
 	Invoke-Build
 #>
@@ -29,8 +26,12 @@ catch { task ConvertMarkdown; task RemoveMarkdownHtml }
 # application (7z.exe). It also shows a dependent task referenced after the
 # script job.
 # The task prepares files, archives them, and then cleans.
-task Zip ConvertMarkdown, UpdateScript, GitStatus, {
-	exec { & 7z a Invoke-Build.$(Get-BuildVersion).zip * '-x!.git*' '-x!Test-Output.*' '-x!*.md' }
+task Zip ConvertMarkdown, Help, UpdateScript, GitStatus, {
+	exec {
+		& 7z a Invoke-Build.$(Get-BuildVersion).zip Demo, Invoke-Build.ps1, Invoke-Build.ps1-Help.xml,
+		LICENSE.txt, README.md, "Release Notes.md"
+	}
+	Remove-Item Invoke-Build.ps1-Help.xml
 },
 RemoveMarkdownHtml
 
@@ -49,7 +50,7 @@ task UpdateScript {
 	$target = Get-Item Invoke-Build.ps1 -ErrorAction 0
 	$source = Get-Item (Get-Command Invoke-Build.ps1).Definition
 	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
-	Copy-Item $source.FullName .
+	Copy-Item $source.FullName, "$($source.FullName)-Help.xml" .
 }
 
 # Tests Demo scripts and compares the output with expected. It creates and
@@ -57,13 +58,25 @@ task UpdateScript {
 # output file in this directory. If they are the same then the new file is
 # removed. Otherwise an application $env:MERGE is started.
 task Test {
-	# invoke tests, get the output
-	$output = Invoke-Build . Demo\.build.ps1 | Out-String -Width:9999
+	# invoke tests, get the output and result
+	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
+
+	assert ($result.Tasks.Count -eq 26) $result.Tasks.Count
+	assert ($result.AllTasks.Count -eq 105) $result.AllTasks.Count
+
+	assert ($result.ErrorCount -eq 0) $result.AllErrorCount
+	assert ($result.AllErrorCount -eq 20) $result.AllErrorCount
+
+	assert ($result.WarningCount -ge 1)
+	assert ($result.AllWarningCount -ge 1)
+
+	assert ($result.Messages.Count -ge 1)
+	assert ($result.AllMessages.Count -ge 21)
 
 	# process and save the output
 	$outputPath = 'Invoke-Build-Test.log'
 	$samplePath = "$env:TEMP\Invoke-Build-Test.log"
-	$output = $output -replace '\d\d:\d\d:\d\d\.\d+', '00:00:00.0000'
+	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?', '00:00:00.0000'
 	Set-Content $outputPath $output
 
 	# compare outputs
@@ -77,7 +90,7 @@ task Test {
 		else {
 			Write-Warning 'The result is not the same as expected.'
 			if ($env:MERGE) {
-				& $env:MERGE $samplePath $outputPath
+				& $env:MERGE $outputPath $samplePath
 			}
 			$toCopy = 1 -eq (Read-Host 'Save the result as expected? [1] Yes [Enter] No')
 		}
@@ -86,7 +99,7 @@ task Test {
 		$toCopy = $true
 	}
 
-	### copy actual to expected
+	# copy actual to expected
 	if ($toCopy) {
 		Write-BuildText Cyan 'Saving the result as expected.'
 		Move-Item $outputPath $samplePath -Force
@@ -100,20 +113,17 @@ task Loop {
 	}
 }
 
+# Build the XML help.
+task Help {
+	$script = (Get-Command Invoke-Build.ps1).Definition
+	$dir = Split-Path $script
+
+	. Helps.ps1
+	Convert-Helps Invoke-Build.ps1-Help.ps1 $dir\Invoke-Build.ps1-Help.xml
+}
+
 # The default task. It tests all and cleans.
-task . Test, Zip, {
+task . Help, Test, Zip, {
 	# remove zip
 	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
-
-	# check the current and total build counters
-	if (!(error ConvertMarkdown)) {
-		# current
-		assert ($BuildThis.TaskCount -eq 7) $BuildThis.TaskCount
-		assert ($BuildThis.ErrorCount -eq 0) $BuildThis.ErrorCount
-		# total
-		assert ($BuildInfo.TaskCount -eq 110) $BuildInfo.TaskCount
-		assert ($BuildInfo.ErrorCount -eq 20) $BuildInfo.ErrorCount
-		assert ($BuildInfo.WarningCount -ge 1)
-		assert ($BuildInfo.WarningCount -ge $BuildThis.WarningCount)
-	}
 }

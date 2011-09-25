@@ -1,27 +1,24 @@
 
-Invoke-Build - Build Automation in PowerShell
-=============================================
+Invoke-Build.ps1 - Build Automation in PowerShell
+=================================================
 
 ![MSBuild and Invoke-Build](https://github.com/downloads/nightroman/Invoke-Build/ProjectVsScript.png)
 
-This script provides an easy to use and robust build engine with build scripts
-written in [*PowerShell*](http://en.wikipedia.org/wiki/Powershell) and concepts
-similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild) and
-[*psake*](https://github.com/psake/psake).
+*Invoke-Build.ps1* is a [build automation](http://en.wikipedia.org/wiki/Build_automation)
+tool implemented as a standalone PowerShell script. It invokes tasks defined in
+PowerShell build scripts using a few domain-specific language (DSL) features.
+Scripts and DSL features are similar to [*psake*](https://github.com/psake/psake).
+Build flow and concepts are similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
 
-Build scripts are *PowerShell* scripts that define tasks. Tasks consist of jobs
+The main DSL feature of build scripts is the `task`. Build tasks consist of jobs
 (references to other tasks and own scripts), conditions (Boolean expressions or
-scripts), and inputs and outputs for incremental and partial incremental builds
-(path lists or equivalent scripts).
+script blocks), and inputs and outputs for incremental and partial incremental
+builds (path lists or equivalent scripts).
 
-*Invoke-Build* is specifically designed for multiple calls in the same session.
-It never changes environment variables and the system path. It does not leave
-any variables, functions, aliases after its calls, successful or not. It also
-restores the current location. Caveat: build tasks can make such changes.
-
-Simultaneous *Invoke-Build* calls in the same session work without conflicts:
-both nested calls and parallel builds called from background jobs or separate
-workspaces.
+*Invoke-Build* is carefully designed for multiple calls in the same PowerShell
+session: sequential, nested, and even parallel in background jobs. It maintains
+its state completely on the stack and never changes environment variables, the
+system path, and the current process directory.
 
 ## Comparison with MSBuild
 
@@ -47,8 +44,9 @@ syntax. But build flow, scripts structure, and concepts are very similar:
 ## Quick Start
 
 **Step 1:**
-Copy *Invoke-Build.ps1* to one of the system path directories. As a result, the
-script can be called from any *PowerShell* code simply as `Invoke-Build`.
+Copy *Invoke-Build.ps1* and its help file *Invoke-Build.ps1-Help.xml* to one of
+the system path directories. As a result, the script can be called from any
+*PowerShell* code simply as `Invoke-Build`.
 
 **Step 2:**
 Set the current location to the *Demo* directory:
@@ -73,26 +71,32 @@ This is it. The script is installed and invokes build scripts.
 
 ## Next Steps
 
-Take a look at this help:
+Take a look at help (make sure *Invoke-Build.ps1-Help.xml* is in the same
+directory as *Invoke-Build.ps1*):
 
     help Invoke-Build -full
 
-And then at functions help, for example `Add-BuildTask` (`task`):
+And then at functions help, for example, `Add-BuildTask` (`task`). Note that
+*Invoke-Build* has to dot-sourced once for that.
 
     . Invoke-Build
     help task -full
+    help property -full
+    ...
 
-Explore existing build scripts with many typical use cases, problem cases, and
-tutorial comments:
+Explore build scripts in the *Demo* directory included into the package. They
+show many typical use cases, problem cases, and contain tutorial comments.
 
-* *Build.ps1* - the build script of this project;
-* *Demo/.build.ps1* - the default script which calls all the tests;
-* *Demo/Xyz.build.ps1* - use and problem cases grouped by categories.
+*Demo* scripts might be useful in order to get familiar with the concepts but
+they are just tests, not real project build scripts. Take a look at the list of
+build scripts in some projects in
+[here](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects).
 
 ## See Also
 
 * [How It Works](https://github.com/nightroman/Invoke-Build/wiki/How-It-Works)
 * [Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks)
 * [Partial Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks)
+* [Build Result Analysis](https://github.com/nightroman/Invoke-Build/wiki/Build-Result-Analysis)
 * [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
 * [Build Scripts in Projects](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
