@@ -45,7 +45,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.18'
+	[System.Version]'1.0.19'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -679,11 +679,11 @@ function Invoke-Build-Write-Info($OK, $TaskCount, $ErrorCount, $WarningCount, $E
 		$color = 'Red'
 	}
 	elseif ($WarningCount) {
-		$done = 'Build succeded with warnings'
+		$done = 'Build succeeded with warnings'
 		$color = 'Yellow'
 	}
 	else {
-		$done = 'Build succeded'
+		$done = 'Build succeeded'
 		$color = 'Green'
 	}
 
