@@ -28,8 +28,14 @@ catch { task ConvertMarkdown; task RemoveMarkdownHtml }
 # The task prepares files, archives them, and then cleans.
 task Zip ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	exec {
-		& 7z a Invoke-Build.$(Get-BuildVersion).zip Demo, Invoke-Build.ps1, Invoke-Build.ps1-Help.xml,
-		LICENSE.txt, README.md, "Release Notes.md"
+		& 7z a Invoke-Build.$(Get-BuildVersion).zip @(
+			'Demo'
+			'Invoke-Build.ps1'
+			'Invoke-Build.ps1-Help.xml'
+			'LICENSE.txt'
+			'README.htm'
+			'Release Notes.htm'
+		)
 	}
 	Remove-Item Invoke-Build.ps1-Help.xml
 },
