@@ -1,7 +1,7 @@
 Invoke-Build Release Notes
 ==========================
 
-## v1.0.18
+## v1.0.18, v1.0.19
 
 Documentation moved to the external file *Invoke-Build.ps1-Help.xml*. It should
 be copied to the same directory where *Invoke-Build.ps1* is located.
