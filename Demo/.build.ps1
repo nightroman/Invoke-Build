@@ -55,8 +55,12 @@ assert ((Split-Path $MyPath) -eq $BuildRoot)
 Write-Warning "Ignore this warning."
 
 # Test empty tasks. They are rare but possible.
-task Dummy1
-task Dummy2 $null
+task Dummy @()
+
+# Test ? ~ show tasks
+task Show {
+	Invoke-Build ? Assert.build.ps1
+}
 
 # Parameters and values are just variables in the script scope.
 # Read them as $Variable. Write them as $script:Variable = ...
@@ -255,8 +259,8 @@ task TestVariables {
 
 # This task calls all test tasks.
 task Tests `
-	Dummy1,
-	Dummy2,
+	Dummy,
+	Show,
 	Alter,
 	Assert,
 	ConditionalTasks,
@@ -307,4 +311,3 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 # Tasks can be referenced between or after scripts.
 Tests,
 ShowHelp
-

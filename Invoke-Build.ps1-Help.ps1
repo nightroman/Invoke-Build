@@ -326,6 +326,9 @@
 	returned. Otherwise, if the environment variable with this name exists then
 	its value is returned. Otherwise, the default value is returned or an error
 	is thrown.
+
+	CAUTION: Properties should be used sparingly with carefully chosen names
+	that unlikely can already exist and be not related to the build script.
 '@
 	parameters = @{
 		Name = @'

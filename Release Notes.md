@@ -1,7 +1,20 @@
 Invoke-Build Release Notes
 ==========================
 
-## v1.0.18, v1.0.19
+## v1.0.20
+
+Tasks still may have empty job lists (e.g. jobs can be created dynamically and
+nothing is actually created). But null or missing job lists are not allowed.
+As a result, this known mistake is now an error:
+
+    task Name
+    {
+        ...
+    }
+
+Fixed a bug in `Invoke-Build ?`.
+
+## v1.0.18 - v1.0.19
 
 Documentation moved to the external file *Invoke-Build.ps1-Help.xml*. It should
 be copied to the same directory where *Invoke-Build.ps1* is located.

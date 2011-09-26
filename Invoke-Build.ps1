@@ -45,7 +45,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.19'
+	[System.Version]'1.0.20'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -55,6 +55,7 @@ function Add-BuildTask
 	[string]$Name
 	,
 	[Parameter(Position = 1)]
+	[ValidateNotNull()]
 	[object[]]$Jobs
 	,
 	[Parameter()]
@@ -668,27 +669,27 @@ $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 }
 
 # Writes build information.
-function Invoke-Build-Write-Info($OK, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
+function Invoke-Build-Write-Info($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
 {
-	if (!$OK) {
-		$done = 'Build FAILED'
+	if ($State -lt 0) {
+		$text = 'Build FAILED'
 		$color = 'Red'
 	}
 	elseif ($ErrorCount) {
-		$done = 'Build completed with errors'
+		$text = 'Build completed with errors'
 		$color = 'Red'
 	}
 	elseif ($WarningCount) {
-		$done = 'Build succeeded with warnings'
+		$text = 'Build succeeded with warnings'
 		$color = 'Yellow'
 	}
 	else {
-		$done = 'Build succeeded'
+		$text = 'Build succeeded'
 		$color = 'Green'
 	}
 
 	Write-BuildText $color @"
-$done. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed.
+$text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed.
 "@
 }
 
@@ -783,6 +784,7 @@ Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 . ${private:-command}
 $ErrorActionPreference = 'Stop'
 
+${private:-state} = 0
 try {
 	### The first task
 	if (!$BuildTask) {
@@ -839,31 +841,30 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 	foreach(${private:-it} in $BuildTask) {
 		Invoke-Build-Task ${private:-it}
 	}
-
-	$OK = $true
+	${private:-state} = 1
 }
 catch {
-	$OK = $false
+	${private:-state} = -1
 	throw
 }
 finally {
 	Set-Location -LiteralPath ${private:-location} -ErrorAction Stop
+	if (${private:-state}) {
+		$BuildInfo.Elapsed = [System.DateTime]::Now - $BuildInfo.Started
+		$BuildInfo.Messages
+		Invoke-Build-Write-Info ${private:-state} $BuildInfo.Tasks.Count $BuildInfo.ErrorCount $BuildInfo.WarningCount $BuildInfo.Elapsed
 
-	### Results
-	$BuildInfo.Elapsed = [System.DateTime]::Now - $BuildInfo.Started
-	$BuildInfo.Messages
-	Invoke-Build-Write-Info $OK $BuildInfo.Tasks.Count $BuildInfo.ErrorCount $BuildInfo.WarningCount $BuildInfo.Elapsed
-
-	if (${private:-parent}) {
-		${private:-parent}.AllTasks.AddRange($BuildInfo.AllTasks)
-		${private:-parent}.AllMessages.AddRange($BuildInfo.AllMessages)
-		${private:-parent}.AllErrorCount += $BuildInfo.AllErrorCount
-		${private:-parent}.AllWarningCount += $BuildInfo.AllWarningCount
-	}
-	else {
-		if ($BuildInfo.AllTasks.Count -ne $BuildInfo.Tasks.Count) {
-			$BuildInfo.AllMessages
-			Invoke-Build-Write-Info $OK $BuildInfo.AllTasks.Count $BuildInfo.AllErrorCount $BuildInfo.AllWarningCount $BuildInfo.Elapsed
+		if (${private:-parent}) {
+			${private:-parent}.AllTasks.AddRange($BuildInfo.AllTasks)
+			${private:-parent}.AllMessages.AddRange($BuildInfo.AllMessages)
+			${private:-parent}.AllErrorCount += $BuildInfo.AllErrorCount
+			${private:-parent}.AllWarningCount += $BuildInfo.AllWarningCount
+		}
+		else {
+			if ($BuildInfo.AllTasks.Count -ne $BuildInfo.Tasks.Count) {
+				$BuildInfo.AllMessages
+				Invoke-Build-Write-Info ${private:-state} $BuildInfo.AllTasks.Count $BuildInfo.AllErrorCount $BuildInfo.AllWarningCount $BuildInfo.Elapsed
+			}
 		}
 	}
 }
