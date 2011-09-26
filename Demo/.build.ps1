@@ -54,13 +54,14 @@ assert ((Split-Path $MyPath) -eq $BuildRoot)
 # Test warning
 Write-Warning "Ignore this warning."
 
-# Test empty tasks. They are rare but possible.
-task Dummy @()
-
 # Test ? ~ show tasks
 task Show {
 	Invoke-Build ? Assert.build.ps1
 }
+
+# Test null/empty job tasks. They are rare but possible.
+task Dummy1
+task Dummy2 @()
 
 # Parameters and values are just variables in the script scope.
 # Read them as $Variable. Write them as $script:Variable = ...
@@ -234,10 +235,13 @@ task TestVariables {
 	# get variables in a clean session
 	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
 	$0 += @(
-		'BuildData' # internal data
-		'BuildInfo' # internal data
-		'result' # for the caller
-		# system
+		# build engine internals
+		'BuildData'
+		'BuildInfo'
+		# project build script
+		'Result'
+		'SkipTestDiff'
+		# system variables
 		'foreach'
 		'LASTEXITCODE'
 		'PSCmdlet'
@@ -259,8 +263,9 @@ task TestVariables {
 
 # This task calls all test tasks.
 task Tests `
-	Dummy,
 	Show,
+	Dummy1,
+	Dummy2,
 	Alter,
 	Assert,
 	ConditionalTasks,

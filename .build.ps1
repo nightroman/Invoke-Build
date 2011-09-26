@@ -11,6 +11,11 @@
 	Invoke-Build
 #>
 
+param
+(
+	[switch]$SkipTestDiff
+)
+
 # Set strict mode
 Set-StrictMode -Version 2
 
@@ -67,8 +72,8 @@ task Test {
 	# invoke tests, get the output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
-	assert ($result.Tasks.Count -eq 26) $result.Tasks.Count
-	assert ($result.AllTasks.Count -eq 105) $result.AllTasks.Count
+	assert ($result.Tasks.Count -eq 27) $result.Tasks.Count
+	assert ($result.AllTasks.Count -eq 107) $result.AllTasks.Count
 
 	assert ($result.ErrorCount -eq 0) $result.AllErrorCount
 	assert ($result.AllErrorCount -eq 20) $result.AllErrorCount
@@ -78,6 +83,8 @@ task Test {
 
 	assert ($result.Messages.Count -ge 1)
 	assert ($result.AllMessages.Count -ge 21)
+
+	if ($SkipTestDiff) { return }
 
 	# process and save the output
 	$outputPath = 'Invoke-Build-Test.log'

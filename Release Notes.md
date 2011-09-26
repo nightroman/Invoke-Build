@@ -1,6 +1,19 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.21
+
+*v1.0.20* continued. Build scripts are not allowed to output script blocks. It
+makes no sense and, more likely, indicates a script job defined after a task,
+not as a parameter. As a result, this script fails:
+
+    task task2 task1
+    {
+        ...
+    }
+
+As a result, null or missing job lists in tasks are allowed again.
+
 ## v1.0.20
 
 Tasks still may have empty job lists (e.g. jobs can be created dynamically and

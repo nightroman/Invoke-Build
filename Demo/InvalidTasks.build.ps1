@@ -27,6 +27,19 @@ function Test($ExpectedMessagePattern, $Script) {
 	Remove-Item z.build.ps1
 }
 
+# Build scripts are not allowed to output script blocks. It makes no sense and,
+# more likely, indicates a script job defined after a task, not as a parameter.
+task ScriptOutput {
+	Test "Build scripts should not output script blocks. *\z.build.ps1*" {
+		task task1
+		'It is fine to output some data ...'
+		task task2 task1
+		{
+			'... but this script block is a mistake.'
+		}
+	}
+}
+
 # Tasks with same names cannot be added twice. But it is fine to use the same
 # task 2+ times in a task job list (it does not make much sense though).
 task TaskAddedTwice {
@@ -90,6 +103,7 @@ task EitherInputsOrOutputsIsMissing {
 }
 
 task . `
+ScriptOutput,
 TaskAddedTwice,
 TaskNotDefined,
 CyclicReference,

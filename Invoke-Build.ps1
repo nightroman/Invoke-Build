@@ -45,7 +45,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.20'
+	[System.Version]'1.0.21'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -55,7 +55,6 @@ function Add-BuildTask
 	[string]$Name
 	,
 	[Parameter(Position = 1)]
-	[ValidateNotNull()]
 	[object[]]$Jobs
 	,
 	[Parameter()]
@@ -781,7 +780,12 @@ Remove-Variable Task, Script, Result
 ### Invoke the script and restore error preference
 Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ ${private:-command}"
 Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-. ${private:-command}
+foreach(${private:-it} in (. ${private:-command})) {
+	${private:-it}
+	if (${private:-it} -is [scriptblock]) {
+		Invoke-BuildError "Build scripts should not output script blocks. Correct the '$BuildFile'." InvalidOperation ${private:-it}
+	}
+}
 $ErrorActionPreference = 'Stop'
 
 ${private:-state} = 0

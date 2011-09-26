@@ -95,6 +95,7 @@ build scripts in some projects in
 ## See Also
 
 * [How It Works](https://github.com/nightroman/Invoke-Build/wiki/How-It-Works)
+* [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial)
 * [Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks)
 * [Partial Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks)
 * [Build Result Analysis](https://github.com/nightroman/Invoke-Build/wiki/Build-Result-Analysis)
