@@ -2,7 +2,7 @@
 Invoke-Build.ps1 - Build Automation in PowerShell
 =================================================
 
-![MSBuild and Invoke-Build](https://github.com/downloads/nightroman/Invoke-Build/ProjectVsScript.png)
+![Together](https://github.com/downloads/nightroman/Invoke-Build/Together.png)
 
 *Invoke-Build.ps1* is a [build automation](http://en.wikipedia.org/wiki/Build_automation)
 tool implemented as a standalone PowerShell script. It invokes tasks defined in
