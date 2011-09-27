@@ -9,6 +9,12 @@ Invoke-Build main parameters are `Task`, `File`, `Parameters`, as they used to
 be. The removed combined parameter `Script` was not intuitive, according to the
 feedback.
 
+Replaced task parameters `Inputs` and `Outputs` with `Incremental` and
+`Partial`. New parameters are hashtables with a single entry: key is the
+inputs, value is the outputs. As a result, the outputs can be defined as a
+script block for any kind of incremental task, partial or not. (NB: script
+blocks are lazy and preferable in some cases for better performance).
+
 ## v1.0.21
 
 *v1.0.20* continued. Build scripts are not allowed to output script blocks. It

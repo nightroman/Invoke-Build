@@ -162,8 +162,9 @@ task ErrorCases {
 	Test-Issue ScriptConditionFails ErrorCases.build.ps1 'If fails.'
 	Test-Issue InputsFails ErrorCases.build.ps1 'Inputs fails.'
 	Test-Issue OutputsFails ErrorCases.build.ps1 'Outputs fails.'
-	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Task 'InputsOutputsMismatch': Different input and output counts: 1 and 0."
+	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0."
 	Test-Issue MissingInputsItems ErrorCases.build.ps1 "Task 'MissingInputsItems': Error on resolving inputs: Cannot find path 'missing' because it does not exist."
+	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output is empty. Expected at list one item."
 	Test-Issue MissingProperty ErrorCases.build.ps1 "PowerShell or environment variable 'MissingProperty' is not defined."
 }
 

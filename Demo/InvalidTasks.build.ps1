@@ -92,13 +92,10 @@ task InvalidJobValue {
 	}
 }
 
-# Inputs and Outputs should be both null or not null.
-task EitherInputsOrOutputsIsMissing {
-	Test "Task '.': Inputs and Outputs should be both null or not null." {
-		task . -Inputs {} { throw 'Unexpected.' }
-	}
-	Test "Task '.': Inputs and Outputs should be both null or not null." {
-		task . -Outputs {} { throw 'Unexpected.' }
+# Incremental and Partial cannot be used together.
+task IncrementalAndPartial {
+	Test "Task '.': Parameters Incremental and Partial cannot be used together." {
+		task . -Incremental @{} -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
@@ -109,4 +106,4 @@ TaskNotDefined,
 CyclicReference,
 InvalidJobType,
 InvalidJobValue,
-EitherInputsOrOutputsIsMissing
+IncrementalAndPartial

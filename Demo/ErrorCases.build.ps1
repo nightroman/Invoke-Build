@@ -1,14 +1,7 @@
 
 <#
 .Synopsis
-	Tests runtime errors.
-
-.Description
-	Tested in here runtime errors:
-	* Errors in task script jobs (if task calls are not protected);
-	* Errors in task If scripts;
-	* Errors in task Inputs scripts;
-	* Errors in task Outputs scripts.
+	Tests various runtime errors.
 
 .Link
 	Invoke-Build
@@ -57,17 +50,20 @@ task TestAlmostSurvives AlmostSurvives, @{Fails=1}
 # Error: the If script fails.
 task ScriptConditionFails -If { throw "If fails." } { throw }
 
-# Error: the Inputs script fails.
-task InputsFails -Inputs { throw 'Inputs fails.' } -Outputs {} { throw }
+# Error: the inputs script fails.
+task InputsFails -Partial @{{ throw 'Inputs fails.' } = {}} { throw }
 
-# Error: the Outputs script fails.
-task OutputsFails -Outputs { throw 'Outputs fails.' } -Inputs { '.build.ps1' } { throw }
+# Error: the outputs script fails.
+task OutputsFails -Partial @{{ '.build.ps1' } = { throw 'Outputs fails.' }} { throw }
 
-# Error: Inputs and Outputs (script) have different number of items
-task InputsOutputsMismatch -Inputs { '.build.ps1' } -Outputs { } { throw }
+# Error: inputs and outputs (scripts) have different number of items
+task InputsOutputsMismatch -Partial @{{ '.build.ps1' } = {}} { throw }
 
-# Error: one of the Inputs items is missing.
-task MissingInputsItems -Inputs { 'missing' } -Outputs {} { throw }
+# Error: incremental output is empty
+task IncrementalOutputsIsEmpty -Incremental @{{ '.build.ps1' } = {}} { throw }
+
+# Error: one of the input items is missing.
+task MissingInputsItems -Partial @{{ 'missing' } = {}} { throw }
 
 # Error: missing property
 task MissingProperty {

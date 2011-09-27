@@ -32,9 +32,9 @@ syntax. But build flow, scripts structure, and concepts are very similar:
     DefaultTargets               The . or the first added task
     Properties                   Script/environment variables
     Import                       Dot-source or invoke
-    Target                       Task
+    Target                       task
     Condition                    -If
-    Inputs, Outputs              -Inputs, -Outputs
+    Inputs, Outputs              -Incremental or -Partial
     DependsOnTargets             -Jobs, referenced task names
     Tasks                        -Jobs, PowerShell script blocks
     AfterTargets, BeforeTargets  -After, -Before

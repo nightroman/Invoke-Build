@@ -64,10 +64,10 @@ function Add-BuildTask
 	[object]$If = $true
 	,
 	[Parameter()]
-	[object]$Inputs
+	[hashtable]$Incremental
 	,
 	[Parameter()]
-	[object]$Outputs
+	[hashtable]$Partial
 	,
 	[Parameter()]
 	[object[]]$After
@@ -85,8 +85,8 @@ Task '$Name' is added twice:
 "@ InvalidOperation $Name
 	}
 
-	if (($null -eq $Inputs) -ne ($null -eq $Outputs)) {
-		Invoke-BuildError "Task '$Name': Inputs and Outputs should be both null or not null."
+	if ($Incremental -and $Partial) {
+		Invoke-BuildError "Task '$Name': Parameters Incremental and Partial cannot be used together."
 	}
 
 	$jobList = [System.Collections.ArrayList]@()
@@ -110,20 +110,34 @@ Task '$Name' is added twice:
 		}
 	}
 
+	if ($Incremental) {
+		$inputs, $outputs = Invoke-Build-Pair $Name $Incremental
+		$isPartial = $false
+	}
+	elseif ($Partial) {
+		$inputs, $outputs = Invoke-Build-Pair $Name $Partial
+		$isPartial = $true
+	}
+	else {
+		$inputs = $null
+		$outputs = $null
+		$isPartial = $false
+	}
+
 	$BuildData.Add($Name, (New-Object PSObject -Property @{
 		Name = $Name
 		Jobs = $jobList
 		Try = $tryList
 		If = $If
-		Inputs = $Inputs
-		Outputs = $Outputs
+		Inputs = $inputs
+		Outputs = $outputs
+		Partial = $isPartial
 		After = $After
 		Before = $Before
 		Info = $MyInvocation
 		Error = $null
 		Started = $null
 		Elapsed = $null
-		Partial = $false
 	}))
 }
 
@@ -345,6 +359,16 @@ function Invoke-Build-Reference([string]$Task, $Ref)
 	}
 }
 
+#???
+function Invoke-Build-Pair([string]$Task, $Ref)
+{
+	if ($Ref.Count -ne 1) {
+		Invoke-BuildError "Task '$Task': Hashtable task reference should have one item." InvalidArgument $Ref
+	}
+	, @($Ref.Keys)[0]
+	@($Ref.Values)[0]
+}
+
 # Heals line breaks in the position message.
 function Invoke-Build-Format-Message([string]$Message)
 {
@@ -404,11 +428,16 @@ function Invoke-Build-IO([object]$Task)
 
 	# evaluate outputs
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-	if (${private:-task}.Outputs -is [scriptblock]) {
-		${private:-task}.Partial = $true
-		${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
+	if (${private:-task}.Partial) {
+
+		if (${private:-task}.Outputs -is [scriptblock]) {
+			${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
+		}
+		else {
+			${private:-outputs} = @(${private:-task}.Outputs)
+		}
 		if (${private:-paths}.Count -ne ${private:-outputs}.Count) {
-			throw "Task '$(${private:-task}.Name)': Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
+			throw "Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
 		}
 
 		${private:-index} = -1
@@ -434,6 +463,14 @@ function Invoke-Build-IO([object]$Task)
 	else {
 		${private:-task}.Inputs = ${private:-paths}
 
+		if (${private:-task}.Outputs -is [scriptblock]) {
+			${private:-task}.Outputs = & ${private:-task}.Outputs
+			if (!${private:-task}.Outputs) {
+				throw "Incremental output is empty. Expected at list one item."
+			}
+		}
+
+		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		foreach(${private:-out} in ${private:-task}.Outputs) {
 			if (!(Test-Path -LiteralPath ${private:-out} -ErrorAction Stop)) {
 				return

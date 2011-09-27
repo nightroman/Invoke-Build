@@ -195,39 +195,41 @@
 		default is $true. The value is either a script block evaluated on
 		task invocation or a value treated as Boolean.
 '@
-		Inputs = @'
-		File system items or literal paths used as input for full or partial
-		incremental build, or a script which gets them. All input items must
-		exist. All items are finally resolved to full paths and all or some of
-		them (it depends on Outputs) are piped to the task script jobs.
+		Incremental = @'
+		Tells to process the task as incremental. It is a hashtable with a
+		single entry where the key is inputs and the value is outputs.
 
-		The script jobs are not invoked if all the Outputs are up-to-date or if
-		the Inputs is not null and yet empty. But dependent tasks are invoked.
+		Inputs and outputs are file system items or literal paths or script
+		blocks which get them.
 
-		Inputs and Outputs are processed on the first script job invocation.
-		Thus, preceding task jobs can for example create the Inputs files.
+		Automatic variables for task script jobs:
+		- [System.Collections.ArrayList]$Inputs - evaluated inputs, full paths
+		- $Outputs - evaluated outputs value exactly, [string] or [string[]]
+
+		See more about incremental tasks:
+		https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks
 '@
-		Outputs = @'
-		Literal output paths. There are two forms:
+		Partial = @'
+		Tells to process the task as partial incremental. It is a hashtable
+		with a single entry where the key is inputs and the value is outputs.
+		There must be one-to-one correspondence between input and output files.
 
-		1) [string] or [string[]] is for full incremental build. If there are
-		missing items then the scripts are invoked. Otherwise they are invoked
-		if the minimum output time is less than the maximum input time. All
-		input paths are piped to the task scripts.
-		* Automatic variables for script jobs:
-		- [System.Collections.ArrayList]$Inputs - evaluated Inputs, full paths
-		- $Outputs - exactly the Outputs value, i.e. [string] or [string[]]
+		Inputs and outputs are file system items or literal paths or script
+		blocks which get them.
 
-		2) [scriptblock] is for partial incremental build. All input paths are
-		piped to the Outputs script which gets exactly one path for each input.
-		Then input and output time stamps are compared and only input paths
-		with out-of-date output, if any, are piped to the task script jobs.
-		* Automatic variables for script jobs:
-		- [System.Collections.ArrayList]$Inputs - evaluated Inputs, full paths
-		- [System.Collections.ArrayList]$Outputs - paths transformed by Outputs
-		* In addition inside process{} blocks:
+		If the outputs value is defined as a script block then it is invoked
+		with input items piped to it.
+
+		Automatic variables for script jobs:
+		- [System.Collections.ArrayList]$Inputs - evaluated inputs, full paths
+		- [System.Collections.ArrayList]$Outputs - outputs (transformed inputs)
+
+		In addition inside process{} blocks:
 		- $_ - the current full input path
-		- $$ - the current output path (returned by the Outputs script)
+		- $$ - the current output path
+
+		See more about partial incremental tasks:
+		https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks
 '@
 		After = @'
 		Tells to add this task to the specified task job lists. The task is
