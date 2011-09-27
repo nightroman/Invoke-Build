@@ -21,7 +21,7 @@
 #>
 
 # Build scripts can use parameters passed in as
-# PS> Invoke-Build ... { . <script> <parameters> }
+# PS> Invoke-Build ... -Parameters @{...}
 param
 (
 	# This value is available for all tasks ($MyParam1).
@@ -90,14 +90,14 @@ task ParamsValues2 ParamsValues1, SharedValueTask1, {
 
 # Just like regular scripts, build scripts may have functions used by tasks.
 # For example, this function is used by several tasks testing various issues.
-function Test-Issue([Parameter()]$Task, $Script, $ExpectedMessagePattern) {
+function Test-Issue([Parameter()]$Task, $File, $ExpectedMessagePattern) {
 	$message = ''
-	try { Invoke-Build $Task $Script }
+	try { Invoke-Build $Task $File }
 	catch { $message = "$_" }
 	if ($message -notlike $ExpectedMessagePattern) {
 		Invoke-BuildError "Expected pattern: [`n$ExpectedMessagePattern`n]`n Actual message: [`n$message`n]"
 	}
-	"Issue '$Task' of '$Script' is tested."
+	"Issue '$Task' of '$File' is tested."
 }
 
 # Test After and Before tasks.
@@ -113,8 +113,8 @@ task Assert {
 # Test conditional tasks.
 # It shows how to invoke a build script with parameters (Debug|Release).
 task ConditionalTasks {
-	Invoke-Build . { . .\ConditionalTasks.build.ps1 Debug }
-	Invoke-Build . { . .\ConditionalTasks.build.ps1 Release }
+	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Debug' }
+	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Release' }
 	Invoke-Build TestScriptCondition ConditionalTasks.build.ps1
 }
 
@@ -187,17 +187,6 @@ task TestExitCode {
 
 	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 AssertDefault Assert.build.ps1
 	assert ($LastExitCode -eq 1)
-}
-
-# Test the Script parameter issues.
-task TestScriptParameter {
-	$var = '.\MissingScript.ps1'
-	Test-Issue . {} "Invalid Script. The first token should be the . operator."
-	Test-Issue . { . } "Invalid Script. The second token should be Command, String, or Variable. Actual type: NewLine."
-	Test-Issue . { . 42 } "Invalid Script. The second token should be Command, String, or Variable. Actual type: Number."
-	Test-Issue . { . .\MissingScript.ps1 } "Invalid Script. The term '.\MissingScript.ps1' is not recognized as *"
-	Test-Issue . { . '.\MissingScript.ps1' } "Invalid Script. The term '.\MissingScript.ps1' is not recognized as *"
-	Test-Issue . { . $var } "Invalid Script. The term '.\MissingScript.ps1' is not recognized as *"
 }
 
 # The task shows unwanted functions potentially introduced by Invoke-Build.
@@ -279,7 +268,6 @@ task Tests `
 	Use,
 	TestDefaultParameter,
 	TestExitCode,
-	TestScriptParameter,
 	TestFunctions,
 	TestVariables
 

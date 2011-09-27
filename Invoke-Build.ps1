@@ -25,7 +25,10 @@ param
 	[string[]]$Task
 	,
 	[Parameter(Position = 1)]
-	[object]$Script
+	[string]$File
+	,
+	[Parameter(Position = 2)]
+	[hashtable]$Parameters
 	,
 	[Parameter()]
 	[string]$Result
@@ -45,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.21'
+	[System.Version]'1.0.22'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -692,65 +695,38 @@ $text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed.
 "@
 }
 
-### Start
+### Resolve the file
 $ErrorActionPreference = 'Stop'
-
-### Resolve the script
-if ($Script -is [scriptblock]) {
-	${private:-command} = $Script
-	try {
-		${private:-it}, $Script, $null = [System.Management.Automation.PSParser]::Tokenize($Script, [ref]$null)
-		if (!${private:-it} -or ${private:-it}.Type -ne 'Operator' -or ${private:-it}.Content -ne '.') {
-			throw "The first token should be the . operator."
+try {
+	if ($File) {
+		$BuildFile = Resolve-Path -LiteralPath $File -ErrorAction Stop
+	}
+	else {
+		$BuildFile = @(Resolve-Path '*.build.ps1')
+		if (!$BuildFile) {
+			throw "Found no '*.build.ps1' files."
 		}
-		if (($Script.Type -eq 'Command') -or ($Script.Type -eq 'String')) {
-			$Script = $Script.Content
-		}
-		elseif ($Script.Type -eq 'Variable') {
-			$Script = Get-Variable $Script.Content -ValueOnly
+		if ($BuildFile.Count -eq 1) {
+			$BuildFile = $BuildFile[0]
 		}
 		else {
-			throw "The second token should be Command, String, or Variable. Actual type: $($Script.Type)."
+			$BuildFile = $BuildFile -match '\\\.build\.ps1$'
+			if (!$BuildFile) {
+				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+			}
 		}
-		$BuildFile = @(Get-Command $Script -CommandType ExternalScript)[0].Definition
 	}
-	catch {
-		Invoke-BuildError "Invalid Script. $_" InvalidArgument ${private:-command}
-	}
+	$BuildFile = Convert-Path $BuildFile
 }
-else {
-	try {
-		if ($Script) {
-			${private:-location} = Resolve-Path -LiteralPath $Script -ErrorAction Stop
-		}
-		else {
-			${private:-location} = @(Resolve-Path '*.build.ps1')
-			if (!${private:-location}) {
-				throw "Found no '*.build.ps1' files."
-			}
-			if (${private:-location}.Count -eq 1) {
-				${private:-location} = ${private:-location}[0]
-			}
-			else {
-				${private:-location} = ${private:-location} -match '\\\.build\.ps1$'
-				if (!${private:-location}) {
-					throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
-				}
-			}
-		}
-	}
-	catch {
-		Invoke-BuildError "$_" ObjectNotFound $Script
-	}
-	$BuildFile = Convert-Path ${private:-location}
-	${private:-command} = $BuildFile
+catch {
+	Invoke-BuildError "$_" ObjectNotFound $File
 }
 
 ### Set the variables
 ${private:-location} = Get-Location
 ${private:-parent} = Get-Variable '[B]uildInfo'
 if (${private:-parent}) {
-	if (${private:-parent}.Description -ne 'cf62724c-bbc2-4ade-a925-ea0e73598492') {
+	if (${private:-parent}.Description -ne 'cf62724cbbc24adea925ea0e73598492') {
 		${private:-parent} = $null
 	}
 	else {
@@ -758,7 +734,7 @@ if (${private:-parent}) {
 	}
 }
 New-Variable -Name BuildData -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
-New-Variable -Name BuildInfo -Option Constant -Description cf62724c-bbc2-4ade-a925-ea0e73598492 -Value (New-Object PSObject)
+New-Variable -Name BuildInfo -Option Constant -Description cf62724cbbc24adea925ea0e73598492 -Value (New-Object PSObject)
 $BuildInfo |
 Add-Member -MemberType NoteProperty -Name Tasks -Value ([System.Collections.ArrayList]@()) -PassThru |
 Add-Member -MemberType NoteProperty -Name AllTasks -Value ([System.Collections.ArrayList]@()) -PassThru |
@@ -770,26 +746,27 @@ Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name AllWarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name Started -Value ([System.DateTime]::Now) -PassThru |
 Add-Member -MemberType NoteProperty -Name Elapsed -Value $null
-if ($Result) {
-	New-Variable -Scope 1 $Result $BuildInfo -Force
-}
 New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
 $BuildTask = $Task
-Remove-Variable Task, Script, Result
+${private:cf62724cbbc24adea925ea0e73598492} = $Parameters
+if ($Result) { New-Variable -Scope 1 $Result $BuildInfo -Force }
+Remove-Variable Task, File, Parameters, Result
 
-### Invoke the script and restore error preference
-Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ ${private:-command}"
-Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-foreach(${private:-it} in (. ${private:-command})) {
-	${private:-it}
-	if (${private:-it} -is [scriptblock]) {
-		Invoke-BuildError "Build scripts should not output script blocks. Correct the '$BuildFile'." InvalidOperation ${private:-it}
-	}
-}
-$ErrorActionPreference = 'Stop'
-
+### Start
 ${private:-state} = 0
 try {
+	### Invoke the script and restore error preference
+	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ $BuildFile"
+	${private:-it} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
+	$ErrorActionPreference = 'Stop'
+	foreach(${private:-it} in ${private:-it}) {
+		${private:-it}
+		if (${private:-it} -is [scriptblock]) {
+			Invoke-BuildError "Build scripts should not output script blocks. Correct the '$BuildFile'." InvalidOperation ${private:-it}
+		}
+	}
+
 	### The first task
 	if (!$BuildTask) {
 		if (!$BuildData.Count) {

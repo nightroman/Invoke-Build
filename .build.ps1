@@ -72,8 +72,8 @@ task Test {
 	# invoke tests, get the output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
-	assert ($result.Tasks.Count -eq 27) $result.Tasks.Count
-	assert ($result.AllTasks.Count -eq 107) $result.AllTasks.Count
+	assert ($result.Tasks.Count -eq 26) $result.Tasks.Count
+	assert ($result.AllTasks.Count -eq 106) $result.AllTasks.Count
 
 	assert ($result.ErrorCount -eq 0) $result.AllErrorCount
 	assert ($result.AllErrorCount -eq 20) $result.AllErrorCount
@@ -122,6 +122,8 @@ task Test {
 # Calls the tests infinitely.
 task Loop {
 	for(;;) {
+		$BuildInfo.AllTasks.Clear()
+		$BuildInfo.AllMessages.Clear()
 		Invoke-Build . Demo\.build.ps1
 	}
 }

@@ -56,13 +56,15 @@
 		One or more tasks to be invoked. Use '?' in order to view tasks.
 		The default task is '.' if it exists, otherwise the first added task.
 '@
-		Script = @'
-		A build script. It is either a relative path or a script block which
-		dot-sources a script with parameters or a script located in the path.
+		File = @'
+		The build script which defines build tasks by Add-BuildTask (task).
 
 		If it is not specified then Invoke-Build looks for "*.build.ps1" files
 		in the current location. A single file is used as the script. If there
 		are more files then ".build.ps1" is used as the default.
+'@
+		Parameters = @'
+		The hashtable of parameters passed in the build script.
 '@
 		Result = @'
 		Name of the variable with build result information. Properties:
@@ -106,30 +108,13 @@
 		}
 		@{
 			code = {
-	# Invoke the specified task in the specified script:
-	Invoke-Build Build C:\Projects\Project\Project.build.ps1
+	# Invoke the specified tasks and script with parameters:
+	Invoke-Build Build, Test .build.ps1 @{Log='log.txt'; WarningLevel=4 }
 			}
 		}
 		@{
 			code = {
-	# Invoke the tasks in the script with parameters:
-	Invoke-Build Build, Test { . .\Project.build.ps1 -Log log.txt -Mode 4 }
-			}
-		}
-		@{
-			code = {
-	# How to invoke scripts located in the path.
-
-	# Invoke a script somewhere in the path:
-	Invoke-Build Task { . Project.build.ps1 }
-
-	# Compare: this script is in the current location:
-	Invoke-Build Task Project.build.ps1
-			}
-		}
-		@{
-			code = {
-	# Show the tasks from the default script and specified script:
+	# Show the tasks in the default script and the specified script:
 	Invoke-Build ?
 	Invoke-Build ? Project.build.ps1
 			}

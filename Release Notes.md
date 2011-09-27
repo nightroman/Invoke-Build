@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.22
+
+**Breaking changes**
+
+Invoke-Build main parameters are `Task`, `File`, `Parameters`, as they used to
+be. The removed combined parameter `Script` was not intuitive, according to the
+feedback.
+
 ## v1.0.21
 
 *v1.0.20* continued. Build scripts are not allowed to output script blocks. It
