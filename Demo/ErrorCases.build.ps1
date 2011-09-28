@@ -51,19 +51,21 @@ task TestAlmostSurvives AlmostSurvives, @{Fails=1}
 task ScriptConditionFails -If { throw "If fails." } { throw }
 
 # Error: the inputs script fails.
-task InputsFails -Partial @{{ throw 'Inputs fails.' } = {}} { throw }
+task IncrementalInputsFails -Incremental @{{ throw 'Incremental inputs fails.' } = {}} { throw }
+task PartialInputsFails -Partial @{{ throw 'Partial inputs fails.' } = {}} { throw }
 
 # Error: the outputs script fails.
-task OutputsFails -Partial @{{ '.build.ps1' } = { throw 'Outputs fails.' }} { throw }
-
-# Error: inputs and outputs (scripts) have different number of items
-task InputsOutputsMismatch -Partial @{{ '.build.ps1' } = {}} { throw }
+task IncrementalOutputsFails -Incremental @{{ '.build.ps1' } = { throw 'Incremental outputs fails.' }} { throw }
+task PartialOutputsFails -Partial @{{ '.build.ps1' } = { throw 'Partial outputs fails.' }} { throw }
 
 # Error: incremental output is empty
+# Error: partial inputs and outputs have different number of items
 task IncrementalOutputsIsEmpty -Incremental @{{ '.build.ps1' } = {}} { throw }
+task InputsOutputsMismatch -Partial @{{ '.build.ps1' } = {}} { throw }
 
 # Error: one of the input items is missing.
-task MissingInputsItems -Partial @{{ 'missing' } = {}} { throw }
+task IncrementalMissingInputs -Incremental @{{ 'missing' } = {}} { throw }
+task PartialMissingInputs -Partial @{{ 'missing' } = {}} { throw }
 
 # Error: missing property
 task MissingProperty {

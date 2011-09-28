@@ -99,6 +99,16 @@ task IncrementalAndPartial {
 	}
 }
 
+# Invalid Incremental/Partial hashtable.
+task IncrementalInvalidHashtable {
+	Test "Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." {
+		task . -Incremental @{} { throw 'Unexpected.' }
+	}
+	Test "Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." {
+		task . -Partial @{} { throw 'Unexpected.' }
+	}
+}
+
 task . `
 ScriptOutput,
 TaskAddedTwice,
@@ -106,4 +116,5 @@ TaskNotDefined,
 CyclicReference,
 InvalidJobType,
 InvalidJobValue,
-IncrementalAndPartial
+IncrementalAndPartial,
+IncrementalInvalidHashtable

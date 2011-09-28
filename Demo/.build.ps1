@@ -160,11 +160,19 @@ task Empty {
 task ErrorCases {
 	Test-Issue TestAlmostSurvives ErrorCases.build.ps1 'Error2'
 	Test-Issue ScriptConditionFails ErrorCases.build.ps1 'If fails.'
-	Test-Issue InputsFails ErrorCases.build.ps1 'Inputs fails.'
-	Test-Issue OutputsFails ErrorCases.build.ps1 'Outputs fails.'
-	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0."
-	Test-Issue MissingInputsItems ErrorCases.build.ps1 "Task 'MissingInputsItems': Error on resolving inputs: Cannot find path 'missing' because it does not exist."
+
+	Test-Issue IncrementalInputsFails ErrorCases.build.ps1 'Incremental inputs fails.'
+	Test-Issue PartialInputsFails ErrorCases.build.ps1 'Partial inputs fails.'
+
+	Test-Issue IncrementalOutputsFails ErrorCases.build.ps1 'Incremental outputs fails.'
+	Test-Issue PartialOutputsFails ErrorCases.build.ps1 'Partial outputs fails.'
+
 	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output is empty. Expected at list one item."
+	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0."
+
+	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist."
+	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist."
+
 	Test-Issue MissingProperty ErrorCases.build.ps1 "PowerShell or environment variable 'MissingProperty' is not defined."
 }
 

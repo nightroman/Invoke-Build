@@ -72,11 +72,11 @@ task Test {
 	# invoke tests, get the output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
-	assert ($result.Tasks.Count -eq 26) $result.Tasks.Count
-	assert ($result.AllTasks.Count -eq 107) $result.AllTasks.Count
+	assert ($result.AllTasks.Count -eq 111) $result.AllTasks.Count
+	assert ($result.AllErrorCount -eq 24) $result.AllErrorCount
 
+	assert ($result.Tasks.Count -eq 26) $result.Tasks.Count
 	assert ($result.ErrorCount -eq 0) $result.AllErrorCount
-	assert ($result.AllErrorCount -eq 21) $result.AllErrorCount
 
 	assert ($result.WarningCount -ge 1)
 	assert ($result.AllWarningCount -ge 1)
@@ -105,7 +105,7 @@ task Test {
 			if ($env:MERGE) {
 				& $env:MERGE $outputPath $samplePath
 			}
-			$toCopy = 1 -eq (Read-Host 'Save the result as expected? [1] Yes [Enter] No')
+			$toCopy = 1 -eq (Read-Host 'Save the result as expected? Yes: [1]')
 		}
 	}
 	else {

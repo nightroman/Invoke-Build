@@ -177,7 +177,11 @@
 '@
 	parameters = @{
 		Name = @'
-		The task name, any string except '?' ('?' is used to view tasks).
+		The task name, any string except '?' which is used to view tasks.
+
+		Note: task names are used in the protected call notation @{TaskName=1}.
+		If a name contains not trivial characters then single or double quotes
+		have to be used there. Compare: @{MakeHelp=1} vs. @{'make-help'=1}.
 '@
 		Jobs = @'
 		The task jobs. The following types are supported:

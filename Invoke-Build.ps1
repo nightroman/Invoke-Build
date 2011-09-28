@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.22'
+	[System.Version]'1.0.23'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -111,17 +111,26 @@ Task '$Name' is added twice:
 	}
 
 	if ($Incremental) {
-		$inputs, $outputs = Invoke-Build-Pair $Name $Incremental
+		$IO = $Incremental
 		$isPartial = $false
 	}
 	elseif ($Partial) {
-		$inputs, $outputs = Invoke-Build-Pair $Name $Partial
+		$IO = $Partial
 		$isPartial = $true
 	}
 	else {
+		$IO = $null
 		$inputs = $null
 		$outputs = $null
 		$isPartial = $false
+	}
+
+	if ($IO) {
+		if ($IO.Count -ne 1) {
+			Invoke-BuildError "Task '$Name': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." InvalidArgument $IO
+		}
+		$inputs = @($IO.Keys)[0]
+		$outputs = 	@($IO.Values)[0]
 	}
 
 	$BuildData.Add($Name, (New-Object PSObject -Property @{
@@ -359,16 +368,6 @@ function Invoke-Build-Reference([string]$Task, $Ref)
 	}
 }
 
-#???
-function Invoke-Build-Pair([string]$Task, $Ref)
-{
-	if ($Ref.Count -ne 1) {
-		Invoke-BuildError "Task '$Task': Hashtable task reference should have one item." InvalidArgument $Ref
-	}
-	, @($Ref.Keys)[0]
-	@($Ref.Values)[0]
-}
-
 # Heals line breaks in the position message.
 function Invoke-Build-Format-Message([string]$Message)
 {
@@ -417,7 +416,7 @@ function Invoke-Build-IO([object]$Task)
 		}
 	}
 	catch {
-		throw "Task '$(${private:-task}.Name)': Error on resolving inputs: $_"
+		throw "Error on resolving inputs: $_"
 	}
 
 	# no input:
@@ -605,14 +604,14 @@ function Invoke-Build-Task($Name, $Path)
 
 		${private:-elapsed} = [System.DateTime]::Now - ${private:-task}.Started
 		${private:-task}.Elapsed = ${private:-elapsed}
-		Write-BuildText DarkYellow "${private:-path} is done, ${private:-elapsed}."
+		Write-BuildText DarkYellow "${private:-path} is done, ${private:-elapsed}"
 	}
 	catch {
 		${private:-task}.Elapsed = [System.DateTime]::Now - ${private:-task}.Started
 		${private:-task}.Error = $_
 		++$BuildInfo.ErrorCount
 		++$BuildInfo.AllErrorCount
-		${private:-text} = "ERROR: Task ${private:-path}: $_"
+		${private:-text} = "ERROR: Task '${private:-path}': $_"
 		$null = $BuildInfo.Messages.Add(${private:-text})
 		$null = $BuildInfo.AllMessages.Add(${private:-text})
 		Write-BuildText Yellow (Invoke-Build-Format-Message ${private:-task}.Info.PositionMessage)
@@ -728,7 +727,7 @@ function Invoke-Build-Write-Info($State, $TaskCount, $ErrorCount, $WarningCount,
 	}
 
 	Write-BuildText $color @"
-$text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed.
+$text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed
 "@
 }
 
