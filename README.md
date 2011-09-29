@@ -77,7 +77,7 @@ directory as *Invoke-Build.ps1*):
     help Invoke-Build -full
 
 And then at functions help, for example, `Add-BuildTask` (`task`). Note that
-*Invoke-Build* has to dot-sourced once for that.
+*Invoke-Build* has to be dot-sourced once.
 
     . Invoke-Build
     help task -full

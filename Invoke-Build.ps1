@@ -407,6 +407,7 @@ function Invoke-Build-IO([object]$Task)
 	# resolve to paths and items
 	${private:-paths} = [System.Collections.ArrayList]@()
 	try {
+		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		${private:-inputs} = foreach(${private:-in} in ${private:-inputs}) {
 			if (${private:-in} -isnot [System.IO.FileSystemInfo]) {
 				${private:-in} = Get-Item -LiteralPath ${private:-in} -Force -ErrorAction Stop
@@ -426,10 +427,9 @@ function Invoke-Build-IO([object]$Task)
 	}
 
 	# evaluate outputs
-	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	if (${private:-task}.Partial) {
-
 		if (${private:-task}.Outputs -is [scriptblock]) {
+			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 			${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
 		}
 		else {
@@ -442,6 +442,7 @@ function Invoke-Build-IO([object]$Task)
 		${private:-index} = -1
 		${private:-inputs2} = [System.Collections.ArrayList]@()
 		${private:-outputs2} = [System.Collections.ArrayList]@()
+		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		foreach(${private:-in} in ${private:-inputs}) {
 			++${private:-index}
 			${private:-out} = ${private:-outputs}[${private:-index}]
@@ -463,6 +464,7 @@ function Invoke-Build-IO([object]$Task)
 		${private:-task}.Inputs = ${private:-paths}
 
 		if (${private:-task}.Outputs -is [scriptblock]) {
+			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 			${private:-task}.Outputs = & ${private:-task}.Outputs
 			if (!${private:-task}.Outputs) {
 				throw "Incremental output is empty. Expected at list one item."
