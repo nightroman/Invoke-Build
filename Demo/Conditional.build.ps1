@@ -20,11 +20,11 @@
 
 .Example
 	># Debug configuration
-	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Debug' }
+	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
 
 .Example
 	># Release configuration
-	Invoke-Build . ConditionalTask.build.ps1 @{ Configuration = 'Release' }
+	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
 
 .Link
 	Invoke-Build

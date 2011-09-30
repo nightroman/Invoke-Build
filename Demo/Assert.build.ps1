@@ -11,15 +11,19 @@
 	.build.ps1
 #>
 
-# Check $ErrorActionPreference and change it.
+# $ErrorActionPreference is Stop by default
 assert ($ErrorActionPreference -eq 'Stop')
+
+# But scripts can change it.
 $ErrorActionPreference = 0
 
 # This task fails with a default message.
 task AssertDefault {
-	# Check $ErrorActionPreference and change it.
-	assert ($ErrorActionPreference -eq 'Stop')
-	$ErrorActionPreference = 0
+	# Check $ErrorActionPreference
+	assert ($ErrorActionPreference -eq 0)
+
+	# Hack needed only for testing, change
+	$script:ErrorActionPreference = 'Stop'
 
 	# The simplest assert
 	assert

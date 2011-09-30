@@ -1,7 +1,17 @@
 Invoke-Build Release Notes
 ==========================
 
-## v1.0.22
+## v1.0.24
+
+Scripts can change `$ErrorActionPreference` at the script level once for all
+their tasks. Reminder: the default value is *Stop*.
+
+The special command [`. Invoke-Build`] also shows the current version. Tip: for
+scripts there is `Get-BuildVersion`.
+
+Amended error messages and source information in several error cases.
+
+## v1.0.22, v1.0.23
 
 **Breaking changes**
 

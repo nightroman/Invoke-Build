@@ -51,12 +51,26 @@ assert ((Split-Path $MyPath) -eq $BuildRoot)
 # Mind potential variable name conflicts in the same script scope!
 . .\SharedTasksData.tasks.ps1
 
-# Test warning
+# Test warning.
 Write-Warning "Ignore this warning."
 
-# Test ? ~ show tasks
-task Show {
+# -WhatIf is used in order to show task scripts without invoking them.
+# Note: -Result can be used in order to get some information as well.
+# But this information is not always the same as without -WhatIf.
+task WhatIf {
+	Invoke-Build . Conditional.build.ps1 @{Configuration='Debug'} -WhatIf -Result Result
+	assert ($Result.AllTasks.Count -eq 1)
+	assert ($Result.Tasks.Count -eq 1)
+}
+
+# "Invoke-Build ?" is used in order to show tasks:
+task ShowTask {
 	Invoke-Build ? Assert.build.ps1
+}
+
+# ". Invoke-Build" is used in order to use Get-Help:
+task ShowInfo {
+	. Invoke-Build
 }
 
 # Test null/empty job tasks. They are rare but possible.
@@ -93,9 +107,10 @@ task ParamsValues2 ParamsValues1, SharedValueTask1, {
 function Test-Issue([Parameter()]$Task, $File, $ExpectedMessagePattern) {
 	$message = ''
 	try { Invoke-Build $Task $File }
-	catch { $message = "$_" }
+	catch { $message = $_ | Out-String }
+	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedMessagePattern) {
-		Invoke-BuildError "Expected pattern: [`n$ExpectedMessagePattern`n]`n Actual message: [`n$message`n]"
+		Invoke-BuildError "Expected pattern: [`n$ExpectedMessagePattern`n]"
 	}
 	"Issue '$Task' of '$File' is tested."
 }
@@ -112,10 +127,10 @@ task Assert {
 
 # Test conditional tasks.
 # It shows how to invoke a build script with parameters (Debug|Release).
-task ConditionalTasks {
-	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Debug' }
-	Invoke-Build . ConditionalTasks.build.ps1 @{ Configuration = 'Release' }
-	Invoke-Build TestScriptCondition ConditionalTasks.build.ps1
+task Conditional {
+	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
+	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
+	Invoke-Build TestScriptCondition Conditional.build.ps1
 }
 
 # Test exec.
@@ -151,34 +166,36 @@ task Use {
 # Test an empty build file.
 task Empty {
 	# no task is specified
-	Test-Issue @() Empty.build.ps1 'There is no task in the script.'
+	Test-Issue @() Empty.build.ps1 "*\Invoke-Build.ps1 : There is no task in the script.*InvalidOperation: (*:String)*"
 	# a task is specified
-	Test-Issue Missing Empty.build.ps1 "Task 'Missing' is not defined."
+	Test-Issue Missing Empty.build.ps1 "*\Invoke-Build.ps1 : Task 'Missing' is not defined.*ObjectNotFound: (Missing:String)*"
 }
 
 # Test runtime errors.
 task ErrorCases {
-	Test-Issue TestAlmostSurvives ErrorCases.build.ps1 'Error2'
-	Test-Issue ScriptConditionFails ErrorCases.build.ps1 'If fails.'
+	Test-Issue TestAlmostSurvives ErrorCases.build.ps1 "Error2*At *\SharedTasksData.tasks.ps1*throw <<<<*"
+	Test-Issue ScriptConditionFails ErrorCases.build.ps1 "If fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 
-	Test-Issue IncrementalInputsFails ErrorCases.build.ps1 'Incremental inputs fails.'
-	Test-Issue PartialInputsFails ErrorCases.build.ps1 'Partial inputs fails.'
+	Test-Issue IncrementalInputsFails ErrorCases.build.ps1 "Incremental inputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
+	Test-Issue PartialInputsFails ErrorCases.build.ps1 "Partial inputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 
-	Test-Issue IncrementalOutputsFails ErrorCases.build.ps1 'Incremental outputs fails.'
-	Test-Issue PartialOutputsFails ErrorCases.build.ps1 'Partial outputs fails.'
+	Test-Issue IncrementalOutputsFails ErrorCases.build.ps1 "Incremental outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
+	Test-Issue PartialOutputsFails ErrorCases.build.ps1 "Partial outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 
-	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output is empty. Expected at list one item."
-	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0."
+	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output is empty. Expected at list one item.*OperationStopped*"
+	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0.*OperationStopped*"
 
-	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist."
-	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist."
+	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist.*OperationStopped*"
+	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist.*OperationStopped*"
 
-	Test-Issue MissingProperty ErrorCases.build.ps1 "PowerShell or environment variable 'MissingProperty' is not defined."
+	Test-Issue MissingProperty ErrorCases.build.ps1 @'
+Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound: (*String)*
+'@
 }
 
 # Test/cover the default parameter.
 task TestDefaultParameter {
-	Invoke-Build TestDefaultParameter ConditionalTasks.build.ps1
+	Invoke-Build TestDefaultParameter Conditional.build.ps1
 }
 
 # Test exit codes on errors.
@@ -234,7 +251,7 @@ task TestVariables {
 	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
 	$0 += @(
 		# build engine internals
-		'BuildData'
+		'BuildList'
 		'BuildInfo'
 		# project build script
 		'Result'
@@ -259,27 +276,6 @@ task TestVariables {
 	}}
 }
 
-# This task calls all test tasks.
-task Tests `
-	Show,
-	Dummy1,
-	Dummy2,
-	Alter,
-	Assert,
-	ConditionalTasks,
-	Empty,
-	ErrorCases,
-	Exec,
-	Incremental,
-	InvalidTasks,
-	Property,
-	ProtectedTasks,
-	Use,
-	TestDefaultParameter,
-	TestExitCode,
-	TestFunctions,
-	TestVariables
-
 # Show all help.
 task ShowHelp {
 	@(
@@ -300,6 +296,26 @@ task ShowHelp {
 	Out-String -Width 80
 }
 
+# This task calls all test tasks.
+task Tests `
+	Dummy1,
+	Dummy2,
+	Alter,
+	Assert,
+	Conditional,
+	Empty,
+	ErrorCases,
+	Exec,
+	Incremental,
+	InvalidTasks,
+	Property,
+	ProtectedTasks,
+	Use,
+	TestDefaultParameter,
+	TestExitCode,
+	TestFunctions,
+	TestVariables
+
 # This task calls all sample and the main test task.
 # By conventions it is the default task due to its name.
 task . ParamsValues2, ParamsValues1, SharedTask2, {
@@ -312,4 +328,7 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 },
 # Tasks can be referenced between or after scripts.
 Tests,
-ShowHelp
+WhatIf,
+ShowTask,
+ShowHelp,
+ShowInfo

@@ -17,8 +17,8 @@ function Test($ExpectedMessagePattern, $Script) {
 	# invoke it, catch the error, compare the message
 	$message = ''
 	try { Invoke-Build . z.build.ps1 }
-	catch { $message = "$_" }
-	$message
+	catch { $message = $_ | Out-String }
+	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedMessagePattern) {
 		Invoke-BuildError "Expected message pattern: [`n$ExpectedMessagePattern`n]"
 	}
@@ -30,7 +30,7 @@ function Test($ExpectedMessagePattern, $Script) {
 # Build scripts are not allowed to output script blocks. It makes no sense and,
 # more likely, indicates a script job defined after a task, not as a parameter.
 task ScriptOutput {
-	Test "Build scripts should not output script blocks. *\z.build.ps1*" {
+	Test "*\Invoke-Build.ps1 : Build scripts should not output script blocks. Correct *\z.build.ps1*At *InvalidOperation*" {
 		task task1
 		'It is fine to output some data ...'
 		task task2 task1
@@ -43,7 +43,7 @@ task ScriptOutput {
 # Tasks with same names cannot be added twice. But it is fine to use the same
 # task 2+ times in a task job list (it does not make much sense though).
 task TaskAddedTwice {
-	Test "Task 'task1' is added twice:*1: *2: *" {
+	Test "Add-BuildTask : Task 'task1' is added twice.*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidOperation*" {
 		task task1 {}
 		# It is fine to reference a task 2+ times
 		task task2 task1, task1, task1
@@ -52,26 +52,9 @@ task TaskAddedTwice {
 	}
 }
 
-# Example of a missing task.
-task TaskNotDefined {
-	Test "Task 'task1': Job 1: Task 'missing' is not defined.*" {
-		task task1 missing, {}
-		task . task1, {}
-	}
-}
-
-# Tasks with a cyclic reference: . -> task1 -> task2 -> task1 (oops!)
-task CyclicReference {
-	Test "Task 'task2': Job 1: Cyclic reference to 'task1'.*" {
-		task task1 task2
-		task task2 task1
-		task . task1
-	}
-}
-
 # The tested task has three valid jobs and one invalid (42 ~ [int]).
 task InvalidJobType {
-	Test "Task '.': Invalid job type." {
+	Test "Add-BuildTask : Task '.': Invalid job type.*At *InvalidArgument*" {
 		task task1 {}
 		task task2 {}
 		task . @(
@@ -85,7 +68,7 @@ task InvalidJobType {
 
 # The tested task uses valid job type but its value is invalid.
 task InvalidJobValue {
-	Test "Task '.': Hashtable task reference should have one item." {
+	Test "Add-BuildTask : Task '.': Hashtable task reference should have one item.*At *InvalidArgument*" {
 		task . @(
 			@{ task2 = 1; task1 = 1 }
 		)
@@ -94,27 +77,44 @@ task InvalidJobValue {
 
 # Incremental and Partial cannot be used together.
 task IncrementalAndPartial {
-	Test "Task '.': Parameters Incremental and Partial cannot be used together." {
+	Test "Add-BuildTask : Task '.': Parameters Incremental and Partial cannot be used together.*At *InvalidArgument*" {
 		task . -Incremental @{} -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Invalid Incremental/Partial hashtable.
 task IncrementalInvalidHashtable {
-	Test "Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." {
+	Test "Add-BuildTask : Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }.*At *InvalidArgument*" {
 		task . -Incremental @{} { throw 'Unexpected.' }
 	}
-	Test "Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." {
+	Test "Add-BuildTask : Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }.*At *InvalidArgument*" {
 		task . -Partial @{} { throw 'Unexpected.' }
+	}
+}
+
+# Example of a missing task. (Task preprocessing).
+task TaskNotDefined {
+	Test "*\Invoke-Build.ps1 : Task 'task1': Job 1: Task 'missing' is not defined.*At *\z.build.ps1:2 *ObjectNotFound: (missing:String)*" {
+		task task1 missing, {}
+		task . task1, {}
+	}
+}
+
+# Tasks with a cyclic reference: . -> task1 -> task2 -> task1 (oops!). (Task preprocessing).
+task CyclicReference {
+	Test "*\Invoke-Build.ps1 : Task 'task2': Job 1: Cyclic reference to 'task1'.*At *\z.build.ps1:3 *InvalidOperation: (task1:String)*" {
+		task task1 task2
+		task task2 task1
+		task . task1
 	}
 }
 
 task . `
 ScriptOutput,
 TaskAddedTwice,
-TaskNotDefined,
-CyclicReference,
 InvalidJobType,
 InvalidJobValue,
 IncrementalAndPartial,
-IncrementalInvalidHashtable
+IncrementalInvalidHashtable,
+TaskNotDefined,
+CyclicReference

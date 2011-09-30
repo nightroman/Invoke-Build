@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.23'
+	[System.Version]'1.0.24'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -76,17 +76,16 @@ function Add-BuildTask
 	[object[]]$Before
 )
 {
-	$task = $BuildData[$Name]
+	$task = $BuildList[$Name]
 	if ($task) {
 		Invoke-BuildError @"
-Task '$Name' is added twice:
-1: $(Invoke-Build-Format-Message $task.Info.PositionMessage)
-2: $(Invoke-Build-Format-Message $MyInvocation.PositionMessage)
+Task '$Name' is added twice.
+$(Invoke-Build-Format-Message $task.Info.PositionMessage)
 "@ InvalidOperation $Name
 	}
 
 	if ($Incremental -and $Partial) {
-		Invoke-BuildError "Task '$Name': Parameters Incremental and Partial cannot be used together."
+		Invoke-BuildError "Task '$Name': Parameters Incremental and Partial cannot be used together." InvalidArgument
 	}
 
 	$jobList = [System.Collections.ArrayList]@()
@@ -133,7 +132,7 @@ Task '$Name' is added twice:
 		$outputs = 	@($IO.Values)[0]
 	}
 
-	$BuildData.Add($Name, (New-Object PSObject -Property @{
+	$BuildList.Add($Name, (New-Object PSObject -Property @{
 		Name = $Name
 		Jobs = $jobList
 		Try = $tryList
@@ -157,7 +156,7 @@ function Get-BuildError
 	[string]$Task
 )
 {
-	$it = $BuildData[$Task]
+	$it = $BuildList[$Task]
 	if (!$it) {
 		Invoke-BuildError "Task '$Task' is not defined." ObjectNotFound $Task
 	}
@@ -287,16 +286,21 @@ function Write-BuildText
 }
 
 # For advanced functions to show caller locations in errors.
-function Invoke-BuildError($Message, $Category = 0, $Target)
+function Invoke-BuildError([string]$Message, $Category = 0, $Target)
 {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
 }
 
 ### End of the public zone. Exit if dot-sourced.
 if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
-	Write-Warning 'Invoke-Build is dot-sourced only in order to get its command help.'
+	@"
+Invoke-Build.ps1 Version $(Get-BuildVersion)
+Copyright (c) 2011 Roman Kuzmin
+
+Invoke-Build is dot-sourced only in order to use Get-Help for its commands:
+"@
 	'Add-BuildTask','Get-BuildProperty','Get-BuildError','Assert-BuildTrue','Invoke-BuildExec','Use-BuildAlias','Get-BuildVersion','Write-BuildText' |
-	%{ Get-Help $_ } | Format-Table Name, Synopsis -AutoSize
+	%{ Get-Help $_ } | Format-Table Name, Synopsis -AutoSize | Out-String
 	return
 }
 
@@ -322,7 +326,7 @@ function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
 	foreach($ref in $Refs) {
 		$name, $data = Invoke-Build-Reference $TaskName $ref
 
-		$task = $BuildData[$name]
+		$task = $BuildList[$name]
 		if (!$task) {
 			Invoke-BuildError "Task '$TaskName': Task '$name' is not defined." InvalidArgument $ref
 		}
@@ -467,7 +471,7 @@ function Invoke-Build-IO([object]$Task)
 			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 			${private:-task}.Outputs = & ${private:-task}.Outputs
 			if (!${private:-task}.Outputs) {
-				throw "Incremental output is empty. Expected at list one item."
+				throw 'Incremental output is empty. Expected at list one item.'
 			}
 		}
 
@@ -494,7 +498,7 @@ function Invoke-Build-IO([object]$Task)
 function Invoke-Build-Task($Name, $Path)
 {
 	# the task
-	${private:-task} = $BuildData[$Name]
+	${private:-task} = $BuildList[$Name]
 	if (!${private:-task}) { throw }
 
 	# the path, use the original name
@@ -551,7 +555,7 @@ function Invoke-Build-Task($Name, $Path)
 					}
 					# survive
 					else {
-						${private:-job} = $BuildData[${private:-job}]
+						${private:-job} = $BuildList[${private:-job}]
 						if (!${private:-job}) { throw }
 						Write-BuildText Red (${private:-job}.Error | Out-String)
 					}
@@ -639,7 +643,7 @@ function Invoke-Build-Try-Task([string]$TryTask)
 # Gets a reason to die on protected task errors.
 function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
 {
-	$task1 = $BuildData[$Task]
+	$task1 = $BuildList[$Task]
 	if (!$task1) { throw }
 
 	# ignored:
@@ -683,22 +687,22 @@ function Invoke-Build-Preprocess([object]$Task, [Collections.ArrayList]$Done)
 	foreach($job in $Task.Jobs) {
 		++$number
 		if ($job -is [string]) {
-			$task2 = $BuildData[$job]
+			$task2 = $BuildList[$job]
 
 			# missing:
 			if (!$task2) {
-				throw @"
+				Invoke-BuildError @"
 Task '$($Task.Name)': Job $($number): Task '$job' is not defined.
 $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
-"@
+"@ ObjectNotFound $job
 			}
 
 			# cyclic:
 			if ($Done.Contains($task2)) {
-				throw @"
+				Invoke-BuildError @"
 Task '$($Task.Name)': Job $($number): Cyclic reference to '$job'.
 $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
-"@
+"@ InvalidOperation $job
 			}
 
 			# recur
@@ -771,7 +775,10 @@ if (${private:-parent}) {
 		${private:-parent} = ${private:-parent}.Value
 	}
 }
-New-Variable -Name BuildData -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
+$BuildTask = $Task
+${private:cf62724cbbc24adea925ea0e73598492} = $Parameters
+New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
+New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
 New-Variable -Name BuildInfo -Option Constant -Description cf62724cbbc24adea925ea0e73598492 -Value (New-Object PSObject)
 $BuildInfo |
 Add-Member -MemberType NoteProperty -Name Tasks -Value ([System.Collections.ArrayList]@()) -PassThru |
@@ -784,20 +791,16 @@ Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name AllWarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name Started -Value ([System.DateTime]::Now) -PassThru |
 Add-Member -MemberType NoteProperty -Name Elapsed -Value $null
-New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
-$BuildTask = $Task
-${private:cf62724cbbc24adea925ea0e73598492} = $Parameters
 if ($Result) { New-Variable -Scope 1 $Result $BuildInfo -Force }
 Remove-Variable Task, File, Parameters, Result
 
 ### Start
 ${private:-state} = 0
 try {
-	### Invoke the script and restore error preference
+	### Invoke the script
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ $BuildFile"
 	${private:-it} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
-	$ErrorActionPreference = 'Stop'
 	foreach(${private:-it} in ${private:-it}) {
 		${private:-it}
 		if (${private:-it} -is [scriptblock]) {
@@ -807,19 +810,19 @@ try {
 
 	### The first task
 	if (!$BuildTask) {
-		if (!$BuildData.Count) {
-			Invoke-BuildError "There is no task in the script."
+		if (!$BuildList.Count) {
+			Invoke-BuildError "There is no task in the script." InvalidOperation $BuildFile
 		}
-		if ($BuildData.Contains('.')) {
+		if ($BuildList.Contains('.')) {
 			$BuildTask = '.'
 		}
 		else {
-			$BuildTask = $BuildData.Item(0).Name
+			$BuildTask = $BuildList.Item(0).Name
 		}
 	}
 
 	### Alter task jobs
-	foreach(${private:-task} in $BuildData.Values) {
+	foreach(${private:-task} in $BuildList.Values) {
 		${private:-list} = ${private:-task}.Before
 		if (${private:-list}) {
 			Invoke-Build-Alter ${private:-task}.Name ${private:-list}
@@ -832,7 +835,7 @@ try {
 
 	### View the tasks
 	if ($BuildTask[0] -eq '?') {
-		$BuildData.Values | .{process{
+		$BuildList.Values | .{process{
 			${private:-task} = 1 | Select-Object Task, Info
 			${private:-task}.Task = $_.Name
 			${private:-file} = $_.Info.ScriptName
@@ -849,7 +852,7 @@ $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $($
 
 	### Preprocess tasks
 	foreach(${private:-it} in $BuildTask) {
-		${private:-task} = $BuildData[${private:-it}]
+		${private:-task} = $BuildList[${private:-it}]
 		if (!${private:-task}) {
 			Invoke-BuildError "Task '${private:-it}' is not defined." ObjectNotFound ${private:-it}
 		}

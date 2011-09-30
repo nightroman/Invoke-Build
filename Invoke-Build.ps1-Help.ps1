@@ -16,8 +16,8 @@
 	scripts written in PowerShell and concepts similar to MSBuild and psake.
 
 	Build scripts define parameters, variables, and tasks. Scripts and tasks
-	are invoked with the current location set to the $BuildRoot which is the
-	directory of the main build script. $ErrorActionPreference is Stop.
+	are invoked with the current location set to the build script directory,
+	$BuildRoot. Default $ErrorActionPreference is set to 'Stop'.
 
 	Dot-source Invoke-Build only in order to get help for its functions.
 
@@ -47,9 +47,9 @@
 		* BuildRoot - build script root path
 		* WhatIf    - Invoke-Build parameter
 
-	Variables for internal use by Invoke-Build:
+	Variables for internal use by the engine:
 
-		* BuildData, BuildInfo, PSCmdlet
+		* BuildInfo, BuildList, PSCmdlet
 '@
 	parameters = @{
 		Task = @'

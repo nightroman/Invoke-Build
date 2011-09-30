@@ -7,8 +7,8 @@ Invoke-Build.ps1 - Build Automation in PowerShell
 *Invoke-Build.ps1* is a [build automation](http://en.wikipedia.org/wiki/Build_automation)
 tool implemented as a standalone PowerShell script. It invokes tasks defined in
 PowerShell build scripts using a few domain-specific language (DSL) features.
-Scripts and DSL features are similar to [*psake*](https://github.com/psake/psake).
 Build flow and concepts are similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
+Scripts are similar to [*psake*](https://github.com/psake/psake) but not compatible.
 
 The main DSL feature of build scripts is the `task`. Build tasks consist of jobs
 (references to other tasks and own scripts), conditions (Boolean expressions or
@@ -16,9 +16,9 @@ script blocks), and inputs and outputs for incremental and partial incremental
 builds (path lists or equivalent scripts).
 
 *Invoke-Build* is carefully designed for multiple calls in the same PowerShell
-session: sequential, nested, and even parallel in background jobs. It maintains
-its state completely on the stack and never changes environment variables, the
-system path, and the current process directory.
+session: sequential, nested, and even parallel. Every call maintains its state
+completely on the stack. The engine itself never changes environment variables,
+the path, the current directory, and other global settings. It's up to scripts.
 
 ## Comparison with MSBuild
 
