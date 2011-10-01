@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.24'
+	[System.Version]'1.0.25'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -194,7 +194,7 @@ function Get-BuildProperty
 function Assert-BuildTrue
 (
 	[Parameter()]
-	$Condition
+	[bool]$Condition
 	,
 	[Parameter()]
 	[string]$Message
@@ -254,10 +254,8 @@ function Use-BuildAlias
 			}
 		}
 		else {
-			if (!(Test-Path -LiteralPath $Path)) {
-				Invoke-BuildError "Directory does not exist: '$Path'." InvalidArgument $Path
-			}
-			$dir = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop)
+			try { $dir = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop) }
+			catch { Invoke-BuildError $_ InvalidArgument $Path }
 		}
 	}
 	else {
@@ -285,8 +283,15 @@ function Write-BuildText
 	$Host.UI.RawUI.ForegroundColor = $saved
 }
 
-# For advanced functions to show caller locations in errors.
-function Invoke-BuildError([string]$Message, $Category = 0, $Target)
+# Advanced function error helper, mostly for internal use.
+function Invoke-BuildError
+(
+	[string]$Message
+	,
+	[System.Management.Automation.ErrorCategory]$Category = 0
+	,
+	$Target
+)
 {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
 }
@@ -309,7 +314,7 @@ if (!$Host.UI -or !$Host.UI.RawUI) {
 	function Write-BuildText([Parameter()][System.ConsoleColor]$Color, [Parameter()][string]$Text) { $Text }
 }
 
-# Replaces Write-Warning to collect warnings.
+# Replaces Write-Warning and processes warnings.
 function Write-Warning([string]$Message)
 {
 	$Message = "WARNING: " + $Message
@@ -320,7 +325,7 @@ function Write-Warning([string]$Message)
 	$null = $BuildInfo.AllMessages.Add($Message)
 }
 
-# Adds the task to the referenced task jobs.
+# Adds an extra task to the referenced tasks.
 function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
 {
 	foreach($ref in $Refs) {
@@ -350,7 +355,7 @@ function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
 			}
 		}
 
-		$task.Jobs.Insert($index, $TaskName)
+		$jobs.Insert($index, $TaskName)
 		if (1 -eq $data) {
 			$null = $task.Try.Add($TaskName)
 		}
@@ -364,11 +369,11 @@ function Invoke-Build-Reference([string]$Task, $Ref)
 		if ($Ref.Count -ne 1) {
 			Invoke-BuildError "Task '$Task': Hashtable task reference should have one item." InvalidArgument $Ref
 		}
-		@($Ref.Keys)[0]
-		@($Ref.Values)[0]
+		, @($Ref.Keys)[0]
+		, @($Ref.Values)[0]
 	}
 	else {
-		$Ref
+		, $Ref
 	}
 }
 
@@ -408,7 +413,7 @@ function Invoke-Build-IO([object]$Task)
 		${private:-inputs} = @(& ${private:-inputs})
 	}
 
-	# resolve to paths and items
+	# resolve inputs to paths and items
 	${private:-paths} = [System.Collections.ArrayList]@()
 	try {
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
@@ -450,7 +455,7 @@ function Invoke-Build-IO([object]$Task)
 		foreach(${private:-in} in ${private:-inputs}) {
 			++${private:-index}
 			${private:-out} = ${private:-outputs}[${private:-index}]
-			if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force -ErrorAction Stop).LastWriteTime)) {
+			if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force).LastWriteTime)) {
 				$null = ${private:-inputs2}.Add(${private:-paths}[${private:-index}])
 				$null = ${private:-outputs2}.Add(${private:-out})
 			}
@@ -494,12 +499,11 @@ function Invoke-Build-IO([object]$Task)
 	}
 }
 
-# This is used internally and should not be called directly.
+# Used internally and should not be called directly.
 function Invoke-Build-Task($Name, $Path)
 {
-	# the task
+	# the task, must exist
 	${private:-task} = $BuildList[$Name]
-	if (!${private:-task}) { throw }
 
 	# the path, use the original name
 	${private:-path} = if ($Path) { "$Path\$(${private:-task}.Name)" } else { ${private:-task}.Name }
@@ -547,7 +551,7 @@ function Invoke-Build-Task($Name, $Path)
 					if (${private:-task}.Try -notcontains ${private:-job}) {
 						throw
 					}
-					# try to survive, die
+					# try to survive
 					${private:-why} = Invoke-Build-Try-Task ${private:-job}
 					if (${private:-why}) {
 						Write-BuildText Red ${private:-why}
@@ -556,7 +560,6 @@ function Invoke-Build-Task($Name, $Path)
 					# survive
 					else {
 						${private:-job} = $BuildList[${private:-job}]
-						if (!${private:-job}) { throw }
 						Write-BuildText Red (${private:-job}.Error | Out-String)
 					}
 				}
@@ -643,8 +646,8 @@ function Invoke-Build-Try-Task([string]$TryTask)
 # Gets a reason to die on protected task errors.
 function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
 {
+	# the task, must exist
 	$task1 = $BuildList[$Task]
-	if (!$task1) { throw }
 
 	# ignored:
 	if (!$task1.If) {
@@ -781,14 +784,14 @@ New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
 New-Variable -Name BuildInfo -Option Constant -Description cf62724cbbc24adea925ea0e73598492 -Value (New-Object PSObject)
 $BuildInfo |
-Add-Member -MemberType NoteProperty -Name Tasks -Value ([System.Collections.ArrayList]@()) -PassThru |
 Add-Member -MemberType NoteProperty -Name AllTasks -Value ([System.Collections.ArrayList]@()) -PassThru |
-Add-Member -MemberType NoteProperty -Name Messages -Value ([System.Collections.ArrayList]@()) -PassThru |
 Add-Member -MemberType NoteProperty -Name AllMessages -Value ([System.Collections.ArrayList]@()) -PassThru |
-Add-Member -MemberType NoteProperty -Name ErrorCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name AllErrorCount -Value 0 -PassThru |
-Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name AllWarningCount -Value 0 -PassThru |
+Add-Member -MemberType NoteProperty -Name Tasks -Value ([System.Collections.ArrayList]@()) -PassThru |
+Add-Member -MemberType NoteProperty -Name Messages -Value ([System.Collections.ArrayList]@()) -PassThru |
+Add-Member -MemberType NoteProperty -Name ErrorCount -Value 0 -PassThru |
+Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name Started -Value ([System.DateTime]::Now) -PassThru |
 Add-Member -MemberType NoteProperty -Name Elapsed -Value $null
 if ($Result) { New-Variable -Scope 1 $Result $BuildInfo -Force }

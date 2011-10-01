@@ -80,7 +80,7 @@ You should see the build process (testing) output. If the last message starts
 with *"Build completed"* then ignore all errors and warnings, they are
 intentional.
 
-    Build completed with errors. 114 tasks, 24 errors, 1 warnings, 00:00:12.6986956
+    Build completed with errors. 116 tasks, 26 errors, 1 warnings, 00:00:09.5316167
 
 This is it, the script is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise to learn the basics in order

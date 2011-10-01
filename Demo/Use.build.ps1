@@ -56,19 +56,29 @@ task ResolvedPath {
 	assert (($path -like '?:\*\MyTestAlias') -or ($path -like '\\*\MyTestAlias'))
 }
 
-# This task fails due to the invalid framework specified.
-task InvalidFramework {
-	use Framework\xyz MSBuild
-}
-
-# This task fails due to the invalid directory specified.
-task InvalidDirectory {
-	use \MissingScripts MyScript
-}
-
-# This task fails because `use` should not be dot-sourced.
+# Error: `use` should not be dot-sourced.
 task DoNotDotSource {
 	. use $null MSBuild
+}
+
+# Error: missing framework.
+task MissingFramework {
+	use Framework\MissingFramework MSBuild
+}
+
+# Error: invalid framework.
+task InvalidFramework {
+	use 'Framework\<>' MSBuild
+}
+
+# Error: missing directory.
+task MissingDirectory {
+	use \MissingDirectory MyScript
+}
+
+# Error: invalid directory.
+task InvalidDirectory {
+	use '\<>' MyScript
 }
 
 # The default task calls the others and checks that InvalidFramework and
@@ -78,15 +88,24 @@ v2.0.50727,
 v4.0.30319,
 CurrentFramework,
 ResolvedPath,
+@{DoNotDotSource=1},
+@{MissingFramework=1},
 @{InvalidFramework=1},
+@{MissingDirectory=1},
 @{InvalidDirectory=1},
-@{DoNotDotSource=1}, {
+{
+	$e = error DoNotDotSource
+	assert (($e | Out-String) -like "Use-BuildAlias : Use-BuildAlias should not be dot-sourced.* . <<<<  use *")
+
+	$e = error MissingFramework
+	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.* use <<<< *")
+
 	$e = error InvalidFramework
-	assert ("$e" -like "Directory does not exist: '*\xyz'.")
+	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\<>'.* use <<<< *")
+
+	$e = error MissingDirectory
+	assert (($e | Out-String) -like "Use-BuildAlias : Cannot find path '\MissingDirectory' because it does not exist.* use <<<< *")
 
 	$e = error InvalidDirectory
-	assert ("$e" -eq "Directory does not exist: '\MissingScripts'.")
-
-	$e = error DoNotDotSource
-	assert ("$e" -like "Use-BuildAlias should not be dot-sourced.")
+	assert (($e | Out-String) -like "Use-BuildAlias : Illegal characters in path.* use <<<< *")
 }

@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.25
+
+Amended error messages in `Use-BuildAlias` and other tweaks. New tests.
+
 ## v1.0.24
 
 Scripts can change `$ErrorActionPreference` at the script level once for all
