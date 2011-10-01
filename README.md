@@ -2,7 +2,7 @@
 Invoke-Build.ps1 - Build Automation in PowerShell
 =================================================
 
-[Together](https://github.com/downloads/nightroman/Invoke-Build/Together.png)
+![Together](https://github.com/downloads/nightroman/Invoke-Build/Together.png)
 
 ## Introduction
 
