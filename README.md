@@ -2,28 +2,38 @@
 Invoke-Build.ps1 - Build Automation in PowerShell
 =================================================
 
-![Together](https://github.com/downloads/nightroman/Invoke-Build/Together.png)
+[Together](https://github.com/downloads/nightroman/Invoke-Build/Together.png)
+
+## Introduction
 
 *Invoke-Build.ps1* is a [build automation](http://en.wikipedia.org/wiki/Build_automation)
 tool implemented as a standalone PowerShell script. It invokes tasks defined in
-PowerShell build scripts using a few domain-specific language (DSL) features.
+build scripts written in PowerShell with a few domain-specific language (DSL) constructs.
 Build flow and concepts are similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
 Scripts are similar to [*psake*](https://github.com/psake/psake) but not compatible.
-
-The main DSL feature of build scripts is the `task`. Build tasks consist of jobs
-(references to other tasks and own scripts), conditions (Boolean expressions or
-script blocks), and inputs and outputs for incremental and partial incremental
-builds (path lists or equivalent scripts).
 
 *Invoke-Build* is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel. Every call maintains its state
 completely on the stack. The engine itself never changes environment variables,
-the path, the current directory, and other global settings. It's up to scripts.
+the path, the current directory, and other global settings. All is up to build
+scripts.
+
+## What Does It Build?
+
+In fact, all it builds is a sequence of script blocks defined in scripts by
+several `task` statements with parameters which establish task names, script
+blocks, dependencies, conditions, and inputs and outputs for incremental and
+partial incremental tasks. Then this sequence of task scripts is invoked. What
+it does can be anything that can be done in PowerShell, the build engine only
+invokes it and provides supportive tools.
 
 ## Comparison with MSBuild
 
-*Invoke-Build* PowerShell scripts and *MSBuild* XML scripts use different
-syntax. But build flow, scripts structure, and concepts are very similar:
+*MSBuild* is yet another build automation tool, part of the .NET Framework.
+*Invoke-Build* is designed to be very similar. Of course their scripts use
+different languages (PowerShell and XML) and different built-in and external
+tools. But build flow, scripts structure, and main concepts are almost the
+same.
 
     MSBuild                      Invoke-Build
     -------                      ------------
@@ -44,12 +54,13 @@ syntax. But build flow, scripts structure, and concepts are very similar:
 ## Quick Start
 
 **Step 1:**
-Copy *Invoke-Build.ps1* and its help file *Invoke-Build.ps1-Help.xml* to one of
-the system path directories. As a result, the script can be called from any
-*PowerShell* code simply as `Invoke-Build`.
+Download and unzip the package, copy *Invoke-Build.ps1* and its help content
+file *Invoke-Build.ps1-Help.xml* to one of the system path directories. As a
+result, the script can be called from any PowerShell code simply as
+`Invoke-Build` and `Get-Help` should work.
 
 **Step 2:**
-Set the current location to the *Demo* directory:
+Set the current location to the unzipped *Demo* directory:
 
     Set-Location <path>/Demo
 
@@ -65,9 +76,16 @@ Invoke the default (`.`) task from the default script (it tests the engine):
 
     Invoke-Build
 
-You should see the build process output (*Invoke-Build* testing progress).
+You should see the build process (testing) output. If the last message starts
+with *"Build completed"* then ignore all errors and warnings, they are
+intentional.
 
-This is it. The script is installed and invokes build scripts.
+    Build completed with errors. 114 tasks, 24 errors, 1 warnings, 00:00:12.6986956
+
+This is it, the script is ready to build scripts. If building existing scripts
+is all that you need then you are done. Otherwise to learn the basics in order
+to create your own scripts read the
+[Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial).
 
 ## Next Steps
 
@@ -85,19 +103,19 @@ And then at functions help, for example, `Add-BuildTask` (`task`). Note that
     ...
 
 Explore build scripts in the *Demo* directory included into the package. They
-show many typical use cases, problem cases, and contain tutorial comments.
+show typical use cases, cover issues and mistakes, and have tutorial comments.
 
-*Demo* scripts might be useful in order to get familiar with the concepts but
-they are just tests, not real project build scripts. Take a look at the list of
-build scripts in some projects in
+*Demo* scripts should be useful in order to get familiar with the concepts but
+they are just tests, not real project build scripts. Some real scripts are
+listed in
 [here](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects).
 
 ## See Also
 
-* [How It Works](https://github.com/nightroman/Invoke-Build/wiki/How-It-Works)
 * [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial)
+* [How Build Works](https://github.com/nightroman/Invoke-Build/wiki/How-Build-Works)
+* [Build Result Analysis](https://github.com/nightroman/Invoke-Build/wiki/Build-Result-Analysis)
 * [Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks)
 * [Partial Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks)
-* [Build Result Analysis](https://github.com/nightroman/Invoke-Build/wiki/Build-Result-Analysis)
 * [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
 * [Build Scripts in Projects](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
