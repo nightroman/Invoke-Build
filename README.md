@@ -15,7 +15,7 @@ Scripts are similar to [*psake*](https://github.com/psake/psake) but not compati
 *Invoke-Build* is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel. Every call maintains its state
 completely on the stack. The engine itself never changes environment variables,
-the path, the current directory, and other global settings. All is up to build
+the path, the current directory, and other global settings. This is up to build
 scripts.
 
 ## What Does It Build?
@@ -54,13 +54,20 @@ same.
 ## Quick Start
 
 **Step 1:**
-Download and unzip the package, copy *Invoke-Build.ps1* and its help content
-file *Invoke-Build.ps1-Help.xml* to one of the system path directories. As a
-result, the script can be called from any PowerShell code simply as
-`Invoke-Build` and `Get-Help` should work.
+An easy way to get and update the package is
+[NuGet.exe Command Line](http://nuget.codeplex.com/releases):
+
+    NuGet install Invoke-Build
+
+Alternatively, manually download and unzip the latest package from
+[Downloads](https://github.com/nightroman/Invoke-Build/downloads).
+
+Copy *Invoke-Build.ps1* and its help content file *Invoke-Build.ps1-Help.xml*
+to one of the system path directories. As a result, the script can be called
+from any PowerShell code simply as `Invoke-Build` and `Get-Help` should work.
 
 **Step 2:**
-Set the current location to the unzipped *Demo* directory:
+Set the current location to the *Demo* directory of the package:
 
     Set-Location <path>/Demo
 
@@ -76,15 +83,15 @@ Invoke the default (`.`) task from the default script (it tests the engine):
 
     Invoke-Build
 
-You should see the build process (testing) output. If the last message starts
-with *"Build completed"* then ignore all errors and warnings, they are
-intentional.
+You should see output of the build process, testing in this case. If the last
+message starts with *"Build completed"* then ignore all errors and warnings,
+failures are tested as well and their issues are counted and reported.
 
     Build completed with errors. 116 tasks, 26 errors, 1 warnings, 00:00:09.5316167
 
-This is it, the script is ready to build scripts. If building existing scripts
-is all that you need then you are done. Otherwise to learn the basics in order
-to create your own scripts read the
+This is it, Invoke-Build is ready to build scripts. If building existing scripts
+is all that you need then you are done. Otherwise, in order to learn the basics
+and create your own scripts, read the
 [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial).
 
 ## Next Steps

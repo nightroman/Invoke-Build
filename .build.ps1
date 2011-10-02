@@ -22,32 +22,16 @@ Set-StrictMode -Version 2
 # Requires: 7z.exe
 Set-Alias 7z @(Get-Command 7z)[0].Definition
 
-# Example of imported tasks and a case of empty dummy tasks created on errors.
+# Import markdown tasks ConvertMarkdown and RemoveMarkdownHtml.
 # <https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks>
-try { Markdown.tasks.ps1 }
-catch { task ConvertMarkdown; task RemoveMarkdownHtml }
+Markdown.tasks.ps1
 
-# Example of using imported tasks (ConvertMarkdown, RemoveMarkdownHtml) and an
-# application (7z.exe). It also shows a dependent task referenced after the
-# script job.
-# The task prepares files, archives them, and then cleans.
-task Zip ConvertMarkdown, Help, UpdateScript, GitStatus, {
-	exec {
-		& 7z a Invoke-Build.$(Get-BuildVersion).zip @(
-			'Demo'
-			'Invoke-Build.ps1'
-			'Invoke-Build.ps1-Help.xml'
-			'LICENSE.txt'
-			'README.htm'
-			'Release Notes.htm'
-		)
-	}
-	Remove-Item Invoke-Build.ps1-Help.xml
-},
-RemoveMarkdownHtml
+# Remove generated HTML and temp files.
+task Clean RemoveMarkdownHtml, {
+	Remove-Item z -Force -Recurse -ErrorAction 0
+}
 
-# Example of a conditional task. It warns about not empty git status if .git
-# exists. The task is not invoked if .git is missing due to the condition.
+# Warn about not empty git status if .git exists.
 task GitStatus -If (Test-Path .git) {
 	$status = exec { git status -s }
 	if ($status) {
@@ -55,13 +39,87 @@ task GitStatus -If (Test-Path .git) {
 	}
 }
 
-# Example of 'assert'. Copies Invoke-Build.ps1 from its working location to the
-# project home. Fails if the project file is newer, it is not supposed to be.
+# Copy Invoke-Build.ps1 and help from working location to the project.
+# Fail (assert) if the project file is newer, it is not supposed to be.
 task UpdateScript {
 	$target = Get-Item Invoke-Build.ps1 -ErrorAction 0
 	$source = Get-Item (Get-Command Invoke-Build.ps1).Definition
 	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
 	Copy-Item $source.FullName, "$($source.FullName)-Help.xml" .
+}
+
+# Build the XML help file.
+task Help {
+	$script = (Get-Command Invoke-Build.ps1).Definition
+	$dir = Split-Path $script
+
+	. Helps.ps1
+	Convert-Helps Invoke-Build.ps1-Help.ps1 $dir\Invoke-Build.ps1-Help.xml
+}
+
+# Make the package in z\tools for Zip and NuGet.
+task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
+	# temp package folder
+	Remove-Item [z] -Force -Recurse
+	$null = mkdir z\tools
+
+	# copy project files
+	Copy-Item -Destination z\tools -Recurse @(
+		'Demo'
+		'Invoke-Build.ps1'
+		'LICENSE.txt'
+	)
+
+	# move generated files
+	Move-Item -Destination z\tools @(
+		'Invoke-Build.ps1-Help.xml'
+		'README.htm'
+		'Release-Notes.htm'
+	)
+}
+
+# Make the zip package.
+task Zip Package, {
+	Set-Location z\tools
+	exec { & 7z a ..\..\Invoke-Build.$(Get-BuildVersion).zip * }
+}
+
+# Make the NuGet package.
+task NuGet Package, {
+	# nuspec
+	Set-Content z\Package.nuspec @"
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>Invoke-Build</id>
+		<version>$(Get-BuildVersion)</version>
+		<authors>Roman Kuzmin</authors>
+		<owners>Roman Kuzmin</owners>
+		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<description>
+Invoke-Build.ps1 is a build automation tool implemented as a standalone
+PowerShell script. It invokes tasks defined in build scripts written in
+PowerShell with a few domain-specific language constructs. Build flow and
+concepts are similar to MSBuild. Scripts are similar to psake but not
+compatible.
+		</description>
+		<summary>Invoke-Build.ps1 - Build Automation in PowerShell</summary>
+		<tags>build powershell</tags>
+	</metadata>
+</package>
+"@
+	# pack
+	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes }
+}
+
+# Calls the tests infinitely.
+task Loop {
+	for(;;) {
+		$BuildInfo.AllTasks.Clear()
+		$BuildInfo.AllMessages.Clear()
+		Invoke-Build . Demo\.build.ps1
+	}
 }
 
 # Tests Demo scripts and compares the output with expected. It creates and
@@ -119,26 +177,9 @@ task Test {
 	}
 }
 
-# Calls the tests infinitely.
-task Loop {
-	for(;;) {
-		$BuildInfo.AllTasks.Clear()
-		$BuildInfo.AllMessages.Clear()
-		Invoke-Build . Demo\.build.ps1
-	}
-}
-
-# Build the XML help.
-task Help {
-	$script = (Get-Command Invoke-Build.ps1).Definition
-	$dir = Split-Path $script
-
-	. Helps.ps1
-	Convert-Helps Invoke-Build.ps1-Help.ps1 $dir\Invoke-Build.ps1-Help.xml
-}
-
-# The default task. It tests all and cleans.
-task . Help, Test, Zip, {
-	# remove zip
+# Test all and clean.
+task . Help, Test, Zip, NuGet, {
 	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
-}
+	Remove-Item Invoke-Build.$(Get-BuildVersion).nupkg
+},
+Clean
