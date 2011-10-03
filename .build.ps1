@@ -4,11 +4,14 @@
 	Build script (https://github.com/nightroman/Invoke-Build)
 
 .Description
-	There is nothing to compile in this project. But Invoke-Build is suitable
-	for automating all operations on project files, not just classic builds.
-
-.Link
-	Invoke-Build
+	The script automates project tasks like:
+	* Clean the project directory
+	* Run tests and compare results with expected
+	* Build the help file (PowerShell MAML format)
+	* Convert markdown files to HTML for packages
+	* Create packages
+	    * zip for the project downloads
+	    * NuGet for the NuGet Gallery
 #>
 
 param
@@ -48,11 +51,10 @@ task UpdateScript {
 	Copy-Item $source.FullName, "$($source.FullName)-Help.xml" .
 }
 
-# Build the XML help file.
+# Build the PowerShell help file.
 task Help {
 	$script = (Get-Command Invoke-Build.ps1).Definition
 	$dir = Split-Path $script
-
 	. Helps.ps1
 	Convert-Helps Invoke-Build.ps1-Help.ps1 $dir\Invoke-Build.ps1-Help.xml
 }
@@ -96,7 +98,11 @@ task NuGet Package, {
 		<authors>Roman Kuzmin</authors>
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
+		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<summary>
+Invoke-Build.ps1 - Build Automation in PowerShell
+		</summary>
 		<description>
 Invoke-Build.ps1 is a build automation tool implemented as a standalone
 PowerShell script. It invokes tasks defined in build scripts written in
@@ -104,8 +110,7 @@ PowerShell with a few domain-specific language constructs. Build flow and
 concepts are similar to MSBuild. Scripts are similar to psake but not
 compatible.
 		</description>
-		<summary>Invoke-Build.ps1 - Build Automation in PowerShell</summary>
-		<tags>build powershell</tags>
+		<tags>powershell build automation</tags>
 	</metadata>
 </package>
 "@
