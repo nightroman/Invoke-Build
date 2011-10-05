@@ -31,7 +31,7 @@ Markdown.tasks.ps1
 
 # Remove generated HTML and temp files.
 task Clean RemoveMarkdownHtml, {
-	Remove-Item z -Force -Recurse -ErrorAction 0
+	Remove-Item z, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Warn about not empty git status if .git exists.
@@ -85,6 +85,9 @@ task Zip Package, {
 	Set-Location z\tools
 	exec { & 7z a ..\..\Invoke-Build.$(Get-BuildVersion).zip * }
 }
+
+# Make both zip and NuGet packages
+task Pack Zip, NuGet
 
 # Make the NuGet package.
 task NuGet Package, {
@@ -182,9 +185,5 @@ task Test {
 	}
 }
 
-# Test all and clean.
-task . Help, Test, Zip, NuGet, {
-	Remove-Item Invoke-Build.$(Get-BuildVersion).zip
-	Remove-Item Invoke-Build.$(Get-BuildVersion).nupkg
-},
-Clean
+# Test some more and clean.
+task . Help, Test, Clean

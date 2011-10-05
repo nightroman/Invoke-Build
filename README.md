@@ -15,8 +15,8 @@ Scripts are similar to [*psake*](https://github.com/psake/psake) but not compati
 *Invoke-Build* is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel. Every call maintains its state
 completely on the stack. The engine itself never changes environment variables,
-the path, the current directory, and other global settings. This is up to build
-scripts.
+the path, the current directory, and other global settings. This is all up to
+build scripts.
 
 ## What Does It Build?
 
