@@ -8,7 +8,7 @@ Invoke-Build.ps1 - Build Automation in PowerShell
 
 *Invoke-Build.ps1* is a [build automation](http://en.wikipedia.org/wiki/Build_automation)
 tool implemented as a standalone PowerShell script. It invokes tasks defined in
-build scripts written in PowerShell with a few domain-specific language (DSL) constructs.
+build scripts written in PowerShell with a few domain-specific language (DSL) features.
 Build flow and concepts are similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
 Scripts are similar to [*psake*](https://github.com/psake/psake) but not compatible.
 
@@ -117,12 +117,4 @@ they are just tests, not real project build scripts. Some real scripts are
 listed in
 [here](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects).
 
-## See Also
-
-* [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial)
-* [How Build Works](https://github.com/nightroman/Invoke-Build/wiki/How-Build-Works)
-* [Build Result Analysis](https://github.com/nightroman/Invoke-Build/wiki/Build-Result-Analysis)
-* [Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks)
-* [Partial Incremental Tasks](https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks)
-* [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
-* [Build Scripts in Projects](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
+**See also:** [Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki)

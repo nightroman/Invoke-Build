@@ -17,6 +17,13 @@ assert ($ErrorActionPreference -eq 'Stop')
 # But scripts can change it.
 $ErrorActionPreference = 0
 
+# Also check this: $WhatIf is set on ?
+assert (('?' -ne $BuildTask) -or $WhatIf)
+
+# Assert does not require [bool], any object will do
+assert "Hi!"
+assert $Host
+
 # This task fails with a default message.
 task AssertDefault {
 	# Check $ErrorActionPreference

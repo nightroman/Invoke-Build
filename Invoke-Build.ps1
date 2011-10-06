@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.25'
+	[System.Version]'1.0.26'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -194,7 +194,7 @@ function Get-BuildProperty
 function Assert-BuildTrue
 (
 	[Parameter()]
-	[bool]$Condition
+	$Condition
 	,
 	[Parameter()]
 	[string]$Message
@@ -762,6 +762,7 @@ try {
 		}
 	}
 	$BuildFile = Convert-Path $BuildFile
+	$BuildRoot = Split-Path $BuildFile
 }
 catch {
 	Invoke-BuildError "$_" ObjectNotFound $File
@@ -778,9 +779,11 @@ if (${private:-parent}) {
 		${private:-parent} = ${private:-parent}.Value
 	}
 }
+else {
+     Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
+}
 $BuildTask = $Task
 ${private:cf62724cbbc24adea925ea0e73598492} = $Parameters
-New-Variable -Option Constant -Name BuildRoot -Value (Split-Path $BuildFile)
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
 New-Variable -Name BuildInfo -Option Constant -Description cf62724cbbc24adea925ea0e73598492 -Value (New-Object PSObject)
 $BuildInfo |
@@ -794,6 +797,7 @@ Add-Member -MemberType NoteProperty -Name ErrorCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name Started -Value ([System.DateTime]::Now) -PassThru |
 Add-Member -MemberType NoteProperty -Name Elapsed -Value $null
+if ($Task -and $Task[0] -eq '?') { $WhatIf = $true }
 if ($Result) { New-Variable -Scope 1 $Result $BuildInfo -Force }
 Remove-Variable Task, File, Parameters, Result
 
@@ -802,7 +806,7 @@ ${private:-state} = 0
 try {
 	### Invoke the script
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') @ $BuildFile"
+	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') $BuildFile"
 	${private:-it} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
 	foreach(${private:-it} in ${private:-it}) {
 		${private:-it}

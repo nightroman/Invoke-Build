@@ -1,6 +1,24 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.26
+
+New script *Build.ps1* - Invoke-Build wrapper, mostly for command prompt.
+
+Build scripts are allowed to alter `$BuildRoot`. Use cases: 1) when it is not
+suitable to keep a file where it works; 2) the same file is used for several or
+variable directories.
+
+`$WhatIf` is set to `$true` when `?` is specified as a task (view tasks).
+
+Alias `Invoke-Build` is set internally to the full path of the invoked script.
+Reasons: faster nested calls, ability to use *Invoke-Build.ps1* copies, not in
+the path, too.
+
+`assert`: allow any object as the condition, to require `[bool]` is too much.
+
+Amended the first line of the build output.
+
 ## v1.0.25
 
 Amended error messages in `Use-BuildAlias` and other tweaks. New tests.

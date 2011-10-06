@@ -31,7 +31,7 @@ Markdown.tasks.ps1
 
 # Remove generated HTML and temp files.
 task Clean RemoveMarkdownHtml, {
-	Remove-Item z, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
+	Remove-Item z, Invoke-Build.ps1-Help.xml, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Warn about not empty git status if .git exists.
@@ -49,6 +49,11 @@ task UpdateScript {
 	$source = Get-Item (Get-Command Invoke-Build.ps1).Definition
 	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
 	Copy-Item $source.FullName, "$($source.FullName)-Help.xml" .
+
+	$target = Get-Item Build.ps1 -ErrorAction 0
+	$source = Get-Item (Get-Command x.ps1).Definition
+	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
+	Copy-Item $source.FullName Build.ps1
 }
 
 # Build the PowerShell help file.
@@ -68,6 +73,7 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	# copy project files
 	Copy-Item -Destination z\tools -Recurse @(
 		'Demo'
+		'Build.ps1'
 		'Invoke-Build.ps1'
 		'LICENSE.txt'
 	)
@@ -109,7 +115,7 @@ Invoke-Build.ps1 - Build Automation in PowerShell
 		<description>
 Invoke-Build.ps1 is a build automation tool implemented as a standalone
 PowerShell script. It invokes tasks defined in build scripts written in
-PowerShell with a few domain-specific language constructs. Build flow and
+PowerShell with a few domain-specific language features. Build flow and
 concepts are similar to MSBuild. Scripts are similar to psake but not
 compatible.
 		</description>
@@ -130,10 +136,11 @@ task Loop {
 	}
 }
 
-# Tests Demo scripts and compares the output with expected. It creates and
-# keeps Invoke-Build-Test.log in $env:TEMP. Then it compares it with a new
-# output file in this directory. If they are the same then the new file is
-# removed. Otherwise an application $env:MERGE is started.
+# * Test Demo scripts and compare the output with expected. Create and keep
+# Invoke-Build-Test.log in %TEMP%. Then compare it with a new output file in
+# this directory. If they are the same then remove the new file. Otherwise
+# start %MERGE%.
+# * After the test call UpdateScript.
 task Test {
 	# invoke tests, get the output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
@@ -183,7 +190,8 @@ task Test {
 		Write-BuildText Cyan 'Saving the result as expected.'
 		Move-Item $outputPath $samplePath -Force
 	}
-}
+},
+UpdateScript
 
 # Test some more and clean.
 task . Help, Test, Clean

@@ -128,8 +128,11 @@ task Assert {
 # Test conditional tasks.
 # It shows how to invoke a build script with parameters (Debug|Release).
 task Conditional {
+	# call with Debug
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
+	# call with Release
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
+	# call default (! there was an issue !)
 	Invoke-Build TestScriptCondition Conditional.build.ps1
 }
 
