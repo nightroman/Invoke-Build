@@ -127,7 +127,7 @@ compatible.
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes }
 }
 
-# Calls the tests infinitely.
+# Calls tests infinitely to be sure it works and nothing leaks.
 task Loop {
 	for(;;) {
 		$BuildInfo.AllTasks.Clear()

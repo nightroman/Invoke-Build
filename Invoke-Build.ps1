@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.26'
+	[System.Version]'1.0.27'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -304,7 +304,7 @@ Copyright (c) 2011 Roman Kuzmin
 
 Invoke-Build is dot-sourced only in order to use Get-Help for its commands:
 "@
-	'Add-BuildTask','Get-BuildProperty','Get-BuildError','Assert-BuildTrue','Invoke-BuildExec','Use-BuildAlias','Get-BuildVersion','Write-BuildText' |
+	'task', 'use', 'exec', 'assert', 'property', 'error', 'Get-BuildVersion','Write-BuildText' |
 	%{ Get-Help $_ } | Format-Table Name, Synopsis -AutoSize | Out-String
 	return
 }
@@ -686,16 +686,14 @@ function Invoke-Build-Preprocess([object]$Task, [Collections.ArrayList]$Done)
 	$count = 1 + $Done.Add($Task)
 
 	# process task jobs
-	$number = 0
 	foreach($job in $Task.Jobs) {
-		++$number
 		if ($job -is [string]) {
 			$task2 = $BuildList[$job]
 
 			# missing:
 			if (!$task2) {
 				Invoke-BuildError @"
-Task '$($Task.Name)': Job $($number): Task '$job' is not defined.
+Task '$($Task.Name)': Task '$job' is not defined.
 $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 "@ ObjectNotFound $job
 			}
@@ -703,7 +701,7 @@ $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 			# cyclic:
 			if ($Done.Contains($task2)) {
 				Invoke-BuildError @"
-Task '$($Task.Name)': Job $($number): Cyclic reference to '$job'.
+Task '$($Task.Name)': Cyclic reference to '$job'.
 $(Invoke-Build-Format-Message $Task.Info.PositionMessage)
 "@ InvalidOperation $job
 			}
@@ -744,10 +742,10 @@ $text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed
 $ErrorActionPreference = 'Stop'
 try {
 	if ($File) {
-		$BuildFile = Resolve-Path -LiteralPath $File -ErrorAction Stop
+		$BuildFile = (Get-Item -LiteralPath $File -Force).FullName
 	}
 	else {
-		$BuildFile = @(Resolve-Path '*.build.ps1')
+		$BuildFile = @([System.IO.Directory]::GetFiles((Get-Location).ProviderPath, '*.build.ps1'))
 		if (!$BuildFile) {
 			throw "Found no '*.build.ps1' files."
 		}
@@ -755,13 +753,17 @@ try {
 			$BuildFile = $BuildFile[0]
 		}
 		else {
-			$BuildFile = $BuildFile -match '\\\.build\.ps1$'
+			$BuildFile = foreach($BuildFile in $BuildFile) {
+				if ($BuildFile.EndsWith('\.build.ps1', [System.StringComparison]::OrdinalIgnoreCase)) {
+					$BuildFile
+					break
+				}
+			}
 			if (!$BuildFile) {
 				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
 			}
 		}
 	}
-	$BuildFile = Convert-Path $BuildFile
 	$BuildRoot = Split-Path $BuildFile
 }
 catch {
@@ -783,6 +785,7 @@ else {
      Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
 }
 $BuildTask = $Task
+${private:-result} = $Result
 ${private:cf62724cbbc24adea925ea0e73598492} = $Parameters
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
 New-Variable -Name BuildInfo -Option Constant -Description cf62724cbbc24adea925ea0e73598492 -Value (New-Object PSObject)
@@ -797,8 +800,15 @@ Add-Member -MemberType NoteProperty -Name ErrorCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
 Add-Member -MemberType NoteProperty -Name Started -Value ([System.DateTime]::Now) -PassThru |
 Add-Member -MemberType NoteProperty -Name Elapsed -Value $null
-if ($Task -and $Task[0] -eq '?') { $WhatIf = $true }
-if ($Result) { New-Variable -Scope 1 $Result $BuildInfo -Force }
+if ('?' -eq $Task) { $WhatIf = $true }
+if ($Result) {
+	if ('?' -eq $Task) {
+		New-Variable -Scope 1 $Result $BuildList -Force
+	}
+	else {
+		New-Variable -Scope 1 $Result $BuildInfo -Force
+	}
+}
 Remove-Variable Task, File, Parameters, Result
 
 ### Start
@@ -815,19 +825,6 @@ try {
 		}
 	}
 
-	### The first task
-	if (!$BuildTask) {
-		if (!$BuildList.Count) {
-			Invoke-BuildError "There is no task in the script." InvalidOperation $BuildFile
-		}
-		if ($BuildList.Contains('.')) {
-			$BuildTask = '.'
-		}
-		else {
-			$BuildTask = $BuildList.Item(0).Name
-		}
-	}
-
 	### Alter task jobs
 	foreach(${private:-task} in $BuildList.Values) {
 		${private:-list} = ${private:-task}.Before
@@ -840,21 +837,29 @@ try {
 		}
 	}
 
-	### View the tasks
-	if ($BuildTask[0] -eq '?') {
-		$BuildList.Values | .{process{
-			${private:-task} = 1 | Select-Object Task, Info
-			${private:-task}.Task = $_.Name
-			${private:-file} = $_.Info.ScriptName
-			if (${private:-file} -like "$BuildRoot\*") {
-				${private:-file} = ${private:-file}.Substring($BuildRoot.Length + 1)
-			}
-			${private:-task}.Info = @"
-$(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') @ $(${private:-file}):$($_.Info.ScriptLineNumber)
+	### List the tasks
+	if ('?' -eq $BuildTask) {
+		if (!${private:-result}) {
+			foreach($_ in $BuildList.Values) {
+			@"
+$($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') $($_.Info.ScriptName):$($_.Info.ScriptLineNumber)
 "@
-			${private:-task}
-		}} | Format-Table Task, Info -AutoSize -Wrap | Out-String
+			}
+		}
 		return
+	}
+
+	### The first task
+	if (!$BuildTask) {
+		if (!$BuildList.Count) {
+			Invoke-BuildError "There is no task in the script." InvalidOperation $BuildFile
+		}
+		if ($BuildList.Contains('.')) {
+			$BuildTask = '.'
+		}
+		else {
+			$BuildTask = $BuildList.Item(0).Name
+		}
 	}
 
 	### Preprocess tasks

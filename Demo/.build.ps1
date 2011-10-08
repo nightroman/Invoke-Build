@@ -63,9 +63,14 @@ task WhatIf {
 	assert ($Result.Tasks.Count -eq 1)
 }
 
-# "Invoke-Build ?" is used in order to show tasks:
-task ShowTask {
+# "Invoke-Build ?" lists tasks: 1) text; 2) data
+task ListTask {
+	# text
 	Invoke-Build ? Assert.build.ps1
+
+	# data
+	Invoke-Build ? Assert.build.ps1 -Result Result
+	assert ($Result.Count -eq 3)
 }
 
 # ". Invoke-Build" is used in order to use Get-Help:
@@ -332,6 +337,6 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 # Tasks can be referenced between or after scripts.
 Tests,
 WhatIf,
-ShowTask,
+ListTask,
 ShowHelp,
 ShowInfo

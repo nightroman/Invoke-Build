@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.27
+
+`Invoke-Build ? -Result ...` - gets the task collection without invoking tasks.
+
+New switch `Tree` of *Build.ps1* allows to show task parents and trees.
+
+Tweaks in default file discovery and path resolution.
+
 ## v1.0.26
 
 New script *Build.ps1* - Invoke-Build wrapper, mostly for command prompt.

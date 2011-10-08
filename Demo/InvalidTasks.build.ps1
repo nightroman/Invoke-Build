@@ -94,7 +94,7 @@ task IncrementalInvalidHashtable {
 
 # Example of a missing task. (Task preprocessing).
 task TaskNotDefined {
-	Test "*\Invoke-Build.ps1 : Task 'task1': Job 1: Task 'missing' is not defined.*At *\z.build.ps1:2 *ObjectNotFound: (missing:String)*" {
+	Test "*\Invoke-Build.ps1 : Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *ObjectNotFound: (missing:String)*" {
 		task task1 missing, {}
 		task . task1, {}
 	}
@@ -102,7 +102,7 @@ task TaskNotDefined {
 
 # Tasks with a cyclic reference: . -> task1 -> task2 -> task1 (oops!). (Task preprocessing).
 task CyclicReference {
-	Test "*\Invoke-Build.ps1 : Task 'task2': Job 1: Cyclic reference to 'task1'.*At *\z.build.ps1:3 *InvalidOperation: (task1:String)*" {
+	Test "*\Invoke-Build.ps1 : Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *InvalidOperation: (task1:String)*" {
 		task task1 task2
 		task task2 task1
 		task . task1

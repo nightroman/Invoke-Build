@@ -9,8 +9,7 @@
 	command = 'Invoke-Build.ps1'
 	synopsis = 'Invoke-Build.ps1 - Build Automation in PowerShell'
 	description = @'
-	Installation: copy Invoke-Build.ps1 and its help Invoke-Build.ps1-Help.xml
-	to any directory in the path. Call it as Invoke-Build or Invoke-Build.ps1.
+	Install: copy Invoke-Build.ps1 and Invoke-Build.ps1-Help.xml to the path.
 
 	This script is a simple and yet robust build automation tool with build
 	scripts written in PowerShell and concepts similar to MSBuild and psake.
@@ -53,8 +52,9 @@
 '@
 	parameters = @{
 		Task = @'
-		One or more tasks to be invoked. Use '?' in order to view tasks.
+		One or more tasks to be invoked. Use '?' in order to list the tasks.
 		The default task is '.' if it exists, otherwise the first added task.
+		NOTE: Names starting with '?' are reserved for special engine commands.
 '@
 		File = @'
 		The build script which defines build tasks by Add-BuildTask (task).
@@ -67,7 +67,14 @@
 		The hashtable of parameters passed in the build script.
 '@
 		Result = @'
-		Name of the variable with build result information. Properties:
+		Name of the variable for the task collection or build results.
+
+		If the Task is '?' then the build script is invoked with WhatIf set,
+		tasks are collected in the result variable and build is not invoked.
+
+		Otherwise the build proceeds and the variable contains its results.
+
+		Properties:
 		* Tasks, AllTasks - own invoked tasks and with children
 		* Messages, AllMessages - own build messages and with children
 		* ErrorCount, AllErrorCount - own error count and with children
@@ -86,7 +93,7 @@
 '@
 		WhatIf = @'
 		Tells to show preprocessed tasks and their jobs instead of invoking
-		them. $WhatIf can be used in build scripts but not in tasks.
+		them. $WhatIf can be checked in build scripts but not in tasks.
 '@
 	}
 	inputs = @()
