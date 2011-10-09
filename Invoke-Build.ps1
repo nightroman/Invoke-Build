@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.27'
+	[System.Version]'1.0.28'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -754,7 +754,7 @@ try {
 		}
 		else {
 			$BuildFile = foreach($BuildFile in $BuildFile) {
-				if ($BuildFile.EndsWith('\.build.ps1', [System.StringComparison]::OrdinalIgnoreCase)) {
+				if ([System.IO.Path]::GetFileName($BuildFile) -eq '.build.ps1') {
 					$BuildFile
 					break
 				}

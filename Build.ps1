@@ -55,7 +55,7 @@ param
 	[switch]$Summary
 )
 
-# resolve the file
+### Resolve the file
 if (!$File -and !(Test-Path '*.build.ps1')) {
 
 	# call the script $env:InvokeBuildGetFile
@@ -79,7 +79,7 @@ if (!$File -and !(Test-Path '*.build.ps1')) {
 			}
 			else {
 				foreach($private:it in $private:it) {
-					if ($private:it.EndsWith('\.build.ps1', [System.StringComparison]::OrdinalIgnoreCase)) {
+					if ([System.IO.Path]::GetFileName($private:it) -eq '.build.ps1') {
 						$File = $private:it
 						break
 					}
@@ -172,12 +172,13 @@ $private:_Summary = $Summary
 $private:_Parameters = $Parameters
 Remove-Variable Task, File, Parameters, Tree, Summary
 
-# Build with results, show summary
+### Build with results
 try {
 	$Result = if ($_Summary) { 'Result' } else { $null }
 	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -WhatIf:$WhatIf -Result:$Result
 }
 finally {
+	### Show summary
 	if ($_Summary) {
 		foreach($_ in $Result.AllTasks) {
 			Write-Host ('{0,-16} {1} {2}:{3}' -f $_.Elapsed, $_.Name, $_.Info.ScriptName, $_.Info.ScriptLineNumber)

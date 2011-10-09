@@ -110,7 +110,11 @@ task NuGet Package, {
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>
-Invoke-Build.ps1 - Build Automation in PowerShell
+Invoke-Build.ps1 is a build automation tool implemented as a standalone
+PowerShell script. It invokes tasks defined in build scripts written in
+PowerShell with a few domain-specific language features. Build flow and
+concepts are similar to MSBuild. Scripts are similar to psake but not
+compatible.
 		</summary>
 		<description>
 Invoke-Build.ps1 is a build automation tool implemented as a standalone

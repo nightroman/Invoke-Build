@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.28
+
+Amended default file resolution and built-in help.
+
 ## v1.0.27
 
 `Invoke-Build ? -Result ...` - gets the task collection without invoking tasks.

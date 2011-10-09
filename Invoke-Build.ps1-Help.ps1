@@ -41,14 +41,14 @@
 
 	Exposed variables designed for build scripts and tasks:
 
-		* BuildTask - invoked task names
+		* WhatIf    - WhatIf mode, Invoke-Build parameter
+		* BuildRoot - build script directory (by default)
 		* BuildFile - build script file path
-		* BuildRoot - build script root path
-		* WhatIf    - Invoke-Build parameter
+		* BuildTask - invoked task names
 
 	Variables for internal use by the engine:
 
-		* BuildInfo, BuildList, PSCmdlet
+		* BuildInfo, BuildList
 '@
 	parameters = @{
 		Task = @'
@@ -180,11 +180,11 @@
 	This is the key function of build scripts. It creates build tasks, defines
 	dependencies and invocation order, and adds the tasks to the internal list.
 
-	Caution: Add-BuildTask is called from build scripts, not from their tasks.
+	CAUTION: Add-BuildTask is called from build scripts, not from their tasks.
 '@
 	parameters = @{
 		Name = @'
-		The task name, any string except '?' which is used to view tasks.
+		The task name. Names starting with '?' are reserved for the engine.
 
 		Note: task names are used in the protected call notation @{TaskName=1}.
 		If a name contains not trivial characters then single or double quotes
@@ -214,8 +214,8 @@
 		blocks which get them.
 
 		Automatic variables for task script jobs:
-		- [System.Collections.ArrayList]$Inputs - evaluated inputs, full paths
-		- $Outputs - evaluated outputs value exactly, [string] or [string[]]
+		- $Inputs - full input paths, ArrayList with strings
+		- $Outputs - outputs, [string] or [string[]]
 
 		See more about incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks
@@ -232,8 +232,8 @@
 		with input items piped to it.
 
 		Automatic variables for script jobs:
-		- [System.Collections.ArrayList]$Inputs - evaluated inputs, full paths
-		- [System.Collections.ArrayList]$Outputs - outputs (transformed inputs)
+		- $Inputs - full input paths, ArrayList with strings
+		- $Outputs - outputs (transformed inputs), ArrayList
 
 		In addition inside process{} blocks:
 		- $_ - the current full input path
@@ -318,8 +318,6 @@
 	command = 'Get-BuildProperty'
 	synopsis = '(property) Gets PowerShell/environment variable or a default value.'
 	description = @'
-	A build property is a value of either PowerShell or environment variable.
-
 	If the PowerShell variable with the specified name exists then its value is
 	returned. Otherwise, if the environment variable with this name exists then
 	its value is returned. Otherwise, the default value is returned or an error
@@ -368,7 +366,7 @@
 	command = 'Get-BuildVersion'
 	synopsis = 'Gets Invoke-Build version.'
 	inputs = @()
-	outputs = @()
+	outputs = @{ type = 'System.Version' }
 }
 
 ### Invoke-BuildExec command help
