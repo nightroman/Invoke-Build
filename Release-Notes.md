@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.29
+
+*Build.ps1*: New switch *Comment* (with *Tree*) tells to include comments:
+
+    # show the task tree for Pack and include task comments
+    Build Pack -Tree -Comment
+
 ## v1.0.28
 
 Amended default file resolution and built-in help.

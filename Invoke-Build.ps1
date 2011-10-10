@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.28'
+	[System.Version]'1.0.29'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml

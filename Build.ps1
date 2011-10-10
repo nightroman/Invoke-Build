@@ -15,23 +15,33 @@
 
 	Parameters are similar to Invoke-Build parameters but:
 	* The Result is not available, it is used internally.
-	* There are new switches Tree and Summary.
+	* Extra switches: Summary, Tree, Comment.
 
 .Parameter Task
-		PS> help Invoke-Build -Parameter Task
+		> help Invoke-Build -Parameter Task
+
 .Parameter File
-		PS> help Invoke-Build -Parameter File
+		> help Invoke-Build -Parameter File
+
 .Parameter Parameters
-		PS> help Invoke-Build -Parameter Parameters
+		> help Invoke-Build -Parameter Parameters
+
 .Parameter WhatIf
-		PS> help Invoke-Build -Parameter WhatIf
+		> help Invoke-Build -Parameter WhatIf
+
+.Parameter Summary
+		Tells to show task summary information after the build.
+
 .Parameter Tree
 		Tells to analyse task references and show parent tasks and child trees
-		for the specified or all tasks. It throws an error if a missing or
-		cyclic reference is found. Tasks are not invoked.
-.Parameter Summary
-		Tells to invoke build with the specified parameters as usual and output
-		task summary information after the build.
+		for the specified or all tasks. Tasks are not invoked. It throws an
+		error if missing or cyclic reference are found.
+
+		Use the switch Comment in order to show task comments as well.
+
+.Parameter Comment
+		Tells to show code comments preceding each task. It should be used
+		together with the switch Tree.
 #>
 
 param
@@ -49,10 +59,13 @@ param
 	[switch]$WhatIf
 	,
 	[Parameter()]
+	[switch]$Summary
+	,
+	[Parameter()]
 	[switch]$Tree
 	,
 	[Parameter()]
-	[switch]$Summary
+	[switch]$Comment
 )
 
 ### Resolve the file
@@ -97,13 +110,23 @@ if (!$File -and !(Test-Path '*.build.ps1')) {
 if ($Tree) {
 	function ShowTaskTree($Task, $Step, $Done)
 	{
-		# out name and references
-		$info = '    ' * $Step + $Task.Name
+		if ($Step -eq 0) {''}
+		$tab = '    ' * $Step
+		++$Step
+
+		# comment
+		if ($Comment) {
+			foreach($_ in GetTaskComment $Task) {
+				$tab + $_
+			}
+		}
+
+		# name, parents
+		$info = $tab + $Task.Name
 		if ($Task.Reference.Count) {
 			 $info += ' (' + (($Task.Reference.Keys | Sort-Object) -join ', ') + ')'
 		}
 		$info
-		++$Step
 
 		# add the task to the list
 		$count = 1 + $Done.Add($Task)
@@ -126,9 +149,39 @@ $($Task.Info.PositionMessage)
 				$Done.RemoveRange($count, $Done.Count - $count)
 			}
 			else {
-				'    ' * $Step + '{..}'
+				$tab + '    {..}'
 			}
 		}
+	}
+
+	# gets comments
+	$file2docs = @{}
+	function GetTaskComment($Task) {
+		$file = $Task.Info.ScriptName
+		$docs = $file2docs[$file]
+		if (!$docs) {
+			$docs = New-Object System.Collections.Specialized.OrderedDictionary
+			$file2docs[$file] = $docs
+			try {
+				foreach($token in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $file), [ref]$null)) {
+					if ($token.Type -eq 'Comment') {
+						$docs[$token.EndLine] = $token.Content
+					}
+				}
+			}
+			catch {
+				Write-Warning $_
+			}
+		}
+		$comment = ''
+		for($$ = $Task.Info.ScriptLineNumber - 1; $$ -ge 1; --$$) {
+			$doc = $docs[$$]
+			if (!$doc) {
+				break
+			}
+			$comment = $doc.Replace("`t", '    ') + "`n" + $comment
+		}
+		[regex]::Split($comment.TrimEnd(), '[\r\n]+')
 	}
 
 	# get the tasks as $BuildList
@@ -168,9 +221,9 @@ $($it.Info.PositionMessage)
 # Hide variables
 $private:_Task = $Task
 $private:_File = $File
-$private:_Summary = $Summary
 $private:_Parameters = $Parameters
-Remove-Variable Task, File, Parameters, Tree, Summary
+$private:_Summary = $Summary
+Remove-Variable Task, File, Parameters, Summary, Tree, Comment
 
 ### Build with results
 try {
