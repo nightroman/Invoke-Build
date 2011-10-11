@@ -48,7 +48,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.29'
+	[System.Version]'1.0.30'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -173,7 +173,7 @@ function Get-BuildProperty
 	$Value
 )
 {
-	if (Test-Path "Variable:\$Name") {
+	if (Test-Path -LiteralPath "Variable:\$Name") {
 		Get-Variable $Name -ValueOnly
 	}
 	else {
@@ -262,8 +262,8 @@ function Use-BuildAlias
 		$dir = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
 	}
 
-	foreach($it in $Name) {
-		Set-Alias $it (Join-Path $dir $it) -Scope 1
+	foreach($_ in $Name) {
+		Set-Alias $_ (Join-Path $dir $_) -Scope 1
 	}
 }
 
@@ -293,7 +293,7 @@ function Invoke-BuildError
 	$Target
 )
 {
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]$Message), $null, $Category, $Target))
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
 }
 
 ### End of the public zone. Exit if dot-sourced.
@@ -499,13 +499,13 @@ function Invoke-Build-IO([object]$Task)
 	}
 }
 
-# Used internally and should not be called directly.
+# Invokes tasks.
 function Invoke-Build-Task($Name, $Path)
 {
 	# the task, must exist
 	${private:-task} = $BuildList[$Name]
 
-	# the path, use the original name
+	# the path, use stored name
 	${private:-path} = if ($Path) { "$Path\$(${private:-task}.Name)" } else { ${private:-task}.Name }
 
 	# 1) failed?
@@ -849,8 +849,8 @@ $($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join 
 		return
 	}
 
-	### The first task
-	if (!$BuildTask) {
+	### The default task
+	if (!$BuildTask -or '.' -eq $BuildTask) {
 		if (!$BuildList.Count) {
 			Invoke-BuildError "There is no task in the script." InvalidOperation $BuildFile
 		}

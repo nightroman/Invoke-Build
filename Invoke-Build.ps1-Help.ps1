@@ -52,9 +52,12 @@
 '@
 	parameters = @{
 		Task = @'
-		One or more tasks to be invoked. Use '?' in order to list the tasks.
-		The default task is '.' if it exists, otherwise the first added task.
-		NOTE: Names starting with '?' are reserved for special engine commands.
+		One or more tasks to be invoked. If it is not specified, null, empty,
+		or equal to '.' then the task '.' is invoked if it exists, otherwise
+		the first added task, including imported, is invoked.
+
+		Names starting with '?' are reserved for special engine commands:
+		? - tells to list the tasks without invoking.
 '@
 		File = @'
 		The build script which defines build tasks by Add-BuildTask (task).

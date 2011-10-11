@@ -1,6 +1,17 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.30
+
+If the parameter `Task` is '.' and the the task '.' is not defined then the
+first added task is invoked. In other words, the argument '.' has the same
+effect as if the parameter is not specified.
+
+*Build.ps1*
+
+* Ignored the pseudo task `?` when it is used with the switch `-Tree`.
+* Switch `-Comment`: Fixed extra empty lines. It works on its own, too.
+
 ## v1.0.29
 
 *Build.ps1*: New switch *Comment* (with *Tree*) tells to include comments:

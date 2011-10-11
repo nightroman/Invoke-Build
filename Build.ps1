@@ -107,7 +107,7 @@ if (!$File -and !(Test-Path '*.build.ps1')) {
 }
 
 ### Show tree
-if ($Tree) {
+if ($Tree -or $Comment) {
 	function ShowTaskTree($Task, $Step, $Done)
 	{
 		if ($Step -eq 0) {''}
@@ -117,7 +117,9 @@ if ($Tree) {
 		# comment
 		if ($Comment) {
 			foreach($_ in GetTaskComment $Task) {
-				$tab + $_
+				if ($_) {
+					$tab + $_
+				}
 			}
 		}
 
@@ -207,7 +209,7 @@ $($it.Info.PositionMessage)
 	}
 
 	# show trees
-	foreach($name in $(if ($Task) { $Task } else { $BuildList.Keys })) {
+	foreach($name in $(if ($Task -and '?' -ne $Task) { $Task } else { $BuildList.Keys })) {
 		$it = $BuildList[$name]
 		if (!$it) {
 			throw "Task '$name' is not defined."
