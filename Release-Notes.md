@@ -1,6 +1,15 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.31
+
+`property`: variables with null values are treated as not existing. In other
+words, `property` never gets nulls. There is a little chance that this breaks.
+
+`Write-BuildText` uses try/finally to restore colors on *Ctrl-C* as well.
+
+Tweaks of the engine, output, and documentation.
+
 ## v1.0.30
 
 If the parameter `Task` is '.' and the the task '.' is not defined then the

@@ -1,21 +1,19 @@
 
 <#
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-* Invoke-Build.ps1 - Build Automation in PowerShell
-* Copyright (c) 2011 Roman Kuzmin
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+Invoke-Build.ps1 - Build Automation in PowerShell
+Copyright (c) 2011 Roman Kuzmin
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 #>
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -37,7 +35,7 @@ param
 	[switch]$WhatIf
 )
 
-### Predefined aliases
+### Aliases
 Set-Alias assert Assert-BuildTrue
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
@@ -48,7 +46,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.30'
+	[System.Version]'1.0.31'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -76,24 +74,47 @@ function Add-BuildTask
 	[object[]]$Before
 )
 {
-	$task = $BuildList[$Name]
-	if ($task) {
+	$_ = $BuildList[$Name]
+	if ($_) {
 		Invoke-BuildError @"
 Task '$Name' is added twice.
-$(Invoke-Build-Format-Message $task.Info.PositionMessage)
+$(Invoke-Build-Fix $_.Info.PositionMessage)
 "@ InvalidOperation $Name
-	}
-
-	if ($Incremental -and $Partial) {
-		Invoke-BuildError "Task '$Name': Parameters Incremental and Partial cannot be used together." InvalidArgument
 	}
 
 	$jobList = [System.Collections.ArrayList]@()
 	$tryList = [System.Collections.ArrayList]@()
 
+	$_ = Select-Object Name, Error, Started, Elapsed, Jobs, Try, If, Inputs, Outputs, Partial, After, Before, Info -InputObject 1
+	$_.Name = $Name
+	$_.Jobs = $jobList
+	$_.Try = $tryList
+	$_.If = $If
+	$_.After = $After
+	$_.Before = $Before
+	$_.Info = $MyInvocation
+
+	if ($Incremental -or $Partial) {
+		if ($Incremental -and $Partial) {
+			Invoke-BuildError "Task '$Name': Parameters Incremental and Partial cannot be used together." InvalidArgument
+		}
+		if ($Incremental) {
+			$IO = $Incremental
+		}
+		else {
+			$IO = $Partial
+			$_.Partial = $true
+		}
+		if ($IO.Count -ne 1) {
+			Invoke-BuildError "Task '$Name': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." InvalidArgument $IO
+		}
+		$_.Inputs = @($IO.Keys)[0]
+		$_.Outputs = @($IO.Values)[0]
+	}
+
 	if ($Jobs) {
 		foreach($job in $Jobs) {
-			$name2, $data = Invoke-Build-Reference $Name $job
+			$name2, $data = Invoke-Build-Pair $Name $job
 			if ($data) {
 				$null = $jobList.Add($name2)
 				if (1 -eq $data) {
@@ -109,44 +130,7 @@ $(Invoke-Build-Format-Message $task.Info.PositionMessage)
 		}
 	}
 
-	if ($Incremental) {
-		$IO = $Incremental
-		$isPartial = $false
-	}
-	elseif ($Partial) {
-		$IO = $Partial
-		$isPartial = $true
-	}
-	else {
-		$IO = $null
-		$inputs = $null
-		$outputs = $null
-		$isPartial = $false
-	}
-
-	if ($IO) {
-		if ($IO.Count -ne 1) {
-			Invoke-BuildError "Task '$Name': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." InvalidArgument $IO
-		}
-		$inputs = @($IO.Keys)[0]
-		$outputs = 	@($IO.Values)[0]
-	}
-
-	$BuildList.Add($Name, (New-Object PSObject -Property @{
-		Name = $Name
-		Jobs = $jobList
-		Try = $tryList
-		If = $If
-		Inputs = $inputs
-		Outputs = $outputs
-		Partial = $isPartial
-		After = $After
-		Before = $Before
-		Info = $MyInvocation
-		Error = $null
-		Started = $null
-		Elapsed = $null
-	}))
+	$BuildList.Add($Name, $_)
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -156,11 +140,11 @@ function Get-BuildError
 	[string]$Task
 )
 {
-	$it = $BuildList[$Task]
-	if (!$it) {
+	$_ = $BuildList[$Task]
+	if (!$_) {
 		Invoke-BuildError "Task '$Task' is not defined." ObjectNotFound $Task
 	}
-	$it.Error
+	$_.Error
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -173,21 +157,17 @@ function Get-BuildProperty
 	$Value
 )
 {
-	if (Test-Path -LiteralPath "Variable:\$Name") {
-		Get-Variable $Name -ValueOnly
-	}
-	else {
-		$variable = [System.Environment]::GetEnvironmentVariable($Name)
-		if ($variable) {
-			$variable
-		}
-		elseif ($null -ne $Value) {
-			$Value
-		}
-		else {
-			Invoke-BuildError "PowerShell or environment variable '$Name' is not defined." ObjectNotFound $Name
+	$_ = $ExecutionContext.SessionState.PSVariable.GetValue($Name)
+	if ($null -eq $_) {
+		$_ = [System.Environment]::GetEnvironmentVariable($Name)
+		if ($null -eq $_) {
+			if ($null -eq $Value) {
+				Invoke-BuildError "PowerShell or environment variable '$Name' is not defined." ObjectNotFound $Name
+			}
+			$_ = $Value
 		}
 	}
+	$_
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -217,18 +197,17 @@ function Invoke-BuildExec
 	[scriptblock]$Command
 	,
 	[Parameter()]
-	[ValidateNotNull()]
-	[int[]]$ExitCode = @(0)
+	[int[]]$ExitCode = 0
 )
 {
-	${private:-command} = $Command
-	${private:-valid} = $ExitCode
+	${private:-Command} = $Command
+	${private:-ExitCode} = $ExitCode
 	Remove-Variable Command, ExitCode
 
-	. ${private:-command}
+	. ${private:-Command}
 
-	if (${private:-valid} -notcontains $LastExitCode) {
-		Invoke-BuildError "The command {${private:-command}} exited with code $LastExitCode." InvalidResult $LastExitCode
+	if (${private:-ExitCode} -notcontains $LastExitCode) {
+		Invoke-BuildError "The command {${private:-Command}} exited with code $LastExitCode." InvalidResult $LastExitCode
 	}
 }
 
@@ -278,12 +257,15 @@ function Write-BuildText
 )
 {
 	$saved = $Host.UI.RawUI.ForegroundColor
-	$Host.UI.RawUI.ForegroundColor = $Color
-	$Text
-	$Host.UI.RawUI.ForegroundColor = $saved
+	try {
+		$Host.UI.RawUI.ForegroundColor = $Color
+		$Text
+	}
+	finally {
+		$Host.UI.RawUI.ForegroundColor = $saved
+	}
 }
 
-# Advanced function error helper, mostly for internal use.
 function Invoke-BuildError
 (
 	[string]$Message
@@ -296,44 +278,38 @@ function Invoke-BuildError
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
 }
 
-### End of the public zone. Exit if dot-sourced.
+### Dot-sourced.
 if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
 	@"
 Invoke-Build.ps1 Version $(Get-BuildVersion)
 Copyright (c) 2011 Roman Kuzmin
-
-Invoke-Build is dot-sourced only in order to use Get-Help for its commands:
 "@
 	'task', 'use', 'exec', 'assert', 'property', 'error', 'Get-BuildVersion','Write-BuildText' |
 	%{ Get-Help $_ } | Format-Table Name, Synopsis -AutoSize | Out-String
 	return
 }
 
-# With no UI use this Write-BuildText.
 if (!$Host.UI -or !$Host.UI.RawUI) {
 	function Write-BuildText([Parameter()][System.ConsoleColor]$Color, [Parameter()][string]$Text) { $Text }
 }
 
-# Replaces Write-Warning and processes warnings.
 function Write-Warning([string]$Message)
 {
-	$Message = "WARNING: " + $Message
-	Write-BuildText Yellow $Message
+	$_ = "WARNING: " + $Message
+	Write-BuildText Yellow $_
 	++$BuildInfo.WarningCount
 	++$BuildInfo.AllWarningCount
-	$null = $BuildInfo.Messages.Add($Message)
-	$null = $BuildInfo.AllMessages.Add($Message)
+	$null = $BuildInfo.Messages.Add($_)
+	$null = $BuildInfo.AllMessages.Add($_)
 }
 
-# Adds an extra task to the referenced tasks.
-function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
+function Invoke-Build-Alter([string]$Extra, $Tasks, [switch]$After)
 {
-	foreach($ref in $Refs) {
-		$name, $data = Invoke-Build-Reference $TaskName $ref
-
+	foreach($_ in $Tasks) {
+		$name, $data = Invoke-Build-Pair $Extra $_
 		$task = $BuildList[$name]
 		if (!$task) {
-			Invoke-BuildError "Task '$TaskName': Task '$name' is not defined." InvalidArgument $ref
+			Invoke-BuildError "Task '$Extra': Task '$name' is not defined." InvalidArgument $_
 		}
 
 		$jobs = $task.Jobs
@@ -355,65 +331,59 @@ function Invoke-Build-Alter([string]$TaskName, $Refs, [switch]$After)
 			}
 		}
 
-		$jobs.Insert($index, $TaskName)
+		$jobs.Insert($index, $Extra)
 		if (1 -eq $data) {
-			$null = $task.Try.Add($TaskName)
+			$null = $task.Try.Add($Extra)
 		}
 	}
 }
 
-# Gets the task name and data.
-function Invoke-Build-Reference([string]$Task, $Ref)
+function Invoke-Build-Pair([string]$Task, $Pair)
 {
-	if ($Ref -is [hashtable]) {
-		if ($Ref.Count -ne 1) {
-			Invoke-BuildError "Task '$Task': Hashtable task reference should have one item." InvalidArgument $Ref
+	if ($Pair -is [hashtable]) {
+		if ($Pair.Count -ne 1) {
+			Invoke-BuildError "Task '$Task': Hashtable task reference should have one item." InvalidArgument $Pair
 		}
-		, @($Ref.Keys)[0]
-		, @($Ref.Values)[0]
+		@($Pair.Keys)[0]
+		@($Pair.Values)[0]
 	}
 	else {
-		, $Ref
+		$Pair
 	}
 }
 
-# Heals line breaks in the position message.
-function Invoke-Build-Format-Message([string]$Message)
+function Invoke-Build-Fix([string]$Text)
 {
-	$Message.Trim().Replace("`n", "`r`n")
+	$Text.Trim().Replace("`n", "`r`n")
 }
 
-# Evaluates the If condition of the task.
 function Invoke-Build-If([object]$Task)
 {
-	${private:-task} = $Task
+	${private:-Task} = $Task
 	Remove-Variable Task
 
 	try {
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		& ${private:-task}.If
+		& ${private:-Task}.If
 	}
 	catch {
-		${private:-task}.Error = $_
+		${private:-Task}.Error = $_
 		throw
 	}
 }
 
-# Evaluates Inputs and Outputs and gets a reason to skip.
 function Invoke-Build-IO([object]$Task)
 {
-	${private:-task} = $Task
+	${private:-Task} = $Task
 	Remove-Variable Task
 
-	${private:-inputs} = ${private:-task}.Inputs
+	${private:-inputs} = ${private:-Task}.Inputs
 
-	# invoke inputs
 	if (${private:-inputs} -is [scriptblock]) {
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		${private:-inputs} = @(& ${private:-inputs})
 	}
 
-	# resolve inputs to paths and items
 	${private:-paths} = [System.Collections.ArrayList]@()
 	try {
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
@@ -429,20 +399,18 @@ function Invoke-Build-IO([object]$Task)
 		throw "Error on resolving inputs: $_"
 	}
 
-	# no input:
 	if (!${private:-paths}) {
 		'Skipping because there is no input.'
 		return
 	}
 
-	# evaluate outputs
-	if (${private:-task}.Partial) {
-		if (${private:-task}.Outputs -is [scriptblock]) {
+	if (${private:-Task}.Partial) {
+		if (${private:-Task}.Outputs -is [scriptblock]) {
 			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-			${private:-outputs} = @(${private:-paths} | & ${private:-task}.Outputs)
+			${private:-outputs} = @(${private:-paths} | & ${private:-Task}.Outputs)
 		}
 		else {
-			${private:-outputs} = @(${private:-task}.Outputs)
+			${private:-outputs} = @(${private:-Task}.Outputs)
 		}
 		if (${private:-paths}.Count -ne ${private:-outputs}.Count) {
 			throw "Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
@@ -462,26 +430,26 @@ function Invoke-Build-IO([object]$Task)
 		}
 
 		if (${private:-inputs2}) {
-			${private:-task}.Inputs = ${private:-inputs2}
-			${private:-task}.Outputs = ${private:-outputs2}
+			${private:-Task}.Inputs = ${private:-inputs2}
+			${private:-Task}.Outputs = ${private:-outputs2}
 		}
 		else {
 			'Skipping because all outputs are up-to-date with respect to the inputs.'
 		}
 	}
 	else {
-		${private:-task}.Inputs = ${private:-paths}
+		${private:-Task}.Inputs = ${private:-paths}
 
-		if (${private:-task}.Outputs -is [scriptblock]) {
+		if (${private:-Task}.Outputs -is [scriptblock]) {
 			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-			${private:-task}.Outputs = & ${private:-task}.Outputs
-			if (!${private:-task}.Outputs) {
+			${private:-Task}.Outputs = & ${private:-Task}.Outputs
+			if (!${private:-Task}.Outputs) {
 				throw 'Incremental output is empty. Expected at list one item.'
 			}
 		}
 
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		foreach(${private:-out} in ${private:-task}.Outputs) {
+		foreach(${private:-out} in ${private:-Task}.Outputs) {
 			if (!(Test-Path -LiteralPath ${private:-out} -ErrorAction Stop)) {
 				return
 			}
@@ -490,7 +458,7 @@ function Invoke-Build-IO([object]$Task)
 		${private:-time1} = ${private:-inputs} |
 		.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum
 
-		${private:-time2} = Get-Item -LiteralPath ${private:-task}.Outputs -Force -ErrorAction Stop |
+		${private:-time2} = Get-Item -LiteralPath ${private:-Task}.Outputs -Force -ErrorAction Stop |
 		.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Minimum
 
 		if (${private:-time1}.Maximum -le ${private:-time2}.Minimum) {
@@ -499,22 +467,16 @@ function Invoke-Build-IO([object]$Task)
 	}
 }
 
-# Invokes tasks.
 function Invoke-Build-Task($Name, $Path)
 {
-	# the task, must exist
 	${private:-task} = $BuildList[$Name]
+	${private:-path} = if ($Path) { "$Path/$(${private:-task}.Name)" } else { ${private:-task}.Name }
 
-	# the path, use stored name
-	${private:-path} = if ($Path) { "$Path\$(${private:-task}.Name)" } else { ${private:-task}.Name }
-
-	# 1) failed?
 	if (${private:-task}.Error) {
 		Write-BuildText Yellow "${private:-path} failed before."
 		return
 	}
 
-	# 2) done?
 	if (${private:-task}.Started) {
 		Write-BuildText DarkYellow "${private:-path} was done before."
 		return
@@ -522,7 +484,6 @@ function Invoke-Build-Task($Name, $Path)
 
 	Remove-Variable Name, Path
 
-	# condition?
 	${private:-if} = ${private:-task}.If
 	if (${private:-if} -is [scriptblock]) {
 		if (!(Invoke-Build-If ${private:-task})) {
@@ -533,7 +494,6 @@ function Invoke-Build-Task($Name, $Path)
 		return
 	}
 
-	# start
 	${private:-task}.Started = [System.DateTime]::Now
 	${private:-count} = ${private:-task}.Jobs.Count
 	${private:-number} = 0
@@ -547,17 +507,14 @@ function Invoke-Build-Task($Name, $Path)
 					Invoke-Build-Task ${private:-job} ${private:-path}
 				}
 				catch {
-					# die if not protected
 					if (${private:-task}.Try -notcontains ${private:-job}) {
 						throw
 					}
-					# try to survive
 					${private:-why} = Invoke-Build-Try-Task ${private:-job}
 					if (${private:-why}) {
 						Write-BuildText Red ${private:-why}
 						throw
 					}
-					# survive
 					else {
 						${private:-job} = $BuildList[${private:-job}]
 						Write-BuildText Red (${private:-job}.Error | Out-String)
@@ -620,10 +577,10 @@ function Invoke-Build-Task($Name, $Path)
 		${private:-task}.Error = $_
 		++$BuildInfo.ErrorCount
 		++$BuildInfo.AllErrorCount
-		${private:-text} = "ERROR: Task '${private:-path}': $_"
-		$null = $BuildInfo.Messages.Add(${private:-text})
-		$null = $BuildInfo.AllMessages.Add(${private:-text})
-		Write-BuildText Yellow (Invoke-Build-Format-Message ${private:-task}.Info.PositionMessage)
+		$_ = "ERROR: Task '${private:-path}': $_"
+		$null = $BuildInfo.Messages.Add($_)
+		$null = $BuildInfo.AllMessages.Add($_)
+		Write-BuildText Yellow (Invoke-Build-Fix ${private:-task}.Info.PositionMessage)
 		throw
 	}
 	finally {
@@ -632,7 +589,6 @@ function Invoke-Build-Task($Name, $Path)
 	}
 }
 
-# Gets a reason to die on protected task errors.
 function Invoke-Build-Try-Task([string]$TryTask)
 {
 	foreach($name in $BuildTask) {
@@ -643,27 +599,21 @@ function Invoke-Build-Try-Task([string]$TryTask)
 	}
 }
 
-# Gets a reason to die on protected task errors.
 function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
 {
-	# the task, must exist
-	$task1 = $BuildList[$Task]
-
-	# ignored:
-	if (!$task1.If) {
+	$it = $BuildList[$Task]
+	if (!$it.If) {
 		return
 	}
 
-	# has the culprit:
-	if ($task1.Jobs -contains $TryTask) {
-		if ($task1.Try -notcontains $TryTask) {
+	if ($it.Jobs -contains $TryTask) {
+		if ($it.Try -notcontains $TryTask) {
 			"Fatal: Task '$Task' calls failed '$TryTask' not protected."
 		}
 		return
 	}
 
-	# process job tasks:
-	foreach($job in $task1.Jobs) {
+	foreach($job in $it.Jobs) {
 		if ($job -is [string]) {
 			$why = Invoke-Build-Try-Tree $job $TryTask
 			if ($why) {
@@ -673,48 +623,40 @@ function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
 	}
 }
 
-# Preprocesses the task tree.
 function Invoke-Build-Preprocess([object]$Task, [Collections.ArrayList]$Done)
 {
-	# ignore?
 	if (!$Task.If) {
 		Write-BuildText DarkGray "$($Task.Name) is excluded."
 		return
 	}
 
-	# add the task to the list
 	$count = 1 + $Done.Add($Task)
 
-	# process task jobs
-	foreach($job in $Task.Jobs) {
-		if ($job -is [string]) {
-			$task2 = $BuildList[$job]
+	foreach($_ in $Task.Jobs) {
+		if ($_ -is [string]) {
+			$job = $BuildList[$_]
 
-			# missing:
-			if (!$task2) {
+			if (!$job) {
 				Invoke-BuildError @"
-Task '$($Task.Name)': Task '$job' is not defined.
-$(Invoke-Build-Format-Message $Task.Info.PositionMessage)
-"@ ObjectNotFound $job
+Task '$($Task.Name)': Task '$_' is not defined.
+$(Invoke-Build-Fix $Task.Info.PositionMessage)
+"@ ObjectNotFound $_
 			}
 
-			# cyclic:
-			if ($Done.Contains($task2)) {
+			if ($Done.Contains($job)) {
 				Invoke-BuildError @"
-Task '$($Task.Name)': Cyclic reference to '$job'.
-$(Invoke-Build-Format-Message $Task.Info.PositionMessage)
-"@ InvalidOperation $job
+Task '$($Task.Name)': Cyclic reference to '$_'.
+$(Invoke-Build-Fix $Task.Info.PositionMessage)
+"@ InvalidOperation $_
 			}
 
-			# recur
-			Invoke-Build-Preprocess $task2 $Done
+			Invoke-Build-Preprocess $job $Done
 			$Done.RemoveRange($count, $Done.Count - $count)
 		}
 	}
 }
 
-# Writes build information.
-function Invoke-Build-Write-Info($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
+function Invoke-Build-Summary($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
 {
 	if ($State -lt 0) {
 		$text = 'Build FAILED'
@@ -733,9 +675,7 @@ function Invoke-Build-Write-Info($State, $TaskCount, $ErrorCount, $WarningCount,
 		$color = 'Green'
 	}
 
-	Write-BuildText $color @"
-$text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed
-"@
+	Write-BuildText $color "$text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed"
 }
 
 ### Resolve the file
@@ -772,13 +712,13 @@ catch {
 
 ### Set the variables
 ${private:-location} = Get-Location
-${private:-parent} = Get-Variable '[B]uildInfo'
+${private:-parent} = $ExecutionContext.SessionState.PSVariable.Get('BuildInfo')
 if (${private:-parent}) {
-	if (${private:-parent}.Description -ne 'cf62724cbbc24adea925ea0e73598492') {
-		${private:-parent} = $null
+	if (${private:-parent}.Description -eq 'cf62724cbbc24adea925ea0e73598492') {
+		${private:-parent} = ${private:-parent}.Value
 	}
 	else {
-		${private:-parent} = ${private:-parent}.Value
+		${private:-parent} = $null
 	}
 }
 else {
@@ -788,18 +728,17 @@ $BuildTask = $Task
 ${private:-result} = $Result
 ${private:cf62724cbbc24adea925ea0e73598492} = $Parameters
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
-New-Variable -Name BuildInfo -Option Constant -Description cf62724cbbc24adea925ea0e73598492 -Value (New-Object PSObject)
-$BuildInfo |
-Add-Member -MemberType NoteProperty -Name AllTasks -Value ([System.Collections.ArrayList]@()) -PassThru |
-Add-Member -MemberType NoteProperty -Name AllMessages -Value ([System.Collections.ArrayList]@()) -PassThru |
-Add-Member -MemberType NoteProperty -Name AllErrorCount -Value 0 -PassThru |
-Add-Member -MemberType NoteProperty -Name AllWarningCount -Value 0 -PassThru |
-Add-Member -MemberType NoteProperty -Name Tasks -Value ([System.Collections.ArrayList]@()) -PassThru |
-Add-Member -MemberType NoteProperty -Name Messages -Value ([System.Collections.ArrayList]@()) -PassThru |
-Add-Member -MemberType NoteProperty -Name ErrorCount -Value 0 -PassThru |
-Add-Member -MemberType NoteProperty -Name WarningCount -Value 0 -PassThru |
-Add-Member -MemberType NoteProperty -Name Started -Value ([System.DateTime]::Now) -PassThru |
-Add-Member -MemberType NoteProperty -Name Elapsed -Value $null
+New-Variable -Name BuildInfo -Option Constant -Description cf62724cbbc24adea925ea0e73598492 -Value `
+(Select-Object AllTasks, AllMessages, AllErrorCount, AllWarningCount, Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed -InputObject 1)
+$BuildInfo.AllTasks = [System.Collections.ArrayList]@()
+$BuildInfo.AllMessages = [System.Collections.ArrayList]@()
+$BuildInfo.AllErrorCount = 0
+$BuildInfo.AllWarningCount = 0
+$BuildInfo.Tasks = [System.Collections.ArrayList]@()
+$BuildInfo.Messages = [System.Collections.ArrayList]@()
+$BuildInfo.ErrorCount = 0
+$BuildInfo.WarningCount = 0
+$BuildInfo.Started = [System.DateTime]::Now
 if ('?' -eq $Task) { $WhatIf = $true }
 if ($Result) {
 	if ('?' -eq $Task) {
@@ -886,7 +825,7 @@ finally {
 	if (${private:-state}) {
 		$BuildInfo.Elapsed = [System.DateTime]::Now - $BuildInfo.Started
 		$BuildInfo.Messages
-		Invoke-Build-Write-Info ${private:-state} $BuildInfo.Tasks.Count $BuildInfo.ErrorCount $BuildInfo.WarningCount $BuildInfo.Elapsed
+		Invoke-Build-Summary ${private:-state} $BuildInfo.Tasks.Count $BuildInfo.ErrorCount $BuildInfo.WarningCount $BuildInfo.Elapsed
 
 		if (${private:-parent}) {
 			${private:-parent}.AllTasks.AddRange($BuildInfo.AllTasks)
@@ -897,7 +836,7 @@ finally {
 		else {
 			if ($BuildInfo.AllTasks.Count -ne $BuildInfo.Tasks.Count) {
 				$BuildInfo.AllMessages
-				Invoke-Build-Write-Info ${private:-state} $BuildInfo.AllTasks.Count $BuildInfo.AllErrorCount $BuildInfo.AllWarningCount $BuildInfo.Elapsed
+				Invoke-Build-Summary ${private:-state} $BuildInfo.AllTasks.Count $BuildInfo.AllErrorCount $BuildInfo.AllWarningCount $BuildInfo.Elapsed
 			}
 		}
 	}

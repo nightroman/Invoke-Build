@@ -29,5 +29,10 @@ assert ((property UserName) -eq $env:USERNAME)
 $MissingProperty = property MissingProperty 42
 assert ($MissingProperty -eq 42)
 
-# Tests are done but at least one task is needed anyway.
+# Null value is treated as missing, too
+$MissingNullProperty = $null
+$MissingNullProperty = property MissingProperty 42
+assert ($MissingNullProperty -eq 42)
+
+# All is done but at least one task is needed.
 task .

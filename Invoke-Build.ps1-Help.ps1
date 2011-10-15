@@ -67,36 +67,43 @@
 		are more files then ".build.ps1" is used as the default.
 '@
 		Parameters = @'
-		The hashtable of parameters passed in the build script.
+		A hashtable of parameters passed in the build script. Scripts define
+		parameters as usual using standard PowerShell syntax. Parameters are
+		available for all tasks: for reading simply as $ParameterName, for
+		writing as $script:ParameterName. This is true as well for other
+		variables defined in the script scope.
 '@
 		Result = @'
-		Name of the variable for the task collection or build results.
+		Specifies the variable name for the task collection or build results.
 
 		If the Task is '?' then the build script is invoked with WhatIf set,
 		tasks are collected in the result variable and build is not invoked.
 
-		Otherwise the build proceeds and the variable contains its results.
+		Otherwise tasks are invoked and the variable contains the results.
 
-		Properties:
-		* Tasks, AllTasks - own invoked tasks and with children
-		* Messages, AllMessages - own build messages and with children
-		* ErrorCount, AllErrorCount - own error count and with children
-		* WarningCount, AllWarningCount - own warning count and with children
+		Result object properties:
+		* Tasks, AllTasks - own invoked tasks and with nested
+		* Messages, AllMessages - own build messages and with nested
+		* ErrorCount, AllErrorCount - own error count and with nested
+		* WarningCount, AllWarningCount - own warning count and with nested
 
-		Task objects contain various runtime information. The following
-		documented properties are valid for analysis after build:
+		Task objects contain various runtime information. These documented
+		properties are valid for analysis:
 		* Name - task name
 		* Error - task error
 		* Started - start time
 		* Elapsed - task duration
-		* Info - System.Management.Automation.InvocationInfo object:
+		* Info - System.Management.Automation.InvocationInfo:
 		- Info.ScriptName, Info.ScriptLineNumber - where the task is defined.
 
-		Other result or task properties should not be used.
+		Other result and task data should not be used. Also, these data should
+		not be changed, especially if they are requested for a nested build,
+		parent builds are still using these data.
 '@
 		WhatIf = @'
-		Tells to show preprocessed tasks and their jobs instead of invoking
-		them. $WhatIf can be checked in build scripts but not in tasks.
+		Tells to show preprocessed tasks and their scripts instead of invoking
+		them. If a script does anything but adding and configuring tasks then
+		it may check for $WhatIf and skip some actions if it is true.
 '@
 	}
 	inputs = @()
@@ -104,8 +111,8 @@
 		@{
 			type = 'Text'
 			description = @'
-		Build progress, diagnostics, warning, and error messages, various text
-		output of tasks and tools that they invoke.
+		Build process diagnostics, warning, and error messages, and output of
+		scripts, tasks, and commands that they invoke.
 '@
 		}
 	)
@@ -114,11 +121,13 @@
 			code = {
 	# Invoke the default task in the default script:
 	Invoke-Build
+	Invoke-Build .
 			}
 		}
 		@{
 			code = {
-	# Invoke the specified tasks and script with parameters:
+	# Invoke the specified tasks and script with parameters
+	# (the script .build.ps1 defines parameters by 'param', as usual)
 	Invoke-Build Build, Test .build.ps1 @{Log='log.txt'; WarningLevel=4 }
 			}
 		}
@@ -127,6 +136,13 @@
 	# Show the tasks in the default script and the specified script:
 	Invoke-Build ?
 	Invoke-Build ? Project.build.ps1
+			}
+		}
+		@{
+			code = {
+	# Get the tasks without invoking (for listing, TabExpansion, etc.)
+	Invoke-Build ? -Result Tasks
+	$Tasks
 			}
 		}
 		@{
@@ -164,7 +180,8 @@
 		}
 	)
 	links = @(
-		@{ text = 'GitHub'; URI = 'https://github.com/nightroman/Invoke-Build' }
+		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
+		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
 		@{ text = 'Add-BuildTask' }
 		@{ text = 'Assert-BuildTrue' }
 		@{ text = 'Get-BuildError' }
@@ -182,16 +199,20 @@
 	description = @'
 	This is the key function of build scripts. It creates build tasks, defines
 	dependencies and invocation order, and adds the tasks to the internal list.
+	It is called from build scripts, not from their tasks.
 
-	CAUTION: Add-BuildTask is called from build scripts, not from their tasks.
+	In fact, this function is literally all that build scripts really need.
+	Other build functions are just helpers, scripts do not have to use them.
 '@
 	parameters = @{
 		Name = @'
 		The task name. Names starting with '?' are reserved for the engine.
 
-		Note: task names are used in the protected call notation @{TaskName=1}.
-		If a name contains not trivial characters then single or double quotes
-		have to be used there. Compare: @{MakeHelp=1} vs. @{'make-help'=1}.
+		Consider to use simple names without punctuation. Task names are used
+		in the protected call notation @{TaskName = 1}. If a name is simple
+		then it is easy to use there. Compare:
+		@{TaskName = 1}    # name is used as it is
+		@{'Task-Name' = 1} # name has to be used with ' or "
 '@
 		Jobs = @'
 		The task jobs. The following types are supported:
@@ -200,21 +221,43 @@
 		* [scriptblock] - script jobs, script blocks invoked for this task.
 
 		Notation @{TaskName = Option} references the task TaskName and assigns
-		an Option to it. The only supported now option value is 1: protected
+		the Option to it. The only supported now option value is 1: protected
 		task call. It tells to ignore task errors if other active tasks also
 		call TaskName as protected.
+'@
+		After = @'
+		Tells to add this task to job lists of the specified tasks. It is added
+		after the last script job, if any, otherwise to the end.
+
+		Altered tasks are defined as names or constructs @{Task = 1}. In the
+		latter case this extra task is called protected (see the parameter
+		Jobs details).
+
+		Parameters After and Before are used in order to alter build task jobs
+		in special cases when direct changes in task jobs are not suitable.
+'@
+		Before = @'
+		Tells to add this task to job lists of the specified tasks. It is added
+		before the first script job, if any, otherwise to the end (yes, to the
+		end, so that the original dependent tasks are invoked first).
+
+		See the parameter After for details.
 '@
 		If = @'
 		Tells whether to invoke the task ($true) or skip it ($false). The
 		default is $true. The value is either a script block evaluated on
-		task invocation or a value treated as Boolean.
+		task invocation or any value treated as Boolean.
+
+		If it is a script block and the task is called several times then it is
+		possible that the task is at first skipped but still invoked later when
+		this block finally gets true.
 '@
 		Incremental = @'
 		Tells to process the task as incremental. It is a hashtable with a
 		single entry where the key is inputs and the value is outputs.
 
-		Inputs and outputs are file system items or literal paths or script
-		blocks which get them.
+		Inputs and outputs are file system items or literal paths or a script
+		block which gets them.
 
 		Automatic variables for task script jobs:
 		- $Inputs - full input paths, ArrayList with strings
@@ -226,10 +269,10 @@
 		Partial = @'
 		Tells to process the task as partial incremental. It is a hashtable
 		with a single entry where the key is inputs and the value is outputs.
-		There must be one-to-one correspondence between input and output files.
+		There must be one-to-one correspondence between input and output items.
 
-		Inputs and outputs are file system items or literal paths or script
-		blocks which get them.
+		Inputs and outputs are file system items or literal paths or a script
+		block which gets them.
 
 		If the outputs value is defined as a script block then it is invoked
 		with input items piped to it.
@@ -238,29 +281,12 @@
 		- $Inputs - full input paths, ArrayList with strings
 		- $Outputs - outputs (transformed inputs), ArrayList
 
-		In addition inside process{} blocks:
+		In addition, inside process{} blocks:
 		- $_ - the current full input path
 		- $$ - the current output path
 
 		See more about partial incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks
-'@
-		After = @'
-		Tells to add this task to the specified task job lists. The task is
-		added after the last script jobs, if any, otherwise to the end of job
-		lists.
-
-		Altered tasks are defined as names or constructs @{Task=1}. In the
-		latter case this extra task is called protected (see the parameter
-		Jobs).
-
-		After and Before are used in order to alter build task jobs in special
-		cases, normally when direct changes in task jobs are not suitable.
-'@
-		Before = @'
-		Tells to add this task to the specified task job lists. It is added
-		before the first script jobs, if any, otherwise to the end of the job
-		lists. See the parameter After for details.
 '@
 	}
 	inputs = @()
@@ -319,12 +345,13 @@
 ### Get-BuildProperty command help
 @{
 	command = 'Get-BuildProperty'
-	synopsis = '(property) Gets PowerShell/environment variable or a default value.'
+	synopsis = @'
+	(property) Gets PowerShell or environment variable or the default.
+'@
 	description = @'
-	If the PowerShell variable with the specified name exists then its value is
-	returned. Otherwise, if the environment variable with this name exists then
-	its value is returned. Otherwise, the default value is returned or an error
-	is thrown.
+	It gets the first found not null value of these three: PowerShell variable,
+	environment variable, specified default value. If nothing is defined and
+	not null then an error is thrown.
 
 	CAUTION: Properties should be used sparingly with carefully chosen names
 	that unlikely can already exist and be not related to the build script.
