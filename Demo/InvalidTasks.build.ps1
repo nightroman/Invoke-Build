@@ -30,7 +30,7 @@ function Test($ExpectedMessagePattern, $Script) {
 # Build scripts are not allowed to output script blocks. It makes no sense and,
 # more likely, indicates a script job defined after a task, not as a parameter.
 task ScriptOutput {
-	Test "*\Invoke-Build.ps1 : Build scripts should not output script blocks. Correct *\z.build.ps1*At *InvalidOperation*" {
+	Test "*\Invoke-Build.ps1 : Invalid build script syntax at the script block {*}*At *InvalidOperation*" {
 		task task1
 		'It is fine to output some data ...'
 		task task2 task1

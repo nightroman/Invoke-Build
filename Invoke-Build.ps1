@@ -46,7 +46,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.31'
+	[System.Version]'1.0.32'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -757,12 +757,10 @@ try {
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') $BuildFile"
 	${private:-it} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
-	foreach(${private:-it} in ${private:-it}) {
-		${private:-it}
-		if (${private:-it} -is [scriptblock]) {
-			Invoke-BuildError "Build scripts should not output script blocks. Correct the '$BuildFile'." InvalidOperation ${private:-it}
-		}
-	}
+	${private:-it}
+	foreach(${private:-it} in ${private:-it}) { if (${private:-it} -is [scriptblock]) {
+		Invoke-BuildError "Invalid build script syntax at the script block {${private:-it}}" InvalidOperation
+	}}
 
 	### Alter task jobs
 	foreach(${private:-task} in $BuildList.Values) {

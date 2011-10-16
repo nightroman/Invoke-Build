@@ -98,10 +98,10 @@ task ParamsValues1 {
 	$script:MyNewValue1 = 42
 }
 
-# This task depends on another task ParamsValues1. Instead of having the
-# Depends parameter (like psake does) tasks have the Jobs list. Each job is
-# either an existing task name to be executed or a script block to be executed
-# on behalf of this task. Tasks and blocks are invoked in the specified order.
+# This task invokes (depends on) tasks ParamsValues1 and SharedValueTask1 and
+# then invokes its own script. Dependent tasks and own scripts are specified by
+# the parameter Jobs. Any number of any kind of jobs and any order is allowed.
+# In particular dependent tasks can be specified after or between own scripts.
 task ParamsValues2 ParamsValues1, SharedValueTask1, {
 	"In ParamsValues2"
 	"MyParam1='$MyParam1' MyValue1='$MyValue1' MyNewValue1='$MyNewValue1' MySharedValue1='$MySharedValue1'"
@@ -166,9 +166,14 @@ task ProtectedTasks {
 	Invoke-Build . ProtectedTasks.build.ps1
 }
 
-# Test use.
+# Test 'use'.
 task Use {
 	Invoke-Build . Use.build.ps1
+}
+
+# Tests 'Build.ps1'
+task Wrapper {
+	Invoke-Build . Wrapper.build.ps1
 }
 
 # Test an empty build file.
@@ -306,23 +311,24 @@ task ShowHelp {
 
 # This task calls all test tasks.
 task Tests `
-	Dummy1,
-	Dummy2,
-	Alter,
-	Assert,
-	Conditional,
-	Empty,
-	ErrorCases,
-	Exec,
-	Incremental,
-	InvalidTasks,
-	Property,
-	ProtectedTasks,
-	Use,
-	TestDefaultParameter,
-	TestExitCode,
-	TestFunctions,
-	TestVariables
+Dummy1,
+Dummy2,
+Alter,
+Assert,
+Conditional,
+Empty,
+ErrorCases,
+Exec,
+Incremental,
+InvalidTasks,
+Property,
+ProtectedTasks,
+Use,
+Wrapper,
+TestDefaultParameter,
+TestExitCode,
+TestFunctions,
+TestVariables
 
 # This task calls all sample and the main test task.
 # By conventions it is the default task due to its name.

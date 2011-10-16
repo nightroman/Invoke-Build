@@ -1,10 +1,10 @@
 
 <#
 .Synopsis
-	Invoke-Build wrapper for command prompt.
+	Invoke-Build.ps1 wrapper.
 
 .Description
-	This script is for interactive use. Build scripts should use Invoke-Build.
+	This script calls Invoke-Build.ps1 with additional options provided.
 
 	If the parameter File is not specified and there is no *.build.ps1 files in
 	the current location then $env:InvokeBuildGetFile is called if it exists.
@@ -13,35 +13,38 @@
 	If File is still not defined then this script searches for *.build.ps1
 	candidates in the parent directory tree.
 
-	Parameters are similar to Invoke-Build parameters but:
-	* The Result is not available, it is used internally.
-	* Extra switches: Summary, Tree, Comment.
+	Parameters are similar to Invoke-Build.ps1 parameters but:
+	* There are extra switches: Summary, Tree, Comment.
+	* Result is not available, it is used internally.
 
 .Parameter Task
-		> help Invoke-Build -Parameter Task
+		See: help Invoke-Build -Parameter Task
 
 .Parameter File
-		> help Invoke-Build -Parameter File
+		See: help Invoke-Build -Parameter File
+
+		If it is not specified and there is no standard default file then this
+		script searches for more candidates. See description for details.
 
 .Parameter Parameters
-		> help Invoke-Build -Parameter Parameters
+		See: help Invoke-Build -Parameter Parameters
 
 .Parameter WhatIf
-		> help Invoke-Build -Parameter WhatIf
+		See: help Invoke-Build -Parameter WhatIf
 
 .Parameter Summary
-		Tells to show task summary information after the build.
+		Tells to show task summary information after building.
 
 .Parameter Tree
 		Tells to analyse task references and show parent tasks and child trees
-		for the specified or all tasks. Tasks are not invoked. It throws an
-		error if missing or cyclic reference are found.
+		for the specified or all tasks. Tasks are not invoked. It throws if
+		missing or cyclic task references are found.
 
 		Use the switch Comment in order to show task comments as well.
 
 .Parameter Comment
-		Tells to show code comments preceding each task. It should be used
-		together with the switch Tree.
+		Tells to show code comments preceding each task in the task tree. It is
+		used together with the switch Tree but now it works on its own as well.
 #>
 
 param
@@ -83,14 +86,11 @@ if (!$File -and !(Test-Path '*.build.ps1')) {
 				throw "Cannot find *.build.ps1 in the parent tree."
 			}
 			$private:it = @([System.IO.Directory]::GetFiles($private:dir, '*.build.ps1'))
-			if (!$private:it) {
-				throw "Found no '*.build.ps1' files."
-			}
 			if ($private:it.Count -eq 1) {
 				$File = $private:it[0]
 				break
 			}
-			else {
+			elseif ($private:it.Count -ge 2) {
 				foreach($private:it in $private:it) {
 					if ([System.IO.Path]::GetFileName($private:it) -eq '.build.ps1') {
 						$File = $private:it
@@ -130,24 +130,22 @@ if ($Tree -or $Comment) {
 		}
 		$info
 
-		# add the task to the list
+		# watch cyclic
 		$count = 1 + $Done.Add($Task)
 
-		# process task jobs
-		foreach($job in $Task.Jobs) {
-			if ($job -is [string]) {
-				$task2 = $BuildList[$job]
+		# task jobs
+		foreach($_ in $Task.Jobs) {
+			if ($_ -is [string]) {
+				$job = $BuildList[$_]
 
-				# cyclic:
-				if ($Done.Contains($task2)) {
+				if ($Done.Contains($job)) {
 					throw @"
-Task '$($Task.Name)': Cyclic reference to '$job'.
+Task '$($Task.Name)': Cyclic reference to '$_'.
 $($Task.Info.PositionMessage)
 "@
 				}
 
-				# recur
-				ShowTaskTree $task2 $Step $Done
+				ShowTaskTree $job $Step $Done
 				$Done.RemoveRange($count, $Done.Count - $count)
 			}
 			else {

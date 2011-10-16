@@ -12,7 +12,7 @@ build scripts written in PowerShell with a few domain-specific language (DSL) fe
 Build flow and concepts are similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
 Scripts are similar to [*psake*](https://github.com/psake/psake) but not compatible.
 
-*Invoke-Build* is carefully designed for multiple calls in the same PowerShell
+Invoke-Build is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel. Every call maintains its state
 completely on the stack. The engine itself never changes environment variables,
 the path, the current directory, and other global settings. This is all up to
@@ -20,20 +20,19 @@ build scripts.
 
 ## What Does It Build?
 
-In fact, all it builds is a sequence of script blocks defined in scripts by
-several `task` statements with parameters which establish task names, script
-blocks, dependencies, conditions, and inputs and outputs for incremental and
-partial incremental tasks. Then this sequence of task scripts is invoked. What
-it does can be anything that can be done in PowerShell, the build engine only
-invokes it and provides supportive tools.
+All it builds is a sequence of script blocks defined in scripts by several
+`task` statements with parameters which establish task names, script blocks,
+dependencies, conditions, and inputs and outputs for incremental and partial
+incremental tasks. Then this sequence of task scripts is invoked.
+
+[More...](https://github.com/nightroman/Invoke-Build/wiki/How-Build-Works)
 
 ## Comparison with MSBuild
 
 *MSBuild* is yet another build automation tool, part of the .NET Framework.
 *Invoke-Build* is designed to be very similar. Of course their scripts use
 different languages (PowerShell and XML) and different built-in and external
-tools. But build flow, scripts structure, and main concepts are almost the
-same.
+tools. But build flow, script structure, and main concepts are almost the same.
 
     MSBuild                      Invoke-Build
     -------                      ------------
@@ -62,9 +61,12 @@ An easy way to get and update the package is
 Alternatively, manually download and unzip the latest package from
 [Downloads](https://github.com/nightroman/Invoke-Build/downloads).
 
-Copy *Invoke-Build.ps1* and its help content file *Invoke-Build.ps1-Help.xml*
-to one of the system path directories. As a result, the script can be called
-from any PowerShell code simply as `Invoke-Build` and `Get-Help` should work.
+Copy *Invoke-Build.ps1* and its help *Invoke-Build.ps1-Help.xml* to the path.
+As a result, the script can be called from any PowerShell code simply as
+`Invoke-Build` and `Get-Help` should work.
+
+If you use the sources: they do not include *Invoke-Build.ps1-Help.xml*, get it
+with packages or build it using [Helps.ps1](https://github.com/nightroman/Helps).
 
 **Step 2:**
 Set the current location to the *Demo* directory of the package:
@@ -83,11 +85,11 @@ Invoke the default (`.`) task from the default script (it tests the engine):
 
     Invoke-Build
 
-You should see output of the build process, testing in this case. If the last
-message starts with *"Build completed"* then ignore all errors and warnings,
-failures are tested as well and their issues are counted and reported.
+You should see output of building, testing in this case. If the last message
+starts with *"Build completed"* then ignore all errors and warnings, they are
+expected during this test.
 
-    Build completed with errors. 116 tasks, 26 errors, 1 warnings, 00:00:09.5316167
+    Build completed with errors. 132 tasks, 27 errors, 1 warnings, 00:00:09.8095611
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
@@ -117,4 +119,8 @@ they are just tests, not real project build scripts. Some real scripts are
 listed in
 [here](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects).
 
-**See also:** [Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki)
+## See Also
+
+* [Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki)
+
+----

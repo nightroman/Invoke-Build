@@ -11,7 +11,7 @@
 	* Convert markdown files to HTML for packages
 	* Create packages
 	    * zip for the project downloads
-	    * NuGet for the NuGet Gallery
+	    * NuGet for the NuGet gallery
 #>
 
 param
@@ -86,14 +86,25 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	)
 }
 
+# Make and test the package scripts and clean.
+# It is not supposed to be called with other tasks.
+task PackageTest Package, {
+	# test in the package and using tools exactly from the package
+	Set-Alias Invoke-Build "$BuildRoot\z\tools\Invoke-Build.ps1"
+	Set-Location z\tools\Demo
+	..\Build.ps1
+
+	# the last sanity check: expected package item count
+	$count = (Get-ChildItem .. -Force -Recurse).Count
+	assert ($count -eq 22) $count
+},
+Clean
+
 # Make the zip package.
 task Zip Package, {
 	Set-Location z\tools
 	exec { & 7z a ..\..\Invoke-Build.$(Get-BuildVersion).zip * }
 }
-
-# Make both zip and NuGet packages
-task Pack Zip, NuGet
 
 # Make the NuGet package.
 task NuGet Package, {
@@ -131,6 +142,9 @@ compatible.
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes }
 }
 
+# Make both zip and NuGet packages
+task Pack Zip, NuGet
+
 # Calls tests infinitely to be sure it works and nothing leaks.
 task Loop {
 	for(;;) {
@@ -149,10 +163,10 @@ task Test {
 	# invoke tests, get the output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
-	assert ($result.AllTasks.Count -eq 116) $result.AllTasks.Count
-	assert ($result.Tasks.Count -eq 28) $result.Tasks.Count
+	assert ($result.AllTasks.Count -eq 132) $result.AllTasks.Count
+	assert ($result.Tasks.Count -eq 29) $result.Tasks.Count
 
-	assert ($result.AllErrorCount -eq 26) $result.AllErrorCount
+	assert ($result.AllErrorCount -eq 27) $result.AllErrorCount
 	assert ($result.ErrorCount -eq 0) $result.AllErrorCount
 
 	assert ($result.AllWarningCount -ge 1)
@@ -174,15 +188,16 @@ task Test {
 	if (Test-Path $samplePath) {
 		$sample = (Get-Content $samplePath) -join "`r`n"
 		if ($output -ceq $sample) {
-			Write-BuildText Green 'The result is expected.'
+			Write-BuildText Green 'The result is not changed.'
 			Remove-Item $outputPath
 		}
 		else {
-			Write-Warning 'The result is not the same as expected.'
+			Write-Warning 'The result is changed.'
 			if ($env:MERGE) {
 				& $env:MERGE $outputPath $samplePath
 			}
-			$toCopy = 1 -eq (Read-Host 'Save the result as expected? Yes: [1]')
+			do {} until ((Read-Host "[] Continue [1] Save the result") -match '^(1)?$')
+			$toCopy = 1 -eq $matches[1]
 		}
 	}
 	else {

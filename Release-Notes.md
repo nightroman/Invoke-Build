@@ -1,6 +1,16 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.32
+
+Amended error message on a script block returned by a build script.
+
+*Build.ps1*
+
+* Fixed search for the build script in the parent tree (it used to stop on a directory with no candidates).
+* Added yet missing *Demo/Wrapper.build.ps1* which tests all *Build.ps1* features.
+* Documentation comments.
+
 ## v1.0.31
 
 `property`: variables with null values are treated as not existing. In other
