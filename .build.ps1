@@ -10,8 +10,8 @@
 	* Build the help file (PowerShell MAML format)
 	* Convert markdown files to HTML for packages
 	* Create packages
-	    * zip for the project downloads
-	    * NuGet for the NuGet gallery
+		* zip for the project downloads
+		* NuGet for the NuGet gallery
 #>
 
 param
@@ -96,7 +96,7 @@ task PackageTest Package, {
 
 	# the last sanity check: expected package item count
 	$count = (Get-ChildItem .. -Force -Recurse).Count
-	assert ($count -eq 22) $count
+	assert ($count -eq 23) $count
 },
 Clean
 
@@ -163,10 +163,10 @@ task Test {
 	# invoke tests, get the output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
-	assert ($result.AllTasks.Count -eq 132) $result.AllTasks.Count
-	assert ($result.Tasks.Count -eq 29) $result.Tasks.Count
+	assert ($result.AllTasks.Count -eq 137) $result.AllTasks.Count
+	assert ($result.Tasks.Count -eq 30) $result.Tasks.Count
 
-	assert ($result.AllErrorCount -eq 27) $result.AllErrorCount
+	assert ($result.AllErrorCount -eq 26) $result.AllErrorCount
 	assert ($result.ErrorCount -eq 0) $result.AllErrorCount
 
 	assert ($result.AllWarningCount -ge 1)
@@ -180,7 +180,7 @@ task Test {
 	# process and save the output
 	$outputPath = 'Invoke-Build-Test.log'
 	$samplePath = "$env:TEMP\Invoke-Build-Test.log"
-	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?', '00:00:00.0000'
+	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?', '00:00:00.0000000'
 	Set-Content $outputPath $output
 
 	# compare outputs

@@ -126,7 +126,7 @@ if ($Tree -or $Comment) {
 		# name, parents
 		$info = $tab + $Task.Name
 		if ($Task.Reference.Count) {
-			 $info += ' (' + (($Task.Reference.Keys | Sort-Object) -join ', ') + ')'
+			$info += ' (' + (($Task.Reference.Keys | Sort-Object) -join ', ') + ')'
 		}
 		$info
 

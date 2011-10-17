@@ -1,6 +1,20 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.33
+
+`task`: the job list is unrolled internally. Thus, it is fine to mix single
+jobs and job collections in the same list. See new *Demo/Dynamic.build.ps1*
+which shows dynamic task creation and also covers unrolling.
+
+Removed do-not-dot-source check from `Use-BuildAlias` (`use`). Otherwise for
+consistency such paranoia checks should be in all functions, this is too much.
+
+Amended checks of varying output in *Demo/Wrapper.build.ps1*, task *Summary*.
+
+*Demo* tests: replaced some culture specific checks of core error messages with
+neutral checks. Tests are supposed to work on any machine and with any culture.
+
 ## v1.0.32
 
 Amended error message on a script block returned by a build script.

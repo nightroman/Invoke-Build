@@ -120,25 +120,29 @@ task TreeAndComment Tree, Comment
 
 task Summary {
 	# fake
-	function Write-Host($Text, $ForegroundColor) { $Text }
+	function Write-Host($Text, $ForegroundColor) { $null = $log.Add($Text) }
 
 	# build succeeds
 	@'
 task task1 { Start-Sleep -Milliseconds 1 }
 task . task1
 '@ > z\test.build.ps1
-	$log = Build . z\test.build.ps1 -Summary | Out-String
-	$log
-	assert ($log -match '00:00:00\.\d+ task1 \S+?\\test\.build\.ps1:1\r\n00:00:00\.\d+ \. \S+?\\test\.build\.ps1:2')
+	$log = [System.Collections.ArrayList]@()
+	Build . z\test.build.ps1 -Summary
+	$log = ($log -join "`r`n")
+	Write-BuildText Magenta $log
+	assert ($log -like '00:00:00*task1*\z\test.build.ps1:1*00:00:00*.*\z\test.build.ps1:2')
 
 	# build fails
 	@'
 task task1 { throw 'Demo error in task1.' }
 task . @{task1=1}
 '@ > z\test.build.ps1
-	$log = Build . z\test.build.ps1 -Summary | Out-String
-	$log
-	assert ($log -match '(?s)00:00:00\.\d+ task1 \S+?\\test\.build\.ps1:1\r\nDemo error in task1.*00:00:00\.\d+ \. \S+?\\test\.build\.ps1:2')
+	$log = [System.Collections.ArrayList]@()
+	Build . z\test.build.ps1 -Summary
+	$log = ($log -join "`r`n")
+	Write-BuildText Magenta $log
+	assert ($log -like '00:00:00*task1*\z\test.build.ps1:1*Demo error in task1.*00:00:00*.*\z\test.build.ps1:2')
 }
 
 # Call tests and clean.

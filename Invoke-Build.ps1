@@ -19,20 +19,11 @@ limitations under the License.
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 param
 (
-	[Parameter(Position = 0)]
-	[string[]]$Task
-	,
-	[Parameter(Position = 1)]
-	[string]$File
-	,
-	[Parameter(Position = 2)]
-	[hashtable]$Parameters
-	,
-	[Parameter()]
-	[string]$Result
-	,
-	[Parameter()]
-	[switch]$WhatIf
+	[Parameter(Position = 0)][string[]]$Task,
+	[Parameter(Position = 1)][string]$File,
+	[Parameter(Position = 2)][hashtable]$Parameters,
+	[Parameter()][string]$Result,
+	[Parameter()][switch]$WhatIf
 )
 
 ### Aliases
@@ -46,53 +37,40 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.32'
+	[System.Version]'1.0.33'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
 (
-	[Parameter(Position = 0, Mandatory = $true)]
-	[string]$Name
-	,
-	[Parameter(Position = 1)]
-	[object[]]$Jobs
-	,
-	[Parameter()]
-	[object]$If = $true
-	,
-	[Parameter()]
-	[hashtable]$Incremental
-	,
-	[Parameter()]
-	[hashtable]$Partial
-	,
-	[Parameter()]
-	[object[]]$After
-	,
-	[Parameter()]
-	[object[]]$Before
+	[Parameter(Position = 0, Mandatory = $true)][string]$Name,
+	[Parameter(Position = 1)][object[]]$Jobs,
+	[Parameter()][object]$If = $true,
+	[Parameter()][hashtable]$Incremental,
+	[Parameter()][hashtable]$Partial,
+	[Parameter()][object[]]$After,
+	[Parameter()][object[]]$Before
 )
 {
-	$_ = $BuildList[$Name]
-	if ($_) {
+	$task = $BuildList[$Name]
+	if ($task) {
 		Invoke-BuildError @"
 Task '$Name' is added twice.
-$(Invoke-Build-Fix $_.Info.PositionMessage)
+$(Invoke-Build-Fix $task.Info.PositionMessage)
 "@ InvalidOperation $Name
 	}
 
 	$jobList = [System.Collections.ArrayList]@()
 	$tryList = [System.Collections.ArrayList]@()
 
-	$_ = Select-Object Name, Error, Started, Elapsed, Jobs, Try, If, Inputs, Outputs, Partial, After, Before, Info -InputObject 1
-	$_.Name = $Name
-	$_.Jobs = $jobList
-	$_.Try = $tryList
-	$_.If = $If
-	$_.After = $After
-	$_.Before = $Before
-	$_.Info = $MyInvocation
+	$task = Select-Object Name, Error, Started, Elapsed, Jobs, Try, If, Inputs, Outputs, Partial, After, Before, Info -InputObject 1
+	$task.Name = $Name
+	$task.Jobs = $jobList
+	$task.Try = $tryList
+	$task.If = $If
+	$task.After = $After
+	$task.Before = $Before
+	$task.Info = $MyInvocation
 
 	if ($Incremental -or $Partial) {
 		if ($Incremental -and $Partial) {
@@ -103,41 +81,38 @@ $(Invoke-Build-Fix $_.Info.PositionMessage)
 		}
 		else {
 			$IO = $Partial
-			$_.Partial = $true
+			$task.Partial = $true
 		}
 		if ($IO.Count -ne 1) {
 			Invoke-BuildError "Task '$Name': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." InvalidArgument $IO
 		}
-		$_.Inputs = @($IO.Keys)[0]
-		$_.Outputs = @($IO.Values)[0]
+		$task.Inputs = @($IO.Keys)[0]
+		$task.Outputs = @($IO.Values)[0]
 	}
 
-	if ($Jobs) {
-		foreach($job in $Jobs) {
-			$name2, $data = Invoke-Build-Pair $Name $job
-			if ($data) {
-				$null = $jobList.Add($name2)
-				if (1 -eq $data) {
-					$null = $tryList.Add($name2)
-				}
-			}
-			elseif (($job -is [string]) -or ($job -is [scriptblock])) {
-				$null = $jobList.Add($job)
-			}
-			else {
-				Invoke-BuildError "Task '$Name': Invalid job type." InvalidArgument $job
+	if ($Jobs) { foreach($_ in $Jobs) { foreach($_ in $_) {
+		$name2, $data = Invoke-Build-Pair $Name $_
+		if ($data) {
+			$null = $jobList.Add($name2)
+			if (1 -eq $data) {
+				$null = $tryList.Add($name2)
 			}
 		}
-	}
+		elseif (($_ -is [string]) -or ($_ -is [scriptblock])) {
+			$null = $jobList.Add($_)
+		}
+		else {
+			Invoke-BuildError "Task '$Name': Invalid job type." InvalidArgument $_
+		}
+	}}}
 
-	$BuildList.Add($Name, $_)
+	$BuildList.Add($Name, $task)
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildError
 (
-	[Parameter(Mandatory = $true)]
-	[string]$Task
+	[Parameter(Mandatory = $true)][string]$Task
 )
 {
 	$_ = $BuildList[$Task]
@@ -150,11 +125,8 @@ function Get-BuildError
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildProperty
 (
-	[Parameter(Mandatory = $true)]
-	[string]$Name
-	,
-	[Parameter()]
-	$Value
+	[Parameter(Mandatory = $true)][string]$Name,
+	[Parameter()]$Value
 )
 {
 	$_ = $ExecutionContext.SessionState.PSVariable.GetValue($Name)
@@ -173,11 +145,8 @@ function Get-BuildProperty
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Assert-BuildTrue
 (
-	[Parameter()]
-	$Condition
-	,
-	[Parameter()]
-	[string]$Message
+	[Parameter()]$Condition,
+	[Parameter()][string]$Message
 )
 {
 	if (!$Condition) {
@@ -193,11 +162,8 @@ function Assert-BuildTrue
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Invoke-BuildExec
 (
-	[Parameter(Mandatory = $true)]
-	[scriptblock]$Command
-	,
-	[Parameter()]
-	[int[]]$ExitCode = 0
+	[Parameter(Mandatory = $true)][scriptblock]$Command,
+	[Parameter()][int[]]$ExitCode = 0
 )
 {
 	${private:-Command} = $Command
@@ -214,31 +180,22 @@ function Invoke-BuildExec
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Use-BuildAlias
 (
-	[Parameter()]
-	[string]$Path
-	,
-	[Parameter(Mandatory = $true)]
-	[string[]]$Name
+	[Parameter()][string]$Path,
+	[Parameter(Mandatory = $true)][string[]]$Name
 )
 {
-	if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
-		Invoke-BuildError "Use-BuildAlias should not be dot-sourced." InvalidOperation
+	if (!$Path) {
+		$dir = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
 	}
-
-	if ($Path) {
-		if ($Path.StartsWith('Framework', [System.StringComparison]::OrdinalIgnoreCase)) {
-			$dir = "$env:windir\Microsoft.NET\$Path"
-			if (![System.IO.Directory]::Exists($dir)) {
-				Invoke-BuildError "Directory does not exist: '$dir'." InvalidArgument $Path
-			}
-		}
-		else {
-			try { $dir = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop) }
-			catch { Invoke-BuildError $_ InvalidArgument $Path }
+	elseif ($Path.StartsWith('Framework', [System.StringComparison]::OrdinalIgnoreCase)) {
+		$dir = "$env:windir\Microsoft.NET\$Path"
+		if (![System.IO.Directory]::Exists($dir)) {
+			Invoke-BuildError "Directory does not exist: '$dir'." InvalidArgument $Path
 		}
 	}
 	else {
-		$dir = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
+		try { $dir = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop) }
+		catch { Invoke-BuildError $_ InvalidArgument $Path }
 	}
 
 	foreach($_ in $Name) {
@@ -249,11 +206,8 @@ function Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Write-BuildText
 (
-	[Parameter()]
-	[System.ConsoleColor]$Color
-	,
-	[Parameter()]
-	[string]$Text
+	[Parameter()][System.ConsoleColor]$Color,
+	[Parameter()][string]$Text
 )
 {
 	$saved = $Host.UI.RawUI.ForegroundColor
@@ -266,14 +220,7 @@ function Write-BuildText
 	}
 }
 
-function Invoke-BuildError
-(
-	[string]$Message
-	,
-	[System.Management.Automation.ErrorCategory]$Category = 0
-	,
-	$Target
-)
+function Invoke-BuildError([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0, $Target)
 {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
 }
@@ -722,7 +669,7 @@ if (${private:-parent}) {
 	}
 }
 else {
-     Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
+	Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
 }
 $BuildTask = $Task
 ${private:-result} = $Result

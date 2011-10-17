@@ -56,11 +56,6 @@ task ResolvedPath {
 	assert (($path -like '?:\*\MyTestAlias') -or ($path -like '\\*\MyTestAlias'))
 }
 
-# Error: `use` should not be dot-sourced.
-task DoNotDotSource {
-	. use $null MSBuild
-}
-
 # Error: missing framework.
 task MissingFramework {
 	use Framework\MissingFramework MSBuild
@@ -88,15 +83,11 @@ v2.0.50727,
 v4.0.30319,
 CurrentFramework,
 ResolvedPath,
-@{DoNotDotSource=1},
 @{MissingFramework=1},
 @{InvalidFramework=1},
 @{MissingDirectory=1},
 @{InvalidDirectory=1},
 {
-	$e = error DoNotDotSource
-	assert (($e | Out-String) -like "Use-BuildAlias : Use-BuildAlias should not be dot-sourced.* . <<<<  use *")
-
 	$e = error MissingFramework
 	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.* use <<<< *")
 
@@ -104,8 +95,10 @@ ResolvedPath,
 	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\<>'.* use <<<< *")
 
 	$e = error MissingDirectory
-	assert (($e | Out-String) -like "Use-BuildAlias : Cannot find path '\MissingDirectory' because it does not exist.* use <<<< *")
+	assert (($e | Out-String) -like "Use-BuildAlias : * '\MissingDirectory' * use <<<< *")
+	assert ($e.TargetObject -eq '\MissingDirectory')
 
 	$e = error InvalidDirectory
-	assert (($e | Out-String) -like "Use-BuildAlias : Illegal characters in path.* use <<<< *")
+	assert (($e | Out-String) -like "Use-BuildAlias : * use <<<< *")
+	assert ($e.TargetObject -eq '\<>')
 }

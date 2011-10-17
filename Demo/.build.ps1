@@ -141,6 +141,20 @@ task Conditional {
 	Invoke-Build TestScriptCondition Conditional.build.ps1
 }
 
+# Test dynamic tasks (! and some other issues !).
+task Dynamic {
+	# first, just request the task list and test it
+	Invoke-Build ? Dynamic.build.ps1 -Result tasks
+	assert ($tasks.Count -eq 5)
+	$last = $tasks.Item(4)
+	assert ($last.Name -eq '.')
+	assert ($last.Jobs.Count -eq 4)
+
+	# invoke with results and test: 5 tasks are done
+	Invoke-Build . Dynamic.build.ps1 -Result result
+	assert ($result.Tasks.Count -eq 5)
+}
+
 # Test exec.
 task Exec {
 	Invoke-Build . Exec.build.ps1
@@ -198,8 +212,8 @@ task ErrorCases {
 	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output is empty. Expected at list one item.*OperationStopped*"
 	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0.*OperationStopped*"
 
-	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist.*OperationStopped*"
-	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Error on resolving inputs: Cannot find path 'missing' because it does not exist.*OperationStopped*"
+	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Error on resolving inputs:*'missing'*OperationStopped*"
+	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Error on resolving inputs:*'missing'*OperationStopped*"
 
 	Test-Issue MissingProperty ErrorCases.build.ps1 @'
 Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound: (*String)*
@@ -316,6 +330,7 @@ Dummy2,
 Alter,
 Assert,
 Conditional,
+Dynamic,
 Empty,
 ErrorCases,
 Exec,

@@ -85,11 +85,12 @@ Invoke the default (`.`) task from the default script (it tests the engine):
 
     Invoke-Build
 
-You should see output of building, testing in this case. If the last message
-starts with *"Build completed"* then ignore all errors and warnings, they are
-expected during this test.
+You should see output the build process (testing). If the last message starts
+with *"Build completed"* then ignore all errors and warnings, they are expected
+during this test. If it starts with "*Build FAILED*" please submit an issue
+(for example message checks may depend on UI culture, only en-US was tested).
 
-    Build completed with errors. 132 tasks, 27 errors, 1 warnings, 00:00:09.8095611
+    Build completed with errors. 137 tasks, 26 errors, 1 warnings, 00:00:12
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics

@@ -224,6 +224,9 @@
 		the Option to it. The only supported now option value is 1: protected
 		task call. It tells to ignore task errors if other active tasks also
 		call TaskName as protected.
+
+		It is fine to mix single jobs and dynamically created collections of
+		jobs in the same argument. Collection items are unrolled internally.
 '@
 		After = @'
 		Tells to add this task to job lists of the specified tasks. It is added
