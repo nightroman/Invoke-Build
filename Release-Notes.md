@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.34
+
+*Build.ps1*: fixed not standard PowerShell line separators in messages with
+InvocationInfo. Added two more tests to *Demo/Wrapper.build.ps1*.
+
+Minor tweaks.
+
 ## v1.0.33
 
 `task`: the job list is unrolled internally. Thus, it is fine to mix single

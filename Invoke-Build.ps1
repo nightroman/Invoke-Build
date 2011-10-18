@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.33'
+	[System.Version]'1.0.34'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -246,11 +246,10 @@ function Write-Warning([string]$Message)
 	Write-BuildText Yellow $_
 	++$BuildInfo.WarningCount
 	++$BuildInfo.AllWarningCount
-	$null = $BuildInfo.Messages.Add($_)
-	$null = $BuildInfo.AllMessages.Add($_)
+	$null = $BuildInfo.Messages.Add($_), $BuildInfo.AllMessages.Add($_)
 }
 
-function Invoke-Build-Alter([string]$Extra, $Tasks, [switch]$After)
+function Invoke-Build-Alter($Extra, $Tasks, [switch]$After)
 {
 	foreach($_ in $Tasks) {
 		$name, $data = Invoke-Build-Pair $Extra $_
@@ -285,7 +284,7 @@ function Invoke-Build-Alter([string]$Extra, $Tasks, [switch]$After)
 	}
 }
 
-function Invoke-Build-Pair([string]$Task, $Pair)
+function Invoke-Build-Pair($Task, $Pair)
 {
 	if ($Pair -is [hashtable]) {
 		if ($Pair.Count -ne 1) {
@@ -304,7 +303,7 @@ function Invoke-Build-Fix([string]$Text)
 	$Text.Trim().Replace("`n", "`r`n")
 }
 
-function Invoke-Build-If([object]$Task)
+function Invoke-Build-If($Task)
 {
 	${private:-Task} = $Task
 	Remove-Variable Task
@@ -319,7 +318,7 @@ function Invoke-Build-If([object]$Task)
 	}
 }
 
-function Invoke-Build-IO([object]$Task)
+function Invoke-Build-IO($Task)
 {
 	${private:-Task} = $Task
 	Remove-Variable Task
@@ -371,8 +370,7 @@ function Invoke-Build-IO([object]$Task)
 			++${private:-index}
 			${private:-out} = ${private:-outputs}[${private:-index}]
 			if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force).LastWriteTime)) {
-				$null = ${private:-inputs2}.Add(${private:-paths}[${private:-index}])
-				$null = ${private:-outputs2}.Add(${private:-out})
+				$null = ${private:-inputs2}.Add(${private:-paths}[${private:-index}]), ${private:-outputs2}.Add(${private:-out})
 			}
 		}
 
@@ -515,9 +513,9 @@ function Invoke-Build-Task($Name, $Path)
 			}
 		}
 
-		${private:-elapsed} = [System.DateTime]::Now - ${private:-task}.Started
-		${private:-task}.Elapsed = ${private:-elapsed}
-		Write-BuildText DarkYellow "${private:-path} is done, ${private:-elapsed}"
+		$_ = [System.DateTime]::Now - ${private:-task}.Started
+		${private:-task}.Elapsed = $_
+		Write-BuildText DarkYellow "${private:-path} is done, $_"
 	}
 	catch {
 		${private:-task}.Elapsed = [System.DateTime]::Now - ${private:-task}.Started
@@ -525,28 +523,26 @@ function Invoke-Build-Task($Name, $Path)
 		++$BuildInfo.ErrorCount
 		++$BuildInfo.AllErrorCount
 		$_ = "ERROR: Task '${private:-path}': $_"
-		$null = $BuildInfo.Messages.Add($_)
-		$null = $BuildInfo.AllMessages.Add($_)
+		$null = $BuildInfo.Messages.Add($_), $BuildInfo.AllMessages.Add($_)
 		Write-BuildText Yellow (Invoke-Build-Fix ${private:-task}.Info.PositionMessage)
 		throw
 	}
 	finally {
-		$null = $BuildInfo.Tasks.Add(${private:-task})
-		$null = $BuildInfo.AllTasks.Add(${private:-task})
+		$null = $BuildInfo.Tasks.Add(${private:-task}), $BuildInfo.AllTasks.Add(${private:-task})
 	}
 }
 
-function Invoke-Build-Try-Task([string]$TryTask)
+function Invoke-Build-Try-Task($TryTask)
 {
-	foreach($name in $BuildTask) {
-		$why = Invoke-Build-Try-Tree $name $TryTask
+	foreach($_ in $BuildTask) {
+		$why = Invoke-Build-Try-Tree $_ $TryTask
 		if ($why) {
 			return $why
 		}
 	}
 }
 
-function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
+function Invoke-Build-Try-Tree($Task, $TryTask)
 {
 	$it = $BuildList[$Task]
 	if (!$it.If) {
@@ -560,20 +556,18 @@ function Invoke-Build-Try-Tree([string]$Task, [string]$TryTask)
 		return
 	}
 
-	foreach($job in $it.Jobs) {
-		if ($job -is [string]) {
-			$why = Invoke-Build-Try-Tree $job $TryTask
-			if ($why) {
-				return $why
-			}
+	foreach($_ in $it.Jobs) { if ($_ -is [string]) {
+		$why = Invoke-Build-Try-Tree $_ $TryTask
+		if ($why) {
+			return $why
 		}
-	}
+	}}
 }
 
-function Invoke-Build-Preprocess([object]$Task, [Collections.ArrayList]$Done)
+function Invoke-Build-Preprocess($Task, $Done)
 {
 	if (!$Task.If) {
-		Write-BuildText DarkGray "$($Task.Name) is excluded."
+		Write-BuildText DarkGray "$($Task.Name) skipped."
 		return
 	}
 

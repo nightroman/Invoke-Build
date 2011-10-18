@@ -141,7 +141,7 @@ if ($Tree -or $Comment) {
 				if ($Done.Contains($job)) {
 					throw @"
 Task '$($Task.Name)': Cyclic reference to '$_'.
-$($Task.Info.PositionMessage)
+$($Task.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 "@
 				}
 
@@ -198,7 +198,7 @@ $($Task.Info.PositionMessage)
 				if (!$it2) {
 					throw @"
 Task '$($it.Name)': Task '$job' is not defined.
-$($it.Info.PositionMessage)
+$($it.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 "@
 				}
 				$it2.Reference[$it.Name] = 0

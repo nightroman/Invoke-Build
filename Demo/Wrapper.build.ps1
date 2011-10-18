@@ -145,6 +145,23 @@ task . @{task1=1}
 	assert ($log -like '00:00:00*task1*\z\test.build.ps1:1*Demo error in task1.*00:00:00*.*\z\test.build.ps1:2')
 }
 
+task TreeTaskNotDefined {
+	Set-Content z\test.build.ps1 {
+		task task1 missing, {}
+		task . task1, {}
+	}
+	Build . z\test.build.ps1 -Tree
+}
+
+task TreeCyclicReference {
+	Set-Content z\test.build.ps1 {
+		task task1 task2
+		task task2 task1
+		task . task1
+	}
+	Build . z\test.build.ps1 -Tree
+}
+
 # Call tests and clean.
 # The comment is tested.
 task . `
@@ -155,6 +172,14 @@ GrandParentHasOneCandidate,
 InvokeBuildGetFile,
 TreeAndComment,
 Summary,
+@{TreeTaskNotDefined=1},
+@{TreeCyclicReference=1},
 {
+	$e = error TreeTaskNotDefined
+	assert ("$e" -like "Task 'task1': Task 'missing' is not defined.*At *\z\test.build.ps1:*task <<<<  task1 *")
+
+	$e = error TreeCyclicReference
+	assert ("$e" -like "Task 'task2': Cyclic reference to 'task1'.*At *\z\test.build.ps1:*task <<<<  task2 *")
+
 	Remove-Item z -Force -Recurse
 }
