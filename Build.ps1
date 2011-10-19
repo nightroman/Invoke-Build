@@ -4,7 +4,8 @@
 	Invoke-Build.ps1 wrapper.
 
 .Description
-	This script calls Invoke-Build.ps1 with additional options provided.
+	This script calls Invoke-Build.ps1 with additional options.
+	It is mostly designed for interactive use in command lines.
 
 	If the parameter File is not specified and there is no *.build.ps1 files in
 	the current location then $env:InvokeBuildGetFile is called if it exists.
@@ -134,24 +135,22 @@ if ($Tree -or $Comment) {
 		$count = 1 + $Done.Add($Task)
 
 		# task jobs
-		foreach($_ in $Task.Jobs) {
-			if ($_ -is [string]) {
-				$job = $BuildList[$_]
+		foreach($_ in $Task.Jobs) { if ($_ -is [string]) {
+			$job = $BuildList[$_]
 
-				if ($Done.Contains($job)) {
-					throw @"
+			if ($Done.Contains($job)) {
+				throw @"
 Task '$($Task.Name)': Cyclic reference to '$_'.
 $($Task.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 "@
-				}
+			}
 
-				ShowTaskTree $job $Step $Done
-				$Done.RemoveRange($count, $Done.Count - $count)
-			}
-			else {
-				$tab + '    {..}'
-			}
+			ShowTaskTree $job $Step $Done
+			$Done.RemoveRange($count, $Done.Count - $count)
 		}
+		else {
+			$tab + '    {..}'
+		}}
 	}
 
 	# gets comments
@@ -191,20 +190,16 @@ $($Task.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 	foreach($it in $BuildList.Values) {
 		$it | Add-Member -MemberType NoteProperty -Name Reference -Value @{}
 	}
-	foreach($it in $BuildList.Values) {
-		foreach($job in $it.Jobs) {
-			if ($job -is [string]) {
-				$it2 = $BuildList[$job]
-				if (!$it2) {
-					throw @"
+	foreach($it in $BuildList.Values) { foreach($job in $it.Jobs) { if ($job -is [string]) {
+		$it2 = $BuildList[$job]
+		if (!$it2) {
+			throw @"
 Task '$($it.Name)': Task '$job' is not defined.
 $($it.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 "@
-				}
-				$it2.Reference[$it.Name] = 0
-			}
 		}
-	}
+		$it2.Reference[$it.Name] = 0
+	}}}
 
 	# show trees
 	foreach($name in $(if ($Task -and '?' -ne $Task) { $Task } else { $BuildList.Keys })) {

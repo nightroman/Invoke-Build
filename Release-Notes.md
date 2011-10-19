@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.35
+
+Moved log messages "Task skipped" from preprocessing to processing phase. As a
+result, a task with false condition is logged every time when a task is called.
+
+Internal engine functions now use weird names, just in case, to avoid clashes.
+
 ## v1.0.34
 
 *Build.ps1*: fixed not standard PowerShell line separators in messages with

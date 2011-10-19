@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.34'
+	[System.Version]'1.0.35'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -56,7 +56,7 @@ function Add-BuildTask
 	if ($task) {
 		Invoke-BuildError @"
 Task '$Name' is added twice.
-$(Invoke-Build-Fix $task.Info.PositionMessage)
+$(*Fix* $task)
 "@ InvalidOperation $Name
 	}
 
@@ -91,7 +91,7 @@ $(Invoke-Build-Fix $task.Info.PositionMessage)
 	}
 
 	if ($Jobs) { foreach($_ in $Jobs) { foreach($_ in $_) {
-		$name2, $data = Invoke-Build-Pair $Name $_
+		$name2, $data = *Pair* $Name $_
 		if ($data) {
 			$null = $jobList.Add($name2)
 			if (1 -eq $data) {
@@ -249,10 +249,10 @@ function Write-Warning([string]$Message)
 	$null = $BuildInfo.Messages.Add($_), $BuildInfo.AllMessages.Add($_)
 }
 
-function Invoke-Build-Alter($Extra, $Tasks, [switch]$After)
+function *Alter*($Extra, $Tasks, [switch]$After)
 {
 	foreach($_ in $Tasks) {
-		$name, $data = Invoke-Build-Pair $Extra $_
+		$name, $data = *Pair* $Extra $_
 		$task = $BuildList[$name]
 		if (!$task) {
 			Invoke-BuildError "Task '$Extra': Task '$name' is not defined." InvalidArgument $_
@@ -284,7 +284,7 @@ function Invoke-Build-Alter($Extra, $Tasks, [switch]$After)
 	}
 }
 
-function Invoke-Build-Pair($Task, $Pair)
+function *Pair*($Task, $Pair)
 {
 	if ($Pair -is [hashtable]) {
 		if ($Pair.Count -ne 1) {
@@ -298,27 +298,12 @@ function Invoke-Build-Pair($Task, $Pair)
 	}
 }
 
-function Invoke-Build-Fix([string]$Text)
+function *Fix*($Task)
 {
-	$Text.Trim().Replace("`n", "`r`n")
+	$Task.Info.PositionMessage.Trim().Replace("`n", "`r`n")
 }
 
-function Invoke-Build-If($Task)
-{
-	${private:-Task} = $Task
-	Remove-Variable Task
-
-	try {
-		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		& ${private:-Task}.If
-	}
-	catch {
-		${private:-Task}.Error = $_
-		throw
-	}
-}
-
-function Invoke-Build-IO($Task)
+function *IO*($Task)
 {
 	${private:-Task} = $Task
 	Remove-Variable Task
@@ -412,7 +397,7 @@ function Invoke-Build-IO($Task)
 	}
 }
 
-function Invoke-Build-Task($Name, $Path)
+function *Task*($Name, $Path)
 {
 	${private:-task} = $BuildList[$Name]
 	${private:-path} = if ($Path) { "$Path/$(${private:-task}.Name)" } else { ${private:-task}.Name }
@@ -431,11 +416,17 @@ function Invoke-Build-Task($Name, $Path)
 
 	${private:-if} = ${private:-task}.If
 	if (${private:-if} -is [scriptblock]) {
-		if (!(Invoke-Build-If ${private:-task})) {
-			return
+		try {
+			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+			${private:-if} = & ${private:-if}
+		}
+		catch {
+			${private:-task}.Error = $_
+			throw
 		}
 	}
-	elseif (!${private:-if}) {
+	if (!${private:-if}) {
+		Write-BuildText DarkGray "$(${private:-task}.Name) skipped."
 		return
 	}
 
@@ -449,13 +440,13 @@ function Invoke-Build-Task($Name, $Path)
 			++${private:-number}
 			if (${private:-job} -is [string]) {
 				try {
-					Invoke-Build-Task ${private:-job} ${private:-path}
+					*Task* ${private:-job} ${private:-path}
 				}
 				catch {
 					if (${private:-task}.Try -notcontains ${private:-job}) {
 						throw
 					}
-					${private:-why} = Invoke-Build-Try-Task ${private:-job}
+					${private:-why} = *Try-Task* ${private:-job}
 					if (${private:-why}) {
 						Write-BuildText Red ${private:-why}
 						throw
@@ -478,7 +469,7 @@ function Invoke-Build-Task($Name, $Path)
 				if (${private:-do-input}) {
 					${private:-do-input} = $false
 					if ($null -ne ${private:-task}.Inputs) {
-						${private:-no-input} = Invoke-Build-IO ${private:-task}
+						${private:-no-input} = *IO* ${private:-task}
 					}
 				}
 
@@ -524,7 +515,7 @@ function Invoke-Build-Task($Name, $Path)
 		++$BuildInfo.AllErrorCount
 		$_ = "ERROR: Task '${private:-path}': $_"
 		$null = $BuildInfo.Messages.Add($_), $BuildInfo.AllMessages.Add($_)
-		Write-BuildText Yellow (Invoke-Build-Fix ${private:-task}.Info.PositionMessage)
+		Write-BuildText Yellow (*Fix* ${private:-task})
 		throw
 	}
 	finally {
@@ -532,22 +523,20 @@ function Invoke-Build-Task($Name, $Path)
 	}
 }
 
-function Invoke-Build-Try-Task($TryTask)
+function *Try-Task*($TryTask)
 {
 	foreach($_ in $BuildTask) {
-		$why = Invoke-Build-Try-Tree $_ $TryTask
+		$why = *Try-Tree* $_ $TryTask
 		if ($why) {
 			return $why
 		}
 	}
 }
 
-function Invoke-Build-Try-Tree($Task, $TryTask)
+function *Try-Tree*($Task, $TryTask)
 {
 	$it = $BuildList[$Task]
-	if (!$it.If) {
-		return
-	}
+	if (!$it.If) { return }
 
 	if ($it.Jobs -contains $TryTask) {
 		if ($it.Try -notcontains $TryTask) {
@@ -557,47 +546,42 @@ function Invoke-Build-Try-Tree($Task, $TryTask)
 	}
 
 	foreach($_ in $it.Jobs) { if ($_ -is [string]) {
-		$why = Invoke-Build-Try-Tree $_ $TryTask
+		$why = *Try-Tree* $_ $TryTask
 		if ($why) {
 			return $why
 		}
 	}}
 }
 
-function Invoke-Build-Preprocess($Task, $Done)
+function *Preprocess*($Task, $Done)
 {
-	if (!$Task.If) {
-		Write-BuildText DarkGray "$($Task.Name) skipped."
-		return
-	}
+	if (!$Task.If) { return }
 
 	$count = 1 + $Done.Add($Task)
 
-	foreach($_ in $Task.Jobs) {
-		if ($_ -is [string]) {
-			$job = $BuildList[$_]
+	foreach($_ in $Task.Jobs) { if ($_ -is [string]) {
+		$job = $BuildList[$_]
 
-			if (!$job) {
-				Invoke-BuildError @"
+		if (!$job) {
+			Invoke-BuildError @"
 Task '$($Task.Name)': Task '$_' is not defined.
-$(Invoke-Build-Fix $Task.Info.PositionMessage)
+$(*Fix* $Task)
 "@ ObjectNotFound $_
-			}
-
-			if ($Done.Contains($job)) {
-				Invoke-BuildError @"
-Task '$($Task.Name)': Cyclic reference to '$_'.
-$(Invoke-Build-Fix $Task.Info.PositionMessage)
-"@ InvalidOperation $_
-			}
-
-			Invoke-Build-Preprocess $job $Done
-			$Done.RemoveRange($count, $Done.Count - $count)
 		}
-	}
+
+		if ($Done.Contains($job)) {
+			Invoke-BuildError @"
+Task '$($Task.Name)': Cyclic reference to '$_'.
+$(*Fix* $Task)
+"@ InvalidOperation $_
+		}
+
+		*Preprocess* $job $Done
+		$Done.RemoveRange($count, $Done.Count - $count)
+	}}
 }
 
-function Invoke-Build-Summary($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
+function *Summary*($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
 {
 	if ($State -lt 0) {
 		$text = 'Build FAILED'
@@ -707,11 +691,11 @@ try {
 	foreach(${private:-task} in $BuildList.Values) {
 		${private:-list} = ${private:-task}.Before
 		if (${private:-list}) {
-			Invoke-Build-Alter ${private:-task}.Name ${private:-list}
+			*Alter* ${private:-task}.Name ${private:-list}
 		}
 		${private:-list} = ${private:-task}.After
 		if (${private:-list}) {
-			Invoke-Build-Alter ${private:-task}.Name ${private:-list} -After
+			*Alter* ${private:-task}.Name ${private:-list} -After
 		}
 	}
 
@@ -746,12 +730,12 @@ $($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join 
 		if (!${private:-task}) {
 			Invoke-BuildError "Task '${private:-it}' is not defined." ObjectNotFound ${private:-it}
 		}
-		Invoke-Build-Preprocess ${private:-task} ([System.Collections.ArrayList]@())
+		*Preprocess* ${private:-task} ([System.Collections.ArrayList]@())
 	}
 
 	### Process tasks
 	foreach(${private:-it} in $BuildTask) {
-		Invoke-Build-Task ${private:-it}
+		*Task* ${private:-it}
 	}
 	${private:-state} = 1
 }
@@ -764,7 +748,7 @@ finally {
 	if (${private:-state}) {
 		$BuildInfo.Elapsed = [System.DateTime]::Now - $BuildInfo.Started
 		$BuildInfo.Messages
-		Invoke-Build-Summary ${private:-state} $BuildInfo.Tasks.Count $BuildInfo.ErrorCount $BuildInfo.WarningCount $BuildInfo.Elapsed
+		*Summary* ${private:-state} $BuildInfo.Tasks.Count $BuildInfo.ErrorCount $BuildInfo.WarningCount $BuildInfo.Elapsed
 
 		if (${private:-parent}) {
 			${private:-parent}.AllTasks.AddRange($BuildInfo.AllTasks)
@@ -775,7 +759,7 @@ finally {
 		else {
 			if ($BuildInfo.AllTasks.Count -ne $BuildInfo.Tasks.Count) {
 				$BuildInfo.AllMessages
-				Invoke-Build-Summary ${private:-state} $BuildInfo.AllTasks.Count $BuildInfo.AllErrorCount $BuildInfo.AllWarningCount $BuildInfo.Elapsed
+				*Summary* ${private:-state} $BuildInfo.AllTasks.Count $BuildInfo.AllErrorCount $BuildInfo.AllWarningCount $BuildInfo.Elapsed
 			}
 		}
 	}

@@ -259,9 +259,9 @@ task TestFunctions {
 		'Write-Warning'
 	)
 	Get-Command -CommandType Function | .{process{
-		if (($list -notcontains $_.Name) -and ($_.Name -notlike 'Invoke-Build-*')) {
+		if (($list -notcontains $_.Name) -and ($_.Name -notmatch '^\*.*\*$')) {
 			if ($exposed -contains $_.Name) {
-				"Function $($_.Name) is one of Invoke-Build."
+				"Function $($_.Name) is from Invoke-Build."
 			}
 			else {
 				Write-Warning "Unknown function '$_'."

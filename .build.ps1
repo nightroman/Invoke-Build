@@ -108,6 +108,13 @@ task Zip Package, {
 
 # Make the NuGet package.
 task NuGet Package, {
+	$text = @'
+Invoke-Build.ps1 is a build automation tool implemented as a standalone
+PowerShell script. It invokes tasks defined in build scripts written in
+PowerShell with a few domain-specific language features. Build flow and
+concepts are similar to MSBuild. Scripts are similar to psake but look more
+like usual due to standard PowerShell parameters and script scope variables.
+'@
 	# nuspec
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
@@ -120,20 +127,8 @@ task NuGet Package, {
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
 		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<summary>
-Invoke-Build.ps1 is a build automation tool implemented as a standalone
-PowerShell script. It invokes tasks defined in build scripts written in
-PowerShell with a few domain-specific language features. Build flow and
-concepts are similar to MSBuild. Scripts are similar to psake but not
-compatible.
-		</summary>
-		<description>
-Invoke-Build.ps1 is a build automation tool implemented as a standalone
-PowerShell script. It invokes tasks defined in build scripts written in
-PowerShell with a few domain-specific language features. Build flow and
-concepts are similar to MSBuild. Scripts are similar to psake but not
-compatible.
-		</description>
+		<summary>$text</summary>
+		<description>$text</description>
 		<tags>powershell build automation</tags>
 	</metadata>
 </package>

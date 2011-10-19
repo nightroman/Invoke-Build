@@ -6,11 +6,11 @@ Invoke-Build.ps1 - Build Automation in PowerShell
 
 ## Introduction
 
-*Invoke-Build.ps1* is a [build automation](http://en.wikipedia.org/wiki/Build_automation)
-tool implemented as a standalone PowerShell script. It invokes tasks defined in
-build scripts written in PowerShell with a few domain-specific language (DSL) features.
-Build flow and concepts are similar to [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
-Scripts are similar to [*psake*](https://github.com/psake/psake) but not compatible.
+Invoke-Build.ps1 is a build automation tool implemented as a standalone
+PowerShell script. It invokes tasks defined in build scripts written in
+PowerShell with a few domain-specific language features. Build flow and
+concepts are similar to MSBuild. Scripts are similar to psake but look more
+like usual due to standard PowerShell parameters and script scope variables.
 
 Invoke-Build is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel. Every call maintains its state
@@ -29,8 +29,8 @@ incremental tasks. Then this sequence of task scripts is invoked.
 
 ## Comparison with MSBuild
 
-*MSBuild* is yet another build automation tool, part of the .NET Framework.
-*Invoke-Build* is designed to be very similar. Of course their scripts use
+MSBuild is yet another build automation tool, part of the .NET Framework.
+Invoke-Build is designed to be very similar. Of course, their scripts use
 different languages (PowerShell and XML) and different built-in and external
 tools. But build flow, script structure, and main concepts are almost the same.
 
@@ -65,7 +65,7 @@ Copy *Invoke-Build.ps1* and its help *Invoke-Build.ps1-Help.xml* to the path.
 As a result, the script can be called from any PowerShell code simply as
 `Invoke-Build` and `Get-Help` should work.
 
-If you use the sources: they do not include *Invoke-Build.ps1-Help.xml*, get it
+If you use the sources, they do not include *Invoke-Build.ps1-Help.xml*, get it
 with packages or build it using [Helps.ps1](https://github.com/nightroman/Helps).
 
 **Step 2:**
@@ -90,7 +90,7 @@ with *"Build completed"* then ignore all errors and warnings, they are expected
 during this test. If it starts with "*Build FAILED*" please submit an issue
 (for example message checks may depend on UI culture, only en-US was tested).
 
-    Build completed with errors. 137 tasks, 26 errors, 1 warnings, 00:00:12
+    Build completed with errors. 139 tasks, 28 errors, 1 warnings, 00:00:12
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
@@ -112,16 +112,24 @@ And then at functions help, for example, `Add-BuildTask` (`task`). Note that
     help property -full
     ...
 
-Explore build scripts in the *Demo* directory included into the package. They
-show typical use cases, cover issues and mistakes, and have tutorial comments.
+Explore build scripts in the *Demo* directory included into the package. With
+tutorial comments they show typical use cases and cover issues and mistakes.
 
-*Demo* scripts should be useful in order to get familiar with the concepts but
-they are just tests, not real project build scripts. Some real scripts are
-listed in
+*Demo* scripts help to get familiar with the concepts but they are tests, not
+real project build scripts. Some projects using build scripts are listed in
 [here](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects).
+
+## Credits
+
+Invoke-Build is inspired by [*psake*](https://github.com/psake/psake), the
+famous and probably the first build automation tool implemented in PowerShell.
+
+Build concepts comes from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
+The goal was to make Invoke-Build similar as much as possible.
 
 ## See Also
 
-* [Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki)
+[Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki) -
+online tutorial, build scripts in projects, tips and tricks, ...
 
 ----

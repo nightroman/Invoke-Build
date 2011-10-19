@@ -11,7 +11,7 @@
 	description = @'
 	Install: copy Invoke-Build.ps1 and Invoke-Build.ps1-Help.xml to the path.
 
-	This script is a simple and yet robust build automation tool with build
+	This script is robust and easy to use build automation engine with build
 	scripts written in PowerShell and concepts similar to MSBuild and psake.
 
 	Build scripts define parameters, variables, and tasks. Scripts and tasks
