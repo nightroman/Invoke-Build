@@ -14,9 +14,8 @@ like usual due to standard PowerShell parameters and script scope variables.
 
 Invoke-Build is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel. Every call maintains its state
-completely on the stack. The engine itself never changes environment variables,
-the path, the current directory, and other global settings. This is all up to
-build scripts.
+completely on the stack. The engine does not change environment variables, the
+path, and global variables and settings. This is all up to build scripts.
 
 ## What Does It Build?
 
@@ -81,39 +80,39 @@ Take a look at the tasks of the default *.build.ps1* build script there:
 It shows the tasks from this script and imported from `*.tasks.ps1` scripts.
 
 **Step 4:**
-Invoke the default (`.`) task from the default script (it tests the engine):
+Invoke the default task from the default script (it tests the engine):
 
     Invoke-Build
 
-You should see output the build process (testing). If the last message starts
-with *"Build completed"* then ignore all errors and warnings, they are expected
-during this test. If it starts with "*Build FAILED*" please submit an issue
-(for example message checks may depend on UI culture, only en-US was tested).
+If the last output message starts with "Build completed" then ignore errors and
+warnings, they are expected during this test. If it starts with "Build FAILED"
+please submit an issue (tests sensitive to UI culture may fail, only en-US was
+tested).
 
     Build completed with errors. 139 tasks, 28 errors, 1 warnings, 00:00:12
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
-and create your own scripts, read the
+and create own scripts, read the
 [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial).
 
 ## Next Steps
 
-Take a look at help (make sure *Invoke-Build.ps1-Help.xml* is in the same
+Take a look at help (ensure *Invoke-Build.ps1-Help.xml* is in the same
 directory as *Invoke-Build.ps1*):
 
     help Invoke-Build -full
 
 And then at functions help, for example, `Add-BuildTask` (`task`). Note that
-*Invoke-Build* has to be dot-sourced once.
+Invoke-Build has to be dot-sourced once.
 
     . Invoke-Build
     help task -full
     help property -full
     ...
 
-Explore build scripts in the *Demo* directory included into the package. With
-tutorial comments they show typical use cases and cover issues and mistakes.
+Explore build scripts included into the package. With tutorial comments they
+show typical use cases and cover issues and mistakes.
 
 *Demo* scripts help to get familiar with the concepts but they are tests, not
 real project build scripts. Some projects using build scripts are listed in
@@ -124,7 +123,7 @@ real project build scripts. Some projects using build scripts are listed in
 Invoke-Build is inspired by [*psake*](https://github.com/psake/psake), the
 famous and probably the first build automation tool implemented in PowerShell.
 
-Build concepts comes from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
+Build concepts come from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
 The goal was to make Invoke-Build similar as much as possible.
 
 ## See Also

@@ -135,22 +135,24 @@ if ($Tree -or $Comment) {
 		$count = 1 + $Done.Add($Task)
 
 		# task jobs
-		foreach($_ in $Task.Jobs) { if ($_ -is [string]) {
-			$job = $BuildList[$_]
+		foreach($_ in $Task.Jobs) {
+			if ($_ -is [string]) {
+				$job = $BuildList[$_]
 
-			if ($Done.Contains($job)) {
-				throw @"
+				if ($Done.Contains($job)) {
+					throw @"
 Task '$($Task.Name)': Cyclic reference to '$_'.
 $($Task.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 "@
-			}
+				}
 
-			ShowTaskTree $job $Step $Done
-			$Done.RemoveRange($count, $Done.Count - $count)
+				ShowTaskTree $job $Step $Done
+				$Done.RemoveRange($count, $Done.Count - $count)
+			}
+			else {
+				$tab + '    {..}'
+			}
 		}
-		else {
-			$tab + '    {..}'
-		}}
 	}
 
 	# gets comments
