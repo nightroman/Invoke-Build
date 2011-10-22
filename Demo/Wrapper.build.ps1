@@ -20,7 +20,7 @@ if (!$WhatIf) {
 	$null = mkdir z\1\2
 
 	# This directory has many build files, the default is
-	$ManyDefault = Convert-Path (Resolve-Path .build.ps1)
+	$ManyDefault = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('.build.ps1')
 
 	# This path will represent a single build file
 	$OneDefault = "$BuildRoot\z\test.build.ps1"
@@ -68,8 +68,9 @@ task InvokeBuildGetFile {
 	$env:InvokeBuildGetFile = "$BuildRoot\z\1\InvokeBuildGetFile.ps1"
 
 	# make the hook script which gets a build file
+	#! `> $env:InvokeBuildGetFile` fails in [ ]
 	$path = "$BuildRoot\Property.build.ps1"
-	"'$path'" > $env:InvokeBuildGetFile
+	[System.IO.File]::WriteAllText($env:InvokeBuildGetFile, "'$path'")
 
 	# invoke (remove the test script, if any)
 	Set-Location z
@@ -108,7 +109,7 @@ task Comment {
 
 	# ensure comments are there
 	$log = $log -replace '\r\n', '='
-	assert ($log.Contains('\Demo\Wrapper.build.ps1==# Call tests and clean.=# The comment is tested.=.=    ParentHasManyCandidates (.)=')) $log
+	assert ($log.Contains('\Wrapper.build.ps1==# Call tests and clean.=# The comment is tested.=.=    ParentHasManyCandidates (.)=')) $log
 	assert ($log.Contains('=    <#=    Call tree tests.=    The comment is tested.=    #>=    TreeAndComment (.)=        Tree (TreeAndComment)=')) $log
 }
 
@@ -146,19 +147,19 @@ task . @{task1=1}
 }
 
 task TreeTaskNotDefined {
-	Set-Content z\test.build.ps1 {
+	[System.IO.File]::WriteAllText("$BuildRoot\z\test.build.ps1", {
 		task task1 missing, {}
 		task . task1, {}
-	}
+	})
 	Build . z\test.build.ps1 -Tree
 }
 
 task TreeCyclicReference {
-	Set-Content z\test.build.ps1 {
+	[System.IO.File]::WriteAllText("$BuildRoot\z\test.build.ps1", {
 		task task1 task2
 		task task2 task1
 		task . task1
-	}
+	})
 	Build . z\test.build.ps1 -Tree
 }
 

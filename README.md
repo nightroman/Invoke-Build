@@ -2,8 +2,6 @@
 Invoke-Build.ps1 - Build Automation in PowerShell
 =================================================
 
-![Together](https://github.com/downloads/nightroman/Invoke-Build/Together.png)
-
 ## Introduction
 
 Invoke-Build.ps1 is a build automation tool implemented as a standalone
@@ -17,12 +15,13 @@ session: sequential, nested, and even parallel. Every call maintains its state
 completely on the stack. The engine does not change environment variables, the
 path, and global variables and settings. This is all up to build scripts.
 
-## What Does It Build?
+## How Does It Work?
 
-All it builds is a sequence of script blocks defined in scripts by several
-`task` statements with parameters which establish task names, script blocks,
-dependencies, conditions, and inputs and outputs for incremental and partial
-incremental tasks. Then this sequence of task scripts is invoked.
+The engine builds a sequence of tasks defined in build scripts by `task`
+statements which provide task names, dependencies, conditions, inputs and
+outputs, and script blocks. Then this sequence is checked for trivial issues
+like missing or cyclic dependencies. If everything is fine the initial tasks
+and their task trees are invoked according to the rules.
 
 [More...](https://github.com/nightroman/Invoke-Build/wiki/How-Build-Works)
 
@@ -32,20 +31,6 @@ MSBuild is yet another build automation tool, part of the .NET Framework.
 Invoke-Build is designed to be very similar. Of course, their scripts use
 different languages (PowerShell and XML) and different built-in and external
 tools. But build flow, script structure, and main concepts are almost the same.
-
-    MSBuild                      Invoke-Build
-    -------                      ------------
-    Default build script         A single *.build.ps1 or .build.ps1
-    InitialTargets               Whatever a build script invokes
-    DefaultTargets               The . or the first added task
-    Properties                   Script/environment variables
-    Import                       Dot-source or invoke
-    Target                       task
-    Condition                    -If
-    Inputs, Outputs              -Incremental or -Partial
-    DependsOnTargets             -Jobs, referenced task names
-    Tasks                        -Jobs, PowerShell script blocks
-    AfterTargets, BeforeTargets  -After, -Before
 
 [More...](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild)
 
@@ -130,5 +115,3 @@ The goal was to make Invoke-Build similar as much as possible.
 
 [Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki) -
 online tutorial, build scripts in projects, tips and tricks, ...
-
-----

@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.35'
+	[System.Version]'1.0.36'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -129,7 +129,7 @@ function Get-BuildProperty
 	[Parameter()]$Value
 )
 {
-	$_ = $ExecutionContext.SessionState.PSVariable.GetValue($Name)
+	$_ = $PSCmdlet.GetVariableValue($Name)
 	if ($null -eq $_) {
 		$_ = [System.Environment]::GetEnvironmentVariable($Name)
 		if ($null -eq $_) {
@@ -184,18 +184,22 @@ function Use-BuildAlias
 	[Parameter(Mandatory = $true)][string[]]$Name
 )
 {
-	if (!$Path) {
-		$dir = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
-	}
-	elseif ($Path.StartsWith('Framework', [System.StringComparison]::OrdinalIgnoreCase)) {
-		$dir = "$env:windir\Microsoft.NET\$Path"
-		if (![System.IO.Directory]::Exists($dir)) {
-			Invoke-BuildError "Directory does not exist: '$dir'." InvalidArgument $Path
+	if ($Path) {
+		try {
+			if ($Path.StartsWith('Framework', [System.StringComparison]::OrdinalIgnoreCase)) {
+				$dir = "$env:windir\Microsoft.NET\$Path"
+			}
+			else {
+				$dir = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
+			}
+			if (![System.IO.Directory]::Exists($dir)) { throw "Directory does not exist: '$dir'." }
+		}
+		catch {
+			Invoke-BuildError $_ InvalidArgument $Path
 		}
 	}
 	else {
-		try { $dir = Convert-Path (Resolve-Path -LiteralPath $Path -ErrorAction Stop) }
-		catch { Invoke-BuildError $_ InvalidArgument $Path }
+		$dir = [System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
 	}
 
 	foreach($_ in $Name) {
@@ -316,18 +320,16 @@ function *IO*($Task)
 	}
 
 	${private:-paths} = [System.Collections.ArrayList]@()
-	try {
-		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		${private:-inputs} = foreach(${private:-in} in ${private:-inputs}) {
-			if (${private:-in} -isnot [System.IO.FileSystemInfo]) {
-				${private:-in} = Get-Item -LiteralPath ${private:-in} -Force -ErrorAction Stop
+	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+	${private:-inputs} = foreach(${private:-in} in ${private:-inputs}) {
+		if (${private:-in} -isnot [System.IO.FileInfo]) {
+			${private:-in} = [System.IO.FileInfo]$PSCmdlet.GetUnresolvedProviderPathFromPSPath(${private:-in})
+			if (!${private:-in}.Exists) {
+				throw "Input file does not exist: '${private:-in}'."
 			}
-			$null = ${private:-paths}.Add(${private:-in}.FullName)
-			${private:-in}
 		}
-	}
-	catch {
-		throw "Error on resolving inputs: $_"
+		$null = ${private:-paths}.Add(${private:-in}.FullName)
+		${private:-in}
 	}
 
 	if (!${private:-paths}) {
@@ -353,9 +355,10 @@ function *IO*($Task)
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		foreach(${private:-in} in ${private:-inputs}) {
 			++${private:-index}
-			${private:-out} = ${private:-outputs}[${private:-index}]
-			if (!(Test-Path -LiteralPath ${private:-out}) -or (${private:-in}.LastWriteTime -gt (Get-Item -LiteralPath ${private:-out} -Force).LastWriteTime)) {
-				$null = ${private:-inputs2}.Add(${private:-paths}[${private:-index}]), ${private:-outputs2}.Add(${private:-out})
+			${private:-out-path} = ${private:-outputs}[${private:-index}]
+			${private:-out} = [System.IO.FileInfo]$PSCmdlet.GetUnresolvedProviderPathFromPSPath(${private:-out-path})
+			if (!${private:-out}.Exists -or (${private:-in}.LastWriteTime -gt ${private:-out}.LastWriteTime)) {
+				$null = ${private:-inputs2}.Add(${private:-paths}[${private:-index}]), ${private:-outputs2}.Add(${private:-out-path})
 			}
 		}
 
@@ -378,22 +381,15 @@ function *IO*($Task)
 			}
 		}
 
+		$ticks = (${private:-inputs} | .{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum).Maximum
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		foreach(${private:-out} in ${private:-Task}.Outputs) {
-			if (!(Test-Path -LiteralPath ${private:-out} -ErrorAction Stop)) {
+		foreach($_ in ${private:-Task}.Outputs) {
+			$_ = [System.IO.FileInfo]$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)
+			if (!$_.Exists -or $_.LastWriteTime.Ticks -lt $ticks) {
 				return
 			}
 		}
-
-		${private:-time1} = ${private:-inputs} |
-		.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Maximum
-
-		${private:-time2} = Get-Item -LiteralPath ${private:-Task}.Outputs -Force -ErrorAction Stop |
-		.{process{ $_.LastWriteTime.Ticks }} | Measure-Object -Minimum
-
-		if (${private:-time1}.Maximum -le ${private:-time2}.Minimum) {
-			'Skipping because all outputs are up-to-date with respect to the inputs.'
-		}
+		'Skipping because all outputs are up-to-date with respect to the inputs.'
 	}
 }
 
@@ -426,7 +422,7 @@ function *Task*($Name, $Path)
 		}
 	}
 	if (!${private:-if}) {
-		Write-BuildText DarkGray "$(${private:-task}.Name) skipped."
+		Write-BuildText DarkYellow "$(${private:-task}.Name) skipped."
 		return
 	}
 
@@ -605,12 +601,14 @@ function *Summary*($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
 
 ### Resolve the file
 $ErrorActionPreference = 'Stop'
+${private:-location} = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
 try {
 	if ($File) {
-		$BuildFile = (Get-Item -LiteralPath $File -Force).FullName
+		$BuildFile = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($File)
+		if (!([System.IO.File]::Exists($BuildFile))) { throw "Script does not exist: '$BuildFile'." }
 	}
 	else {
-		$BuildFile = @([System.IO.Directory]::GetFiles((Get-Location).ProviderPath, '*.build.ps1'))
+		$BuildFile = @([System.IO.Directory]::GetFiles(${private:-location}, '*.build.ps1'))
 		if (!$BuildFile) {
 			throw "Found no '*.build.ps1' files."
 		}
@@ -624,9 +622,7 @@ try {
 					break
 				}
 			}
-			if (!$BuildFile) {
-				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
-			}
+			if (!$BuildFile) { throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'." }
 		}
 	}
 	$BuildRoot = Split-Path $BuildFile
@@ -636,8 +632,7 @@ catch {
 }
 
 ### Set the variables
-${private:-location} = Get-Location
-${private:-parent} = $ExecutionContext.SessionState.PSVariable.Get('BuildInfo')
+${private:-parent} = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
 if (${private:-parent}) {
 	if (${private:-parent}.Description -eq 'cf62724cbbc24adea925ea0e73598492') {
 		${private:-parent} = ${private:-parent}.Value

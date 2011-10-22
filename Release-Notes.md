@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.36
+
+Adapted *Invoke-Build.ps1*, *Build.ps1*, and tests for notorious paths with
+square brackets. Caution: this is done to some reasonable extent, some paths
+choke PowerShell anyway, like this weird but valid directory name:
+
+    ] [ `] `[
+
 ## v1.0.35
 
 Moved log messages "Task skipped" from preprocessing to processing phase. As a

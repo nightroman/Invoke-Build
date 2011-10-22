@@ -68,7 +68,7 @@ task InvalidFramework {
 
 # Error: missing directory.
 task MissingDirectory {
-	use \MissingDirectory MyScript
+	use MissingDirectory MyScript
 }
 
 # Error: invalid directory.
@@ -95,8 +95,8 @@ ResolvedPath,
 	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\<>'.* use <<<< *")
 
 	$e = error MissingDirectory
-	assert (($e | Out-String) -like "Use-BuildAlias : * '\MissingDirectory' * use <<<< *")
-	assert ($e.TargetObject -eq '\MissingDirectory')
+	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\MissingDirectory'.* use <<<< *")
+	assert ($e.TargetObject -eq 'MissingDirectory')
 
 	$e = error InvalidDirectory
 	assert (($e | Out-String) -like "Use-BuildAlias : * use <<<< *")

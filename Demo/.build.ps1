@@ -212,8 +212,8 @@ task ErrorCases {
 	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output is empty. Expected at list one item.*OperationStopped*"
 	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0.*OperationStopped*"
 
-	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Error on resolving inputs:*'missing'*OperationStopped*"
-	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Error on resolving inputs:*'missing'*OperationStopped*"
+	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*"
+	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*"
 
 	Test-Issue MissingProperty ErrorCases.build.ps1 @'
 Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound: (*String)*

@@ -259,8 +259,8 @@
 		Tells to process the task as incremental. It is a hashtable with a
 		single entry where the key is inputs and the value is outputs.
 
-		Inputs and outputs are file system items or literal paths or a script
-		block which gets them.
+		Inputs and outputs are file system items or literal file paths or
+		script blocks which gets them.
 
 		Automatic variables for task script jobs:
 		- $Inputs - full input paths, ArrayList with strings
@@ -274,11 +274,11 @@
 		with a single entry where the key is inputs and the value is outputs.
 		There must be one-to-one correspondence between input and output items.
 
-		Inputs and outputs are file system items or literal paths or a script
-		block which gets them.
+		Inputs and outputs are file system items or literal file paths or
+		script blocks which gets them.
 
 		If the outputs value is defined as a script block then it is invoked
-		with input items piped to it.
+		with full input paths piped to it.
 
 		Automatic variables for script jobs:
 		- $Inputs - full input paths, ArrayList with strings
@@ -296,6 +296,9 @@
 	outputs = @()
 	links = @(
 		@{ text = 'Get-BuildError' }
+		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial' }
+		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks' }
+		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks' }
 	)
 }
 

@@ -73,7 +73,7 @@ param
 )
 
 ### Resolve the file
-if (!$File -and !(Test-Path '*.build.ps1')) {
+if (!$File -and !([System.IO.Directory]::GetFiles($PSCmdlet.GetUnresolvedProviderPathFromPSPath(''), '*.build.ps1'))) {
 
 	# call the script $env:InvokeBuildGetFile
 	if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
@@ -82,7 +82,7 @@ if (!$File -and !(Test-Path '*.build.ps1')) {
 
 	# search in the parent tree
 	if (!$File) {
-		for($private:dir = Split-Path (Get-Location).ProviderPath;; $private:dir = Split-Path $private:dir) {
+		for($private:dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath('');; $private:dir = Split-Path $private:dir) {
 			if (!$private:dir) {
 				throw "Cannot find *.build.ps1 in the parent tree."
 			}

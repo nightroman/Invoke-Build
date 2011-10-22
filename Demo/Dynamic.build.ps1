@@ -2,6 +2,9 @@
 <#
 .Synopsis
 	Example of tasks created dynamically.
+
+.Example
+	Invoke-Build . Dynamic.build.ps1
 #>
 
 # Add a task for each item and collect names to be used as jobs.
