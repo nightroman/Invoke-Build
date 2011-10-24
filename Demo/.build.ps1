@@ -190,14 +190,6 @@ task Wrapper {
 	Invoke-Build . Wrapper.build.ps1
 }
 
-# Test an empty build file.
-task Empty {
-	# no task is specified
-	Test-Issue @() Empty.build.ps1 "*\Invoke-Build.ps1 : There is no task in the script.*InvalidOperation: (*:String)*"
-	# a task is specified
-	Test-Issue Missing Empty.build.ps1 "*\Invoke-Build.ps1 : Task 'Missing' is not defined.*ObjectNotFound: (Missing:String)*"
-}
-
 # Test runtime errors.
 task ErrorCases {
 	Test-Issue TestAlmostSurvives ErrorCases.build.ps1 "Error2*At *\SharedTasksData.tasks.ps1*throw <<<<*"
@@ -209,7 +201,7 @@ task ErrorCases {
 	Test-Issue IncrementalOutputsFails ErrorCases.build.ps1 "Incremental outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 	Test-Issue PartialOutputsFails ErrorCases.build.ps1 "Partial outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 
-	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output is empty. Expected at list one item.*OperationStopped*"
+	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output cannot be empty.*OperationStopped*"
 	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0.*OperationStopped*"
 
 	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*"
@@ -235,7 +227,7 @@ task TestExitCode {
 	assert ($LastExitCode -eq 1)
 
 	# missing task
-	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Empty.build.ps1
+	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Dynamic.build.ps1
 	assert ($LastExitCode -eq 1)
 
 	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 AssertDefault Assert.build.ps1
@@ -287,6 +279,7 @@ task TestVariables {
 		'foreach'
 		'LASTEXITCODE'
 		'PSCmdlet'
+		'PWD'
 		'this'
 	)
 	Get-Variable | .{process{
@@ -331,7 +324,6 @@ Alter,
 Assert,
 Conditional,
 Dynamic,
-Empty,
 ErrorCases,
 Exec,
 Incremental,

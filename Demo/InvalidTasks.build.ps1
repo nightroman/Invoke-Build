@@ -1,17 +1,17 @@
 
 <#
 .Synopsis
-	Tests of various invalid task definitions.
+	Tests invalid scripts and tasks.
 
 .Description
-	If a build script has invalid tasks then it fails on the first. Thus, in
-	order to test all the issues and avoid too many tiny script files this
-	script creates these tiny build scripts with just one issue.
+	If a build script or a task is invalid then build fails on the first issue.
+	In order to test all issues and avoid too many small invalid scripts this
+	script creates and tests temporary scripts, one issue each.
 #>
 
-# Writes a temp build script with issues, calls it, compares the message.
+# Writes a temporary script with an issue, calls it, compares the message.
 function Test($ExpectedMessagePattern, $Script) {
-	# write the temp build script
+	# write the temp script
 	$Script > z.build.ps1
 
 	# invoke it, catch the error, compare the message
@@ -25,6 +25,13 @@ function Test($ExpectedMessagePattern, $Script) {
 
 	# remove the temp script
 	Remove-Item z.build.ps1
+}
+
+# Build scripts should have at least one task defined.
+task NoTasks {
+	Test "*\Invoke-Build.ps1 : There is no task in the script.*InvalidOperation*z.build.ps1:String*" {
+		# Script with no tasks
+	}
 }
 
 # Build scripts are not allowed to output script blocks. It makes no sense and,
@@ -43,7 +50,7 @@ task ScriptOutput {
 # Tasks with same names cannot be added twice. But it is fine to use the same
 # task 2+ times in a task job list (it does not make much sense though).
 task TaskAddedTwice {
-	Test "Add-BuildTask : Task 'task1' is added twice.*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidOperation*" {
+	Test "Add-BuildTask : Task 'task1': Task name already exists:*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidArgument*" {
 		task task1 {}
 		# It is fine to reference a task 2+ times
 		task task2 task1, task1, task1
@@ -68,7 +75,7 @@ task InvalidJobType {
 
 # The tested task uses valid job type but its value is invalid.
 task InvalidJobValue {
-	Test "Add-BuildTask : Task '.': Hashtable task reference should have one item.*At *InvalidArgument*" {
+	Test "Add-BuildTask : Invalid pair, expected hashtable @{value1 = value2}.*task <<<<*InvalidArgument*" {
 		task . @(
 			@{ task2 = 1; task1 = 1 }
 		)
@@ -77,24 +84,24 @@ task InvalidJobValue {
 
 # Incremental and Partial cannot be used together.
 task IncrementalAndPartial {
-	Test "Add-BuildTask : Task '.': Parameters Incremental and Partial cannot be used together.*At *InvalidArgument*" {
+	Test "Add-BuildTask : Parameter set cannot be resolved using the specified named parameters.*At*task <<<<*AmbiguousParameterSet*" {
 		task . -Incremental @{} -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Invalid Incremental/Partial hashtable.
 task IncrementalInvalidHashtable {
-	Test "Add-BuildTask : Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }.*At *InvalidArgument*" {
+	Test "Add-BuildTask : Invalid pair, expected hashtable @{value1 = value2}.*task <<<<*InvalidArgument*" {
 		task . -Incremental @{} { throw 'Unexpected.' }
 	}
-	Test "Add-BuildTask : Task '.': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }.*At *InvalidArgument*" {
+	Test "Add-BuildTask : Invalid pair, expected hashtable @{value1 = value2}.*task <<<<*InvalidArgument*" {
 		task . -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Example of a missing task. (Task preprocessing).
 task TaskNotDefined {
-	Test "*\Invoke-Build.ps1 : Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *ObjectNotFound: (missing:String)*" {
+	Test "*\Invoke-Build.ps1 : Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *ObjectNotFound: (:)*" {
 		task task1 missing, {}
 		task . task1, {}
 	}
@@ -102,7 +109,7 @@ task TaskNotDefined {
 
 # Tasks with a cyclic reference: . -> task1 -> task2 -> task1 (oops!). (Task preprocessing).
 task CyclicReference {
-	Test "*\Invoke-Build.ps1 : Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *InvalidOperation: (task1:String)*" {
+	Test "*\Invoke-Build.ps1 : Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *InvalidOperation: (:)*" {
 		task task1 task2
 		task task2 task1
 		task . task1
@@ -110,6 +117,7 @@ task CyclicReference {
 }
 
 task . `
+NoTasks,
 ScriptOutput,
 TaskAddedTwice,
 InvalidJobType,

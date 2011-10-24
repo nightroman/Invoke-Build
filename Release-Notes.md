@@ -1,6 +1,16 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.37
+
+Script processing checks for "no tasks" first and fails if this is the case.
+If it is not a build script then other checks and messages can be confusing.
+
+`Add-BuildTask` (`task`) uses named parameter sets Incremental and Partial.
+This should not affect build scripts but, just in case, some errors changed.
+
+Tweaks in scripts and tests.
+
 ## v1.0.36
 
 Adapted *Invoke-Build.ps1*, *Build.ps1*, and tests for notorious paths with

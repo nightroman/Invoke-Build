@@ -37,76 +37,73 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.36'
+	[System.Version]'1.0.37'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
-(
-	[Parameter(Position = 0, Mandatory = $true)][string]$Name,
-	[Parameter(Position = 1)][object[]]$Jobs,
-	[Parameter()][object]$If = $true,
-	[Parameter()][hashtable]$Incremental,
-	[Parameter()][hashtable]$Partial,
-	[Parameter()][object[]]$After,
-	[Parameter()][object[]]$Before
-)
 {
-	$task = $BuildList[$Name]
-	if ($task) {
-		Invoke-BuildError @"
-Task '$Name' is added twice.
-$(*Fix* $task)
-"@ InvalidOperation $Name
-	}
-
-	$jobList = [System.Collections.ArrayList]@()
-	$tryList = [System.Collections.ArrayList]@()
-
-	$task = Select-Object Name, Error, Started, Elapsed, Jobs, Try, If, Inputs, Outputs, Partial, After, Before, Info -InputObject 1
-	$task.Name = $Name
-	$task.Jobs = $jobList
-	$task.Try = $tryList
-	$task.If = $If
-	$task.After = $After
-	$task.Before = $Before
-	$task.Info = $MyInvocation
-
-	if ($Incremental -or $Partial) {
-		if ($Incremental -and $Partial) {
-			Invoke-BuildError "Task '$Name': Parameters Incremental and Partial cannot be used together." InvalidArgument
+	[CmdletBinding(DefaultParameterSetName="All")]
+	param
+	(
+		[Parameter(Position = 0, Mandatory = $true)][string]$Name,
+		[Parameter(Position = 1)][object[]]$Jobs,
+		[Parameter()][object]$If = $true,
+		[Parameter(ParameterSetName='Incremental')][hashtable]$Incremental,
+		[Parameter(ParameterSetName='Partial')][hashtable]$Partial,
+		[Parameter()][object[]]$After,
+		[Parameter()][object[]]$Before
+	)
+	try {
+		$task = $BuildList[$Name]
+		if ($task) {
+			throw "Task name already exists:`r`n$(*Fix* $task)"
 		}
-		if ($Incremental) {
-			$IO = $Incremental
-		}
-		else {
-			$IO = $Partial
-			$task.Partial = $true
-		}
-		if ($IO.Count -ne 1) {
-			Invoke-BuildError "Task '$Name': Invalid Incremental/Partial hashtable. Valid form: @{ Inputs = Outputs }." InvalidArgument $IO
-		}
-		$task.Inputs = @($IO.Keys)[0]
-		$task.Outputs = @($IO.Values)[0]
-	}
 
-	if ($Jobs) { foreach($_ in $Jobs) { foreach($_ in $_) {
-		$name2, $data = *Pair* $Name $_
-		if ($data) {
-			$null = $jobList.Add($name2)
-			if (1 -eq $data) {
-				$null = $tryList.Add($name2)
+		$jobList = [System.Collections.ArrayList]@()
+		$tryList = [System.Collections.ArrayList]@()
+
+		$task = Select-Object Name, Error, Started, Elapsed, Jobs, Try, If, Inputs, Outputs, Partial, After, Before, Info -InputObject 1
+		$task.Name = $Name
+		$task.Jobs = $jobList
+		$task.Try = $tryList
+		$task.If = $If
+		$task.After = $After
+		$task.Before = $Before
+		$task.Info = $MyInvocation
+
+		switch($PSCmdlet.ParameterSetName)
+		{
+			'Incremental' {
+				$task.Inputs, $task.Outputs = *KV* $Incremental
+			}
+			'Partial' {
+				$task.Inputs, $task.Outputs = *KV* $Partial
+				$task.Partial = $true
 			}
 		}
-		elseif (($_ -is [string]) -or ($_ -is [scriptblock])) {
-			$null = $jobList.Add($_)
-		}
-		else {
-			Invoke-BuildError "Task '$Name': Invalid job type." InvalidArgument $_
-		}
-	}}}
 
-	$BuildList.Add($Name, $task)
+		if ($Jobs) { foreach($_ in $Jobs) { foreach($_ in $_) {
+			$name2, $data = *Ref* $_
+			if ($data) {
+				$null = $jobList.Add($name2)
+				if (1 -eq $data) {
+					$null = $tryList.Add($name2)
+				}
+			}
+			elseif (($_ -is [string]) -or ($_ -is [scriptblock])) {
+				$null = $jobList.Add($_)
+			}
+			else {
+				throw "Invalid job type."
+			}
+		}}}
+
+		$BuildList.Add($Name, $task)
+	}
+	catch {
+		Invoke-BuildError "Task '$Name': $_" InvalidArgument
+	}
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -192,7 +189,9 @@ function Use-BuildAlias
 			else {
 				$dir = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
 			}
-			if (![System.IO.Directory]::Exists($dir)) { throw "Directory does not exist: '$dir'." }
+			if (![System.IO.Directory]::Exists($dir)) {
+				throw "Directory does not exist: '$dir'."
+			}
 		}
 		catch {
 			Invoke-BuildError $_ InvalidArgument $Path
@@ -256,10 +255,10 @@ function Write-Warning([string]$Message)
 function *Alter*($Extra, $Tasks, [switch]$After)
 {
 	foreach($_ in $Tasks) {
-		$name, $data = *Pair* $Extra $_
+		$name, $data = *Ref* $_
 		$task = $BuildList[$name]
 		if (!$task) {
-			Invoke-BuildError "Task '$Extra': Task '$name' is not defined." InvalidArgument $_
+			throw "Task '$name' is not defined."
 		}
 
 		$jobs = $task.Jobs
@@ -288,17 +287,22 @@ function *Alter*($Extra, $Tasks, [switch]$After)
 	}
 }
 
-function *Pair*($Task, $Pair)
+function *KV*($Hash)
 {
-	if ($Pair -is [hashtable]) {
-		if ($Pair.Count -ne 1) {
-			Invoke-BuildError "Task '$Task': Hashtable task reference should have one item." InvalidArgument $Pair
-		}
-		@($Pair.Keys)[0]
-		@($Pair.Values)[0]
+	if ($Hash.Count -ne 1) {
+		Invoke-BuildError "Invalid pair, expected hashtable @{value1 = value2}." InvalidArgument
+	}
+	, @($Hash.Keys)[0]
+	, @($Hash.Values)[0]
+}
+
+function *Ref*($Ref)
+{
+	if ($Ref -is [hashtable]) {
+		*KV* $Ref
 	}
 	else {
-		$Pair
+		$Ref
 	}
 }
 
@@ -313,7 +317,6 @@ function *IO*($Task)
 	Remove-Variable Task
 
 	${private:-inputs} = ${private:-Task}.Inputs
-
 	if (${private:-inputs} -is [scriptblock]) {
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		${private:-inputs} = @(& ${private:-inputs})
@@ -349,25 +352,23 @@ function *IO*($Task)
 			throw "Different input and output counts: $(${private:-paths}.Count) and $(${private:-outputs}.Count)."
 		}
 
-		${private:-index} = -1
-		${private:-inputs2} = [System.Collections.ArrayList]@()
-		${private:-outputs2} = [System.Collections.ArrayList]@()
+		$index = -1
+		$inputs2 = [System.Collections.ArrayList]@()
+		$outputs2 = [System.Collections.ArrayList]@()
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-		foreach(${private:-in} in ${private:-inputs}) {
-			++${private:-index}
-			${private:-out-path} = ${private:-outputs}[${private:-index}]
-			${private:-out} = [System.IO.FileInfo]$PSCmdlet.GetUnresolvedProviderPathFromPSPath(${private:-out-path})
-			if (!${private:-out}.Exists -or (${private:-in}.LastWriteTime -gt ${private:-out}.LastWriteTime)) {
-				$null = ${private:-inputs2}.Add(${private:-paths}[${private:-index}]), ${private:-outputs2}.Add(${private:-out-path})
+		foreach($_ in ${private:-inputs}) {
+			++$index
+			$path = ${private:-outputs}[$index]
+			$file = [System.IO.FileInfo]$PSCmdlet.GetUnresolvedProviderPathFromPSPath($path)
+			if (!$file.Exists -or ($_.LastWriteTime -gt $file.LastWriteTime)) {
+				$null = $inputs2.Add(${private:-paths}[$index]), $outputs2.Add($path)
 			}
 		}
 
-		if (${private:-inputs2}) {
-			${private:-Task}.Inputs = ${private:-inputs2}
-			${private:-Task}.Outputs = ${private:-outputs2}
-		}
-		else {
-			'Skipping because all outputs are up-to-date with respect to the inputs.'
+		if ($inputs2) {
+			${private:-Task}.Inputs = $inputs2
+			${private:-Task}.Outputs = $outputs2
+			return
 		}
 	}
 	else {
@@ -377,7 +378,7 @@ function *IO*($Task)
 			Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 			${private:-Task}.Outputs = & ${private:-Task}.Outputs
 			if (!${private:-Task}.Outputs) {
-				throw 'Incremental output is empty. Expected at list one item.'
+				throw 'Incremental output cannot be empty.'
 			}
 		}
 
@@ -389,22 +390,20 @@ function *IO*($Task)
 				return
 			}
 		}
-		'Skipping because all outputs are up-to-date with respect to the inputs.'
 	}
+	'Skipping because all outputs are up-to-date with respect to the inputs.'
 }
 
 function *Task*($Name, $Path)
 {
 	${private:-task} = $BuildList[$Name]
 	${private:-path} = if ($Path) { "$Path/$(${private:-task}.Name)" } else { ${private:-task}.Name }
-
 	if (${private:-task}.Error) {
-		Write-BuildText Yellow "${private:-path} failed before."
+		Write-BuildText DarkGray "${private:-path} failed."
 		return
 	}
-
 	if (${private:-task}.Started) {
-		Write-BuildText DarkYellow "${private:-path} was done before."
+		Write-BuildText DarkGray "${private:-path} is done."
 		return
 	}
 
@@ -422,7 +421,7 @@ function *Task*($Name, $Path)
 		}
 	}
 	if (!${private:-if}) {
-		Write-BuildText DarkYellow "$(${private:-task}.Name) skipped."
+		Write-BuildText DarkGray "${private:-path} skipped."
 		return
 	}
 
@@ -442,14 +441,13 @@ function *Task*($Name, $Path)
 					if (${private:-task}.Try -notcontains ${private:-job}) {
 						throw
 					}
-					${private:-why} = *Try-Task* ${private:-job}
-					if (${private:-why}) {
-						Write-BuildText Red ${private:-why}
+					$why = *Try-Task* ${private:-job}
+					if ($why) {
+						Write-BuildText Red $why
 						throw
 					}
 					else {
-						${private:-job} = $BuildList[${private:-job}]
-						Write-BuildText Red (${private:-job}.Error | Out-String)
+						Write-BuildText Red ($BuildList[${private:-job}].Error | Out-String)
 					}
 				}
 			}
@@ -471,31 +469,31 @@ function *Task*($Name, $Path)
 
 				if (${private:-no-input}) {
 					Write-BuildText DarkYellow ${private:-no-input}
+					continue
 				}
-				else {
-					Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-					if ($null -eq ${private:-no-input}) {
-						$Inputs = ${private:-task}.Inputs
-						$Outputs = ${private:-task}.Outputs
-						if (${private:-task}.Partial) {
-							${private:-index} = -1
-							$Inputs | .{process{
-								++${private:-index}
-								$$ = $Outputs[${private:-index}]
-								$_
-							}} | & ${private:-job}
-						}
-						else {
-							$Inputs | & ${private:-job}
-						}
+
+				Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
+				if ($null -eq ${private:-no-input}) {
+					$Inputs = ${private:-task}.Inputs
+					$Outputs = ${private:-task}.Outputs
+					if (${private:-task}.Partial) {
+						${private:-index} = -1
+						$Inputs | .{process{
+							++${private:-index}
+							$$ = $Outputs[${private:-index}]
+							$_
+						}} | & ${private:-job}
 					}
 					else {
-						& ${private:-job}
+						$Inputs | & ${private:-job}
 					}
+				}
+				else {
+					& ${private:-job}
+				}
 
-					if (${private:-task}.Jobs.Count -ge 2) {
-						Write-BuildText DarkYellow "${private:-title} is done."
-					}
+				if (${private:-task}.Jobs.Count -ge 2) {
+					Write-BuildText DarkYellow "${private:-title} is done."
 				}
 			}
 		}
@@ -523,9 +521,7 @@ function *Try-Task*($TryTask)
 {
 	foreach($_ in $BuildTask) {
 		$why = *Try-Tree* $_ $TryTask
-		if ($why) {
-			return $why
-		}
+		if ($why) { return $why }
 	}
 }
 
@@ -536,16 +532,14 @@ function *Try-Tree*($Task, $TryTask)
 
 	if ($it.Jobs -contains $TryTask) {
 		if ($it.Try -notcontains $TryTask) {
-			"Fatal: Task '$Task' calls failed '$TryTask' not protected."
+			"Task '$Task' calls failed '$TryTask' not protected."
 		}
 		return
 	}
 
 	foreach($_ in $it.Jobs) { if ($_ -is [string]) {
 		$why = *Try-Tree* $_ $TryTask
-		if ($why) {
-			return $why
-		}
+		if ($why) { return $why }
 	}}
 }
 
@@ -554,22 +548,15 @@ function *Preprocess*($Task, $Done)
 	if (!$Task.If) { return }
 
 	$count = 1 + $Done.Add($Task)
-
 	foreach($_ in $Task.Jobs) { if ($_ -is [string]) {
 		$job = $BuildList[$_]
 
 		if (!$job) {
-			Invoke-BuildError @"
-Task '$($Task.Name)': Task '$_' is not defined.
-$(*Fix* $Task)
-"@ ObjectNotFound $_
+			Invoke-BuildError "Task '$($Task.Name)': Task '$_' is not defined.`r`n$(*Fix* $Task)" ObjectNotFound
 		}
 
 		if ($Done.Contains($job)) {
-			Invoke-BuildError @"
-Task '$($Task.Name)': Cyclic reference to '$_'.
-$(*Fix* $Task)
-"@ InvalidOperation $_
+			Invoke-BuildError "Task '$($Task.Name)': Cyclic reference to '$_'.`r`n$(*Fix* $Task)" InvalidOperation
 		}
 
 		*Preprocess* $job $Done
@@ -599,19 +586,22 @@ function *Summary*($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
 	Write-BuildText $color "$text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed"
 }
 
-### Resolve the file
+### Resolve script
 $ErrorActionPreference = 'Stop'
 ${private:-location} = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
 try {
 	if ($File) {
 		$BuildFile = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($File)
-		if (!([System.IO.File]::Exists($BuildFile))) { throw "Script does not exist: '$BuildFile'." }
+		if (!([System.IO.File]::Exists($BuildFile))) {
+			throw "Script does not exist: '$BuildFile'."
+		}
 	}
 	else {
 		$BuildFile = @([System.IO.Directory]::GetFiles(${private:-location}, '*.build.ps1'))
 		if (!$BuildFile) {
 			throw "Found no '*.build.ps1' files."
 		}
+
 		if ($BuildFile.Count -eq 1) {
 			$BuildFile = $BuildFile[0]
 		}
@@ -622,7 +612,9 @@ try {
 					break
 				}
 			}
-			if (!$BuildFile) { throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'." }
+			if (!$BuildFile) {
+				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+			}
 		}
 	}
 	$BuildRoot = Split-Path $BuildFile
@@ -631,7 +623,7 @@ catch {
 	Invoke-BuildError "$_" ObjectNotFound $File
 }
 
-### Set the variables
+### Set variables
 ${private:-parent} = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
 if (${private:-parent}) {
 	if (${private:-parent}.Description -eq 'cf62724cbbc24adea925ea0e73598492') {
@@ -670,67 +662,64 @@ if ($Result) {
 }
 Remove-Variable Task, File, Parameters, Result
 
-### Start
 ${private:-state} = 0
 try {
-	### Invoke the script
+	### Invoke script
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') $BuildFile"
-	${private:-it} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
-	${private:-it}
-	foreach(${private:-it} in ${private:-it}) { if (${private:-it} -is [scriptblock]) {
-		Invoke-BuildError "Invalid build script syntax at the script block {${private:-it}}" InvalidOperation
+	${private:_} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
+	if (!$BuildList.Count) {
+		Invoke-BuildError "There is no task in the script." InvalidOperation $BuildFile
+	}
+	$_
+	foreach($_ in $_) { if ($_ -is [scriptblock]) {
+		Invoke-BuildError "Invalid build script syntax at the script block {$_}" InvalidOperation
 	}}
 
-	### Alter task jobs
+	### Alter tasks
 	foreach(${private:-task} in $BuildList.Values) {
-		${private:-list} = ${private:-task}.Before
-		if (${private:-list}) {
-			*Alter* ${private:-task}.Name ${private:-list}
+		try {
+			${private:-list} = ${private:-task}.Before
+			if (${private:-list}) {
+				*Alter* ${private:-task}.Name ${private:-list}
+			}
+			${private:-list} = ${private:-task}.After
+			if (${private:-list}) {
+				*Alter* ${private:-task}.Name ${private:-list} -After
+			}
 		}
-		${private:-list} = ${private:-task}.After
-		if (${private:-list}) {
-			*Alter* ${private:-task}.Name ${private:-list} -After
+		catch {
+			Invoke-BuildError "Task '$(${private:-task}.Name)': $_." InvalidArgument
 		}
 	}
 
-	### List the tasks
+	### List tasks
 	if ('?' -eq $BuildTask) {
 		if (!${private:-result}) {
 			foreach($_ in $BuildList.Values) {
-			@"
-$($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) { $_ } else { '{..}' } }) -join ', ') $($_.Info.ScriptName):$($_.Info.ScriptLineNumber)
-"@
+				"$($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) {$_} else {'{..}'} }) -join ', ') $($_.Info.ScriptName):$($_.Info.ScriptLineNumber)"
 			}
 		}
 		return
 	}
 
-	### The default task
+	### Default task
 	if (!$BuildTask -or '.' -eq $BuildTask) {
-		if (!$BuildList.Count) {
-			Invoke-BuildError "There is no task in the script." InvalidOperation $BuildFile
-		}
-		if ($BuildList.Contains('.')) {
-			$BuildTask = '.'
-		}
-		else {
-			$BuildTask = $BuildList.Item(0).Name
-		}
+		$BuildTask = if ($BuildList.Contains('.')) {'.'} else {$BuildList.Item(0).Name}
 	}
 
 	### Preprocess tasks
-	foreach(${private:-it} in $BuildTask) {
-		${private:-task} = $BuildList[${private:-it}]
+	foreach($_ in $BuildTask) {
+		${private:-task} = $BuildList[$_]
 		if (!${private:-task}) {
-			Invoke-BuildError "Task '${private:-it}' is not defined." ObjectNotFound ${private:-it}
+			Invoke-BuildError "Task '$_' is not defined." ObjectNotFound $_
 		}
 		*Preprocess* ${private:-task} ([System.Collections.ArrayList]@())
 	}
 
 	### Process tasks
-	foreach(${private:-it} in $BuildTask) {
-		*Task* ${private:-it}
+	foreach($_ in $BuildTask) {
+		*Task* $_
 	}
 	${private:-state} = 1
 }

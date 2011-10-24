@@ -72,6 +72,11 @@ param
 	[switch]$Comment
 )
 
+function Invoke-BuildError([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0, $Target)
+{
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
+}
+
 ### Resolve the file
 if (!$File -and !([System.IO.Directory]::GetFiles($PSCmdlet.GetUnresolvedProviderPathFromPSPath(''), '*.build.ps1'))) {
 
@@ -84,7 +89,7 @@ if (!$File -and !([System.IO.Directory]::GetFiles($PSCmdlet.GetUnresolvedProvide
 	if (!$File) {
 		for($private:dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath('');; $private:dir = Split-Path $private:dir) {
 			if (!$private:dir) {
-				throw "Cannot find *.build.ps1 in the parent tree."
+				Invoke-BuildError "Cannot find *.build.ps1 in the parent tree."
 			}
 			$private:it = @([System.IO.Directory]::GetFiles($private:dir, '*.build.ps1'))
 			if ($private:it.Count -eq 1) {
@@ -99,7 +104,7 @@ if (!$File -and !([System.IO.Directory]::GetFiles($PSCmdlet.GetUnresolvedProvide
 					}
 				}
 				if (!$File) {
-					throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
+					Invoke-BuildError "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
 				}
 				break
 			}
@@ -140,10 +145,7 @@ if ($Tree -or $Comment) {
 				$job = $BuildList[$_]
 
 				if ($Done.Contains($job)) {
-					throw @"
-Task '$($Task.Name)': Cyclic reference to '$_'.
-$($Task.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
-"@
+					Invoke-BuildError "Task '$($Task.Name)': Cyclic reference to '$_'."
 				}
 
 				ShowTaskTree $job $Step $Done
@@ -195,10 +197,7 @@ $($Task.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 	foreach($it in $BuildList.Values) { foreach($job in $it.Jobs) { if ($job -is [string]) {
 		$it2 = $BuildList[$job]
 		if (!$it2) {
-			throw @"
-Task '$($it.Name)': Task '$job' is not defined.
-$($it.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
-"@
+			Invoke-BuildError "Task '$($it.Name)': Task '$job' is not defined."
 		}
 		$it2.Reference[$it.Name] = 0
 	}}}
@@ -207,7 +206,7 @@ $($it.Info.PositionMessage.Trim().Replace("`n", "`r`n"))
 	foreach($name in $(if ($Task -and '?' -ne $Task) { $Task } else { $BuildList.Keys })) {
 		$it = $BuildList[$name]
 		if (!$it) {
-			throw "Task '$name' is not defined."
+			Invoke-BuildError "Task '$name' is not defined."
 		}
 		ShowTaskTree $it 0 ([System.Collections.ArrayList]@())
 	}

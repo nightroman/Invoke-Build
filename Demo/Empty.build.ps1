@@ -1,5 +1,0 @@
-
-<#
-.Synopsis
-	Empty script.
-#>

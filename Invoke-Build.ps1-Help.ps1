@@ -259,12 +259,13 @@
 		Tells to process the task as incremental. It is a hashtable with a
 		single entry where the key is inputs and the value is outputs.
 
-		Inputs and outputs are file system items or literal file paths or
-		script blocks which gets them.
+		Inputs are file items or paths or a script block which gets them.
+
+		Outputs are file paths or a script block which gets them.
 
 		Automatic variables for task script jobs:
-		- $Inputs - full input paths, ArrayList with strings
-		- $Outputs - outputs, [string] or [string[]]
+		- $Inputs - ArrayList with full input paths
+		- $Outputs - exactly as defined or returned by a script block
 
 		See more about incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks
@@ -274,19 +275,18 @@
 		with a single entry where the key is inputs and the value is outputs.
 		There must be one-to-one correspondence between input and output items.
 
-		Inputs and outputs are file system items or literal file paths or
-		script blocks which gets them.
+		Inputs are file items or paths or a script block which gets them.
 
-		If the outputs value is defined as a script block then it is invoked
-		with full input paths piped to it.
+		Outputs are file paths or a script block which is invoked with full
+		input paths piped to it in order to transform them into output paths.
 
 		Automatic variables for script jobs:
-		- $Inputs - full input paths, ArrayList with strings
-		- $Outputs - outputs (transformed inputs), ArrayList
+		- $Inputs - ArrayList with full input paths
+		- $Outputs - ArrayList with paths as defined or transformed
 
 		In addition, inside process{} blocks:
-		- $_ - the current full input path
-		- $$ - the current output path
+		- $_ - current full input path
+		- $$ - current output path
 
 		See more about partial incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks

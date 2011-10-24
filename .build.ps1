@@ -86,17 +86,19 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	)
 }
 
-# Make and test the package scripts and clean.
-# It is not supposed to be called with other tasks.
+# Make the package, test in it with Demo renamed to [ ] and clean.
+#! It is not supposed to be called with other tasks.
 task PackageTest Package, {
-	# test in the package and using tools exactly from the package
+	# make it much harder with square brackets
+	Move-Item -LiteralPath z\tools\Demo 'z\tools\[ ]'
+	# test in the package using tools exactly from the package
 	Set-Alias Invoke-Build "$BuildRoot\z\tools\Invoke-Build.ps1"
-	Set-Location z\tools\Demo
+	Set-Location -LiteralPath 'z\tools\[ ]'
 	..\Build.ps1
 
 	# the last sanity check: expected package item count
 	$count = (Get-ChildItem .. -Force -Recurse).Count
-	assert ($count -eq 23) $count
+	assert ($count -eq 22) "Unexpected package item count: $count"
 },
 Clean
 
@@ -159,7 +161,7 @@ task Test {
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
 	assert ($result.AllTasks.Count -eq 139) $result.AllTasks.Count
-	assert ($result.Tasks.Count -eq 30) $result.Tasks.Count
+	assert ($result.Tasks.Count -eq 29) $result.Tasks.Count
 
 	assert ($result.AllErrorCount -eq 28) $result.AllErrorCount
 	assert ($result.ErrorCount -eq 0) $result.AllErrorCount

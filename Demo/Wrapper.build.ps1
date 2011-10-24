@@ -177,10 +177,10 @@ Summary,
 @{TreeCyclicReference=1},
 {
 	$e = error TreeTaskNotDefined
-	assert ("$e" -like "Task 'task1': Task 'missing' is not defined.*At *\z\test.build.ps1:*task <<<<  task1 *")
+	assert ("$e" -eq "Task 'task1': Task 'missing' is not defined.")
 
 	$e = error TreeCyclicReference
-	assert ("$e" -like "Task 'task2': Cyclic reference to 'task1'.*At *\z\test.build.ps1:*task <<<<  task2 *")
+	assert ("$e" -eq "Task 'task2': Cyclic reference to 'task1'.")
 
 	Remove-Item z -Force -Recurse
 }
