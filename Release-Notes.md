@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.38
+
+More info in invalid task errors and more such tests.
+
 ## v1.0.37
 
 Script processing checks for "no tasks" first and fails if this is the case.
