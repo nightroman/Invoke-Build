@@ -59,7 +59,7 @@ task TaskAddedTwice {
 	}
 }
 
-# The tested task has three valid jobs and one invalid (42 ~ [int]).
+# The task has three valid jobs and one invalid (42 ~ [int]).
 task InvalidJobType {
 	Test "Add-BuildTask : Task '.': Invalid job type.*At *InvalidArgument*" {
 		task task1 {}
@@ -73,12 +73,26 @@ task InvalidJobType {
 	}
 }
 
-# The tested task uses valid job type but its value is invalid.
+# The task has invalid job value.
 task InvalidJobValue {
-	Test "Add-BuildTask : Invalid pair, expected hashtable @{value1 = value2}.*task <<<<*InvalidArgument*" {
+	Test "Add-BuildTask : Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
 		task . @(
 			@{ task2 = 1; task1 = 1 }
 		)
+	}
+}
+
+# The task has invalid value in After.
+task InvalidJobValueAfter {
+	Test "*\Invoke-Build.ps1 : Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidAfter*InvalidArgument*" {
+		task InvalidAfter -After @{}
+	}
+}
+
+# The task has invalid value in Before.
+task InvalidJobValueBefore {
+	Test "*\Invoke-Build.ps1 : Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidBefore*InvalidArgument*" {
+		task InvalidBefore -Before @{}
 	}
 }
 
@@ -91,19 +105,33 @@ task IncrementalAndPartial {
 
 # Invalid Incremental/Partial hashtable.
 task IncrementalInvalidHashtable {
-	Test "Add-BuildTask : Invalid pair, expected hashtable @{value1 = value2}.*task <<<<*InvalidArgument*" {
+	Test "Add-BuildTask : Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
 		task . -Incremental @{} { throw 'Unexpected.' }
 	}
-	Test "Add-BuildTask : Invalid pair, expected hashtable @{value1 = value2}.*task <<<<*InvalidArgument*" {
+	Test "Add-BuildTask : Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
 		task . -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
-# Example of a missing task. (Task preprocessing).
+# Missing task in jobs.
 task TaskNotDefined {
 	Test "*\Invoke-Build.ps1 : Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *ObjectNotFound: (:)*" {
 		task task1 missing, {}
 		task . task1, {}
+	}
+}
+
+# Missing task in After.
+task TaskNotDefinedAfter {
+	Test "*\Invoke-Build.ps1 : Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*InvalidArgument: (:)*" {
+		task AfterMissing -After MissingTask {}
+	}
+}
+
+# Missing task in Before.
+task TaskNotDefinedBefore {
+	Test "*\Invoke-Build.ps1 : Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*InvalidArgument: (:)*" {
+		task BeforeMissing -Before MissingTask {}
 	}
 }
 
@@ -122,7 +150,11 @@ ScriptOutput,
 TaskAddedTwice,
 InvalidJobType,
 InvalidJobValue,
+InvalidJobValueAfter,
+InvalidJobValueBefore,
 IncrementalAndPartial,
 IncrementalInvalidHashtable,
 TaskNotDefined,
+TaskNotDefinedAfter,
+TaskNotDefinedBefore,
 CyclicReference

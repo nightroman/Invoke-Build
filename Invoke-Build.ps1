@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.37'
+	[System.Version]'1.0.38'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -290,7 +290,7 @@ function *Alter*($Extra, $Tasks, [switch]$After)
 function *KV*($Hash)
 {
 	if ($Hash.Count -ne 1) {
-		Invoke-BuildError "Invalid pair, expected hashtable @{value1 = value2}." InvalidArgument
+		throw "Invalid pair, expected hashtable @{X = Y}."
 	}
 	, @($Hash.Keys)[0]
 	, @($Hash.Values)[0]
@@ -679,17 +679,17 @@ try {
 	### Alter tasks
 	foreach(${private:-task} in $BuildList.Values) {
 		try {
-			${private:-list} = ${private:-task}.Before
-			if (${private:-list}) {
-				*Alter* ${private:-task}.Name ${private:-list}
+			$_ = ${private:-task}.Before
+			if ($_) {
+				*Alter* ${private:-task}.Name $_
 			}
-			${private:-list} = ${private:-task}.After
-			if (${private:-list}) {
-				*Alter* ${private:-task}.Name ${private:-list} -After
+			$_ = ${private:-task}.After
+			if ($_) {
+				*Alter* ${private:-task}.Name $_ -After
 			}
 		}
 		catch {
-			Invoke-BuildError "Task '$(${private:-task}.Name)': $_." InvalidArgument
+			Invoke-BuildError "Task '$(${private:-task}.Name)': $_`r`n$(*Fix* ${private:-task})" InvalidArgument
 		}
 	}
 
