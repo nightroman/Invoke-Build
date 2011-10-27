@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.40
+
+Cosmetic changes in the engine and help.
+
+Removed some redundancies from tests.
+
 ## v1.0.39
 
 New special task `*` (in addition to `?`). `*` tells to invoke all independent

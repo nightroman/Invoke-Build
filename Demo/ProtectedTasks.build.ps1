@@ -4,7 +4,7 @@
 	Example of protected task jobs (@{Task=1} notation).
 
 .Example
-	Invoke-Build . ProtectedTasks.build.ps1
+	Invoke-Build * ProtectedTasks.build.ps1
 #>
 
 # Import tasks Error1 and Error2 (dot-sourced because imported with data).
@@ -66,6 +66,3 @@ task Survives2 @(
 $JobList = @{Error1=1}, @{Error2=1}
 task Survives3 $JobList
 task Survives4 $JobList
-
-# The default task calls the tests.
-task . Survives1, Survives2, Survives3, Survives4

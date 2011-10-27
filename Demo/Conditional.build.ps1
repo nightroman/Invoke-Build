@@ -15,7 +15,6 @@
 
 	The script also shows how to use script variables shared between tasks.
 
-.Notes
 	Errors are tested in ErrorCases.build.ps1.
 
 .Example

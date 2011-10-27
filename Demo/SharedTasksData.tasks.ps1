@@ -4,20 +4,14 @@
 	Example of imported tasks and data (like MSBuild .targets file).
 
 .Description
-	See .build.ps1, the line with SharedTasksData.tasks.ps1 and comments.
-	It is also imported by ProtectedTasks.build.ps1 and ErrorCases.build.ps1.
+	It is not typical but imported task scripts may have script parameters and
+	variables, just like build scripts. In this case script should be imported
+	by the operator '.' (dot-sourced), so that parameters and variables go to
+	the scope of a calling script. Mind potential variable name conflicts in
+	the same script scope!
+
+	This script is used by ProtectedTasks.build.ps1 and ErrorCases.build.ps1.
 #>
-
-$MySharedValue1 = 'shared 1'
-task SharedValueTask1 {
-	'SharedValueTask1'
-
-	# test: the value is available
-	assert (Test-Path Variable:\MySharedValue1)
-
-	# use the value (just output in here)
-	"MySharedValue1='$MySharedValue1'"
-}
 
 # This task fails (but increments its call counter).
 $MyCountError1 = 0
@@ -27,7 +21,7 @@ task Error1 {
 	throw "Error1"
 }
 
-# This task is the same as Error1, it just uses different names.
+# This task is the same as Error1 but uses different names.
 $MyCountError2 = 0
 task Error2 {
 	++$script:MyCountError2

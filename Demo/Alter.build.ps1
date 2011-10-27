@@ -1,14 +1,14 @@
 
 <#
 .Synopsis
-	Tests tasks altering others by After and Before.
+	Tests tasks altering others by the parameters After and Before.
 
 .Example
 	Invoke-Build * Alter.build.ps1
 #>
 
-# These tasks are to be altered below. Imagine for example that they are in
-# another script dot-sourced in here and we do not want or can modify it.
+# These tasks are to be altered below. Imagine that they are in another script
+# which is dot-sourced in here and we do not want or can modify this script.
 task PreTask1 { 'In PreTask1' }
 task PostTask1 { 'In PostTask1' }
 task Task1 PreTask1, { 'In Task1' }, PostTask1

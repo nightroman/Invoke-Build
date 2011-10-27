@@ -36,7 +36,7 @@
 	[1] Write-Warning is redefined internally in order to count warnings in
 	tasks, build and other scripts. But warnings in modules are not counted.
 
-	[2] It is for build hooks 'File', not for build scripts and tasks.
+	[2] It is for GetFile hooks, not for build scripts and tasks.
 
 	EXPOSED VARIABLES
 
@@ -47,7 +47,7 @@
 		* WhatIf    - WhatIf mode, Invoke-Build parameter
 		* BuildRoot - build script directory (by default)
 		* BuildFile - build script file path
-		* BuildTask - invoked task names
+		* BuildTask - initial task names
 
 	Variables for internal use by the engine:
 
@@ -57,21 +57,23 @@
 		Task = @'
 		One or more tasks to be invoked. If it is not specified, null, empty,
 		or equal to '.' then the task '.' is invoked if it exists, otherwise
-		the first added task, including imported, is invoked.
+		the first added task is invoked.
 
-		Special tasks:
-		? - List the tasks with brief information without invoking.
-		* - Invoke all independent tasks (all tasks starting from roots).
-			This is for test scripts where all tasks (tests) are invoked.
+		NOTE: Names with special wildcard characters are deprecated.
 
-		Names with wildcard characters are deprecated.
+		SPECIAL COMMAND TASKS
+
+		? - Tells to list the tasks with brief information without invoking.
+
+		* - Tells to invoke all root tasks. This batch task is designed for
+		test scripts where all tasks are some tests. * invokes these tests.
 '@
 		File = @'
-		The build script which defines build tasks by Add-BuildTask (task).
+		A build script which defines build tasks by Add-BuildTask (task).
 
 		If it is not specified then Invoke-Build looks for "*.build.ps1" files
 		in the current location. A single file is used as the script. If there
-		are more files then ".build.ps1" is used as the default.
+		are more files then ".build.ps1" is used.
 '@
 		Parameters = @'
 		A hashtable of parameters passed in the build script. Scripts define
@@ -220,7 +222,7 @@
 '@
 	parameters = @{
 		Name = @'
-		The task name. Names with wildcard characters are deprecated.
+		The task name. Names with special wildcard characters are deprecated.
 
 		Consider to use simple names without punctuation. Task names are used
 		in the protected call notation @{TaskName = 1}. If a name is simple

@@ -7,20 +7,20 @@
 	Invoke-Build . Assert.build.ps1
 #>
 
-# $ErrorActionPreference is Stop by default
+# $ErrorActionPreference is 'Stop' by default.
 assert ($ErrorActionPreference -eq 'Stop')
 
-# But scripts can change it.
+# But scripts can change this.
 $ErrorActionPreference = 0
 
-# Also check this: $WhatIf is set on ?
+# Also check that $WhatIf is true on ?
 assert (('?' -ne $BuildTask) -or $WhatIf)
 
-# Assert does not require [bool], any object will do
+# Assert does not require Boolean, any object will do.
 assert "Hi!"
 assert $Host
 
-# This task fails with a default message.
+# This task fails with the default message.
 task AssertDefault {
 	# Check $ErrorActionPreference
 	assert ($ErrorActionPreference -eq 0)
@@ -28,7 +28,7 @@ task AssertDefault {
 	# Hack needed only for testing, change
 	$script:ErrorActionPreference = 'Stop'
 
-	# The simplest assert
+	# The simplest assert always fails
 	assert
 }
 

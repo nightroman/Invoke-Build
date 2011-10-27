@@ -38,7 +38,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.39'
+	[System.Version]'1.0.40'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -50,8 +50,8 @@ function Add-BuildTask
 		[Parameter(Position = 0, Mandatory = $true)][string]$Name,
 		[Parameter(Position = 1)][object[]]$Jobs,
 		[Parameter()][object]$If = $true,
-		[Parameter(ParameterSetName='Incremental')][hashtable]$Incremental,
-		[Parameter(ParameterSetName='Partial')][hashtable]$Partial,
+		[Parameter(ParameterSetName = 'Incremental')][hashtable]$Incremental,
+		[Parameter(ParameterSetName = 'Partial')][hashtable]$Partial,
 		[Parameter()][object[]]$After,
 		[Parameter()][object[]]$Before
 	)
@@ -73,8 +73,7 @@ function Add-BuildTask
 		$task.Before = $Before
 		$task.Info = $MyInvocation
 
-		switch($PSCmdlet.ParameterSetName)
-		{
+		switch($PSCmdlet.ParameterSetName) {
 			'Incremental' {
 				$task.Inputs, $task.Outputs = *KV* $Incremental
 			}
@@ -232,11 +231,7 @@ function Get-BuildFile($Path)
 		$files
 	}
 	else {
-		foreach($_ in $files) {
-			if ([System.IO.Path]::GetFileName($_) -eq '.build.ps1') {
-				return $_
-			}
-		}
+		foreach($_ in $files) { if ([System.IO.Path]::GetFileName($_) -eq '.build.ps1') { return $_ } }
 	}
 }
 
@@ -411,14 +406,6 @@ function *IO*($Task)
 	'Skipping because all outputs are up-to-date with respect to the inputs.'
 }
 
-function *Hook*
-{
-	if ($BuildHook) {
-		${private:-hook} = $BuildHook[$args[0]]
-		if (${private:-hook}) { . ${private:-hook} }
-	}
-}
-
 function *Task*($Name, $Path)
 {
 	${private:-task} = $BuildList[$Name]
@@ -431,7 +418,6 @@ function *Task*($Name, $Path)
 		Write-BuildText DarkGray "${private:-path} is done."
 		return
 	}
-
 	Remove-Variable Name, Path
 
 	${private:-if} = ${private:-task}.If
@@ -453,8 +439,8 @@ function *Task*($Name, $Path)
 	${private:-task}.Started = [System.DateTime]::Now
 	${private:-count} = ${private:-task}.Jobs.Count
 	${private:-number} = 0
-	${private:-do-input} = $true
-	${private:-no-input} = $false
+	${private:-io} = $null -ne ${private:-task}.Inputs
+	${private:-skip} = $false
 	try {
 		foreach(${private:-job} in ${private:-task}.Jobs) {
 			++${private:-number}
@@ -466,14 +452,14 @@ function *Task*($Name, $Path)
 					if (${private:-task}.Try -notcontains ${private:-job}) {
 						throw
 					}
-					$why = *Try-Task* ${private:-job}
-					if ($why) {
-						Write-BuildText Red $why
-						throw
+					foreach($it in $BuildTask) {
+						$why = *Try-Task* $it ${private:-job}
+						if ($why) {
+							Write-BuildText Red $why
+							throw
+						}
 					}
-					else {
-						Write-BuildText Red ($BuildList[${private:-job}].Error | Out-String)
-					}
+					Write-BuildText Red ($_ | Out-String)
 				}
 			}
 			else {
@@ -485,20 +471,18 @@ function *Task*($Name, $Path)
 					continue
 				}
 
-				if (${private:-do-input}) {
-					${private:-do-input} = $false
-					if ($null -ne ${private:-task}.Inputs) {
-						${private:-no-input} = *IO* ${private:-task}
-					}
+				if (${private:-io}) {
+					${private:-io} = $false
+					${private:-skip} = *IO* ${private:-task}
 				}
 
-				if (${private:-no-input}) {
-					Write-BuildText DarkYellow ${private:-no-input}
+				if (${private:-skip}) {
+					Write-BuildText DarkYellow ${private:-skip}
 					continue
 				}
 
 				Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-				if ($null -eq ${private:-no-input}) {
+				if ($null -eq ${private:-skip}) {
 					$Inputs = ${private:-task}.Inputs
 					$Outputs = ${private:-task}.Outputs
 					if (${private:-task}.Partial) {
@@ -542,30 +526,30 @@ function *Task*($Name, $Path)
 	}
 }
 
-function *Try-Task*($TryTask)
+function *Try-Task*($Try, $Task)
 {
-	foreach($_ in $BuildTask) {
-		$why = *Try-Tree* $_ $TryTask
-		if ($why) { return $why }
-	}
-}
-
-function *Try-Tree*($Task, $TryTask)
-{
-	$it = $BuildList[$Task]
+	$it = $BuildList[$Try]
 	if (!$it.If) { return }
 
-	if ($it.Jobs -contains $TryTask) {
-		if ($it.Try -notcontains $TryTask) {
-			"Task '$Task' calls failed '$TryTask' not protected."
+	if ($it.Jobs -contains $Task) {
+		if ($it.Try -notcontains $Task) {
+			"Task '$Try' calls failed '$Task' not protected."
 		}
 		return
 	}
 
 	foreach($_ in $it.Jobs) { if ($_ -is [string]) {
-		$why = *Try-Tree* $_ $TryTask
+		$why = *Try-Task* $_ $Task
 		if ($why) { return $why }
 	}}
+}
+
+function *Hook*
+{
+	if ($BuildHook) {
+		${private:-hook} = $BuildHook[$args[0]]
+		if (${private:-hook}) { . ${private:-hook} }
+	}
 }
 
 function *Preprocess*($Task, $Done)

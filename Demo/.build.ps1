@@ -29,7 +29,7 @@ param
 )
 
 # This value is available for all tasks ($MyValue1).
-# Unlike parameters it is initialized internally.
+# Unlike parameters it is initialized in the script only.
 # Values can be changed by tasks ($script:MyValue1 = ...).
 $MyValue1 = "value 1"
 
@@ -39,16 +39,14 @@ $MyPath = $MyInvocation.MyCommand.Path
 assert ($MyPath -eq $BuildFile)
 assert ((Split-Path $MyPath) -eq $BuildRoot)
 
-# In order to import more tasks invoke the script containing them.
-# *.tasks.ps1 files play the same role as MSBuild *.targets files.
+# In order to import more tasks invoke the script containing them. *.tasks.ps1
+# files play the same role as MSBuild *.targets files. NOTE: It is not typical
+# but imported tasks may have parameters and values as well. In this case task
+# scripts should be dot-sourced (see how SharedTasksData.tasks.ps1 is used in
+# other scripts).
 .\SharedTasks.tasks.ps1
 
-# It is not typical but imported tasks may have parameters and values
-# as well. In this case the *.tasks.ps1 script has to be dot-sourced.
-# Mind potential variable name conflicts in the same script scope!
-. .\SharedTasksData.tasks.ps1
-
-# Test warning.
+# Warning. Warnings are shown together with errors in the build summary.
 Write-Warning "Ignore this warning."
 
 # -WhatIf is used in order to show task scripts without invoking them.
@@ -60,26 +58,30 @@ task WhatIf {
 	assert ($Result.Tasks.Count -eq 1)
 }
 
-# "Invoke-Build ?" lists tasks: 1) text; 2) data
+# "Invoke-Build ?" lists tasks:
+# 1) show tasks with brief information (just ?);
+# 2) get task list (use ? with the parameter Result).
+# The wrapper Build.ps1 uses ? and Result in order to show detailed task trees.
 task ListTask {
-	# text
+	# show tasks
 	Invoke-Build ? Assert.build.ps1
 
-	# data
+	# get task list
 	Invoke-Build ? Assert.build.ps1 -Result Result
 	assert ($Result.Count -eq 3)
 }
 
-# ". Invoke-Build" is used in order to use Get-Help:
+# ". Invoke-Build" is used in order to load exposed functions and use Get-Help.
+# This command itself shows the current version and function help summary.
 task ShowInfo {
 	. Invoke-Build
 }
 
-# Test null/empty job tasks. They are rare but possible.
+# Tasks with null or empty job lists are rare but possible.
 task Dummy1
 task Dummy2 @()
 
-# Parameters and values are just variables in the script scope.
+# Script parameters and values are standard variables in the script scope.
 # Read them as $Variable. Write them as $script:Variable = ...
 task ParamsValues1 {
 	"In ParamsValues1"
@@ -95,13 +97,13 @@ task ParamsValues1 {
 	$script:MyNewValue1 = 42
 }
 
-# This task invokes (depends on) tasks ParamsValues1 and SharedValueTask1 and
-# then invokes its own script. Dependent tasks and own scripts are specified by
-# the parameter Jobs. Any number of any kind of jobs and any order is allowed.
-# In particular dependent tasks can be specified after or between own scripts.
-task ParamsValues2 ParamsValues1, SharedValueTask1, {
+# This task invokes (depends on) the task ParamsValues1 and then invokes its
+# own script. Dependent tasks and own scripts are specified by the parameter
+# Jobs. Any number and any order of jobs is allowed. Dependent tasks often go
+# before own scripts but tasks are allowed after and between scripts as well.
+task ParamsValues2 ParamsValues1, {
 	"In ParamsValues2"
-	"MyParam1='$MyParam1' MyValue1='$MyValue1' MyNewValue1='$MyNewValue1' MySharedValue1='$MySharedValue1'"
+	"MyParam1='$MyParam1' MyValue1='$MyValue1' MyNewValue1='$MyNewValue1'"
 }
 
 # Just like regular scripts, build scripts may have functions used by tasks.
@@ -118,17 +120,18 @@ function Test-Issue([Parameter()]$Task, $File, $ExpectedMessagePattern) {
 }
 
 # Test After and Before tasks.
+# * is used to invoke all tests.
 task Alter {
 	Invoke-Build * Alter.build.ps1
 }
 
-# Test assert.
+# Test assert, the alias of Assert-BuildTrue.
 task Assert {
 	Invoke-Build . Assert.build.ps1
 }
 
 # Test conditional tasks.
-# It shows how to invoke a build script with parameters (Debug|Release).
+# It also shows how to invoke build scripts with parameters.
 task Conditional {
 	# call with Debug
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
@@ -138,7 +141,7 @@ task Conditional {
 	Invoke-Build TestScriptCondition Conditional.build.ps1
 }
 
-# Test dynamic tasks (! and some other issues !).
+# Test dynamic tasks (! and other issues !).
 task Dynamic {
 	# first, just request the task list and test it
 	Invoke-Build ? Dynamic.build.ps1 -Result tasks
@@ -152,37 +155,39 @@ task Dynamic {
 	assert ($result.Tasks.Count -eq 5)
 }
 
-# Test exec.
+# Test exec, the alias of Invoke-BuildExec.
 task Exec {
 	Invoke-Build . Exec.build.ps1
 }
 
-# Test incremental tasks.
+# Test incremental and partial incremental tasks.
 task Incremental {
 	Invoke-Build . Incremental.build.ps1
 }
 
 # Test invalid tasks.
+# * is used to invoke all tests.
 task InvalidTasks {
 	Invoke-Build * InvalidTasks.build.ps1
 }
 
-# Tests property.
+# Test property, the alias of Get-BuildProperty.
 task Property {
 	Invoke-Build . Property.build.ps1
 }
 
 # Test protected tasks (@{Task=1} notation).
+# * is used to invoke all tests.
 task ProtectedTasks {
-	Invoke-Build . ProtectedTasks.build.ps1
+	Invoke-Build * ProtectedTasks.build.ps1
 }
 
-# Test 'use'.
+# Test use, the alias of Use-BuildAlias.
 task Use {
 	Invoke-Build . Use.build.ps1
 }
 
-# Tests 'Build.ps1'
+# Test the wrapper script Build.ps1.
 task Wrapper {
 	Invoke-Build . Wrapper.build.ps1
 }
@@ -209,7 +214,7 @@ Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not 
 '@
 }
 
-# Test/cover the default parameter.
+# Test the default parameter.
 task TestDefaultParameter {
 	Invoke-Build TestDefaultParameter Conditional.build.ps1
 }
@@ -231,7 +236,7 @@ task TestExitCode {
 	assert ($LastExitCode -eq 1)
 }
 
-# The task shows unwanted functions potentially introduced by Invoke-Build.
+# Show unwanted functions potentially introduced by Invoke-Build.
 task TestFunctions {
 	$list = PowerShell "Get-Command -CommandType Function | Select-Object -ExpandProperty Name"
 	$list += 'Test-Issue'
@@ -295,7 +300,7 @@ task TestVariables {
 	}}
 }
 
-# Show all help.
+# Show full help.
 task ShowHelp {
 	@(
 		'Invoke-Build'
@@ -336,8 +341,8 @@ TestExitCode,
 TestFunctions,
 TestVariables
 
-# This task calls all sample and the main test task.
-# By conventions it is the default task due to its name.
+# This is the default task due to its name, by the convention.
+# This task calls all the samples and the main test task.
 task . ParamsValues2, ParamsValues1, SharedTask2, {
 	"In default, script 1"
 },

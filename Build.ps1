@@ -32,9 +32,6 @@
 .Parameter WhatIf
 		See: help Invoke-Build -Parameter WhatIf
 
-.Parameter Summary
-		Tells to show task summary information after building.
-
 .Parameter Tree
 		Tells to analyse task references and show parent tasks and child trees
 		for the specified or all tasks. Tasks are not invoked. It throws if
@@ -45,6 +42,9 @@
 .Parameter Comment
 		Tells to show code comments preceding each task in the task tree. It is
 		used together with the switch Tree but now it works on its own as well.
+
+.Parameter Summary
+		Tells to show task summary information after building.
 #>
 
 param
