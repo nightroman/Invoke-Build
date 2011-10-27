@@ -4,11 +4,17 @@ Invoke-Build.ps1 - Build Automation in PowerShell
 
 ## Introduction
 
-Invoke-Build.ps1 is a build automation tool implemented as a standalone
-PowerShell script. It invokes tasks defined in build scripts written in
-PowerShell with a few domain-specific language features. Build flow and
-concepts are similar to MSBuild. Scripts are similar to psake but look more
-like usual due to standard PowerShell parameters and script scope variables.
+Invoke-Build.ps1 is a build automation tool implemented as a single PowerShell
+script. It invokes tasks defined in build scripts written in PowerShell with
+domain-specific language features. Build flow and concepts are similar to
+MSBuild. Scripts are similar to psake but look more like usual due to standard
+script parameters and script scope variables.
+
+Invoke-Build is suitable not only for *building*. It can be used for testing in
+PowerShell oriented projects. It is easy and convenient to implement PowerShell
+tests as build tasks. The engine ensures test logging and time measurement, all
+tests are invoked once, no test is forgotten (`*`), tests may have dependencies
+and hierarchical structure, and etc.
 
 Invoke-Build is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel. Every call maintains its state
@@ -74,7 +80,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 139 tasks, 28 errors, 1 warnings, 00:00:12
+    Build completed with errors. 141 tasks, 28 errors, 1 warnings, 00:00:15
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics

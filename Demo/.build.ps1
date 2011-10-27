@@ -15,9 +15,6 @@
 	Invoke-Build
 	Assuming Invoke-Build.ps1 is in the system path and the current location is
 	the Demo directory this command invokes the . task from this build script.
-
-.Link
-	Invoke-Build.ps1
 #>
 
 # Build scripts can use parameters passed in as
@@ -122,7 +119,7 @@ function Test-Issue([Parameter()]$Task, $File, $ExpectedMessagePattern) {
 
 # Test After and Before tasks.
 task Alter {
-	Invoke-Build . Alter.build.ps1
+	Invoke-Build * Alter.build.ps1
 }
 
 # Test assert.
@@ -167,7 +164,7 @@ task Incremental {
 
 # Test invalid tasks.
 task InvalidTasks {
-	Invoke-Build . InvalidTasks.build.ps1
+	Invoke-Build * InvalidTasks.build.ps1
 }
 
 # Tests property.
@@ -242,6 +239,7 @@ task TestFunctions {
 		'Add-BuildTask'
 		'Assert-BuildTrue'
 		'Get-BuildError'
+		'Get-BuildFile'
 		'Get-BuildProperty'
 		'Get-BuildVersion'
 		'Invoke-BuildError'
@@ -272,6 +270,7 @@ task TestVariables {
 		# build engine internals
 		'BuildList'
 		'BuildInfo'
+		'BuildHook'
 		# project build script
 		'Result'
 		'SkipTestDiff'

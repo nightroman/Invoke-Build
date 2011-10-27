@@ -31,9 +31,12 @@
 		* Use-BuildAlias (use)
 		* Write-BuildText
 		* Write-Warning [1]
+		* Get-BuildFile [2]
 
 	[1] Write-Warning is redefined internally in order to count warnings in
 	tasks, build and other scripts. But warnings in modules are not counted.
+
+	[2] It is for build hooks 'File', not for build scripts and tasks.
 
 	EXPOSED VARIABLES
 
@@ -48,7 +51,7 @@
 
 	Variables for internal use by the engine:
 
-		* BuildInfo, BuildList
+		* BuildHook, BuildInfo, BuildList
 '@
 	parameters = @{
 		Task = @'
@@ -56,8 +59,12 @@
 		or equal to '.' then the task '.' is invoked if it exists, otherwise
 		the first added task, including imported, is invoked.
 
-		Names starting with '?' are reserved for special engine commands:
-		? - tells to list the tasks without invoking.
+		Special tasks:
+		? - List the tasks with brief information without invoking.
+		* - Invoke all independent tasks (all tasks starting from roots).
+			This is for test scripts where all tasks (tests) are invoked.
+
+		Names with wildcard characters are deprecated.
 '@
 		File = @'
 		The build script which defines build tasks by Add-BuildTask (task).
@@ -104,6 +111,13 @@
 		Tells to show preprocessed tasks and their scripts instead of invoking
 		them. If a script does anything but adding and configuring tasks then
 		it may check for $WhatIf and skip some actions if it is true.
+'@
+		Hook = @'
+		External build hooks.
+
+		GetFile
+			This script block is called if the default build file is not found.
+			It gets full path of an alternative default file, if any.
 '@
 	}
 	inputs = @()
@@ -206,7 +220,7 @@
 '@
 	parameters = @{
 		Name = @'
-		The task name. Names starting with '?' are reserved for the engine.
+		The task name. Names with wildcard characters are deprecated.
 
 		Consider to use simple names without punctuation. Task names are used
 		in the protected call notation @{TaskName = 1}. If a name is simple
@@ -511,4 +525,23 @@
 			type = 'String'
 		}
 	)
+}
+
+### Get-BuildFile command help
+@{
+	command = 'Get-BuildFile'
+	synopsis = @'
+	Gets full path of the build file candidate in a directory.
+'@
+	description = @'
+	This function is not designed for build scripts and tasks. It is used
+	internally and exposed only for build hooks in wrapper scripts.
+'@
+	parameters = @{
+		Path = @'
+		A full directory path where to get a build file from.
+'@
+	}
+	inputs = @()
+	outputs = @{ type = 'String' }
 }

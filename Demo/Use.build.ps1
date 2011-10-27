@@ -14,10 +14,6 @@
 
 .Example
 	Invoke-Build . Use.build.ps1
-
-.Link
-	Invoke-Build
-	.build.ps1
 #>
 
 # Use the current framework at the script level (used by CurrentFramework).

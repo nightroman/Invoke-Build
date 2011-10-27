@@ -2,10 +2,6 @@
 <#
 .Synopsis
 	Tests various runtime errors.
-
-.Link
-	Invoke-Build
-	.build.ps1
 #>
 
 # Import tasks Error1 and Error2 (dot-sourced because imported with data).

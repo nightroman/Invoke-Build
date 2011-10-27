@@ -16,7 +16,7 @@
 	The script also shows how to use script variables shared between tasks.
 
 .Notes
-	A case of If block errors is tested in ErrorCases.build.ps1.
+	Errors are tested in ErrorCases.build.ps1.
 
 .Example
 	># Debug configuration
@@ -25,10 +25,6 @@
 .Example
 	># Release configuration
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
-
-.Link
-	Invoke-Build
-	.build.ps1
 #>
 
 param

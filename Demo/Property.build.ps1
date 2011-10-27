@@ -8,10 +8,6 @@
 
 .Example
 	Invoke-Build . Property.build.ps1
-
-.Link
-	Invoke-Build
-	.build.ps1
 #>
 
 param

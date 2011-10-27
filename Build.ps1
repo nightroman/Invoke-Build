@@ -7,16 +7,15 @@
 	This script calls Invoke-Build.ps1 with additional options.
 	It is mostly designed for interactive use in command lines.
 
-	If the parameter File is not specified and there is no *.build.ps1 files in
-	the current location then $env:InvokeBuildGetFile is called if it exists.
-	It gets either nothing or the file path based on the current location.
+	If File is not specified and the default file is not found then the script
+	defined as $env:InvokeBuildGetFile is called. It optionally gets the file
+	path based on the current location.
 
-	If File is still not defined then this script searches for *.build.ps1
-	candidates in the parent directory tree.
+	If File is still not defined then this script searches for default build
+	files in the parent directory tree.
 
-	Parameters are similar to Invoke-Build.ps1 parameters but:
-	* There are extra switches: Summary, Tree, Comment.
-	* Result is not available, it is used internally.
+	Parameters are main Invoke-Build parameters and some new:
+	* Summary, Tree, Comment.
 
 .Parameter Task
 		See: help Invoke-Build -Parameter Task
@@ -63,13 +62,13 @@ param
 	[switch]$WhatIf
 	,
 	[Parameter()]
-	[switch]$Summary
-	,
-	[Parameter()]
 	[switch]$Tree
 	,
 	[Parameter()]
 	[switch]$Comment
+	,
+	[Parameter()]
+	[switch]$Summary
 )
 
 function Invoke-BuildError([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0, $Target)
@@ -77,37 +76,17 @@ function Invoke-BuildError([string]$Message, [System.Management.Automation.Error
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
 }
 
-### Resolve the file
-if (!$File -and !([System.IO.Directory]::GetFiles($PSCmdlet.GetUnresolvedProviderPathFromPSPath(''), '*.build.ps1'))) {
+### Hook
+$BuildHook = @{
+	GetFile = {
+		if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
+			$_ = & $env:InvokeBuildGetFile
+			if ($_) { return $_ }
+		}
 
-	# call the script $env:InvokeBuildGetFile
-	if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
-		$File = & $env:InvokeBuildGetFile
-	}
-
-	# search in the parent tree
-	if (!$File) {
-		for($private:dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath('');; $private:dir = Split-Path $private:dir) {
-			if (!$private:dir) {
-				Invoke-BuildError "Cannot find *.build.ps1 in the parent tree."
-			}
-			$private:it = @([System.IO.Directory]::GetFiles($private:dir, '*.build.ps1'))
-			if ($private:it.Count -eq 1) {
-				$File = $private:it[0]
-				break
-			}
-			elseif ($private:it.Count -ge 2) {
-				foreach($private:it in $private:it) {
-					if ([System.IO.Path]::GetFileName($private:it) -eq '.build.ps1') {
-						$File = $private:it
-						break
-					}
-				}
-				if (!$File) {
-					Invoke-BuildError "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
-				}
-				break
-			}
+		for($dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath(''); $dir; $dir = Split-Path $dir) {
+			$_ = Get-BuildFile $dir
+			if ($_) { return $_ }
 		}
 	}
 }
@@ -188,7 +167,7 @@ if ($Tree -or $Comment) {
 	}
 
 	# get the tasks as $BuildList
-	Invoke-Build ? -File:$File -Parameters:$Parameters -Result BuildList
+	Invoke-Build ? -File:$File -Parameters:$Parameters -Hook:$BuildHook -Result BuildList
 
 	# references
 	foreach($it in $BuildList.Values) {
@@ -219,12 +198,12 @@ $private:_Task = $Task
 $private:_File = $File
 $private:_Parameters = $Parameters
 $private:_Summary = $Summary
-Remove-Variable Task, File, Parameters, Summary, Tree, Comment
+Remove-Variable Task, File, Parameters, Tree, Comment, Summary
 
 ### Build with results
 try {
 	$Result = if ($_Summary) { 'Result' } else { $null }
-	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -WhatIf:$WhatIf -Result:$Result
+	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Hook:$BuildHook -WhatIf:$WhatIf -Result:$Result
 }
 finally {
 	### Show summary

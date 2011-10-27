@@ -5,10 +5,6 @@
 
 .Example
 	Invoke-Build . Exec.build.ps1
-
-.Link
-	Invoke-Build
-	.build.ps1
 #>
 
 task ExecWorksCode0 {

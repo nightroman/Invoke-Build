@@ -22,6 +22,7 @@ param
 	[Parameter(Position = 0)][string[]]$Task,
 	[Parameter(Position = 1)][string]$File,
 	[Parameter(Position = 2)][hashtable]$Parameters,
+	[Parameter()][hashtable]$Hook,
 	[Parameter()][string]$Result,
 	[Parameter()][switch]$WhatIf
 )
@@ -37,13 +38,13 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.38'
+	[System.Version]'1.0.39'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
 {
-	[CmdletBinding(DefaultParameterSetName="All")]
+	[CmdletBinding(DefaultParameterSetName='.')]
 	param
 	(
 		[Parameter(Position = 0, Mandatory = $true)][string]$Name,
@@ -223,6 +224,22 @@ function Write-BuildText
 	}
 }
 
+#.ExternalHelp Invoke-Build.ps1-Help.xml
+function Get-BuildFile($Path)
+{
+	$files = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')
+	if ($files.Count -eq 1) {
+		$files
+	}
+	else {
+		foreach($_ in $files) {
+			if ([System.IO.Path]::GetFileName($_) -eq '.build.ps1') {
+				return $_
+			}
+		}
+	}
+}
+
 function Invoke-BuildError([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0, $Target)
 {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
@@ -392,6 +409,14 @@ function *IO*($Task)
 		}
 	}
 	'Skipping because all outputs are up-to-date with respect to the inputs.'
+}
+
+function *Hook*
+{
+	if ($BuildHook) {
+		${private:-hook} = $BuildHook[$args[0]]
+		if (${private:-hook}) { . ${private:-hook} }
+	}
 }
 
 function *Task*($Name, $Path)
@@ -597,24 +622,12 @@ try {
 		}
 	}
 	else {
-		$BuildFile = @([System.IO.Directory]::GetFiles(${private:-location}, '*.build.ps1'))
+		$BuildFile = Get-BuildFile ${private:-location}
 		if (!$BuildFile) {
-			throw "Found no '*.build.ps1' files."
+			$BuildFile = *Hook* GetFile
 		}
-
-		if ($BuildFile.Count -eq 1) {
-			$BuildFile = $BuildFile[0]
-		}
-		else {
-			$BuildFile = foreach($BuildFile in $BuildFile) {
-				if ([System.IO.Path]::GetFileName($BuildFile) -eq '.build.ps1') {
-					$BuildFile
-					break
-				}
-			}
-			if (!$BuildFile) {
-				throw "Found more than one '*.build.ps1' and none of them is '.build.ps1'."
-			}
+		if (!$BuildFile) {
+			throw "Cannot find the default file."
 		}
 	}
 	$BuildRoot = Split-Path $BuildFile
@@ -637,6 +650,7 @@ else {
 	Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
 }
 $BuildTask = $Task
+$BuildHook = $Hook
 ${private:-result} = $Result
 ${private:cf62724cbbc24adea925ea0e73598492} = $Parameters
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
@@ -660,7 +674,7 @@ if ($Result) {
 		New-Variable -Scope 1 $Result $BuildInfo -Force
 	}
 }
-Remove-Variable Task, File, Parameters, Result
+Remove-Variable Task, File, Parameters, Result, Hook
 
 ${private:-state} = 0
 try {
@@ -703,9 +717,20 @@ try {
 		return
 	}
 
-	### Default task
+	### Initial tasks
 	if (!$BuildTask -or '.' -eq $BuildTask) {
 		$BuildTask = if ($BuildList.Contains('.')) {'.'} else {$BuildList.Item(0).Name}
+	}
+	elseif ('*' -eq $BuildTask) {
+		$BuildTask = foreach($_ in $BuildList.Keys) {
+			foreach(${private:-task} in $BuildList.Values) {
+				if (${private:-task}.Jobs -contains $_) {
+					$_ = $null
+					break
+				}
+			}
+			if ($_) { $_ }
+		}
 	}
 
 	### Preprocess tasks

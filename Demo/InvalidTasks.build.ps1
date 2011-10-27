@@ -7,6 +7,9 @@
 	If a build script or a task is invalid then build fails on the first issue.
 	In order to test all issues and avoid too many small invalid scripts this
 	script creates and tests temporary scripts, one issue each.
+
+.Example
+	Invoke-Build * InvalidTasks.build.ps1
 #>
 
 # Writes a temporary script with an issue, calls it, compares the message.
@@ -143,18 +146,3 @@ task CyclicReference {
 		task . task1
 	}
 }
-
-task . `
-NoTasks,
-ScriptOutput,
-TaskAddedTwice,
-InvalidJobType,
-InvalidJobValue,
-InvalidJobValueAfter,
-InvalidJobValueBefore,
-IncrementalAndPartial,
-IncrementalInvalidHashtable,
-TaskNotDefined,
-TaskNotDefinedAfter,
-TaskNotDefinedBefore,
-CyclicReference

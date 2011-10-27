@@ -5,10 +5,6 @@
 
 .Example
 	Invoke-Build . Assert.build.ps1
-
-.Link
-	Invoke-Build
-	.build.ps1
 #>
 
 # $ErrorActionPreference is Stop by default

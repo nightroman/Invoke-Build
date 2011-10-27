@@ -1,14 +1,10 @@
 
 <#
 .Synopsis
-	Tests task parameters After and Before.
+	Tests tasks altering others by After and Before.
 
 .Example
-	Invoke-Build . Alter.build.ps1
-
-.Link
-	Invoke-Build
-	.build.ps1
+	Invoke-Build * Alter.build.ps1
 #>
 
 # These tasks are to be altered below. Imagine for example that they are in
@@ -40,6 +36,3 @@ task AfterTask3 -After @{Task3=1} {
 task BeforeTask3 -Before @{Task3=1} {
 	throw 'In BeforeTask3'
 }
-
-# Run tests.
-task . Task1, Task2, Task3

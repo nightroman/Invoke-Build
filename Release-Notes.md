@@ -1,6 +1,18 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.39
+
+New special task `*` (in addition to `?`). `*` tells to invoke all independent
+tasks, i.e. all tasks starting with roots. This is very useful for scripts with
+test tasks, one does not have to have a master task that calls all the others.
+Besides, `*` ensures that there is no test not called by mistake.
+
+Thus, some obsolete/redundant tasks were removed from scripts in *Demo*.
+
+New *Invoke-Build* parameter *Hook* for extensions. The only hook for now is
+*GetFile* which is used by *Build.ps1*. *Get-BuildFile* is exposed for this.
+
 ## v1.0.38
 
 More info in invalid task errors and more such tests.
