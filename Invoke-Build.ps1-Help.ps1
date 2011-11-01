@@ -64,6 +64,8 @@
 		SPECIAL COMMAND TASKS
 
 		? - Tells to list the tasks with brief information without invoking.
+		When used together with Result it returns tasks in the variable. It
+		also checks tasks and throws errors on missing or cyclic references.
 
 		* - Tells to invoke all root tasks. This batch task is designed for
 		test scripts where all tasks are some tests. * invokes these tests.
@@ -85,8 +87,9 @@
 		Result = @'
 		Specifies the variable name for the task collection or build results.
 
-		If the Task is '?' then the build script is invoked with WhatIf set,
-		tasks are collected in the result variable and build is not invoked.
+		If the Task is ? then the build script is invoked with WhatIf = $true,
+		tasks are checked for missing or cyclic references and returned in the
+		specified result variable.
 
 		Otherwise tasks are invoked and the variable contains the results.
 
@@ -118,8 +121,8 @@
 		External build hooks.
 
 		GetFile
-			This script block is called if the default build file is not found.
-			It gets full path of an alternative default file, if any.
+			A script block called when the default build file is not found.
+			It gets full path of an alternative default file or null.
 '@
 	}
 	inputs = @()

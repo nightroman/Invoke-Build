@@ -71,11 +71,6 @@ param
 	[switch]$Summary
 )
 
-function Invoke-BuildError([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0, $Target)
-{
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
-}
-
 ### Hook
 $BuildHook = @{
 	GetFile = {
@@ -93,7 +88,7 @@ $BuildHook = @{
 
 ### Show tree
 if ($Tree -or $Comment) {
-	function ShowTaskTree($Task, $Step, $Done)
+	function ShowTaskTree($Task, $Step)
 	{
 		if ($Step -eq 0) {''}
 		$tab = '    ' * $Step
@@ -115,20 +110,10 @@ if ($Tree -or $Comment) {
 		}
 		$info
 
-		# watch cyclic
-		$count = 1 + $Done.Add($Task)
-
 		# task jobs
 		foreach($_ in $Task.Jobs) {
 			if ($_ -is [string]) {
-				$job = $BuildList[$_]
-
-				if ($Done.Contains($job)) {
-					Invoke-BuildError "Task '$($Task.Name)': Cyclic reference to '$_'."
-				}
-
-				ShowTaskTree $job $Step $Done
-				$Done.RemoveRange($count, $Done.Count - $count)
+				ShowTaskTree ($BuildList[$_]) $Step
 			}
 			else {
 				$tab + '    {..}'
@@ -166,7 +151,7 @@ if ($Tree -or $Comment) {
 		[regex]::Split($comment.TrimEnd(), '[\r\n]+')
 	}
 
-	# get the tasks as $BuildList
+	# get tasks as $BuildList
 	Invoke-Build ? -File:$File -Parameters:$Parameters -Hook:$BuildHook -Result BuildList
 
 	# references
@@ -174,20 +159,12 @@ if ($Tree -or $Comment) {
 		$it | Add-Member -MemberType NoteProperty -Name Reference -Value @{}
 	}
 	foreach($it in $BuildList.Values) { foreach($job in $it.Jobs) { if ($job -is [string]) {
-		$it2 = $BuildList[$job]
-		if (!$it2) {
-			Invoke-BuildError "Task '$($it.Name)': Task '$job' is not defined."
-		}
-		$it2.Reference[$it.Name] = 0
+		$BuildList[$job].Reference[$it.Name] = 0
 	}}}
 
 	# show trees
 	foreach($name in $(if ($Task -and '?' -ne $Task) { $Task } else { $BuildList.Keys })) {
-		$it = $BuildList[$name]
-		if (!$it) {
-			Invoke-BuildError "Task '$name' is not defined."
-		}
-		ShowTaskTree $it 0 ([System.Collections.ArrayList]@())
+		ShowTaskTree ($BuildList[$name]) 0
 	}
 
 	return

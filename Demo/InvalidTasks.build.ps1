@@ -13,13 +13,13 @@
 #>
 
 # Writes a temporary script with an issue, calls it, compares the message.
-function Test($ExpectedMessagePattern, $Script) {
+function Test($ExpectedMessagePattern, $Script, $Task = '.') {
 	# write the temp script
 	$Script > z.build.ps1
 
-	# invoke it, catch the error, compare the message
+	# invoke, catch, compare
 	$message = ''
-	try { Invoke-Build . z.build.ps1 }
+	try { Invoke-Build $Task z.build.ps1 }
 	catch { $message = $_ | Out-String }
 	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedMessagePattern) {
@@ -30,15 +30,16 @@ function Test($ExpectedMessagePattern, $Script) {
 	Remove-Item z.build.ps1
 }
 
-# Build scripts should have at least one task defined.
+# Build scripts should have at least one task.
 task NoTasks {
 	Test "*\Invoke-Build.ps1 : There is no task in the script.*InvalidOperation*z.build.ps1:String*" {
 		# Script with no tasks
 	}
 }
 
-# Build scripts are not allowed to output script blocks. It makes no sense and,
-# more likely, indicates a script job defined after a task, not as a parameter.
+# Build scripts should not output script blocks. This often indicates a typical
+# mistake when a script is defined starting from a new line (tasks are function
+# calls, not definitions).
 task ScriptOutput {
 	Test "*\Invoke-Build.ps1 : Invalid build script syntax at the script block {*}*At *InvalidOperation*" {
 		task task1
@@ -50,8 +51,8 @@ task ScriptOutput {
 	}
 }
 
-# Tasks with same names cannot be added twice. But it is fine to use the same
-# task 2+ times in a task job list (it does not make much sense though).
+# Task names should be unique. But it is fine to use the same task name several
+# times in a task job list (this does not make much sense though).
 task TaskAddedTwice {
 	Test "Add-BuildTask : Task 'task1': Task name already exists:*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidArgument*" {
 		task task1 {}
@@ -138,11 +139,26 @@ task TaskNotDefinedBefore {
 	}
 }
 
-# Tasks with a cyclic reference: . -> task1 -> task2 -> task1 (oops!). (Task preprocessing).
+# Tasks with a cyclic reference: . -> task1 -> task2 -> task1
 task CyclicReference {
 	Test "*\Invoke-Build.ps1 : Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *InvalidOperation: (:)*" {
 		task task1 task2
 		task task2 task1
 		task . task1
+	}
+}
+
+# Cyclic references should be caught on ? as well.
+task CyclicReferenceList {
+	Test -Task ? "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *InvalidOperation: (:)*" {
+		task test1 test2
+		task test2 test1
+	}
+}
+# Cyclic references should be caught on * as well.
+task CyclicReferenceStar {
+	Test -Task * "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *InvalidOperation: (:)*" {
+		task test1 test2
+		task test2 test1
 	}
 }

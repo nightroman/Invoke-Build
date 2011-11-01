@@ -38,7 +38,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.40'
+	[System.Version]'1.0.41'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -552,23 +552,28 @@ function *Hook*
 	}
 }
 
-function *Preprocess*($Task, $Done)
-{
-	if (!$Task.If) { return }
+function *Test-Task*($Task) {
+	foreach($_ in $Task) {
+		$it = $BuildList[$_]
+		if (!$it) {
+			Invoke-BuildError "Task '$_' is not defined." ObjectNotFound $_
+		}
+		*Test-Tree* $it ([System.Collections.ArrayList]@())
+	}
+}
 
+function *Test-Tree*($Task, $Done)
+{
 	$count = 1 + $Done.Add($Task)
 	foreach($_ in $Task.Jobs) { if ($_ -is [string]) {
 		$job = $BuildList[$_]
-
 		if (!$job) {
 			Invoke-BuildError "Task '$($Task.Name)': Task '$_' is not defined.`r`n$(*Fix* $Task)" ObjectNotFound
 		}
-
 		if ($Done.Contains($job)) {
 			Invoke-BuildError "Task '$($Task.Name)': Cyclic reference to '$_'.`r`n$(*Fix* $Task)" InvalidOperation
 		}
-
-		*Preprocess* $job $Done
+		*Test-Tree* $job $Done
 		$Done.RemoveRange($count, $Done.Count - $count)
 	}}
 }
@@ -595,14 +600,14 @@ function *Summary*($State, $TaskCount, $ErrorCount, $WarningCount, $Elapsed)
 	Write-BuildText $color "$text. $TaskCount tasks, $ErrorCount errors, $WarningCount warnings, $Elapsed"
 }
 
-### Resolve script
+### File
 $ErrorActionPreference = 'Stop'
 ${private:-location} = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
 try {
 	if ($File) {
 		$BuildFile = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($File)
 		if (!([System.IO.File]::Exists($BuildFile))) {
-			throw "Script does not exist: '$BuildFile'."
+			throw "Build file does not exist: '$BuildFile'."
 		}
 	}
 	else {
@@ -611,7 +616,7 @@ try {
 			$BuildFile = *Hook* GetFile
 		}
 		if (!$BuildFile) {
-			throw "Cannot find the default file."
+			throw "Default build file is not found."
 		}
 	}
 	$BuildRoot = Split-Path $BuildFile
@@ -620,7 +625,7 @@ catch {
 	Invoke-BuildError "$_" ObjectNotFound $File
 }
 
-### Set variables
+### Init
 ${private:-parent} = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
 if (${private:-parent}) {
 	if (${private:-parent}.Description -eq 'cf62724cbbc24adea925ea0e73598492') {
@@ -662,7 +667,7 @@ Remove-Variable Task, File, Parameters, Result, Hook
 
 ${private:-state} = 0
 try {
-	### Invoke script
+	### Script
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') $BuildFile"
 	${private:_} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
@@ -674,7 +679,7 @@ try {
 		Invoke-BuildError "Invalid build script syntax at the script block {$_}" InvalidOperation
 	}}
 
-	### Alter tasks
+	### Alter
 	foreach(${private:-task} in $BuildList.Values) {
 		try {
 			$_ = ${private:-task}.Before
@@ -691,8 +696,9 @@ try {
 		}
 	}
 
-	### List tasks
+	### List
 	if ('?' -eq $BuildTask) {
+		*Test-Task* $BuildList.Keys
 		if (!${private:-result}) {
 			foreach($_ in $BuildList.Values) {
 				"$($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) {$_} else {'{..}'} }) -join ', ') $($_.Info.ScriptName):$($_.Info.ScriptLineNumber)"
@@ -701,11 +707,9 @@ try {
 		return
 	}
 
-	### Initial tasks
-	if (!$BuildTask -or '.' -eq $BuildTask) {
-		$BuildTask = if ($BuildList.Contains('.')) {'.'} else {$BuildList.Item(0).Name}
-	}
-	elseif ('*' -eq $BuildTask) {
+	### Check
+	if ('*' -eq $BuildTask) {
+		*Test-Task* $BuildList.Keys
 		$BuildTask = foreach($_ in $BuildList.Keys) {
 			foreach(${private:-task} in $BuildList.Values) {
 				if (${private:-task}.Jobs -contains $_) {
@@ -716,17 +720,14 @@ try {
 			if ($_) { $_ }
 		}
 	}
-
-	### Preprocess tasks
-	foreach($_ in $BuildTask) {
-		${private:-task} = $BuildList[$_]
-		if (!${private:-task}) {
-			Invoke-BuildError "Task '$_' is not defined." ObjectNotFound $_
+	else {
+		if (!$BuildTask -or '.' -eq $BuildTask) {
+			$BuildTask = if ($BuildList.Contains('.')) {'.'} else {$BuildList.Item(0).Name}
 		}
-		*Preprocess* ${private:-task} ([System.Collections.ArrayList]@())
+		*Test-Task* $BuildTask
 	}
 
-	### Process tasks
+	### Build
 	foreach($_ in $BuildTask) {
 		*Task* $_
 	}

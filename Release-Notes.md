@@ -1,6 +1,18 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.0.41
+
+Initial task checks process all tasks regardless of `If` conditions. This helps
+to detect issues earlier and also makes checks useful in more scenarios.
+
+The helper task `?` (show/get tasks) now checks tasks in order to find issues
+earlier. Wrappers using `?` may assume that tasks are valid. As a result, the
+wrapper *Build.ps1* is simplified.
+
+The helper task `*` (invoke all) was able to miss tasks with cyclic references.
+This is fixed and covered by tests.
+
 ## v1.0.40
 
 Cosmetic changes in the engine and help.
