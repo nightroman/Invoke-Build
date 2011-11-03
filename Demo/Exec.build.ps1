@@ -12,16 +12,16 @@ task ExecWorksCode0 {
 }
 
 task ExecWorksCode42 {
-	$script:ExecWorksCode42 = exec { PowerShell "'Code42'; exit 42" } (40..50)
+	$script:ExecWorksCode42 = exec { cmd /c 'echo Code42&& exit 42' } (40..50)
 	assert ($LastExitCode -eq 42)
 }
 
 task ExecFailsCode13 {
-	exec { PowerShell "exit 13" }
+	exec { cmd /c exit 13 }
 }
 
 task ExecFailsBadCommand {
-	exec { throw 'Bad Command.' }
+	exec { throw 'throw in ExecFailsBadCommand' }
 }
 
 # The default task calls the others and tests results.
@@ -35,10 +35,10 @@ task . ExecWorksCode0, ExecWorksCode42, @{ExecFailsCode13=1}, @{ExecFailsBadComm
 	'Tested ExecWorksCode42'
 
 	$e = error ExecFailsCode13
-	assert ("$e" -eq 'The command { PowerShell "exit 13" } exited with code 13.')
+	assert (($e | Out-String) -like 'Invoke-BuildExec : The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*exec <<<<*')
 	'Tested ExecFailsCode13'
 
 	$e = error ExecFailsBadCommand
-	assert ("$e" -like 'Bad Command.*')
+	assert (($e | Out-String) -like 'throw in ExecFailsBadCommand*At *\Exec.build.ps1:*exec { throw <<<<*')
 	'Tested ExecFailsBadCommand'
 }

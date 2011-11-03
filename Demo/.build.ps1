@@ -114,7 +114,7 @@ function Test-Issue([Parameter()]$Task, $File, $ExpectedMessagePattern) {
 	catch { $message = $_ | Out-String }
 	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedMessagePattern) {
-		Invoke-BuildError "Expected pattern: [`n$ExpectedMessagePattern`n]"
+		Write-Error "Expected pattern: [`n$ExpectedMessagePattern`n]" -ErrorAction 1
 	}
 	"Issue '$Task' of '$File' is tested."
 }
@@ -236,9 +236,30 @@ task TestExitCode {
 	assert ($LastExitCode -eq 1)
 }
 
+# Test the internally defined alias Invoke-Build. It is strongly recommended
+# for nested calls instead of the script name Invoke-Build.ps1. In a new (!)
+# session set $BuildInfo, build, check for the alias. It also covers work
+# around "Default Host" exception on setting colors.
+task TestSelfAlias {
+    'task . { (Get-Alias Invoke-Build -ea Stop).Definition }' > z.build.ps1
+    $log = [PowerShell]::Create().AddScript("`$BuildInfo = 42; Invoke-Build . '$BuildRoot\z.build.ps1'").Invoke() | Out-String
+    $log
+    assert ($log.Contains('Build succeeded'))
+    Remove-Item z.build.ps1
+}
+
+# Test a build invoked from a background job just to be sure it works.
+task TestStartJob {
+    $job = Start-Job { Invoke-Build . $args[0] } -ArgumentList "$BuildRoot\Dynamic.build.ps1"
+    $log = Wait-Job $job | Receive-Job $job
+    Remove-Job $job
+    $log
+    assert ($log[-1].StartsWith('Build succeeded. 5 tasks'))
+}
+
 # Show unwanted functions potentially introduced by Invoke-Build.
 task TestFunctions {
-	$list = PowerShell "Get-Command -CommandType Function | Select-Object -ExpandProperty Name"
+	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
 	$list += 'Test-Issue'
 	$exposed = @(
 		'Add-BuildTask'
@@ -247,7 +268,6 @@ task TestFunctions {
 		'Get-BuildFile'
 		'Get-BuildProperty'
 		'Get-BuildVersion'
-		'Invoke-BuildError'
 		'Invoke-BuildExec'
 		'Use-BuildAlias'
 		'Write-BuildText'
@@ -269,8 +289,7 @@ task TestFunctions {
 # warnings about unknown variables (very likely) and they are presumably
 # created by Invoke-Build (less likely), please let the author know.
 task TestVariables {
-	# get variables in a clean session
-	$0 = PowerShell "Get-Variable | Select-Object -ExpandProperty Name"
+	$0 = [PowerShell]::Create().AddScript({ Get-Variable | Select-Object -ExpandProperty Name }).Invoke()
 	$0 += @(
 		# build engine internals
 		'BuildList'
@@ -282,6 +301,7 @@ task TestVariables {
 		# system variables
 		'foreach'
 		'LASTEXITCODE'
+		'PROFILE'
 		'PSCmdlet'
 		'PWD'
 		'this'
@@ -309,7 +329,6 @@ task ShowHelp {
 		'Get-BuildError'
 		'Get-BuildProperty'
 		'Get-BuildVersion'
-		'Invoke-BuildError'
 		'Invoke-BuildExec'
 		'Use-BuildAlias'
 		'Write-BuildText'
@@ -338,6 +357,8 @@ Use,
 Wrapper,
 TestDefaultParameter,
 TestExitCode,
+TestSelfAlias,
+TestStartJob,
 TestFunctions,
 TestVariables
 

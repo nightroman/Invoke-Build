@@ -38,7 +38,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.0.41'
+	[System.Version]'1.1.0'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -102,7 +102,7 @@ function Add-BuildTask
 		$BuildList.Add($Name, $task)
 	}
 	catch {
-		Invoke-BuildError "Task '$Name': $_" InvalidArgument
+		*Die* "Task '$Name': $_" InvalidArgument
 	}
 }
 
@@ -114,7 +114,7 @@ function Get-BuildError
 {
 	$_ = $BuildList[$Task]
 	if (!$_) {
-		Invoke-BuildError "Task '$Task' is not defined." ObjectNotFound $Task
+		*Die* "Task '$Task' is not defined." ObjectNotFound $Task
 	}
 	$_.Error
 }
@@ -131,7 +131,7 @@ function Get-BuildProperty
 		$_ = [System.Environment]::GetEnvironmentVariable($Name)
 		if ($null -eq $_) {
 			if ($null -eq $Value) {
-				Invoke-BuildError "PowerShell or environment variable '$Name' is not defined." ObjectNotFound $Name
+				*Die* "PowerShell or environment variable '$Name' is not defined." ObjectNotFound $Name
 			}
 			$_ = $Value
 		}
@@ -148,10 +148,10 @@ function Assert-BuildTrue
 {
 	if (!$Condition) {
 		if ($Message) {
-			Invoke-BuildError "Assertion failed: $Message" InvalidOperation
+			*Die* "Assertion failed: $Message" InvalidOperation
 		}
 		else {
-			Invoke-BuildError 'Assertion failed.' InvalidOperation
+			*Die* 'Assertion failed.' InvalidOperation
 		}
 	}
 }
@@ -170,7 +170,7 @@ function Invoke-BuildExec
 	. ${private:-Command}
 
 	if (${private:-ExitCode} -notcontains $LastExitCode) {
-		Invoke-BuildError "The command {${private:-Command}} exited with code $LastExitCode." InvalidResult $LastExitCode
+		*Die* "The command {${private:-Command}} exited with code $LastExitCode." InvalidResult $LastExitCode
 	}
 }
 
@@ -194,7 +194,7 @@ function Use-BuildAlias
 			}
 		}
 		catch {
-			Invoke-BuildError $_ InvalidArgument $Path
+			*Die* $_ InvalidArgument $Path
 		}
 	}
 	else {
@@ -209,8 +209,8 @@ function Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Write-BuildText
 (
-	[Parameter()][System.ConsoleColor]$Color,
-	[Parameter()][string]$Text
+	[System.ConsoleColor]$Color,
+	[string]$Text
 )
 {
 	$saved = $Host.UI.RawUI.ForegroundColor
@@ -235,11 +235,6 @@ function Get-BuildFile($Path)
 	}
 }
 
-function Invoke-BuildError([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0, $Target)
-{
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
-}
-
 ### Dot-sourced.
 if ($PSCmdlet.MyInvocation.InvocationName -eq '.') {
 	@"
@@ -251,8 +246,8 @@ Copyright (c) 2011 Roman Kuzmin
 	return
 }
 
-if (!$Host.UI -or !$Host.UI.RawUI) {
-	function Write-BuildText([Parameter()][System.ConsoleColor]$Color, [Parameter()][string]$Text) { $Text }
+if ($Host.Name -eq 'Default Host' -or !$Host.UI -or !$Host.UI.RawUI) {
+	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text) { $Text }
 }
 
 function Write-Warning([string]$Message)
@@ -262,6 +257,11 @@ function Write-Warning([string]$Message)
 	++$BuildInfo.WarningCount
 	++$BuildInfo.AllWarningCount
 	$null = $BuildInfo.Messages.Add($_), $BuildInfo.AllMessages.Add($_)
+}
+
+function *Die*([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0, $Target)
+{
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $Target))
 }
 
 function *Alter*($Extra, $Tasks, [switch]$After)
@@ -556,7 +556,7 @@ function *Test-Task*($Task) {
 	foreach($_ in $Task) {
 		$it = $BuildList[$_]
 		if (!$it) {
-			Invoke-BuildError "Task '$_' is not defined." ObjectNotFound $_
+			*Die* "Task '$_' is not defined." ObjectNotFound $_
 		}
 		*Test-Tree* $it ([System.Collections.ArrayList]@())
 	}
@@ -568,10 +568,10 @@ function *Test-Tree*($Task, $Done)
 	foreach($_ in $Task.Jobs) { if ($_ -is [string]) {
 		$job = $BuildList[$_]
 		if (!$job) {
-			Invoke-BuildError "Task '$($Task.Name)': Task '$_' is not defined.`r`n$(*Fix* $Task)" ObjectNotFound
+			*Die* "Task '$($Task.Name)': Task '$_' is not defined.`r`n$(*Fix* $Task)" ObjectNotFound
 		}
 		if ($Done.Contains($job)) {
-			Invoke-BuildError "Task '$($Task.Name)': Cyclic reference to '$_'.`r`n$(*Fix* $Task)" InvalidOperation
+			*Die* "Task '$($Task.Name)': Cyclic reference to '$_'.`r`n$(*Fix* $Task)" InvalidOperation
 		}
 		*Test-Tree* $job $Done
 		$Done.RemoveRange($count, $Done.Count - $count)
@@ -622,7 +622,7 @@ try {
 	$BuildRoot = Split-Path $BuildFile
 }
 catch {
-	Invoke-BuildError "$_" ObjectNotFound $File
+	*Die* "$_" ObjectNotFound $File
 }
 
 ### Init
@@ -635,7 +635,7 @@ if (${private:-parent}) {
 		${private:-parent} = $null
 	}
 }
-else {
+if (!${private:-parent}) {
 	Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
 }
 $BuildTask = $Task
@@ -672,11 +672,11 @@ try {
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') $BuildFile"
 	${private:_} = if (${private:cf62724cbbc24adea925ea0e73598492}) { . $BuildFile @cf62724cbbc24adea925ea0e73598492 } else { . $BuildFile }
 	if (!$BuildList.Count) {
-		Invoke-BuildError "There is no task in the script." InvalidOperation $BuildFile
+		*Die* "There is no task in the script." InvalidOperation $BuildFile
 	}
 	$_
 	foreach($_ in $_) { if ($_ -is [scriptblock]) {
-		Invoke-BuildError "Invalid build script syntax at the script block {$_}" InvalidOperation
+		*Die* "Invalid build script syntax at the script block {$_}" InvalidOperation
 	}}
 
 	### Alter
@@ -692,7 +692,7 @@ try {
 			}
 		}
 		catch {
-			Invoke-BuildError "Task '$(${private:-task}.Name)': $_`r`n$(*Fix* ${private:-task})" InvalidArgument
+			*Die* "Task '$(${private:-task}.Name)': $_`r`n$(*Fix* ${private:-task})" InvalidArgument
 		}
 	}
 

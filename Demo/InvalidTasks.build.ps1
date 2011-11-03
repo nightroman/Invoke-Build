@@ -23,7 +23,7 @@ function Test($ExpectedMessagePattern, $Script, $Task = '.') {
 	catch { $message = $_ | Out-String }
 	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedMessagePattern) {
-		Invoke-BuildError "Expected message pattern: [`n$ExpectedMessagePattern`n]"
+		Write-Error "Expected message pattern: [`n$ExpectedMessagePattern`n]" -ErrorAction 1
 	}
 
 	# remove the temp script

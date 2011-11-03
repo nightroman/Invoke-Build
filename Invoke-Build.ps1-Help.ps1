@@ -429,15 +429,15 @@
 	command = 'Invoke-BuildExec'
 	synopsis = '(exec) Invokes the command and checks for the $LastExitCode.'
 	description = @'
-	The passed in command is supposed to call an executable tool. This function
-	invokes the command and checks for the $LastExitCode. By default if the
-	code is not zero then the function throws a terminating error.
+	A specified command is supposed to call an executable tool. This function
+	invokes it and checks for the $LastExitCode. By default if the code is not
+	zero then the function throws an error.
 
 	It is common to call .NET framework tools. See Use-BuildAlias.
 '@
 	parameters = @{
 		Command = @'
-		The command that invokes an executable which exit code is checked.
+		A command that invokes an executable which exit code is checked.
 '@
 		ExitCode = @'
 		Valid exit codes (e.g. 0..3 for robocopy). The default is 0.
@@ -471,26 +471,33 @@
 	synopsis = '(use) Sets framework/directory tool aliases.'
 	description = @'
 	Invoke-Build does not change the system path in order to make framework
-	tools available by names. This approach would be not suitable for using
-	mixed framework tools simultaneously. Instead, this function is used in
-	order to set framework aliases in the scope where it is called from.
+	tools available by names. This approach is not suitable for using mixed
+	framework tools (in different tasks, scripts, parallel builds). Instead,
+	this function is used for setting tool aliases in the scope where it is
+	called from.
 
 	This function is often called from a build script and all tasks use script
 	scope aliases. But it can be called from tasks in order to use more tools
 	including other frameworks or tool directories.
+
+	MSBuild is one of frequently used tools. Its samples:
+
+		use Framework\v4.0.30319 MSBuild
+		use Framework\v3.5 MSBuild
+		use Framework\v2.0.50727 MSBuild
 '@
 	parameters = @{
 		Path = @'
 		The tool directory. Null or empty assumes the current .NET runtime
-		directory. If it starts with 'Framework' then it is assumed to be
-		relative to Microsoft.NET in the Windows directory. Otherwise it is
-		used literally, it can be any directory with any tools.
+		directory. If it is like Framework* then it is assumed to be relative
+		to Microsoft.NET in the Windows directory. Otherwise it is a literal
+		path, any directory with any tools.
 
 		Examples: Framework\v4.0.30319, Framework\v2.0.50727, C:\Scripts, etc.
 '@
 		Name = @'
-		The tool names to set aliases for. These names also become alias names
-		and they should be used exactly as specified.
+		Tool names to set aliases for. These names also become alias names and
+		they should be used later in code exactly as specified in here.
 '@
 	}
 	inputs = @()
@@ -518,7 +525,7 @@
 '@
 	parameters = @{
 		Color = @'
-		The [System.ConsoleColor] value or its string representation.
+		[System.ConsoleColor] value or its string representation.
 '@
 		Text = @'
 		Text to be printed using colors or just sent to the output.
@@ -536,7 +543,7 @@
 @{
 	command = 'Get-BuildFile'
 	synopsis = @'
-	Gets full path of the build file candidate in a directory.
+	Gets full path of the default build file in a directory.
 '@
 	description = @'
 	This function is not designed for build scripts and tasks. It is used
@@ -544,7 +551,8 @@
 '@
 	parameters = @{
 		Path = @'
-		A full directory path where to get a build file from.
+		A full directory path used to get the default build file. A file does
+		not have to be located in this directory.
 '@
 	}
 	inputs = @()

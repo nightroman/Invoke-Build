@@ -80,7 +80,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 141 tasks, 28 errors, 1 warnings, 00:00:15
+    Build completed with errors. 143 tasks, 28 errors, 1 warnings, 00:00:10
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
@@ -115,9 +115,9 @@ Invoke-Build is inspired by [*psake*](https://github.com/psake/psake), the
 famous and probably the first build automation tool implemented in PowerShell.
 
 Build concepts come from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
-The goal was to make Invoke-Build similar as much as possible.
+The goal was to make Invoke-Build similar to MSBuild (to some reasonable extent).
 
 ## See Also
 
 [Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki) -
-online tutorial, build scripts in projects, tips and tricks, ...
+Online tutorial, build scripts in projects, tips and tricks, ...

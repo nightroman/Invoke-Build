@@ -1,6 +1,22 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.1.0
+
+This release is the outcome of 1.0 series (stabilization of the tool set and
+concepts). From now on new features will be normally associated with minor
+version numbers. This release itself contains just improvements.
+
+Found and fixed a case when the internal alias *Invoke-Build* was not set.
+See also: [Nested Build Tip][1].
+
+Work around "Default Host" exceptions on setting colors in scenarios like
+
+    [PowerShell]::Create().AddScript("Invoke-Build ...").Invoke()
+
+New test *TestSelfAlias* covers both issues. New test *TestStartJob* invokes
+build as a background job.
+
 ## v1.0.41
 
 Initial task checks process all tasks regardless of `If` conditions. This helps
@@ -274,7 +290,7 @@ If build tasks are not specified and the "." task does not exist then the first
 added task is invoked.
 
 At this point *Invoke-Build* concepts become quite similar to *MSBuild*, see
-[Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild).
+[Comparison with MSBuild][2].
 
 ## v1.0.8
 
@@ -319,3 +335,6 @@ Task `If` conditions are either expressions evaluated on task creation or
 script blocks evaluated on task invocation. In the latter case a script is
 invoked as many times as the task is called until it gets `true` and the task
 is invoked.
+
+[1]: https://github.com/nightroman/Invoke-Build/wiki/Nested-Build-Tip
+[2]: https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild
