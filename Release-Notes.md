@@ -19,8 +19,8 @@ build as a background job.
 
 ## v1.0.41
 
-Initial task checks process all tasks regardless of `If` conditions. This helps
-to detect issues earlier and also makes checks useful in more scenarios.
+Initial task checks process all tasks regardless of `If` conditions. This finds
+issues earlier and also makes checks useful in more scenarios.
 
 The helper task `?` (show/get tasks) now checks tasks in order to find issues
 earlier. Wrappers using `?` may assume that tasks are valid. As a result, the
@@ -142,7 +142,7 @@ Amended default file resolution and built-in help.
 
 `Invoke-Build ? -Result ...` - gets the task collection without invoking tasks.
 
-New switch `Tree` of *Build.ps1* allows to show task parents and trees.
+New switch `Tree` of *Build.ps1* is used to show task parents and trees.
 
 Tweaks in default file discovery and path resolution.
 
@@ -279,7 +279,7 @@ by the parameters or other tasks.
 
 `Before` tasks are added before the first script job. `After` tasks are added
 after the last script job. If there is not a script job they are just added.
-This logic allows to to reproduce MSBuild scenarios.
+This is somewhat similar to what MSBuild does.
 
 ## v1.0.9
 

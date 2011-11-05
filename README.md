@@ -105,8 +105,8 @@ Invoke-Build has to be dot-sourced once.
 Explore build scripts included into the package. With tutorial comments they
 show typical use cases and cover issues and mistakes.
 
-*Demo* scripts help to get familiar with the concepts but they are tests, not
-real project build scripts. Some projects using build scripts are listed in
+*Demo* scripts are good for getting familiar with the concepts but they are
+tests, not real build scripts. Some build scripts used in projects listed in
 [here](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects).
 
 ## Credits
