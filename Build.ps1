@@ -49,25 +49,12 @@
 
 param
 (
-	[Parameter(Position = 0)]
-	[string[]]$Task
-	,
-	[Parameter(Position = 1)]
-	[string]$File
-	,
-	[Parameter(Position = 2)]
-	[hashtable]$Parameters
-	,
-	[Parameter()]
-	[switch]$WhatIf
-	,
-	[Parameter()]
-	[switch]$Tree
-	,
-	[Parameter()]
-	[switch]$Comment
-	,
-	[Parameter()]
+	[Parameter(Position=0)][string[]]$Task,
+	[Parameter(Position=1)][string]$File,
+	[Parameter(Position=2)][hashtable]$Parameters,
+	[switch]$WhatIf,
+	[switch]$Tree,
+	[switch]$Comment,
 	[switch]$Summary
 )
 

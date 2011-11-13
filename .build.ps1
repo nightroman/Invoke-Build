@@ -157,8 +157,8 @@ task Test {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
-	assert ($result.AllTasks.Count -eq 143) $result.AllTasks.Count
-	assert ($result.Tasks.Count -eq 30) $result.Tasks.Count
+	assert ($result.AllTasks.Count -eq 144) $result.AllTasks.Count
+	assert ($result.Tasks.Count -eq 31) $result.Tasks.Count
 
 	assert ($result.AllErrorCount -eq 28) $result.AllErrorCount
 	assert ($result.ErrorCount -eq 0) $result.AllErrorCount

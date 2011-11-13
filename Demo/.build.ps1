@@ -257,7 +257,7 @@ task TestStartJob {
     assert ($log[-1].StartsWith('Build succeeded. 5 tasks'))
 }
 
-# Show unwanted functions potentially introduced by Invoke-Build.
+# Test/show "unexpected" functions.
 task TestFunctions {
 	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
 	$list += 'Test-Issue'
@@ -339,10 +339,24 @@ task ShowHelp {
 	Out-String -Width 80
 }
 
+# Test the internal function *KV*
+task TestKV {
+	# protected references
+	$hash = @{Task=1}
+	$1, $2, $3 = *KV* $hash
+	assert ($1 -eq 'Task' -and $2 -eq 1 -and $null -eq $3)
+
+	# inputs/outputs
+	$hash = @{(1..3)=(1..5)}
+	$1, $2, $3 = *KV* $hash
+	assert ($1.Count -eq 3 -and $2.Count -eq 5 -and $null -eq $3)
+}
+
 # This task calls all test tasks.
 task Tests `
 Dummy1,
 Dummy2,
+TestKV,
 Alter,
 Assert,
 Conditional,

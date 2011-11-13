@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.1.1
+
+Slightly changed output. Minor engine and test changes.
+
 ## v1.1.0
 
 This release is the outcome of 1.0 series (stabilization of the tool set and
