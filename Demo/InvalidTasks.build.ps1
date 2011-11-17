@@ -32,7 +32,7 @@ function Test($ExpectedMessagePattern, $Script, $Task = '.') {
 
 # Build scripts should have at least one task.
 task NoTasks {
-	Test "*\Invoke-Build.ps1 : There is no task in the script.*InvalidOperation*z.build.ps1:String*" {
+	Test "*\Invoke-Build.ps1 : There is no task in '*\z.build.ps1'.*OperationStopped*" {
 		# Script with no tasks
 	}
 }
@@ -41,7 +41,7 @@ task NoTasks {
 # mistake when a script is defined starting from a new line (tasks are function
 # calls, not definitions).
 task ScriptOutput {
-	Test "*\Invoke-Build.ps1 : Invalid build script syntax at the script block {*}*At *InvalidOperation*" {
+	Test "*\Invoke-Build.ps1 : Invalid build script syntax at the script block {*}*At *OperationStopped*" {
 		task task1
 		'It is fine to output some data ...'
 		task task2 task1
@@ -88,14 +88,14 @@ task InvalidJobValue {
 
 # The task has invalid value in After.
 task InvalidJobValueAfter {
-	Test "*\Invoke-Build.ps1 : Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidAfter*InvalidArgument*" {
+	Test "*\Invoke-Build.ps1 : Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidAfter*OperationStopped*" {
 		task InvalidAfter -After @{}
 	}
 }
 
 # The task has invalid value in Before.
 task InvalidJobValueBefore {
-	Test "*\Invoke-Build.ps1 : Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidBefore*InvalidArgument*" {
+	Test "*\Invoke-Build.ps1 : Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidBefore*OperationStopped*" {
 		task InvalidBefore -Before @{}
 	}
 }
@@ -119,7 +119,7 @@ task IncrementalInvalidHashtable {
 
 # Missing task in jobs.
 task TaskNotDefined {
-	Test "*\Invoke-Build.ps1 : Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *ObjectNotFound: (:)*" {
+	Test "*\Invoke-Build.ps1 : Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *OperationStopped*" {
 		task task1 missing, {}
 		task . task1, {}
 	}
@@ -127,21 +127,21 @@ task TaskNotDefined {
 
 # Missing task in After.
 task TaskNotDefinedAfter {
-	Test "*\Invoke-Build.ps1 : Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*InvalidArgument: (:)*" {
+	Test "*\Invoke-Build.ps1 : Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
 		task AfterMissing -After MissingTask {}
 	}
 }
 
 # Missing task in Before.
 task TaskNotDefinedBefore {
-	Test "*\Invoke-Build.ps1 : Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*InvalidArgument: (:)*" {
+	Test "*\Invoke-Build.ps1 : Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
 		task BeforeMissing -Before MissingTask {}
 	}
 }
 
 # Tasks with a cyclic reference: . -> task1 -> task2 -> task1
 task CyclicReference {
-	Test "*\Invoke-Build.ps1 : Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *InvalidOperation: (:)*" {
+	Test "*\Invoke-Build.ps1 : Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *OperationStopped*" {
 		task task1 task2
 		task task2 task1
 		task . task1
@@ -150,14 +150,14 @@ task CyclicReference {
 
 # Cyclic references should be caught on ? as well.
 task CyclicReferenceList {
-	Test -Task ? "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *InvalidOperation: (:)*" {
+	Test -Task ? "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
 		task test1 test2
 		task test2 test1
 	}
 }
 # Cyclic references should be caught on * as well.
 task CyclicReferenceStar {
-	Test -Task * "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *InvalidOperation: (:)*" {
+	Test -Task * "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
 		task test1 test2
 		task test2 test1
 	}

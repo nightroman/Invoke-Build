@@ -203,14 +203,14 @@ task ErrorCases {
 	Test-Issue IncrementalOutputsFails ErrorCases.build.ps1 "Incremental outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 	Test-Issue PartialOutputsFails ErrorCases.build.ps1 "Partial outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 
-	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output cannot be empty.*OperationStopped*"
-	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0.*OperationStopped*"
+	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "*Incremental output cannot be empty.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "*Different input and output counts: 1 and 0.*Invoke-Build <<<<*OperationStopped*"
 
-	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*"
-	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*"
+	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "*Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "*Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
 
 	Test-Issue MissingProperty ErrorCases.build.ps1 @'
-Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound: (*String)*
+Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound:*
 '@
 }
 

@@ -1,6 +1,26 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.1.2
+
+**Errors**
+
+Improved source information of some errors thrown by the engine, for example,
+incremental inputs/outputs errors. Instead of pointing to not useful internal
+`throw` they show where Invoke-Build.ps1 or the wrapper Build.ps1 is invoked,
+this is more useful for troubleshooting. Errors with amended information are
+created in addition, initial errors can be found in the `$Error` list.
+
+Removed target objects from some errors as presumably redundant. They are shown
+in error messages anyway. Other use of them is unlikely practical.
+
+**Exposed variables**
+
+The special variable `$_` is now visible. Scripts and tasks can use it as their
+own, that is assign at first and then use. They must not make any assumptions
+about its incoming value and use it without assignment.
+See also: [Build Variables][3].
+
 ## v1.1.1
 
 Slightly changed output. Minor engine and test changes.
@@ -342,3 +362,4 @@ is invoked.
 
 [1]: https://github.com/nightroman/Invoke-Build/wiki/Nested-Build-Tip
 [2]: https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild
+[3]: https://github.com/nightroman/Invoke-Build/wiki/Build-Variables

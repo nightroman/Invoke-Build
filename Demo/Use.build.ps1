@@ -92,9 +92,7 @@ ResolvedPath,
 
 	$e = error MissingDirectory
 	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\MissingDirectory'.* use <<<< *")
-	assert ($e.TargetObject -eq 'MissingDirectory')
 
 	$e = error InvalidDirectory
 	assert (($e | Out-String) -like "Use-BuildAlias : * use <<<< *")
-	assert ($e.TargetObject -eq '\<>')
 }

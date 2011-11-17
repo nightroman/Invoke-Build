@@ -52,6 +52,11 @@
 	Variables for internal use by the engine:
 
 		* BuildHook, BuildInfo, BuildList
+
+	NOTE: The special variable $_ can be defined and visible. Scripts and tasks
+	can use it as their own, that is assign at first and then use. They must
+	not make any assumptions about its incoming value and use it without
+	assignment.
 '@
 	parameters = @{
 		Task = @'

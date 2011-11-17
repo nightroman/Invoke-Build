@@ -34,14 +34,12 @@
 
 .Parameter Tree
 		Tells to analyse task references and show parent tasks and child trees
-		for the specified or all tasks. Tasks are not invoked. It throws if
-		missing or cyclic task references are found.
-
-		Use the switch Comment in order to show task comments as well.
+		for the specified or all tasks. Tasks are not invoked. Use the switch
+		Comment in order to show task comments as well.
 
 .Parameter Comment
 		Tells to show code comments preceding each task in the task tree. It is
-		used together with the switch Tree but now it works on its own as well.
+		used together with the switch Tree or on its own.
 
 .Parameter Summary
 		Tells to show task summary information after building.
@@ -63,19 +61,33 @@ $BuildHook = @{
 	GetFile = {
 		if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
 			$_ = & $env:InvokeBuildGetFile
-			if ($_) { return $_ }
+			if ($_) {return $_}
 		}
 
 		for($dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath(''); $dir; $dir = Split-Path $dir) {
 			$_ = Get-BuildFile $dir
-			if ($_) { return $_ }
+			if ($_) {return $_}
 		}
 	}
 }
 
+# Hide variables
+$private:_Task = $Task
+$private:_File = $File
+$private:_Parameters = $Parameters
+$private:_Tree = $Tree
+$private:_Comment = $Comment
+$private:_Summary = $Summary
+Remove-Variable Task, File, Parameters, Tree, Comment, Summary
+
+try { # To amend errors
+
 ### Show tree
-if ($Tree -or $Comment) {
-	function ShowTaskTree($Task, $Step)
+if ($_Tree -or $_Comment) {
+	# get tasks
+	Invoke-Build ? -File:$_File -Parameters:$_Parameters -Hook:$BuildHook -Result:BuildList
+
+	function ShowTaskTree($Task, $Step, $Comment)
 	{
 		if ($Step -eq 0) {''}
 		$tab = '    ' * $Step
@@ -84,9 +96,7 @@ if ($Tree -or $Comment) {
 		# comment
 		if ($Comment) {
 			foreach($_ in GetTaskComment $Task) {
-				if ($_) {
-					$tab + $_
-				}
+				if ($_) {$tab + $_}
 			}
 		}
 
@@ -100,7 +110,7 @@ if ($Tree -or $Comment) {
 		# task jobs
 		foreach($_ in $Task.Jobs) {
 			if ($_ -is [string]) {
-				ShowTaskTree ($BuildList[$_]) $Step
+				ShowTaskTree $BuildList[$_] $Step $Comment
 			}
 			else {
 				$tab + '    {..}'
@@ -123,23 +133,16 @@ if ($Tree -or $Comment) {
 					}
 				}
 			}
-			catch {
-				Write-Warning $_
-			}
+			catch {Write-Warning $_}
 		}
-		$comment = ''
+		$rem = ''
 		for($$ = $Task.Info.ScriptLineNumber - 1; $$ -ge 1; --$$) {
 			$doc = $docs[$$]
-			if (!$doc) {
-				break
-			}
-			$comment = $doc.Replace("`t", '    ') + "`n" + $comment
+			if (!$doc) {break}
+			$rem = $doc.Replace("`t", '    ') + "`n" + $rem
 		}
-		[regex]::Split($comment.TrimEnd(), '[\r\n]+')
+		[regex]::Split($rem.TrimEnd(), '[\r\n]+')
 	}
-
-	# get tasks as $BuildList
-	Invoke-Build ? -File:$File -Parameters:$Parameters -Hook:$BuildHook -Result BuildList
 
 	# references
 	foreach($it in $BuildList.Values) {
@@ -150,23 +153,15 @@ if ($Tree -or $Comment) {
 	}}}
 
 	# show trees
-	foreach($name in $(if ($Task -and '?' -ne $Task) { $Task } else { $BuildList.Keys })) {
-		ShowTaskTree ($BuildList[$name]) 0
+	foreach($name in $(if ($_Task -and '?' -ne $_Task) {$_Task} else {$BuildList.Keys})) {
+		ShowTaskTree $BuildList[$name] 0 $_Comment
 	}
-
 	return
 }
 
-# Hide variables
-$private:_Task = $Task
-$private:_File = $File
-$private:_Parameters = $Parameters
-$private:_Summary = $Summary
-Remove-Variable Task, File, Parameters, Tree, Comment, Summary
-
 ### Build with results
 try {
-	$Result = if ($_Summary) { 'Result' } else { $null }
+	$Result = if ($_Summary) {'Result'}
 	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Hook:$BuildHook -WhatIf:$WhatIf -Result:$Result
 }
 finally {
@@ -179,4 +174,9 @@ finally {
 			}
 		}
 	}
+}
+
+} catch {
+	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
+	$PSCmdlet.ThrowTerminatingError($_)
 }
