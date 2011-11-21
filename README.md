@@ -1,14 +1,14 @@
 
-Invoke-Build.ps1 - Build Automation in PowerShell
-=================================================
+Invoke-Build - Build Automation in PowerShell
+=============================================
 
 ## Introduction
 
-Invoke-Build.ps1 is a build automation tool implemented as a single PowerShell
-script. It invokes tasks defined in build scripts written in PowerShell with
-domain-specific language features. Build flow and concepts are similar to
-MSBuild. Scripts are similar to psake but look more like usual due to standard
-script parameters and script scope variables.
+Invoke-Build.ps1 (engine) and Invoke-Builds.ps1 (parallel engine) are build and
+test automation tools implemented as PowerShell scripts. They invoke tasks from
+scripts written in PowerShell with domain-specific language. Build flow and
+concepts are similar to MSBuild. Scripts are similar to psake but look more
+like usual due to standard script parameters and script scope variables.
 
 Invoke-Build is suitable not only for *building*. It can be used for testing in
 PowerShell oriented projects. It is easy and convenient to implement PowerShell
@@ -17,9 +17,16 @@ tests are invoked once, no test is forgotten (`*`), tests may have dependencies
 and hierarchical structure, and etc.
 
 Invoke-Build is carefully designed for multiple calls in the same PowerShell
-session: sequential, nested, and even parallel. Every call maintains its state
-completely on the stack. The engine does not change environment variables, the
-path, and global variables and settings. This is all up to build scripts.
+session: sequential, nested, and even parallel (using *Invoke-Builds.ps1*).
+Every call maintains its state completely on the stack. The engine does not
+change the process environment or anything global in the PowerShell session.
+
+## The Package
+
+* *Invoke-Build.ps1* invokes build scripts, this is the build engine
+* *Invoke-Builds.ps1* invokes parallel builds using the engine
+* *Build.ps1* is the engine wrapper with some more options
+* *Demo* contains tests of the engine and scripts
 
 ## How Does It Work?
 
@@ -80,7 +87,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 143 tasks, 28 errors, 1 warnings, 00:00:10
+    Build completed with errors. 163 tasks, 30 errors, 1 warnings, 00:00:10
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics

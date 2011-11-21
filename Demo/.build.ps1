@@ -171,6 +171,11 @@ task InvalidTasks {
 	Invoke-Build * InvalidTasks.build.ps1
 }
 
+# Test parallel builds (Invoke-Builds.ps1).
+task Parallel {
+	Invoke-Build * Parallel.build.ps1
+}
+
 # Test property, the alias of Get-BuildProperty.
 task Property {
 	Invoke-Build . Property.build.ps1
@@ -211,6 +216,10 @@ task ErrorCases {
 
 	Test-Issue MissingProperty ErrorCases.build.ps1 @'
 Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound:*
+'@
+
+	Test-Issue ParallelBadParameters ErrorCases.build.ps1 @'
+*Parallel build failures:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*
 '@
 }
 
@@ -324,6 +333,7 @@ task TestVariables {
 task ShowHelp {
 	@(
 		'Invoke-Build'
+		'Invoke-Builds'
 		'Add-BuildTask'
 		'Assert-BuildTrue'
 		'Get-BuildError'
@@ -366,6 +376,7 @@ Exec,
 Incremental,
 InvalidTasks,
 Property,
+Parallel,
 ProtectedTasks,
 Use,
 Wrapper,

@@ -1,6 +1,6 @@
 
 <#
-Invoke-Build.ps1 - Build Automation in PowerShell
+Invoke-Build - Build Automation in PowerShell
 Copyright (c) 2011 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ param
 	[Parameter(Position=1)][string]$File,
 	[Parameter(Position=2)][hashtable]$Parameters,
 	[hashtable]$Hook,
-	[string]$Result,
+	$Result,
 	[switch]$WhatIf
 )
 
@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.1.2'
+	[System.Version]'1.2.0'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -527,12 +527,11 @@ ${private:-up} = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
 if (${-up}) {
 	${-up} = if (${-up}.Description -eq 'Invoke-Build') {${-up}.Value}
 }
-if (!${-up}) {
-	Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
-}
+Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
+Set-Alias Invoke-Builds (Join-Path (Split-Path $MyInvocation.MyCommand.Path) 'Invoke-Builds.ps1')
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
 New-Variable -Name BuildInfo -Option Constant -Description Invoke-Build -Value `
-(Select-Object AllTasks, AllMessages, AllErrorCount, AllWarningCount, Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed -InputObject 1)
+(Select-Object AllTasks, AllMessages, AllErrorCount, AllWarningCount, Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed, Error -InputObject 1)
 $BuildInfo.AllTasks = [System.Collections.ArrayList]@()
 $BuildInfo.AllMessages = [System.Collections.ArrayList]@()
 $BuildInfo.AllErrorCount = 0
@@ -543,7 +542,11 @@ $BuildInfo.ErrorCount = 0
 $BuildInfo.WarningCount = 0
 $BuildInfo.Started = [System.DateTime]::Now
 if ('?' -eq $Task) {$WhatIf = $true}
-if ($Result) {New-Variable -Force -Scope 1 $Result $(if ('?' -eq $Task) {$BuildList} else {$BuildInfo})}
+if ($Result) {
+	$_ = if ('?' -eq $Task) {$BuildList} else {$BuildInfo}
+	if ($Result -is [string]) {New-Variable -Force -Scope 1 $Result $_}
+	else {$Result.Value = $_}
+}
 $BuildTask = $Task
 $BuildHook = $Hook
 ${private:-Result} = $Result
@@ -603,6 +606,7 @@ try {
 }
 catch {
 	${-done} = 2
+	$BuildInfo.Error = $_
 	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
 	$PSCmdlet.ThrowTerminatingError($_)
 }

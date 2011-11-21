@@ -43,14 +43,14 @@ task Fails @(
 # protected call does not help: Fails is not prepared for errors in Error2.
 task TestAlmostSurvives AlmostSurvives, @{Fails=1}
 
-# Error: the If script fails.
+# The If script fails.
 task ScriptConditionFails -If { throw "If fails." } { throw }
 
-# Error: the inputs script fails.
+# The inputs script fails.
 task IncrementalInputsFails -Incremental @{{ throw 'Incremental inputs fails.' } = {}} { throw }
 task PartialInputsFails -Partial @{{ throw 'Partial inputs fails.' } = {}} { throw }
 
-# Error: the outputs script fails.
+# The outputs script fails.
 task IncrementalOutputsFails -Incremental @{{ '.build.ps1' } = { throw 'Incremental outputs fails.' }} { throw }
 task PartialOutputsFails -Partial @{{ '.build.ps1' } = { throw 'Partial outputs fails.' }} { throw }
 
@@ -66,4 +66,9 @@ task PartialMissingInputs -Partial @{{ 'missing' } = {}} { throw }
 # Error: missing property
 task MissingProperty {
 	$MissingProperty = property MissingProperty
+}
+
+# Error: invalid Parameters type on calling Invoke-Builds
+task ParallelBadParameters {
+	Invoke-Builds @{File='Dynamic.build.ps1'; Parameters='BadParameters'}
 }

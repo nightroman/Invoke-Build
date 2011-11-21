@@ -7,7 +7,7 @@
 ### Invoke-Build.ps1 command help
 @{
 	command = 'Invoke-Build.ps1'
-	synopsis = 'Invoke-Build.ps1 - Build Automation in PowerShell'
+	synopsis = 'Invoke-Build - Build Automation in PowerShell'
 	description = @'
 	Install: copy Invoke-Build.ps1 and Invoke-Build.ps1-Help.xml to the path.
 
@@ -90,7 +90,9 @@
 		variables defined in the script scope.
 '@
 		Result = @'
-		Specifies the variable name for the task collection or build results.
+		Tells to output the task collection or build results using a variable.
+		It is either a name of variable to be created or any object with the
+		property Value to be assigned ([ref], [hashtable]).
 
 		If the Task is ? then the build script is invoked with WhatIf = $true,
 		tasks are checked for missing or cyclic references and returned in the
@@ -103,6 +105,7 @@
 		* Messages, AllMessages - own build messages and with nested
 		* ErrorCount, AllErrorCount - own error count and with nested
 		* WarningCount, AllWarningCount - own warning count and with nested
+		* Error - an error that stopped the build
 
 		Task objects contain various runtime information. These documented
 		properties are valid for analysis:
@@ -562,4 +565,74 @@
 	}
 	inputs = @()
 	outputs = @{ type = 'String' }
+}
+
+### Invoke-Builds.ps1 command help
+@{
+	command = 'Invoke-Builds.ps1'
+	synopsis = @'
+	Invokes parallel builds by Invoke-Build.ps1
+'@
+	description = @'
+	This script invokes several build scripts simultaneously. Exact number of
+	parallel builds is limited by the number of processors by default. It can
+	be explicitly specified by MaximumBuilds.
+
+	The build engine script Invoke-Build.ps1 has to be in the same directory.
+	Such script tandems should work without conflicts with others, say, their
+	newer versions in the path.
+'@
+	parameters = @{
+		Build = @'
+		Build parameter set hashtables. Keys/values:
+		* Task - Invoke-Build parameter Task
+		* File - Invoke-Build parameter File
+		* Parameters - Invoke-Build parameter Parameters
+
+		Any number of builds is allowed, including 0 or 1. Maximum number of
+		parallel builds is limited by number of processors. It can be lowered
+		by the parameter MaximumBuilds.
+
+		If exactly a [hashtable[]] (not [object[]] converted on-the-fly) is
+		passed in then after the call it contains amended copies of original
+		hashtables. 'File' values are resolved to full paths. 'Result.Value'
+		contain individual build results or nulls if script invocations fail.
+'@
+		MaximumBuilds = @'
+		Maximum number of builds to be invoked at the same time.
+'@
+		Result = @'
+		Tells to output build results using a variable. It is either a name of
+		variable to be created for results or any object with the property
+		Value to be assigned assigned ([ref], [hashtable]).
+
+		Result properties:
+		* Tasks - tasks (see: help Invoke-Build -Parameter Result)
+		* Messages - build messages
+		* ErrorCount - number of errors
+		* WarningCount - number of warnings
+		* Started - start time
+		* Elapsed - elapsed time span
+'@
+	}
+	inputs = @()
+	outputs = @{
+		type = 'text'
+		description = 'Output of invoked builds and other log messages.'
+	}
+	examples = @(
+		@{
+			code = {
+				Invoke-Builds @(
+					@{File='Dynamic.build.ps1'}
+					@{File='Dynamic.build.ps1'; Task='Task1'}
+					@{File='Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
+				)
+			}
+			remarks = ''
+		}
+	)
+	links = @(
+		@{ text = 'Invoke-Build' }
+	)
 }

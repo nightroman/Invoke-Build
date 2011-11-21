@@ -1,6 +1,30 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.0 - Parallel Builds
+
+New script *Invoke-Builds.ps1* invokes parallel builds by *Invoke-Build.ps1*.
+*Invoke-Builds.ps1* expects *Invoke-Build.ps1* to be in the same directory.
+Such script tandems should work without conflicts with others, say, newer
+versions in the path.
+See also: [Special Aliases][4]
+
+The engine script *Invoke-Build.ps1* does not require this new script. But the
+engine is aware of it (creates an alias `Invoke-Builds`) and helps it to get
+results from other runspaces easier:
+
+* The parameter `Result` provides more ways to get results.
+* The result property `Error` contains an error that stopped the build.
+
+New demo/test script *Parallel.build.ps1* shows how parallel builds are used.
+
+P.S. Some kind of timeout control of parallel builds is planned but not yet
+supported in this version. To be continued.
+
+Fixed a subtle issue: special aliases should be set always, not just on the
+first call. Use case: a build is invoked by a new engine but it explicitly
+calls an old engine, for example, frozen together with some sources.
+
 ## v1.1.2
 
 **Errors**
@@ -19,7 +43,7 @@ in error messages anyway. Other use of them is unlikely practical.
 The special variable `$_` is now visible. Scripts and tasks can use it as their
 own, that is assign at first and then use. They must not make any assumptions
 about its incoming value and use it without assignment.
-See also: [Build Variables][3].
+See also: [Special Variables][3].
 
 ## v1.1.1
 
@@ -32,7 +56,7 @@ concepts). From now on new features will be normally associated with minor
 version numbers. This release itself contains just improvements.
 
 Found and fixed a case when the internal alias *Invoke-Build* was not set.
-See also: [Nested Build Tip][1].
+See also: [Special Aliases][1].
 
 Work around "Default Host" exceptions on setting colors in scenarios like
 
@@ -360,6 +384,7 @@ script blocks evaluated on task invocation. In the latter case a script is
 invoked as many times as the task is called until it gets `true` and the task
 is invoked.
 
-[1]: https://github.com/nightroman/Invoke-Build/wiki/Nested-Build-Tip
+[1]: https://github.com/nightroman/Invoke-Build/wiki/Special-Aliases
 [2]: https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild
-[3]: https://github.com/nightroman/Invoke-Build/wiki/Build-Variables
+[3]: https://github.com/nightroman/Invoke-Build/wiki/Special-Variables
+[4]: https://github.com/nightroman/Invoke-Build/wiki/Special-Aliases

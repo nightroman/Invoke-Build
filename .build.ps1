@@ -45,15 +45,15 @@ task GitStatus -If (Test-Path .git) {
 # Copy scripts and help from working location to the project.
 # Fail if the project files are newer, to be resolved manually.
 task UpdateScript {
-	$target = Get-Item Invoke-Build.ps1 -ErrorAction 0
-	$source = Get-Item (Get-Command Invoke-Build.ps1).Definition
-	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
-	Copy-Item $source.FullName, "$($source.FullName)-Help.xml" .
-
-	$target = Get-Item Build.ps1 -ErrorAction 0
-	$source = Get-Item (Get-Command x.ps1).Definition
-	assert (!$target -or ($target.LastWriteTime -le $source.LastWriteTime))
-	Copy-Item $source.FullName Build.ps1
+	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
+	$target = 'Build.ps1', 'Invoke-Build.ps1', 'Invoke-Builds.ps1', "Invoke-Build.ps1-Help.xml"
+	$source = "$from\x.ps1", "$from\Invoke-Build.ps1", "$from\Invoke-Builds.ps1", "$from\Invoke-Build.ps1-Help.xml"
+	for($$ = 0; $$ -lt 4; ++$$) {
+		$s = Get-Item $source[$$]
+		$t = Get-Item $target[$$] -ErrorAction 0
+		assert (!$t -or ($t.LastWriteTime -le $s.LastWriteTime)) "$s -> $t"
+		Copy-Item $s.FullName $target[$$]
+	}
 }
 
 # Build the PowerShell help file.
@@ -74,6 +74,7 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	Demo,
 	Build.ps1,
 	Invoke-Build.ps1,
+	Invoke-Builds.ps1,
 	LICENSE.txt
 
 	# move generated files
@@ -95,7 +96,7 @@ task PackageTest Package, {
 
 	# the last sanity check: expected package item count
 	$count = (Get-ChildItem .. -Force -Recurse).Count
-	assert ($count -eq 22) "Unexpected package item count: $count"
+	assert (24 -eq $count) "Unexpected package item count: $count"
 },
 Clean
 
@@ -108,11 +109,11 @@ task Zip Package, {
 # Make the NuGet package.
 task NuGet Package, {
 	$text = @'
-Invoke-Build.ps1 is a build and test automation tool implemented as a single
-PowerShell script. It invokes tasks defined in scripts written in PowerShell
-with domain-specific language features. Build flow and concepts are similar to
-MSBuild. Scripts are similar to psake but look more like usual due to standard
-script parameters and script scope variables.
+Invoke-Build.ps1 (engine) and Invoke-Builds.ps1 (parallel engine) are build and
+test automation tools implemented as PowerShell scripts. They invoke tasks from
+scripts written in PowerShell with domain-specific language. Build flow and
+concepts are similar to MSBuild. Scripts are similar to psake but look more
+like usual due to standard script parameters and script scope variables.
 '@
 	# nuspec
 	Set-Content z\Package.nuspec @"
@@ -157,11 +158,11 @@ task Test {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 
-	assert ($result.AllTasks.Count -eq 144) $result.AllTasks.Count
-	assert ($result.Tasks.Count -eq 31) $result.Tasks.Count
+	assert (163 -eq $result.AllTasks.Count) $result.AllTasks.Count
+	assert (32 -eq $result.Tasks.Count) $result.Tasks.Count
 
-	assert ($result.AllErrorCount -eq 28) $result.AllErrorCount
-	assert ($result.ErrorCount -eq 0) $result.AllErrorCount
+	assert (30 -eq $result.AllErrorCount) $result.AllErrorCount
+	assert (0 -eq $result.ErrorCount) $result.AllErrorCount
 
 	assert ($result.AllWarningCount -ge 1)
 	assert ($result.WarningCount -ge 1)
