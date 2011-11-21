@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
 {
-	[System.Version]'1.2.0'
+	[System.Version]'1.2.1'
 }
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
@@ -607,8 +607,10 @@ try {
 catch {
 	${-done} = 2
 	$BuildInfo.Error = $_
-	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
-	$PSCmdlet.ThrowTerminatingError($_)
+	if ($Host.Name -ne 'Default Host') {
+		if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
+		$PSCmdlet.ThrowTerminatingError($_)
+	}
 }
 finally {
 	Set-Location -LiteralPath ${-location} -ErrorAction Stop

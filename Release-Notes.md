@@ -1,6 +1,11 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.1
+
+Output of parallel builds produced before failures used to disappear, only
+failure information was shown. Fixed, build output should be always shown.
+
 ## v1.2.0 - Parallel Builds
 
 New script *Invoke-Builds.ps1* invokes parallel builds by *Invoke-Build.ps1*.

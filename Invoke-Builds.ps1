@@ -43,6 +43,8 @@ else {
 	}
 }
 
+function Fix($_) {"$_`r`n$($_.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n"))"}
+
 ### main
 
 $up = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
@@ -130,7 +132,7 @@ try {
 
 		# state
 		$state = $p.InvocationStateInfo
-		Write-BuildText $(if ($state.State -eq 'Completed') {'Green'} else {'Red'}) "Build ($log) state: $($state.State)"
+		Write-BuildText Cyan "Build ($log) $($state.State)"
 
 		# result and error
 		$r = $Build[$$].Result.Value
@@ -146,7 +148,7 @@ try {
 		}
 		if (!$_) {$_ = $exception}
 		if ($_) {
-			$_ = $_ | Out-String -Width 9999
+			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {Fix $_} else {"$_"}
 			Write-BuildText Red "ERROR: $_"
 			$failures += @{File=$Build[$$].File; Error=$_}
 		}
