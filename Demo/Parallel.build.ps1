@@ -102,3 +102,35 @@ task Many {
 	assert (1 -eq $build[2].Result.Value.Tasks.Count)
 	assert (1 -eq $build[3].Result.Value.Tasks.Count)
 }
+
+# Invoke three builds with specified timeout. One build should complete, the
+# other two should be stopped. NB: Skip this task in problematic locations.
+task Timeout -If (!$BuildRoot.Contains('[')) {
+	# Invoke using try..catch because it fails and use log files for outputs.
+	$message = ''
+	try {
+		Invoke-Builds -Timeout 500 @(
+			@{File='Sleep.build.ps1'; Parameters=@{Milliseconds=10}; Log='z.1'}
+			@{File='Sleep.build.ps1'; Parameters=@{Milliseconds=2000}; Log='z.2'}
+			@{File='Sleep.build.ps1'; Parameters=@{Milliseconds=3000}; Log='z.3'}
+		)
+	}
+	catch {
+		$message = "$_"
+	}
+
+	# Check the error message.
+	assert ($message -like @'
+Parallel build failures:
+Build: *\Sleep.build.ps1
+ERROR: Build (2/3) timed out.
+Build: *\Sleep.build.ps1
+ERROR: Build (3/3) timed out.*
+'@) "[[$message]]"
+
+	# Check the log files: the first is complete, the others are not.
+	assert ((Get-Content z.1)[-1] -like 'Build succeeded. 1 tasks, 0 errors, 0 warnings, *')
+	assert (!(Test-Path z.2) -or (Get-Content z.2)[-1] -eq 'begin')
+	assert (!(Test-Path z.2) -or (Get-Content z.3)[-1] -eq 'begin')
+	Remove-Item z.?
+}

@@ -121,7 +121,7 @@ if ($_Tree -or $_Comment) {
 	# gets comments
 	$file2docs = @{}
 	function GetTaskComment($Task) {
-		$file = $Task.Info.ScriptName
+		$file = $Task.InvocationInfo.ScriptName
 		$docs = $file2docs[$file]
 		if (!$docs) {
 			$docs = New-Object System.Collections.Specialized.OrderedDictionary
@@ -136,7 +136,7 @@ if ($_Tree -or $_Comment) {
 			catch {Write-Warning $_}
 		}
 		$rem = ''
-		for($$ = $Task.Info.ScriptLineNumber - 1; $$ -ge 1; --$$) {
+		for($$ = $Task.InvocationInfo.ScriptLineNumber - 1; $$ -ge 1; --$$) {
 			$doc = $docs[$$]
 			if (!$doc) {break}
 			$rem = $doc.Replace("`t", '    ') + "`n" + $rem
@@ -159,6 +159,9 @@ if ($_Tree -or $_Comment) {
 	return
 }
 
+function *Err*($Text, $Info)
+{"ERROR: $Text`r`n$($Info.PositionMessage.Trim().Replace("`n", "`r`n"))"}
+
 ### Build with results
 try {
 	$Result = if ($_Summary) {'Result'}
@@ -167,10 +170,15 @@ try {
 finally {
 	### Show summary
 	if ($_Summary) {
+		Write-Host @'
+
+---------- Build Summary ----------
+
+'@
 		foreach($_ in $Result.AllTasks) {
-			Write-Host ('{0,-16} {1} {2}:{3}' -f $_.Elapsed, $_.Name, $_.Info.ScriptName, $_.Info.ScriptLineNumber)
+			Write-Host ('{0,-16} {1} {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber)
 			if ($_.Error) {
-				Write-Host -ForegroundColor Red ($_.Error | Out-String)
+				Write-Host -ForegroundColor Red (*Err* $_.Error $_.Error.InvocationInfo)
 			}
 		}
 	}

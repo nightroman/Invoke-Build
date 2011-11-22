@@ -21,6 +21,7 @@ param
 (
 	[Parameter(Position=0)][hashtable[]]$Build,
 	$Result,
+	[int]$Timeout = [int]::MaxValue,
 	[int]$MaximumBuilds = [System.Environment]::ProcessorCount
 )
 Set-StrictMode -Version 2
@@ -102,7 +103,17 @@ try {
 		$posh += $p
 
 		# command
-		$null = $p.AddCommand($path).AddParameters($Build[$$])
+		$b = $Build[$$]
+		$log = $b['Log']
+		if ($log) {
+			$b.Remove('Log')
+		}
+		$null = $p.AddCommand($path).AddParameters($b)
+		if ($log) {
+			$log = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($log)
+			[System.IO.File]::Delete($log)
+			$null = $p.AddCommand('Out-File').AddParameter('FilePath', $log)
+		}
 
 		# start job
 		$jobs += $p.BeginInvoke()
@@ -112,9 +123,11 @@ try {
 	}
 
 	### wait
-	foreach($_ in $wait) {
-		$null = $_.WaitOne()
-	}
+	$stopwatch = [Diagnostics.Stopwatch]::StartNew()
+	$done = @(foreach($_ in $wait) {
+		$left = $Timeout - $stopwatch.ElapsedMilliseconds
+		if ($left -gt 0) {$_.WaitOne($left)} else {$false}
+	})
 
 	### end async
 	for ($$ = 0; $$ -lt $Build.Count; ++$$) {
@@ -124,7 +137,13 @@ try {
 		$p = $posh[$$]
 		$exception = $null
 		try {
-			$p.EndInvoke($jobs[$$])
+			if ($done[$$]) {
+				$p.EndInvoke($jobs[$$])
+			}
+			else {
+				$p.Stop()
+				$exception = "Build ($log) timed out."
+			}
 		}
 		catch {
 			$exception = $_

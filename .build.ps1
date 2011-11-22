@@ -96,7 +96,7 @@ task PackageTest Package, {
 
 	# the last sanity check: expected package item count
 	$count = (Get-ChildItem .. -Force -Recurse).Count
-	assert (24 -eq $count) "Unexpected package item count: $count"
+	assert (25 -eq $count) "Unexpected package item count: $count"
 },
 Clean
 
@@ -157,8 +157,9 @@ task Loop {
 task Test {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
+	if ($SkipTestDiff) { return }
 
-	assert (163 -eq $result.AllTasks.Count) $result.AllTasks.Count
+	assert (167 -eq $result.AllTasks.Count) $result.AllTasks.Count
 	assert (32 -eq $result.Tasks.Count) $result.Tasks.Count
 
 	assert (30 -eq $result.AllErrorCount) $result.AllErrorCount
@@ -169,8 +170,6 @@ task Test {
 
 	assert ($result.AllMessages.Count -ge 1)
 	assert ($result.Messages.Count -ge 1)
-
-	if ($SkipTestDiff) { return }
 
 	# process and save the output
 	$outputPath = 'Invoke-Build-Test.log'

@@ -1,6 +1,18 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.2
+
+Parallel builds. New parameter `Timeout` and ability to log build outputs to
+files. New test *Timeout* in *Parallel.build.ps1* shows how it works.
+
+Removed some noise from logged errors and added the prefix "ERROR:" to make it
+easier to search for error records in logs. Included position messages to final
+build messages shown before the summary line.
+
+Internal task object: renamed property `Info` to `InvocationInfo`. This may
+break code performing task analysis.
+
 ## v1.2.1
 
 Output of parallel builds produced before failures used to disappear, only

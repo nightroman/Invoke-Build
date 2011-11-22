@@ -36,9 +36,7 @@ Set-Alias use Use-BuildAlias
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{
-	[System.Version]'1.2.1'
-}
+{[System.Version]'1.2.2'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -56,16 +54,16 @@ function Add-BuildTask
 	)
 	try {
 		$it = $BuildList[$Name]
-		if ($it) {throw "Task name already exists:`r`n$(*Fix* $it)"}
+		if ($it) {throw *Fix* 'Task name already exists:' $it}
 
-		$it = Select-Object Name, Error, Started, Elapsed, Jobs, Try, If, Inputs, Outputs, Partial, After, Before, Info -InputObject 1
+		$it = Select-Object Name, Error, Started, Elapsed, Jobs, Try, If, Inputs, Outputs, Partial, After, Before, InvocationInfo -InputObject 1
 		$it.Name = $Name
 		$it.Jobs = $jobList = [System.Collections.ArrayList]@()
 		$it.Try = $tryList = [System.Collections.ArrayList]@()
 		$it.If = $If
 		$it.After = $After
 		$it.Before = $Before
-		$it.Info = $MyInvocation
+		$it.InvocationInfo = $MyInvocation
 		$BuildList.Add($Name, $it)
 
 		switch($PSCmdlet.ParameterSetName) {
@@ -191,6 +189,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 
 if ($Host.Name -eq 'Default Host' -or !$Host.UI -or !$Host.UI.RawUI) {
 	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text) {$Text}
+	if ($Host.Name -eq 'Default Host') {function Write-Host {}}
 }
 
 function Write-Warning([string]$Message)
@@ -203,9 +202,26 @@ function Write-Warning([string]$Message)
 }
 
 function *Die*([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0)
+{$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $null))}
+
+function *My*
+{$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'}
+
+function *II*($$)
+{$$.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n")}
+
+function *Fix*($Text, $II)
+{"$Text`r`n$(*II* $II)"}
+
+function *KV*($$)
 {
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $null))
+	if ($$.Count -ne 1) {throw "Invalid pair, expected hashtable @{X = Y}."}
+	$$.Keys
+	$$.Values
 }
+
+function *Ref*($$)
+{if ($$ -is [hashtable]) {*KV* $$} else {$$}}
 
 function *Alter*($Add, $Tasks, [switch]$After)
 {
@@ -238,23 +254,6 @@ function *Alter*($Add, $Tasks, [switch]$After)
 			$null = $it.Try.Add($Add)
 		}
 	}
-}
-
-function *KV*($Hash)
-{
-	if ($Hash.Count -ne 1) {throw "Invalid pair, expected hashtable @{X = Y}."}
-	$Hash.Keys
-	$Hash.Values
-}
-
-function *Ref*($Ref)
-{
-	if ($Ref -is [hashtable]) {*KV* $Ref} else {$Ref}
-}
-
-function *Fix*($Task)
-{
-	$Task.Info.PositionMessage.Trim().Replace("`n", "`r`n")
 }
 
 function *IO*($Task)
@@ -383,7 +382,7 @@ function *Task*($Name, $Path)
 							throw
 						}
 					}
-					Write-BuildText Red ($_ | Out-String)
+					Write-BuildText Red (*Fix* "ERROR: $_" $_)
 				}
 			}
 			else {
@@ -440,9 +439,9 @@ function *Task*($Name, $Path)
 		${-it}.Error = $_
 		++$BuildInfo.ErrorCount
 		++$BuildInfo.AllErrorCount
-		$_ = "ERROR: Task '${-path}': $_"
+		$_ = if (*My*) {"ERROR: Task '${-path}': $_"} else {*Fix* "ERROR: Task '${-path}': $_" $_}
 		$null = $BuildInfo.Messages.Add($_), $BuildInfo.AllMessages.Add($_)
-		Write-BuildText Yellow (*Fix* ${-it})
+		Write-BuildText Yellow (*II* ${-it})
 		throw
 	}
 	finally {
@@ -489,8 +488,8 @@ function *Test-Tree*($Task, $Done)
 	$n = 1 + $Done.Add($Task)
 	foreach($_ in $Task.Jobs) { if ($_ -is [string]) {
 		$it = $BuildList[$_]
-		if (!$it) {throw "Task '$($Task.Name)': Task '$_' is not defined.`r`n$(*Fix* $Task)"}
-		if ($Done.Contains($it)) {throw "Task '$($Task.Name)': Cyclic reference to '$_'.`r`n$(*Fix* $Task)"}
+		if (!$it) {throw *Fix* "Task '$($Task.Name)': Task '$_' is not defined." $Task}
+		if ($Done.Contains($it)) {throw *Fix* "Task '$($Task.Name)': Cyclic reference to '$_'." $Task}
 		*Test-Tree* $it $Done
 		$Done.RemoveRange($n, $Done.Count - $n)
 	}}
@@ -567,15 +566,15 @@ try {
 			if (${-it}.Before) {*Alter* ${-it}.Name ${-it}.Before}
 			if (${-it}.After) {*Alter* ${-it}.Name ${-it}.After -After}
 		}
-		catch {throw "Task '$(${-it}.Name)': $_`r`n$(*Fix* ${-it})"}
+		catch {throw *Fix* "Task '$(${-it}.Name)': $_" ${-it}}
 	}
 
 	if ('?' -eq $BuildTask) {
 		*Test-Task* $BuildList.Keys
 		if (!${-Result}) {
-			foreach($_ in $BuildList.Values) {
-				"$($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) {$_} else {'{..}'} }) -join ', ') $($_.Info.ScriptName):$($_.Info.ScriptLineNumber)"
-			}
+			foreach($_ in $BuildList.Values) {@"
+$($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) {$_} else {'{..}'} }) -join ', ') $($_.InvocationInfo.ScriptName):$($_.InvocationInfo.ScriptLineNumber)
+"@}
 		}
 		return
 	}
@@ -607,10 +606,7 @@ try {
 catch {
 	${-done} = 2
 	$BuildInfo.Error = $_
-	if ($Host.Name -ne 'Default Host') {
-		if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
-		$PSCmdlet.ThrowTerminatingError($_)
-	}
+	if ($Host.Name -ne 'Default Host') {if (*My*) {$PSCmdlet.ThrowTerminatingError($_)} else {throw}}
 }
 finally {
 	Set-Location -LiteralPath ${-location} -ErrorAction Stop

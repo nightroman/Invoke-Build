@@ -13,7 +13,7 @@
 #>
 
 # Writes a temporary script with an issue, calls it, compares the message.
-function Test($ExpectedMessagePattern, $Script, $Task = '.') {
+function Test($ExpectedPattern, $Script, $Task = '.') {
 	# write the temp script
 	$Script > z.build.ps1
 
@@ -22,8 +22,15 @@ function Test($ExpectedMessagePattern, $Script, $Task = '.') {
 	try { Invoke-Build $Task z.build.ps1 }
 	catch { $message = $_ | Out-String }
 	Write-BuildText Magenta $message
-	if ($message -notlike $ExpectedMessagePattern) {
-		Write-Error "Expected message pattern: [`n$ExpectedMessagePattern`n]" -ErrorAction 1
+	if ($message -notlike $ExpectedPattern) {
+		Write-Error -ErrorAction Stop @"
+Expected pattern [
+$ExpectedPattern
+]
+Actual error [
+$message
+]
+"@
 	}
 
 	# remove the temp script

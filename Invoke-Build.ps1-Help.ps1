@@ -113,8 +113,7 @@
 		* Error - task error
 		* Started - start time
 		* Elapsed - task duration
-		* Info - System.Management.Automation.InvocationInfo:
-		- Info.ScriptName, Info.ScriptLineNumber - where the task is defined.
+		* InvocationInfo.ScriptName, .ScriptLineNumber - task location.
 
 		Other result and task data should not be used. Also, these data should
 		not be changed, especially if they are requested for a nested build,
@@ -184,7 +183,7 @@
 	Sort-Object Elapsed |
 	Format-Table -AutoSize Elapsed, @{
 		Name = 'Task'
-		Expression = {$_.Name + ' @ ' + $_.Info.ScriptName}
+		Expression = {$_.Name + ' @ ' + $_.InvocationInfo.ScriptName}
 	} |
 	Out-String
 			}
@@ -588,18 +587,17 @@
 		* Task - Invoke-Build parameter Task
 		* File - Invoke-Build parameter File
 		* Parameters - Invoke-Build parameter Parameters
+		* Log - Tells to output to the specified file; this is especially
+		useful with Timeout because output of timed out builds is discarded.
 
 		Any number of builds is allowed, including 0 or 1. Maximum number of
 		parallel builds is limited by number of processors. It can be lowered
 		by the parameter MaximumBuilds.
 
 		If exactly a [hashtable[]] (not [object[]] converted on-the-fly) is
-		passed in then after the call it contains amended copies of original
-		hashtables. 'File' values are resolved to full paths. 'Result.Value'
-		contain individual build results or nulls if script invocations fail.
-'@
-		MaximumBuilds = @'
-		Maximum number of builds to be invoked at the same time.
+		passed in then after the call it contains modified copies of input
+		hashtables used as parameters of Invoke-Build. The Result.Value
+		contains build results or null if invocation fails.
 '@
 		Result = @'
 		Tells to output build results using a variable. It is either a name of
@@ -613,6 +611,13 @@
 		* WarningCount - number of warnings
 		* Started - start time
 		* Elapsed - elapsed time span
+'@
+		Timeout = @'
+		Maximum build time in milliseconds. Timed out builds are stopped and
+		output is discarded. Consider to use Log, see the parameter Build.
+'@
+		MaximumBuilds = @'
+		Maximum number of builds to be invoked at the same time.
 '@
 	}
 	inputs = @()

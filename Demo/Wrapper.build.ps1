@@ -132,7 +132,7 @@ task . task1
 	Build . z\test.build.ps1 -Summary
 	$log = ($log -join "`r`n")
 	Write-BuildText Magenta $log
-	assert ($log -like '00:00:00*task1*\z\test.build.ps1:1*00:00:00*.*\z\test.build.ps1:2')
+	assert ($log -like '*- Build Summary -*00:00:00*task1*\z\test.build.ps1:1*00:00:00*.*\z\test.build.ps1:2')
 
 	# build fails
 	@'
@@ -143,7 +143,7 @@ task . @{task1=1}
 	Build . z\test.build.ps1 -Summary
 	$log = ($log -join "`r`n")
 	Write-BuildText Magenta $log
-	assert ($log -like '00:00:00*task1*\z\test.build.ps1:1*Demo error in task1.*00:00:00*.*\z\test.build.ps1:2')
+	assert ($log -like '*- Build Summary -*00:00:00*task1*\z\test.build.ps1:1*Demo error in task1.*00:00:00*.*\z\test.build.ps1:2')
 }
 
 task TreeTaskNotDefined {
