@@ -54,7 +54,7 @@ task Many {
 	# These build parameter hashes are not changed (to be tested).
 	$build0 = @{File='Dynamic.build.ps1'}
 	$build1 = @{File='ErrorCases.build.ps1'}
-	$build2 = @{File='Dynamic.build.ps1'; Task='Task1'}
+	$build2 = @{File='Dynamic.build.ps1'; Task='Task0'}
 	$build3 = @{File='Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
 
 	# But this array items will be replaced with copied and amended hashes:

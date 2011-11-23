@@ -88,70 +88,79 @@ try {
 
 		$b.Result = [ref]$null
 		$b.File = $file
+		$b.Safe = $true
 		$Build[$$] = $b
 	}
 
-	$posh = @()
-	$jobs = @()
-	$wait = @()
-
 	### begin async
 	$pool.Open()
+	$works = @()
 	for ($$ = 0; $$ -lt $Build.Count; ++$$) {
+		$work = @{}
+		$works += $work
+
 		$p = [PowerShell]::Create()
 		$p.RunspacePool = $pool
-		$posh += $p
+		$work.Posh = $p
 
 		# command
 		$b = $Build[$$]
 		$log = $b['Log']
 		if ($log) {
+			$work.Temp = $false
 			$b.Remove('Log')
-		}
-		$null = $p.AddCommand($path).AddParameters($b)
-		if ($log) {
 			$log = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($log)
 			[System.IO.File]::Delete($log)
-			$null = $p.AddCommand('Out-File').AddParameter('FilePath', $log)
 		}
+		else {
+			$work.Temp = $true
+			$log = [System.IO.Path]::GetTempFileName()
+		}
+		$work.Log = $log
+		$null = $p.AddCommand($path).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log)
 
 		# start job
-		$jobs += $p.BeginInvoke()
-
-		# wait handles
-		$wait += $jobs[$$].AsyncWaitHandle
+		$work.Job = $p.BeginInvoke()
 	}
 
 	### wait
 	$stopwatch = [Diagnostics.Stopwatch]::StartNew()
-	$done = @(foreach($_ in $wait) {
+	$done = @(foreach($_ in $works) {
 		$left = $Timeout - $stopwatch.ElapsedMilliseconds
-		if ($left -gt 0) {$_.WaitOne($left)} else {$false}
+		if ($left -gt 0) {$_.Job.AsyncWaitHandle.WaitOne($left)} else {$false}
 	})
 
 	### end async
 	for ($$ = 0; $$ -lt $Build.Count; ++$$) {
-		$log = "$($$ + 1)/$($Build.Count)"
-		Write-BuildText Cyan "Build ($log):"
+		$work = $works[$$]
+		$title = "$($$ + 1)/$($Build.Count)"
+		Write-BuildText Cyan "Build ($title):"
 
-		$p = $posh[$$]
+		$p = $work.Posh
 		$exception = $null
 		try {
 			if ($done[$$]) {
-				$p.EndInvoke($jobs[$$])
+				$p.EndInvoke($work.Job)
 			}
 			else {
 				$p.Stop()
-				$exception = "Build ($log) timed out."
+				$exception = "Build ($title) timed out."
 			}
 		}
 		catch {
 			$exception = $_
 		}
 
+		# log
+		if ($work.Temp) {
+			$log = $work.Log
+			Get-Content -LiteralPath $log -ErrorAction Continue
+			[System.IO.File]::Delete($log)
+		}
+
 		# state
 		$state = $p.InvocationStateInfo
-		Write-BuildText Cyan "Build ($log) $($state.State)"
+		Write-BuildText Cyan "Build ($title) $($state.State)"
 
 		# result and error
 		$r = $Build[$$].Result.Value

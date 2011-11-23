@@ -119,6 +119,19 @@
 		not be changed, especially if they are requested for a nested build,
 		parent builds are still using these data.
 '@
+		Safe = @'
+		Tells to catch build failures, store errors as the property Error of
+		Result and return quietly. A caller should use Result and check its
+		Error in order to analyse build failures.
+
+		NOTE: Some exceptions are possible even in safe mode. They show serious
+		errors, not build failures. For example, invalid arguments, missing
+		build scripts, and etc.
+
+		NOTE: Errors thrown in normal mode and errors stored in safe mode are
+		often but not always the same. Some thrown errors are enhanced caught
+		errors. Stored errors are exactly caught errors.
+'@
 		WhatIf = @'
 		Tells to show preprocessed tasks and their scripts instead of invoking
 		them. If a script does anything but adding and configuring tasks then
@@ -587,8 +600,7 @@
 		* Task - Invoke-Build parameter Task
 		* File - Invoke-Build parameter File
 		* Parameters - Invoke-Build parameter Parameters
-		* Log - Tells to output to the specified file; this is especially
-		useful with Timeout because output of timed out builds is discarded.
+		* Log - Tells to write build output to the specified file
 
 		Any number of builds is allowed, including 0 or 1. Maximum number of
 		parallel builds is limited by number of processors. It can be lowered
@@ -613,11 +625,10 @@
 		* Elapsed - elapsed time span
 '@
 		Timeout = @'
-		Maximum build time in milliseconds. Timed out builds are stopped and
-		output is discarded. Consider to use Log, see the parameter Build.
+		Maximum overall build time in milliseconds.
 '@
 		MaximumBuilds = @'
-		Maximum number of builds to be invoked at the same time.
+		Maximum number of builds invoked at the same time.
 '@
 	}
 	inputs = @()

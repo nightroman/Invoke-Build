@@ -35,10 +35,10 @@ task . ExecWorksCode0, ExecWorksCode42, @{ExecFailsCode13=1}, @{ExecFailsBadComm
 	'Tested ExecWorksCode42'
 
 	$e = error ExecFailsCode13
-	assert (($e | Out-String) -like 'Invoke-BuildExec : The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*exec <<<<*')
+	assert (($e | Out-String -Width 9999) -like 'Invoke-BuildExec : The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*exec <<<<*')
 	'Tested ExecFailsCode13'
 
 	$e = error ExecFailsBadCommand
-	assert (($e | Out-String) -like 'throw in ExecFailsBadCommand*At *\Exec.build.ps1:*exec { throw <<<<*')
+	assert (($e | Out-String -Width 9999) -like 'throw in ExecFailsBadCommand*At *\Exec.build.ps1:*exec { throw <<<<*')
 	'Tested ExecFailsBadCommand'
 }

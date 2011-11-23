@@ -20,7 +20,7 @@ function Test($ExpectedPattern, $Script, $Task = '.') {
 	# invoke, catch, compare
 	$message = ''
 	try { Invoke-Build $Task z.build.ps1 }
-	catch { $message = $_ | Out-String }
+	catch { $message = $_ | Out-String -Width 9999 }
 	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedPattern) {
 		Write-Error -ErrorAction Stop @"

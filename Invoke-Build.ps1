@@ -24,6 +24,7 @@ param
 	[Parameter(Position=2)][hashtable]$Parameters,
 	[hashtable]$Hook,
 	$Result,
+	[switch]$Safe,
 	[switch]$WhatIf
 )
 
@@ -36,7 +37,7 @@ Set-Alias use Use-BuildAlias
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.2.2'}
+{[System.Version]'1.2.3'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -187,9 +188,9 @@ if ($MyInvocation.InvocationName -eq '.') {
 	return
 }
 
-if ($Host.Name -eq 'Default Host' -or !$Host.UI -or !$Host.UI.RawUI) {
+if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost' -or !$Host.UI -or !$Host.UI.RawUI) {
 	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text) {$Text}
-	if ($Host.Name -eq 'Default Host') {function Write-Host {}}
+	if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost') {function Write-Host {}}
 }
 
 function Write-Warning([string]$Message)
@@ -549,8 +550,9 @@ if ($Result) {
 $BuildTask = $Task
 $BuildHook = $Hook
 ${private:-Result} = $Result
+${private:-Safe} = $Safe
 $_ = $Parameters
-Remove-Variable Task, File, Parameters, Result, Hook
+Remove-Variable Task, File, Parameters, Result, Safe, Hook
 
 ${private:-done} = 0
 try {
@@ -606,7 +608,7 @@ $($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) {$_} else {'{..}'} }) -join ', '
 catch {
 	${-done} = 2
 	$BuildInfo.Error = $_
-	if ($Host.Name -ne 'Default Host') {if (*My*) {$PSCmdlet.ThrowTerminatingError($_)} else {throw}}
+	if (!${-Safe}) {if (*My*) {$PSCmdlet.ThrowTerminatingError($_)} else {throw}}
 }
 finally {
 	Set-Location -LiteralPath ${-location} -ErrorAction Stop

@@ -111,7 +111,7 @@ task ParamsValues2 ParamsValues1, {
 function Test-Issue([Parameter()]$Task, $File, $ExpectedPattern) {
 	$message = ''
 	try { Invoke-Build $Task $File }
-	catch { $message = $_ | Out-String }
+	catch { $message = $_ | Out-String -Width 9999 }
 	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedPattern) {
 		Write-Error -ErrorAction Stop @"

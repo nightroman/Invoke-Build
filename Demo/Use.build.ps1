@@ -85,14 +85,14 @@ ResolvedPath,
 @{InvalidDirectory=1},
 {
 	$e = error MissingFramework
-	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.* use <<<< *")
+	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.* use <<<< *")
 
 	$e = error InvalidFramework
-	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\<>'.* use <<<< *")
+	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\<>'.* use <<<< *")
 
 	$e = error MissingDirectory
-	assert (($e | Out-String) -like "Use-BuildAlias : Directory does not exist: '*\MissingDirectory'.* use <<<< *")
+	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : Directory does not exist: '*\MissingDirectory'.* use <<<< *")
 
 	$e = error InvalidDirectory
-	assert (($e | Out-String) -like "Use-BuildAlias : * use <<<< *")
+	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : * use <<<< *")
 }

@@ -1,6 +1,15 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.3
+
+New parameter switch `Safe`. It tells to catch/store build errors and return
+quietly. It is needed for parallel builds (instead of a hack used before) but
+it can be useful for regular builds, too.
+
+Parallel builds use log files always, either specified by `Log` or temporary.
+As a result, output is not discarded on timeout and less memory is used, too.
+
 ## v1.2.2
 
 Parallel builds. New parameter `Timeout` and ability to log build outputs to
@@ -34,9 +43,6 @@ results from other runspaces easier:
 * The result property `Error` contains an error that stopped the build.
 
 New demo/test script *Parallel.build.ps1* shows how parallel builds are used.
-
-P.S. Some kind of timeout control of parallel builds is planned but not yet
-supported in this version. To be continued.
 
 Fixed a subtle issue: special aliases should be set always, not just on the
 first call. Use case: a build is invoked by a new engine but it explicitly
