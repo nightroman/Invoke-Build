@@ -588,7 +588,7 @@
 	description = @'
 	This script invokes several build scripts simultaneously. Exact number of
 	parallel builds is limited by the number of processors by default. It can
-	be explicitly specified by MaximumBuilds.
+	be changed by the parameter MaximumBuilds.
 
 	The build engine script Invoke-Build.ps1 has to be in the same directory.
 	Such script tandems should work without conflicts with others, say, their
@@ -602,19 +602,19 @@
 		* Parameters - Invoke-Build parameter Parameters
 		* Log - Tells to write build output to the specified file
 
-		Any number of builds is allowed, including 0 or 1. Maximum number of
-		parallel builds is limited by number of processors. It can be lowered
-		by the parameter MaximumBuilds.
+		Any number of builds is allowed, including 0 and 1. Maximum number of
+		parallel builds is limited by number of processors by default. It can
+		be changed by the parameter MaximumBuilds.
 
-		If exactly a [hashtable[]] (not [object[]] converted on-the-fly) is
-		passed in then after the call it contains modified copies of input
-		hashtables used as parameters of Invoke-Build. The Result.Value
-		contains build results or null if invocation fails.
+		If exactly a [hashtable[]] (not [object[]]) is passed in then after the
+		call it contains modified copies of input hashtables used as parameters
+		of Invoke-Build. Their Result.Value contain build results or nulls if
+		invocations fail.
 '@
 		Result = @'
 		Tells to output build results using a variable. It is either a name of
 		variable to be created for results or any object with the property
-		Value to be assigned assigned ([ref], [hashtable]).
+		Value to be assigned ([ref], [hashtable]).
 
 		Result properties:
 		* Tasks - tasks (see: help Invoke-Build -Parameter Result)

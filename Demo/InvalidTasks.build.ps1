@@ -19,21 +19,9 @@ function Test($ExpectedPattern, $Script, $Task = '.') {
 	# write the temp script
 	$Script > z.build.ps1
 
-	# invoke, catch, compare
-	$message = ''
-	try { Invoke-Build $Task z.build.ps1 }
-	catch { $message = Format-Error $_ }
-	Write-BuildText Magenta $message
-	if ($message -notlike $ExpectedPattern) {
-		Write-Error -ErrorAction Stop @"
-Expected pattern [
-$ExpectedPattern
-]
-Actual error [
-$message
-]
-"@
-	}
+	# invoke
+	try { Test-Issue $Task z.build.ps1 $ExpectedPattern }
+	catch { Write-Error -ErrorAction Stop $_ }
 
 	# remove the temp script
 	Remove-Item z.build.ps1
@@ -74,10 +62,10 @@ task TaskAddedTwice {
 
 # The task has three valid jobs and one invalid (42 ~ [int]).
 task InvalidJobType {
-	Test "Task '.': Invalid job type.*At *InvalidArgument*" {
+	Test "Task 'InvalidJobType': Invalid job type.*At *InvalidArgument*" {
 		task task1 {}
 		task task2 {}
-		task . @(
+		task InvalidJobType @(
 			'task1'        # [string] - task name
 			@{ task2 = 1 } # [hashtable] - tells to ignore task2 errors
 			{ $x = 123 }   # [scriptblock] - code invoked as this task
@@ -88,8 +76,8 @@ task InvalidJobType {
 
 # The task has invalid job value.
 task InvalidJobValue {
-	Test "Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
-		task . @(
+	Test "Task 'InvalidJobValue': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+		task InvalidJobValue @(
 			@{ task2 = 1; task1 = 1 }
 		)
 	}
@@ -112,54 +100,54 @@ task InvalidJobValueBefore {
 # Incremental and Partial cannot be used together.
 task IncrementalAndPartial {
 	Test "Parameter set cannot be resolved using the specified named parameters.*At*task <<<<*InvalidArgument*" {
-		task . -Incremental @{} -Partial @{} { throw 'Unexpected.' }
+		task IncrementalAndPartial -Incremental @{} -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Invalid Incremental/Partial hashtable.
 task IncrementalInvalidHashtable {
-	Test "Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
-		task . -Incremental @{} { throw 'Unexpected.' }
+	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+		task IncrementalInvalidHashtable -Incremental @{} { throw 'Unexpected.' }
 	}
-	Test "Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
-		task . -Partial @{} { throw 'Unexpected.' }
+	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+		task IncrementalInvalidHashtable -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Missing task in jobs.
 task TaskNotDefined {
-	Test "Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *OperationStopped*" {
+	Test "Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:*OperationStopped*" {
+		task TaskNotDefined task1, {}
 		task task1 missing, {}
-		task . task1, {}
 	}
 }
 
 # Missing task in After.
 task TaskNotDefinedAfter {
-	Test "Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
+	Test "Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\z.build.ps1*OperationStopped*" {
 		task AfterMissing -After MissingTask {}
 	}
 }
 
 # Missing task in Before.
 task TaskNotDefinedBefore {
-	Test "Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
+	Test "Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\z.build.ps1*OperationStopped*" {
 		task BeforeMissing -Before MissingTask {}
 	}
 }
 
 # Tasks with a cyclic reference: . -> task1 -> task2 -> task1
 task CyclicReference {
-	Test "Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *OperationStopped*" {
+	Test "Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:*OperationStopped*" {
+		task CyclicReference task1
 		task task1 task2
 		task task2 task1
-		task . task1
 	}
 }
 
 # Cyclic references should be caught on ? as well.
 task CyclicReferenceList {
-	Test -Task ? "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
+	Test -Task ? "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:*OperationStopped*" {
 		task test1 test2
 		task test2 test1
 	}

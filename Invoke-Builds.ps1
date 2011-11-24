@@ -48,9 +48,6 @@ function Fix($_) {"$_`r`n$($_.InvocationInfo.PositionMessage.Trim().Replace("`n"
 
 ### main
 
-$up = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
-if ($up) {$up = if ($up.Description -eq 'Invoke-Build') {$up.Value}}
-
 # this info
 $info = (Select-Object Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed -InputObject 1)
 $info.Tasks = [System.Collections.ArrayList]@()
@@ -99,12 +96,9 @@ try {
 		$work = @{}
 		$works += $work
 
-		$p = [PowerShell]::Create()
-		$p.RunspacePool = $pool
-		$work.Posh = $p
-
-		# command
 		$b = $Build[$$]
+		$work.Title = "($($$ + 1)/$($Build.Count)) $($b.File)"
+
 		$log = $b['Log']
 		if ($log) {
 			$work.Temp = $false
@@ -117,7 +111,11 @@ try {
 			$log = [System.IO.Path]::GetTempFileName()
 		}
 		$work.Log = $log
-		$null = $p.AddCommand($path).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log)
+
+		$p = [PowerShell]::Create()
+		$p.RunspacePool = $pool
+		$work.Posh = $p
+		$null = $p.AddCommand($path).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log).AddParameter('Encoding', 'UTF8')
 
 		# start job
 		$work.Job = $p.BeginInvoke()
@@ -133,8 +131,7 @@ try {
 	### end async
 	for ($$ = 0; $$ -lt $Build.Count; ++$$) {
 		$work = $works[$$]
-		$title = "$($$ + 1)/$($Build.Count)"
-		Write-BuildText Cyan "Build ($title):"
+		Write-BuildText Cyan "Build $($work.Title):"
 
 		$p = $work.Posh
 		$exception = $null
@@ -144,7 +141,7 @@ try {
 			}
 			else {
 				$p.Stop()
-				$exception = "Build ($title) timed out."
+				$exception = "Build timed out."
 			}
 		}
 		catch {
@@ -152,15 +149,19 @@ try {
 		}
 
 		# log
+		$log = $work.Log
 		if ($work.Temp) {
-			$log = $work.Log
-			Get-Content -LiteralPath $log -ErrorAction Continue
+			try {
+				$read = [System.IO.File]::OpenText($log)
+				for(;;) { $_ = $read.ReadLine(); if ($null -eq $_) {break}; $_ }
+				$read.Close()
+			}
+			catch {}
 			[System.IO.File]::Delete($log)
 		}
-
-		# state
-		$state = $p.InvocationStateInfo
-		Write-BuildText Cyan "Build ($title) $($state.State)"
+		else {
+			"Log: $log"
+		}
 
 		# result and error
 		$r = $Build[$$].Result.Value
@@ -176,9 +177,13 @@ try {
 		}
 		if (!$_) {$_ = $exception}
 		if ($_) {
+			Write-BuildText Cyan "Build $($work.Title) FAILED."
 			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {Fix $_} else {"$_"}
 			Write-BuildText Red "ERROR: $_"
 			$failures += @{File=$Build[$$].File; Error=$_}
+		}
+		else {
+			Write-BuildText Cyan "Build $($work.Title) succeeded."
 		}
 	}
 
@@ -203,6 +208,8 @@ finally {
 	$warnings = $info.WarningCount
 	$info.Elapsed = [System.DateTime]::Now - $info.Started
 
+	$up = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
+	if ($up) {$up = if ($up.Description -eq 'Invoke-Build') {$up.Value}}
 	if ($up) {
 		$up.AllTasks.AddRange($info.Tasks)
 		$up.AllMessages.AddRange($info.Messages)

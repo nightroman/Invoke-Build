@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.2.3'}
+{[System.Version]'1.2.4'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask

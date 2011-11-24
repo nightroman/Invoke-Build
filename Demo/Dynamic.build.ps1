@@ -1,4 +1,4 @@
-
+﻿
 <#
 .Synopsis
 	Example of tasks created dynamically.
@@ -17,10 +17,11 @@ $jobs = foreach($_ in 1..3) {
 }
 
 # Yet another task. As far as it is called by parallel and job tests, it uses
-# Write-Host and Write-BuildText. This methods have issues in some hosts.
+# Write-Host and Write-BuildText. This methods have issues in some hosts. Also,
+# let's use some not ASCII text.
 task task0 {
-	Write-Host 'Host text.'
-	Write-BuildText Cyan 'Cyan text.'
+	Write-Host 'Host - Хост'
+	Write-BuildText Cyan 'Cyan - Циан'
 }
 
 # Call "static" and "dynamic" tasks.

@@ -1,4 +1,4 @@
-
+﻿
 <#
 .Synopsis
 	Tests parallel builds called by Invoke-Builds
@@ -123,14 +123,14 @@ task Timeout -If (!$BuildRoot.Contains('[')) {
 	assert ($message -like @'
 Parallel build failures:
 Build: *\Sleep.build.ps1
-ERROR: Build (2/3) timed out.
+ERROR: Build timed out.
 Build: *\Sleep.build.ps1
-ERROR: Build (3/3) timed out.*
+ERROR: Build timed out.*
 '@) "[[$message]]"
 
 	# Check the log files: the first is complete, the others are not.
 	assert ((Get-Content z.1)[-1] -like 'Build succeeded. 1 tasks, 0 errors, 0 warnings, *')
-	assert (!(Test-Path z.2) -or (Get-Content z.2)[-1] -eq 'begin')
-	assert (!(Test-Path z.2) -or (Get-Content z.3)[-1] -eq 'begin')
+	assert (!(Test-Path z.2) -or (Get-Content z.2)[-1] -eq 'begin - начало')
+	assert (!(Test-Path z.2) -or (Get-Content z.3)[-1] -eq 'begin - начало')
 	Remove-Item z.?
 }

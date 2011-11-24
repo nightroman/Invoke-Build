@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.4
+
+Parallel builds. Amended summary messages. Log files are UTF8. Added some non
+ASCII output to parallel build tests.
+
+Tests. Custom Format-Error is used instead of Out-String which does not work in
+strict mode with some hosts due to internal errors.
+
 ## v1.2.3
 
 New parameter switch `Safe`. It tells to catch/store build errors and return

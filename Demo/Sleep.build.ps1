@@ -1,4 +1,4 @@
-
+﻿
 <#
 .Synopsis
 	The task Sleep is used to simulate time consuming jobs.
@@ -10,7 +10,7 @@ param
 )
 
 task Sleep {
-	'begin'
+	'begin - начало'
 	Start-Sleep -Milliseconds $Milliseconds
-	'end'
+	'end - конец'
 }

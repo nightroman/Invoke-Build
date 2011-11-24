@@ -109,26 +109,6 @@ task ParamsValues2 ParamsValues1, {
 	"MyParam1='$MyParam1' MyValue1='$MyValue1' MyNewValue1='$MyNewValue1'"
 }
 
-# Just like regular scripts, build scripts may have functions used by tasks.
-# For example, this function is used by several tasks testing various issues.
-function Test-Issue([Parameter()]$Task, $File, $ExpectedPattern) {
-	$message = ''
-	try { Invoke-Build $Task $File }
-	catch { $message = Format-Error $_ }
-	Write-BuildText Magenta $message
-	if ($message -notlike $ExpectedPattern) {
-		Write-Error -ErrorAction Stop @"
-Expected pattern [
-$ExpectedPattern
-]
-Actual error [
-$message
-]
-"@
-	}
-	"Issue '$Task' of '$File' is tested."
-}
-
 # Test After and Before tasks.
 # * is used to invoke all tests.
 task Alter {
