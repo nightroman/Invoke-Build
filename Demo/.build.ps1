@@ -39,6 +39,9 @@ $MyPath = $MyInvocation.MyCommand.Path
 assert ($MyPath -eq $BuildFile)
 assert ((Split-Path $MyPath) -eq $BuildRoot)
 
+# In order to import shared functions dot-source scripts as usual.
+. .\SharedScript.ps1
+
 # In order to import more tasks invoke the script containing them. *.tasks.ps1
 # files play the same role as MSBuild *.targets files. NOTE: It is not typical
 # but imported tasks may have parameters and values as well. In this case task
@@ -111,7 +114,7 @@ task ParamsValues2 ParamsValues1, {
 function Test-Issue([Parameter()]$Task, $File, $ExpectedPattern) {
 	$message = ''
 	try { Invoke-Build $Task $File }
-	catch { $message = $_ | Out-String -Width 9999 }
+	catch { $message = Format-Error $_ }
 	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedPattern) {
 		Write-Error -ErrorAction Stop @"
@@ -215,18 +218,18 @@ task ErrorCases {
 	Test-Issue IncrementalOutputsFails ErrorCases.build.ps1 "Incremental outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 	Test-Issue PartialOutputsFails ErrorCases.build.ps1 "Partial outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
 
-	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "*Incremental output cannot be empty.*Invoke-Build <<<<*OperationStopped*"
-	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "*Different input and output counts: 1 and 0.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output cannot be empty.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0.*Invoke-Build <<<<*OperationStopped*"
 
-	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "*Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
-	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "*Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
 
 	Test-Issue MissingProperty ErrorCases.build.ps1 @'
-Get-BuildProperty : PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound:*
+PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound:*
 '@
 
 	Test-Issue ParallelBadParameters ErrorCases.build.ps1 @'
-*Parallel build failures:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*
+Parallel build failures:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*
 '@
 }
 
@@ -276,7 +279,7 @@ task TestStartJob {
 # Test/show "unexpected" functions.
 task TestFunctions {
 	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
-	$list += 'Test-Issue'
+	$list += 'Format-Error', 'Test-Issue'
 	$exposed = @(
 		'Add-BuildTask'
 		'Assert-BuildTrue'

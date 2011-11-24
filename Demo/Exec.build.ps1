@@ -7,6 +7,8 @@
 	Invoke-Build . Exec.build.ps1
 #>
 
+. .\SharedScript.ps1
+
 task ExecWorksCode0 {
 	$script:ExecWorksCode0 = exec { cmd /c echo Code0 }
 }
@@ -35,10 +37,10 @@ task . ExecWorksCode0, ExecWorksCode42, @{ExecFailsCode13=1}, @{ExecFailsBadComm
 	'Tested ExecWorksCode42'
 
 	$e = error ExecFailsCode13
-	assert (($e | Out-String -Width 9999) -like 'Invoke-BuildExec : The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*exec <<<<*')
+	assert ((Format-Error $e) -like 'The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*exec <<<<*')
 	'Tested ExecFailsCode13'
 
 	$e = error ExecFailsBadCommand
-	assert (($e | Out-String -Width 9999) -like 'throw in ExecFailsBadCommand*At *\Exec.build.ps1:*exec { throw <<<<*')
+	assert ((Format-Error $e) -like 'throw in ExecFailsBadCommand*At *\Exec.build.ps1:*exec { throw <<<<*')
 	'Tested ExecFailsBadCommand'
 }

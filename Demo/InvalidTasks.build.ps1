@@ -12,6 +12,8 @@
 	Invoke-Build * InvalidTasks.build.ps1
 #>
 
+. .\SharedScript.ps1
+
 # Writes a temporary script with an issue, calls it, compares the message.
 function Test($ExpectedPattern, $Script, $Task = '.') {
 	# write the temp script
@@ -20,7 +22,7 @@ function Test($ExpectedPattern, $Script, $Task = '.') {
 	# invoke, catch, compare
 	$message = ''
 	try { Invoke-Build $Task z.build.ps1 }
-	catch { $message = $_ | Out-String -Width 9999 }
+	catch { $message = Format-Error $_ }
 	Write-BuildText Magenta $message
 	if ($message -notlike $ExpectedPattern) {
 		Write-Error -ErrorAction Stop @"
@@ -39,7 +41,7 @@ $message
 
 # Build scripts should have at least one task.
 task NoTasks {
-	Test "*\Invoke-Build.ps1 : There is no task in '*\z.build.ps1'.*OperationStopped*" {
+	Test "There is no task in '*\z.build.ps1'.*OperationStopped*" {
 		# Script with no tasks
 	}
 }
@@ -48,7 +50,7 @@ task NoTasks {
 # mistake when a script is defined starting from a new line (tasks are function
 # calls, not definitions).
 task ScriptOutput {
-	Test "*\Invoke-Build.ps1 : Invalid build script syntax at the script block {*}*At *OperationStopped*" {
+	Test "Invalid build script syntax at the script block {*}*At *OperationStopped*" {
 		task task1
 		'It is fine to output some data ...'
 		task task2 task1
@@ -61,7 +63,7 @@ task ScriptOutput {
 # Task names should be unique. But it is fine to use the same task name several
 # times in a task job list (this does not make much sense though).
 task TaskAddedTwice {
-	Test "Add-BuildTask : Task 'task1': Task name already exists:*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidArgument*" {
+	Test "Task 'task1': Task name already exists:*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidArgument*" {
 		task task1 {}
 		# It is fine to reference a task 2+ times
 		task task2 task1, task1, task1
@@ -72,7 +74,7 @@ task TaskAddedTwice {
 
 # The task has three valid jobs and one invalid (42 ~ [int]).
 task InvalidJobType {
-	Test "Add-BuildTask : Task '.': Invalid job type.*At *InvalidArgument*" {
+	Test "Task '.': Invalid job type.*At *InvalidArgument*" {
 		task task1 {}
 		task task2 {}
 		task . @(
@@ -86,7 +88,7 @@ task InvalidJobType {
 
 # The task has invalid job value.
 task InvalidJobValue {
-	Test "Add-BuildTask : Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+	Test "Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
 		task . @(
 			@{ task2 = 1; task1 = 1 }
 		)
@@ -95,38 +97,38 @@ task InvalidJobValue {
 
 # The task has invalid value in After.
 task InvalidJobValueAfter {
-	Test "*\Invoke-Build.ps1 : Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidAfter*OperationStopped*" {
+	Test "Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidAfter*OperationStopped*" {
 		task InvalidAfter -After @{}
 	}
 }
 
 # The task has invalid value in Before.
 task InvalidJobValueBefore {
-	Test "*\Invoke-Build.ps1 : Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidBefore*OperationStopped*" {
+	Test "Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidBefore*OperationStopped*" {
 		task InvalidBefore -Before @{}
 	}
 }
 
 # Incremental and Partial cannot be used together.
 task IncrementalAndPartial {
-	Test "Add-BuildTask : Parameter set cannot be resolved using the specified named parameters.*At*task <<<<*AmbiguousParameterSet*" {
+	Test "Parameter set cannot be resolved using the specified named parameters.*At*task <<<<*InvalidArgument*" {
 		task . -Incremental @{} -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Invalid Incremental/Partial hashtable.
 task IncrementalInvalidHashtable {
-	Test "Add-BuildTask : Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+	Test "Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
 		task . -Incremental @{} { throw 'Unexpected.' }
 	}
-	Test "Add-BuildTask : Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+	Test "Task '.': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
 		task . -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Missing task in jobs.
 task TaskNotDefined {
-	Test "*\Invoke-Build.ps1 : Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *OperationStopped*" {
+	Test "Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:2 *OperationStopped*" {
 		task task1 missing, {}
 		task . task1, {}
 	}
@@ -134,21 +136,21 @@ task TaskNotDefined {
 
 # Missing task in After.
 task TaskNotDefinedAfter {
-	Test "*\Invoke-Build.ps1 : Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
+	Test "Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
 		task AfterMissing -After MissingTask {}
 	}
 }
 
 # Missing task in Before.
 task TaskNotDefinedBefore {
-	Test "*\Invoke-Build.ps1 : Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
+	Test "Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\InvalidTasks.build.ps1*OperationStopped*" {
 		task BeforeMissing -Before MissingTask {}
 	}
 }
 
 # Tasks with a cyclic reference: . -> task1 -> task2 -> task1
 task CyclicReference {
-	Test "*\Invoke-Build.ps1 : Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *OperationStopped*" {
+	Test "Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:3 *OperationStopped*" {
 		task task1 task2
 		task task2 task1
 		task . task1
@@ -157,14 +159,14 @@ task CyclicReference {
 
 # Cyclic references should be caught on ? as well.
 task CyclicReferenceList {
-	Test -Task ? "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
+	Test -Task ? "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
 		task test1 test2
 		task test2 test1
 	}
 }
 # Cyclic references should be caught on * as well.
 task CyclicReferenceStar {
-	Test -Task * "*\Invoke-Build.ps1 : Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
+	Test -Task * "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
 		task test1 test2
 		task test2 test1
 	}

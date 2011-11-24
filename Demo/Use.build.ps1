@@ -16,6 +16,8 @@
 	Invoke-Build . Use.build.ps1
 #>
 
+. .\SharedScript.ps1
+
 # Use the current framework at the script level (used by CurrentFramework).
 # In order to use the current framework pass $null or '':
 use $null MSBuild
@@ -84,15 +86,15 @@ ResolvedPath,
 @{MissingDirectory=1},
 @{InvalidDirectory=1},
 {
-	$e = error MissingFramework
-	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.* use <<<< *")
+	$e = Format-Error (error MissingFramework)
+	assert ($e -like "Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.*use <<<< *")
 
-	$e = error InvalidFramework
-	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : Directory does not exist: '*\Microsoft.NET\Framework\<>'.* use <<<< *")
+	$e = Format-Error (error InvalidFramework)
+	assert ($e -like "Directory does not exist: '*\Microsoft.NET\Framework\<>'.*use <<<< *")
 
-	$e = error MissingDirectory
-	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : Directory does not exist: '*\MissingDirectory'.* use <<<< *")
+	$e = Format-Error (error MissingDirectory)
+	assert ($e -like "Directory does not exist: '*\MissingDirectory'.*use <<<< *")
 
-	$e = error InvalidDirectory
-	assert (($e | Out-String -Width 9999) -like "Use-BuildAlias : * use <<<< *")
+	$e = Format-Error (error InvalidDirectory)
+	assert ($e -like "*use <<<< *")
 }

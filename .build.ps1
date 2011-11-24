@@ -96,7 +96,7 @@ task PackageTest Package, {
 
 	# the last sanity check: expected package item count
 	$count = (Get-ChildItem .. -Force -Recurse).Count
-	assert (25 -eq $count) "Unexpected package item count: $count"
+	assert (26 -eq $count) "Unexpected package item count: $count"
 },
 Clean
 
