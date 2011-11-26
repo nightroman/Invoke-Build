@@ -37,7 +37,7 @@ Set-Alias use Use-BuildAlias
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.2.4'}
+{[System.Version]'1.2.5'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -190,7 +190,6 @@ if ($MyInvocation.InvocationName -eq '.') {
 
 if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost' -or !$Host.UI -or !$Host.UI.RawUI) {
 	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text) {$Text}
-	if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost') {function Write-Host {}}
 }
 
 function Write-Warning([string]$Message)

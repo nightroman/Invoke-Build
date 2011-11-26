@@ -20,8 +20,8 @@ $jobs = foreach($_ in 1..3) {
 # Write-Host and Write-BuildText. This methods have issues in some hosts. Also,
 # let's use some not ASCII text.
 task task0 {
-	Write-Host 'Host - Хост'
 	Write-BuildText Cyan 'Cyan - Циан'
+	Write-Verbose 'Verbose - Подробно' -Verbose
 }
 
 # Call "static" and "dynamic" tasks.

@@ -31,6 +31,8 @@ param
 	$Configuration = 'Release'
 )
 
+. .\SharedScript.ps1
+
 $BeforeConditional = 'TODO'
 $AfterConditional = 'TODO'
 $Conditional = 'TODO'
@@ -99,3 +101,11 @@ task TestScriptCondition @(
 		assert ($script:ScriptConditionCount -eq 1) 'Conditional task is still called once.'
 	}
 )
+
+# The If script fails.
+task ScriptConditionFails -If { throw "If fails." } { throw }
+
+# Test errors.
+task ConditionalErrors @{ScriptConditionFails=1}, {
+	Test-Error ScriptConditionFails "If fails.*At *\Conditional.build.ps1*throw <<<<*"
+}

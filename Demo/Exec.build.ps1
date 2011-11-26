@@ -28,19 +28,14 @@ task ExecFailsBadCommand {
 
 # The default task calls the others and tests results.
 # Note use of @{} for failing tasks.
-task . ExecWorksCode0, ExecWorksCode42, @{ExecFailsCode13=1}, @{ExecFailsBadCommand=1}, {
-
+task . `
+ExecWorksCode0,
+ExecWorksCode42,
+@{ExecFailsCode13=1},
+@{ExecFailsBadCommand=1},
+{
 	assert ($script:ExecWorksCode0 -eq 'Code0')
-	'Tested ExecWorksCode0'
-
 	assert ($script:ExecWorksCode42 -eq 'Code42')
-	'Tested ExecWorksCode42'
-
-	$e = error ExecFailsCode13
-	assert ((Format-Error $e) -like 'The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*exec <<<<*')
-	'Tested ExecFailsCode13'
-
-	$e = error ExecFailsBadCommand
-	assert ((Format-Error $e) -like 'throw in ExecFailsBadCommand*At *\Exec.build.ps1:*exec { throw <<<<*')
-	'Tested ExecFailsBadCommand'
+	Test-Error ExecFailsCode13 'The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*exec <<<<*'
+	Test-Error ExecFailsBadCommand 'throw in ExecFailsBadCommand*At *\Exec.build.ps1:*exec { throw <<<<*'
 }

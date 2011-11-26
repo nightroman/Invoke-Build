@@ -1,8 +1,10 @@
 
 <#
 .Synopsis
-	Tests various runtime errors.
+	Tests some more errors (most of errors are tested in other scripts).
 #>
+
+. .\SharedScript.ps1
 
 # Import tasks Error1 and Error2 (dot-sourced because imported with data).
 . .\SharedTasksData.tasks.ps1
@@ -43,32 +45,7 @@ task Fails @(
 # protected call does not help: Fails is not prepared for errors in Error2.
 task TestAlmostSurvives AlmostSurvives, @{Fails=1}
 
-# The If script fails.
-task ScriptConditionFails -If { throw "If fails." } { throw }
-
-# The inputs script fails.
-task IncrementalInputsFails -Incremental @{{ throw 'Incremental inputs fails.' } = {}} { throw }
-task PartialInputsFails -Partial @{{ throw 'Partial inputs fails.' } = {}} { throw }
-
-# The outputs script fails.
-task IncrementalOutputsFails -Incremental @{{ '.build.ps1' } = { throw 'Incremental outputs fails.' }} { throw }
-task PartialOutputsFails -Partial @{{ '.build.ps1' } = { throw 'Partial outputs fails.' }} { throw }
-
-# Error: incremental output is empty
-# Error: partial inputs and outputs have different number of items
-task IncrementalOutputsIsEmpty -Incremental @{{ '.build.ps1' } = {}} { throw }
-task InputsOutputsMismatch -Partial @{{ '.build.ps1' } = {}} { throw }
-
-# Error: one of the input items is missing.
-task IncrementalMissingInputs -Incremental @{{ 'missing' } = {}} { throw }
-task PartialMissingInputs -Partial @{{ 'missing' } = {}} { throw }
-
-# Error: missing property
-task MissingProperty {
-	$MissingProperty = property MissingProperty
-}
-
-# Error: invalid Parameters type on calling Invoke-Builds
-task ParallelBadParameters {
-	Invoke-Builds @{File='Dynamic.build.ps1'; Parameters='BadParameters'}
+# Test error cases.
+task . @{TestAlmostSurvives=1}, {
+	Test-Error TestAlmostSurvives "Error2*At *\SharedTasksData.tasks.ps1*throw <<<<*"
 }

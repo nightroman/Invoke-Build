@@ -11,6 +11,8 @@
 	Invoke-Build . Incremental.build.ps1
 #>
 
+. .\SharedScript.ps1
+
 ### Make a few temporary old and new files
 function New-OldFile($Name) {
 	$null > $Name
@@ -155,6 +157,23 @@ task PartIncrementalTwoOutOfDate -Partial @{{
 	assert($$ -eq $old2)
 }}
 
+# The inputs script fails.
+task IncrementalInputsFails -Incremental @{{ throw 'Incremental inputs fails.' } = {}} { throw }
+task PartialInputsFails -Partial @{{ throw 'Partial inputs fails.' } = {}} { throw }
+
+# The outputs script fails.
+task IncrementalOutputsFails -Incremental @{{ '.build.ps1' } = { throw 'Incremental outputs fails.' }} { throw }
+task PartialOutputsFails -Partial @{{ '.build.ps1' } = { throw 'Partial outputs fails.' }} { throw }
+
+# Error: incremental output is empty
+# Error: partial inputs and outputs have different number of items
+task IncrementalOutputsIsEmpty -Incremental @{{ '.build.ps1' } = {}} { throw }
+task InputsOutputsMismatch -Partial @{{ '.build.ps1' } = {}} { throw }
+
+# Error: one of the input items is missing.
+task IncrementalMissingInputs -Incremental @{{ 'missing' } = {}} { throw }
+task PartialMissingInputs -Partial @{{ 'missing' } = {}} { throw }
+
 # The default task calls all test tasks and then checks the expected results.
 task . `
 EmptyInputs1,
@@ -171,6 +190,10 @@ FullIncrementalTwoMissing,
 PartIncrementalTwoMissing,
 FullIncrementalTwoOutOfDate,
 PartIncrementalTwoOutOfDate,
+@{IncrementalInputsFails=1},
+@{PartialInputsFails=1},
+@{IncrementalOutputsFails=1},
+@{PartialOutputsFails=1},
 {
 	assert ($PreFullIncrementalOneUpToDate -eq 1)
 	assert ($PostPartIncrementalOneUpToDate -eq 1)
@@ -186,6 +209,18 @@ PartIncrementalTwoOutOfDate,
 
 	assert ($FullIncrementalTwoOutOfDate -eq 1)
 	assert ($PartIncrementalTwoOutOfDate -eq 1)
+
+	# thrown from task code
+	Test-Error IncrementalInputsFails "Incremental inputs fails.*At *\Incremental.build.ps1*throw <<<<*"
+	Test-Error PartialInputsFails "Partial inputs fails.*At *\Incremental.build.ps1*throw <<<<*"
+	Test-Error IncrementalOutputsFails "Incremental outputs fails.*At *\Incremental.build.ps1*throw <<<<*"
+	Test-Error PartialOutputsFails "Partial outputs fails.*At *\Incremental.build.ps1*throw <<<<*"
+
+	# thrown from the engine
+	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Incremental output cannot be empty.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different input and output counts: 1 and 0.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue PartialMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
 
 	#! LiteralPath does not work in [ ] test.
 	Remove-Item z.new1.tmp, z.new2.tmp, z.old1.tmp, z.old2.tmp

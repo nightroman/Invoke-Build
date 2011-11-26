@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.5
+
+Removed the questionable trick with empty `Write-Host` defined internally for
+scripts invoked as parallel builds. This is up to scripts to decide how to
+avoid host commands: remove, redefine, replace with `Write-Verbose`, ...
+
+Parallel builds: code clean-up, minor fixes, new tests.
+
 ## v1.2.4
 
 Parallel builds. Amended summary messages. Log files are UTF8. Added some non

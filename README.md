@@ -25,8 +25,9 @@ change the process environment or anything global in the PowerShell session.
 
 * *Invoke-Build.ps1* invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* invokes parallel builds using the engine
-* *Build.ps1* is the engine wrapper with some more options
-* *Demo* contains tests of the engine and scripts
+* *Invoke-Build.ps1-Help.xml* is content for Get-Help
+* *Build.ps1* is the wrapper with some more options
+* *Demo* directory contains engine and scripts tests
 
 ## How Does It Work?
 
@@ -87,7 +88,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 163 tasks, 30 errors, 1 warnings, 00:00:10
+    Build completed with errors. 174 tasks, 34 errors, 1 warnings, 00:00:12
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics

@@ -86,15 +86,8 @@ ResolvedPath,
 @{MissingDirectory=1},
 @{InvalidDirectory=1},
 {
-	$e = Format-Error (error MissingFramework)
-	assert ($e -like "Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.*use <<<< *")
-
-	$e = Format-Error (error InvalidFramework)
-	assert ($e -like "Directory does not exist: '*\Microsoft.NET\Framework\<>'.*use <<<< *")
-
-	$e = Format-Error (error MissingDirectory)
-	assert ($e -like "Directory does not exist: '*\MissingDirectory'.*use <<<< *")
-
-	$e = Format-Error (error InvalidDirectory)
-	assert ($e -like "*use <<<< *")
+	Test-Error MissingFramework "Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.*use <<<< *"
+	Test-Error InvalidFramework "Directory does not exist: '*\Microsoft.NET\Framework\<>'.*use <<<< *"
+	Test-Error MissingDirectory "Directory does not exist: '*\MissingDirectory'.*use <<<< *"
+	Test-Error InvalidDirectory "*use <<<< *"
 }

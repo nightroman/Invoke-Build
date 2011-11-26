@@ -127,8 +127,8 @@ task Conditional {
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
 	# call with Release
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
-	# call default (! there was an issue !)
-	Invoke-Build TestScriptCondition Conditional.build.ps1
+	# call default (! there was an issue !) and also test errors
+	Invoke-Build TestScriptCondition, ConditionalErrors Conditional.build.ps1
 }
 
 # Test dynamic tasks (! and other issues !).
@@ -187,30 +187,9 @@ task Wrapper {
 	Invoke-Build . Wrapper.build.ps1
 }
 
-# Test runtime errors.
+# Test some errors.
 task ErrorCases {
-	Test-Issue TestAlmostSurvives ErrorCases.build.ps1 "Error2*At *\SharedTasksData.tasks.ps1*throw <<<<*"
-	Test-Issue ScriptConditionFails ErrorCases.build.ps1 "If fails.*At *\ErrorCases.build.ps1*throw <<<<*"
-
-	Test-Issue IncrementalInputsFails ErrorCases.build.ps1 "Incremental inputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
-	Test-Issue PartialInputsFails ErrorCases.build.ps1 "Partial inputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
-
-	Test-Issue IncrementalOutputsFails ErrorCases.build.ps1 "Incremental outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
-	Test-Issue PartialOutputsFails ErrorCases.build.ps1 "Partial outputs fails.*At *\ErrorCases.build.ps1*throw <<<<*"
-
-	Test-Issue IncrementalOutputsIsEmpty ErrorCases.build.ps1 "Incremental output cannot be empty.*Invoke-Build <<<<*OperationStopped*"
-	Test-Issue InputsOutputsMismatch ErrorCases.build.ps1 "Different input and output counts: 1 and 0.*Invoke-Build <<<<*OperationStopped*"
-
-	Test-Issue IncrementalMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
-	Test-Issue PartialMissingInputs ErrorCases.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
-
-	Test-Issue MissingProperty ErrorCases.build.ps1 @'
-PowerShell or environment variable 'MissingProperty' is not defined.*At *ErrorCases.build.ps1*ObjectNotFound:*
-'@
-
-	Test-Issue ParallelBadParameters ErrorCases.build.ps1 @'
-Parallel build failures:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*
-'@
+	Invoke-Build . ErrorCases.build.ps1
 }
 
 # Test the default parameter.
@@ -259,7 +238,7 @@ task TestStartJob {
 # Test/show "unexpected" functions.
 task TestFunctions {
 	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
-	$list += 'Format-Error', 'Test-Issue'
+	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
 	$exposed = @(
 		'Add-BuildTask'
 		'Assert-BuildTrue'

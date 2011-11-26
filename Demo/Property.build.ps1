@@ -16,6 +16,8 @@ param
 	$Param2 = (property UserName)
 )
 
+. .\SharedScript.ps1
+
 assert ($Param1 -eq $BuildFile)
 assert ($Param2 -eq $env:USERNAME)
 
@@ -30,5 +32,12 @@ $MissingNullProperty = $null
 $MissingNullProperty = property MissingProperty 42
 assert ($MissingNullProperty -eq 42)
 
-# All is done but at least one task is needed.
-task .
+# Error: missing property
+task MissingProperty {
+	property _111126_181750
+}
+
+# Test error cases.
+task . @{MissingProperty=1}, {
+	Test-Error MissingProperty "*variable '_111126_181750' is not defined.*property <<<<*ObjectNotFound*"
+}

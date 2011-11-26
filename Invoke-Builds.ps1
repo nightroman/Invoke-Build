@@ -25,9 +25,8 @@ param
 	[int]$MaximumBuilds = [System.Environment]::ProcessorCount
 )
 Set-StrictMode -Version 2
-$ErrorActionPreference = 'Stop'
 
-if ($Host.Name -eq 'Default Host' -or !$Host.UI -or !$Host.UI.RawUI) {
+if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost' -or !$Host.UI -or !$Host.UI.RawUI) {
 	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text) {$Text}
 }
 else {
@@ -46,9 +45,12 @@ else {
 
 function Fix($_) {"$_`r`n$($_.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n"))"}
 
+function Die([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0)
+{$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $null))}
+
 ### main
 
-# this info
+# info, result
 $info = (Select-Object Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed -InputObject 1)
 $info.Tasks = [System.Collections.ArrayList]@()
 $info.Messages = [System.Collections.ArrayList]@()
@@ -63,45 +65,45 @@ if ($Result) {
 # no builds
 if (!$Build) {return}
 
+### engine
+$engine = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path), 'Invoke-Build.ps1')
+if (![System.IO.File]::Exists($engine)) {Die "Required script '$engine' does not exist." ObjectNotFound}
+
+### works
+$works = @()
+for ($$ = 0; $$ -lt $Build.Count; ++$$) {
+	$b = @{} + $Build[$$]
+
+	$file = $b['File']
+	if (!$file) {Die "Build parameter File is missing or empty." InvalidArgument}
+	$file = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($file)
+	if (![System.IO.File]::Exists($file)) {Die "Build file '$file' does not exist." ObjectNotFound}
+
+	$b.Result = [ref]$null
+	$b.File = $file
+	$b.Safe = $true
+	$Build[$$] = $b
+
+	$work = @{}
+	$works += $work
+	$work.Build = $b
+	$work.Title = "($($$ + 1)/$($Build.Count)) $file"
+}
+
 # runspace pool
-if ($MaximumBuilds -lt 1) {throw "MaximumBuilds should be a positive number."}
-$pool = [RunspaceFactory]::CreateRunspacePool(1, [Math]::Min($Build.Count, $MaximumBuilds))
+if ($MaximumBuilds -lt 1) {Die "MaximumBuilds should be a positive number." InvalidArgument}
+$pool = [RunspaceFactory]::CreateRunspacePool(1, $MaximumBuilds)
 $failures = @()
 
 try {
-	### get the engine
-	$root = Split-Path $MyInvocation.MyCommand.Path
-	$path = Join-Path $root 'Invoke-Build.ps1'
-	if (![System.IO.File]::Exists($path)) {"Required script '$path' does not exist."}
-
-	### build parameters
-	for ($$ = 0; $$ -lt $Build.Count; ++$$) {
-		$b = @{} + $Build[$$]
-
-		$file = $b['File']
-		if (!$file) {throw "'Build' misses the mandatory key 'File'."}
-		$file = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($file)
-		if (![System.IO.File]::Exists($file)) {"Build script '$file' does not exist."}
-
-		$b.Result = [ref]$null
-		$b.File = $file
-		$b.Safe = $true
-		$Build[$$] = $b
-	}
-
 	### begin async
 	$pool.Open()
-	$works = @()
-	for ($$ = 0; $$ -lt $Build.Count; ++$$) {
-		$work = @{}
-		$works += $work
+	foreach($work in $works) {
+		$b = $work.Build
 
-		$b = $Build[$$]
-		$work.Title = "($($$ + 1)/$($Build.Count)) $($b.File)"
-
+		# log
 		$log = $b['Log']
 		if ($log) {
-			$work.Temp = $false
 			$b.Remove('Log')
 			$log = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($log)
 			[System.IO.File]::Delete($log)
@@ -112,31 +114,32 @@ try {
 		}
 		$work.Log = $log
 
+		# posh
 		$p = [PowerShell]::Create()
 		$p.RunspacePool = $pool
 		$work.Posh = $p
-		$null = $p.AddCommand($path).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log).AddParameter('Encoding', 'UTF8')
+		$null = $p.AddCommand($engine).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log).AddParameter('Encoding', 'UTF8')
 
-		# start job
+		# start
 		$work.Job = $p.BeginInvoke()
 	}
 
 	### wait
 	$stopwatch = [Diagnostics.Stopwatch]::StartNew()
-	$done = @(foreach($_ in $works) {
-		$left = $Timeout - $stopwatch.ElapsedMilliseconds
-		if ($left -gt 0) {$_.Job.AsyncWaitHandle.WaitOne($left)} else {$false}
-	})
+	foreach($work in $works) {
+		Write-BuildText Cyan $work.Title
+		$t = $Timeout - $stopwatch.ElapsedMilliseconds
+		$work.Done = if ($t -gt 0) {$work.Job.AsyncWaitHandle.WaitOne($t)}
+	}
 
 	### end async
-	for ($$ = 0; $$ -lt $Build.Count; ++$$) {
-		$work = $works[$$]
+	foreach($work in $works) {
 		Write-BuildText Cyan "Build $($work.Title):"
 
 		$p = $work.Posh
 		$exception = $null
 		try {
-			if ($done[$$]) {
+			if ($work.Done) {
 				$p.EndInvoke($work.Job)
 			}
 			else {
@@ -150,7 +153,7 @@ try {
 
 		# log
 		$log = $work.Log
-		if ($work.Temp) {
+		if ($work['Temp']) {
 			try {
 				$read = [System.IO.File]::OpenText($log)
 				for(;;) { $_ = $read.ReadLine(); if ($null -eq $_) {break}; $_ }
@@ -163,8 +166,8 @@ try {
 			"Log: $log"
 		}
 
-		# result and error
-		$r = $Build[$$].Result.Value
+		# result, error
+		$r = $work.Build.Result.Value
 		$_ = if ($r) {
 			$r.Error
 			$info.Tasks.AddRange($r.AllTasks)
@@ -173,14 +176,14 @@ try {
 			$info.WarningCount += $r.AllWarningCount
 		}
 		else {
-			"'$($Build[$$].File)' invocation failed: $exception"
+			"'$($work.Build.File)' invocation failed: $exception"
 		}
 		if (!$_) {$_ = $exception}
 		if ($_) {
 			Write-BuildText Cyan "Build $($work.Title) FAILED."
 			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {Fix $_} else {"$_"}
 			Write-BuildText Red "ERROR: $_"
-			$failures += @{File=$Build[$$].File; Error=$_}
+			$failures += @{File=$work.Title; Error=$_}
 		}
 		else {
 			Write-BuildText Cyan "Build $($work.Title) succeeded."
@@ -189,18 +192,14 @@ try {
 
 	# fail
 	if ($failures) {
-		Write-Error -ErrorAction Stop (.{
-			"Parallel build failures:"
+		Die ($(
+			"Failed builds:"
 			foreach($_ in $failures) {
 				"Build: $($_.File)"
 				"ERROR: $($_.Error)"
 			}
-		} | Out-String)
+		) -join "`r`n")
 	}
-}
-catch {
-	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
-	$PSCmdlet.ThrowTerminatingError($_)
 }
 finally {
 	$pool.Close()
