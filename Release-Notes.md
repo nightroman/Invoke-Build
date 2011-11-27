@@ -1,6 +1,11 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.6
+
+Refactoring of tests for decoupling and better grouping. Error cases moved from
+*ErrorCases.build.ps1* and *.build.ps1* to other scripts (test sets, in fact).
+
 ## v1.2.5
 
 Removed the questionable trick with empty `Write-Host` defined internally for

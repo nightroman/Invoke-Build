@@ -4,7 +4,7 @@
 	Example of a script with imported tasks (like MSBuild .targets file).
 
 .Description
-	See .build.ps1, the line with SharedTasks.tasks.ps1 and comments.
+	See .build.ps1, the line with Shared.tasks.ps1 and comments.
 #>
 
 # Just writes a string

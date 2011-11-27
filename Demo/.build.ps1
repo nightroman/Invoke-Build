@@ -39,15 +39,11 @@ $MyPath = $MyInvocation.MyCommand.Path
 assert ($MyPath -eq $BuildFile)
 assert ((Split-Path $MyPath) -eq $BuildRoot)
 
-# In order to import shared functions dot-source scripts as usual.
-. .\SharedScript.ps1
-
 # In order to import more tasks invoke the script containing them. *.tasks.ps1
 # files play the same role as MSBuild *.targets files. NOTE: It is not typical
-# but imported tasks may have parameters and values as well. In this case task
-# scripts should be dot-sourced (see how SharedTasksData.tasks.ps1 is used in
-# other scripts).
-.\SharedTasks.tasks.ps1
+# but imported tasks may use parameters and values as well. In this case task
+# scripts should be dot-sourced.
+.\Shared.tasks.ps1
 
 # Warning. Warnings are shown together with errors in the build summary.
 Write-Warning "Ignore this warning."
@@ -157,8 +153,8 @@ task Incremental {
 
 # Test invalid tasks.
 # * is used to invoke all tests.
-task InvalidTasks {
-	Invoke-Build * InvalidTasks.build.ps1
+task Invalid {
+	Invoke-Build * Invalid.build.ps1
 }
 
 # Test parallel builds (Invoke-Builds.ps1).
@@ -173,8 +169,8 @@ task Property {
 
 # Test protected tasks (@{Task=1} notation).
 # * is used to invoke all tests.
-task ProtectedTasks {
-	Invoke-Build * ProtectedTasks.build.ps1
+task Protected {
+	Invoke-Build * Protected.build.ps1
 }
 
 # Test use, the alias of Use-BuildAlias.
@@ -185,11 +181,6 @@ task Use {
 # Test the wrapper script Build.ps1.
 task Wrapper {
 	Invoke-Build . Wrapper.build.ps1
-}
-
-# Test some errors.
-task ErrorCases {
-	Invoke-Build . ErrorCases.build.ps1
 }
 
 # Test the default parameter.
@@ -340,13 +331,12 @@ Alter,
 Assert,
 Conditional,
 Dynamic,
-ErrorCases,
 Exec,
 Incremental,
-InvalidTasks,
+Invalid,
 Property,
 Parallel,
-ProtectedTasks,
+Protected,
 Use,
 Wrapper,
 TestDefaultParameter,
@@ -364,7 +354,7 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 # It is possible to have more than one script jobs.
 {
 	"In default, script 2"
-	Invoke-Build SharedTask1 SharedTasks.tasks.ps1
+	Invoke-Build SharedTask1 Shared.tasks.ps1
 },
 # Tasks can be referenced between or after scripts.
 Tests,

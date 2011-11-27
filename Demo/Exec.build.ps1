@@ -7,7 +7,7 @@
 	Invoke-Build . Exec.build.ps1
 #>
 
-. .\SharedScript.ps1
+. .\Shared.ps1
 
 task ExecWorksCode0 {
 	$script:ExecWorksCode0 = exec { cmd /c echo Code0 }

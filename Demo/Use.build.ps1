@@ -16,7 +16,7 @@
 	Invoke-Build . Use.build.ps1
 #>
 
-. .\SharedScript.ps1
+. .\Shared.ps1
 
 # Use the current framework at the script level (used by CurrentFramework).
 # In order to use the current framework pass $null or '':

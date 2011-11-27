@@ -640,12 +640,18 @@
 		@{
 			code = {
 				Invoke-Builds @(
-					@{File='Dynamic.build.ps1'}
-					@{File='Dynamic.build.ps1'; Task='Task1'}
-					@{File='Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
+					@{File='Project1.build.ps1'}
+					@{File='Project2.build.ps1'; Task='MakeHelp'}
+					@{File='Project2.build.ps1'; Task='Build', 'Test'}
+					@{File='Project3.build.ps1'; Log='C:\TEMP\Project3.log'}
+					@{File='Project4.build.ps1'; Parameters=@{Configuration='Release'}}
 				)
 			}
-			remarks = ''
+			remarks = @'
+	Five parallel builds are invoked with various combinations of parameters.
+	Note that it is fine to invoke the same build script more than once if
+	build flows specified by different tasks do not conflict.
+'@
 		}
 	)
 	links = @(

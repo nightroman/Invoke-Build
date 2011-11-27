@@ -15,8 +15,6 @@
 
 	The script also shows how to use script variables shared between tasks.
 
-	Errors are tested in ErrorCases.build.ps1.
-
 .Example
 	># Debug configuration
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
@@ -31,7 +29,7 @@ param
 	$Configuration = 'Release'
 )
 
-. .\SharedScript.ps1
+. .\Shared.ps1
 
 $BeforeConditional = 'TODO'
 $AfterConditional = 'TODO'

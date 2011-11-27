@@ -16,7 +16,7 @@ param
 	$Param2 = (property UserName)
 )
 
-. .\SharedScript.ps1
+. .\Shared.ps1
 
 assert ($Param1 -eq $BuildFile)
 assert ($Param2 -eq $env:USERNAME)

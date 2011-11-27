@@ -11,7 +11,7 @@
 	Invoke-Build . Incremental.build.ps1
 #>
 
-. .\SharedScript.ps1
+. .\Shared.ps1
 
 ### Make a few temporary old and new files
 function New-OldFile($Name) {

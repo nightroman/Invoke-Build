@@ -9,10 +9,10 @@
 	script creates and tests temporary scripts, one issue each.
 
 .Example
-	Invoke-Build * InvalidTasks.build.ps1
+	Invoke-Build * Invalid.build.ps1
 #>
 
-. .\SharedScript.ps1
+. .\Shared.ps1
 
 # Writes a temporary script with an issue, calls it, compares the message.
 function Test($ExpectedPattern, $Script, $Task = '.') {
