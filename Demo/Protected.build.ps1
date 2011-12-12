@@ -128,5 +128,5 @@ task AlmostSurvives AlmostSurvives1, @{AlmostSurvives2=1}
 
 # Trigger tasks and check for expected results.
 task . @{AlmostSurvives=1}, {
-	Test-Error AlmostSurvives "Error4*At *\Protected.build.ps1*throw <<<<*"
+	Test-Error AlmostSurvives "Error4*At *\Protected.build.ps1*'Error4'*OperationStopped*"
 }

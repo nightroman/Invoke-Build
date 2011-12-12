@@ -43,7 +43,8 @@ else {
 	}
 }
 
-function Fix($_) {"$_`r`n$($_.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n"))"}
+function Fix($_)
+{"$_`r`n$($1 = $_.InvocationInfo.PositionMessage; if ($1.StartsWith("`n")) {$1.Trim().Replace("`n", "`r`n")} else {$1})"}
 
 function Die([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0)
 {$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $null))}
@@ -71,23 +72,23 @@ if (![System.IO.File]::Exists($engine)) {Die "Required script '$engine' does not
 
 ### works
 $works = @()
-for ($$ = 0; $$ -lt $Build.Count; ++$$) {
-	$b = @{} + $Build[$$]
+for ($1 = 0; $1 -lt $Build.Count; ++$1) {
+	$b = @{} + $Build[$1]
 
 	$file = $b['File']
 	if (!$file) {Die "Build parameter File is missing or empty." InvalidArgument}
 	$file = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($file)
 	if (![System.IO.File]::Exists($file)) {Die "Build file '$file' does not exist." ObjectNotFound}
 
-	$b.Result = [ref]$null
+	$b.Result = @{}
 	$b.File = $file
 	$b.Safe = $true
-	$Build[$$] = $b
+	$Build[$1] = $b
 
 	$work = @{}
 	$works += $work
 	$work.Build = $b
-	$work.Title = "($($$ + 1)/$($Build.Count)) $file"
+	$work.Title = "($($1 + 1)/$($Build.Count)) $file"
 }
 
 # runspace pool
@@ -167,7 +168,7 @@ try {
 		}
 
 		# result, error
-		$r = $work.Build.Result.Value
+		$r = $work.Build.Result['Value']
 		$_ = if ($r) {
 			$r.Error
 			$info.Tasks.AddRange($r.AllTasks)

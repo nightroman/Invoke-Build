@@ -154,16 +154,16 @@ task PartIncrementalTwoOutOfDate -Partial @{{
 	assert ($Outputs.Count -eq 1)
 	assert ($Outputs[0] -eq $old2)
 	assert($_ -eq "$BuildRoot\.build.ps1")
-	assert($$ -eq $old2)
+	assert($2 -eq $old2)
 }}
 
 # The inputs script fails.
-task IncrementalInputsFails -Incremental @{{ throw 'Incremental inputs fails.' } = {}} { throw }
-task PartialInputsFails -Partial @{{ throw 'Partial inputs fails.' } = {}} { throw }
+task IncrementalInputsFails -Incremental @{{ throw 'Throw in input.' } = {}} { throw }
+task PartialInputsFails -Partial @{{ throw 'Throw in input.' } = {}} { throw }
 
 # The outputs script fails.
-task IncrementalOutputsFails -Incremental @{{ '.build.ps1' } = { throw 'Incremental outputs fails.' }} { throw }
-task PartialOutputsFails -Partial @{{ '.build.ps1' } = { throw 'Partial outputs fails.' }} { throw }
+task IncrementalOutputsFails -Incremental @{{ '.build.ps1' } = { throw 'Throw in output.' }} { throw }
+task PartialOutputsFails -Partial @{{ '.build.ps1' } = { throw 'Throw in output.' }} { throw }
 
 # Error: incremental output is empty
 # Error: partial inputs and outputs have different number of items
@@ -211,16 +211,16 @@ PartIncrementalTwoOutOfDate,
 	assert ($PartIncrementalTwoOutOfDate -eq 1)
 
 	# thrown from task code
-	Test-Error IncrementalInputsFails "Incremental inputs fails.*At *\Incremental.build.ps1*throw <<<<*"
-	Test-Error PartialInputsFails "Partial inputs fails.*At *\Incremental.build.ps1*throw <<<<*"
-	Test-Error IncrementalOutputsFails "Incremental outputs fails.*At *\Incremental.build.ps1*throw <<<<*"
-	Test-Error PartialOutputsFails "Partial outputs fails.*At *\Incremental.build.ps1*throw <<<<*"
+	Test-Error IncrementalInputsFails "Throw in input.*At *\Incremental.build.ps1:*task IncrementalInputsFails*"
+	Test-Error PartialInputsFails "Throw in input.*At *\Incremental.build.ps1:*task PartialInputsFails*"
+	Test-Error IncrementalOutputsFails "Throw in output.*At *\Incremental.build.ps1:*task IncrementalOutputsFails*"
+	Test-Error PartialOutputsFails "Throw in output.*At *\Incremental.build.ps1:*task PartialOutputsFails*"
 
 	# thrown from the engine
-	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Incremental output cannot be empty.*Invoke-Build <<<<*OperationStopped*"
-	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different input and output counts: 1 and 0.*Invoke-Build <<<<*OperationStopped*"
-	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
-	Test-Issue PartialMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*Invoke-Build <<<<*OperationStopped*"
+	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Incremental output cannot be empty.*try { Invoke-Build *OperationStopped*"
+	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different input and output counts: 1 and 0.*try { Invoke-Build *OperationStopped*"
+	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*try { Invoke-Build *OperationStopped*"
+	Test-Issue PartialMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*try { Invoke-Build *OperationStopped*"
 
 	#! LiteralPath does not work in [ ] test.
 	Remove-Item z.new1.tmp, z.new2.tmp, z.old1.tmp, z.old2.tmp

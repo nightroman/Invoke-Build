@@ -126,18 +126,15 @@ if ($_Tree -or $_Comment) {
 		if (!$docs) {
 			$docs = New-Object System.Collections.Specialized.OrderedDictionary
 			$file2docs[$file] = $docs
-			try {
-				foreach($token in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $file), [ref]$null)) {
-					if ($token.Type -eq 'Comment') {
-						$docs[$token.EndLine] = $token.Content
-					}
+			foreach($token in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $file), [ref]$null)) {
+				if ($token.Type -eq 'Comment') {
+					$docs[[object]$token.EndLine] = $token.Content
 				}
 			}
-			catch {Write-Warning $_}
 		}
 		$rem = ''
-		for($$ = $Task.InvocationInfo.ScriptLineNumber - 1; $$ -ge 1; --$$) {
-			$doc = $docs[$$]
+		for($1 = $Task.InvocationInfo.ScriptLineNumber - 1; $1 -ge 1; --$1) {
+			$doc = $docs[[object]$1]
 			if (!$doc) {break}
 			$rem = $doc.Replace("`t", '    ') + "`n" + $rem
 		}
@@ -160,7 +157,7 @@ if ($_Tree -or $_Comment) {
 }
 
 function *Err*($Text, $Info)
-{"ERROR: $Text`r`n$($Info.PositionMessage.Trim().Replace("`n", "`r`n"))"}
+{"ERROR: $Text`r`n$($_ = $Info.PositionMessage; if ($_.StartsWith("`n")) {$_.Trim().Replace("`n", "`r`n")} else {$_})"}
 
 ### Build with results
 try {

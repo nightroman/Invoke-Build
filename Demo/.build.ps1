@@ -220,7 +220,7 @@ task TestSelfAlias {
 # Test a build invoked from a background job just to be sure it works.
 task TestStartJob {
     $job = Start-Job { Invoke-Build . $args[0] } -ArgumentList "$BuildRoot\Dynamic.build.ps1"
-    $log = Wait-Job $job | Receive-Job $job
+    $log = Wait-Job $job | Receive-Job
     Remove-Job $job
     $log
     assert ($log[-1].StartsWith('Build succeeded. 5 tasks'))

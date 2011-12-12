@@ -325,7 +325,7 @@
 
 		In addition, inside process{} blocks:
 		- $_ - current full input path
-		- $$ - current output path
+		- $2 - current output path
 
 		See more about partial incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks

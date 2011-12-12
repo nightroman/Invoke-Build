@@ -76,7 +76,7 @@ task InvalidJobType {
 
 # The task has invalid job value.
 task InvalidJobValue {
-	Test "Task 'InvalidJobValue': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+	Test "Task 'InvalidJobValue': Invalid pair, expected hashtable @{X = Y}.*InvalidJobValue @(*InvalidArgument*" {
 		task InvalidJobValue @(
 			@{ task2 = 1; task1 = 1 }
 		)
@@ -85,31 +85,38 @@ task InvalidJobValue {
 
 # The task has invalid value in After.
 task InvalidJobValueAfter {
-	Test "Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidAfter*OperationStopped*" {
+	Test "Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*InvalidAfter -After*OperationStopped*" {
 		task InvalidAfter -After @{}
 	}
 }
 
 # The task has invalid value in Before.
 task InvalidJobValueBefore {
-	Test "Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*task <<<<  InvalidBefore*OperationStopped*" {
+	Test "Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*InvalidBefore -Before*OperationStopped*" {
 		task InvalidBefore -Before @{}
 	}
 }
 
 # Incremental and Partial cannot be used together.
 task IncrementalAndPartial {
-	Test "Parameter set cannot be resolved using the specified named parameters.*At*task <<<<*InvalidArgument*" {
+	$script = {
 		task IncrementalAndPartial -Incremental @{} -Partial @{} { throw 'Unexpected.' }
+	}
+	#?? V3 gets not proper source
+	if ($PSVersionTable.PSVersion.Major -ge 3) {
+		Test "Parameter set cannot be resolved*At *\Shared.ps1:*try { Invoke-Build*InvalidArgument*" $script
+	}
+	else {
+		Test "Parameter set cannot be resolved*At*IncrementalAndPartial -Incremental*InvalidArgument*" $script
 	}
 }
 
 # Invalid Incremental/Partial hashtable.
 task IncrementalInvalidHashtable {
-	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*IncrementalInvalidHashtable -Incremental*InvalidArgument*" {
 		task IncrementalInvalidHashtable -Incremental @{} { throw 'Unexpected.' }
 	}
-	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*task <<<<*InvalidArgument*" {
+	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*IncrementalInvalidHashtable -Partial*InvalidArgument*" {
 		task IncrementalInvalidHashtable -Partial @{} { throw 'Unexpected.' }
 	}
 }

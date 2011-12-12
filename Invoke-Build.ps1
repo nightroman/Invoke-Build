@@ -28,16 +28,9 @@ param
 	[switch]$WhatIf
 )
 
-Set-Alias assert Assert-BuildTrue
-Set-Alias error Get-BuildError
-Set-Alias exec Invoke-BuildExec
-Set-Alias property Get-BuildProperty
-Set-Alias task Add-BuildTask
-Set-Alias use Use-BuildAlias
-
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.2.6'}
+{[System.Version]'1.2.7'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -183,8 +176,8 @@ function Get-BuildFile($Path)
 
 if ($MyInvocation.InvocationName -eq '.') {
 	"Invoke-Build.ps1 Version $(Get-BuildVersion)`r`nCopyright (c) 2011 Roman Kuzmin"
-	'task', 'use', 'exec', 'assert', 'property', 'error', 'Get-BuildVersion','Write-BuildText' |
-	.{process{ Get-Help $_ }} | Format-Table Name, Synopsis -AutoSize | Out-String
+	'Add-BuildTask', 'Use-BuildAlias', 'Invoke-BuildExec', 'Assert-BuildTrue', 'Get-BuildProperty', 'Get-BuildError', 'Get-BuildVersion','Write-BuildText' |
+	.{process{ Get-Help $_}} | Format-Table Name, Synopsis -AutoSize | Out-String
 	return
 }
 
@@ -207,21 +200,21 @@ function *Die*([string]$Message, [System.Management.Automation.ErrorCategory]$Ca
 function *My*
 {$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'}
 
-function *II*($$)
-{$$.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n")}
+function *II*($_)
+{$_ = $_.InvocationInfo.PositionMessage; if ($_.StartsWith("`n")) {$_.Trim().Replace("`n", "`r`n")} else {$_}}
 
 function *Fix*($Text, $II)
 {"$Text`r`n$(*II* $II)"}
 
-function *KV*($$)
+function *KV*($_)
 {
-	if ($$.Count -ne 1) {throw "Invalid pair, expected hashtable @{X = Y}."}
-	$$.Keys
-	$$.Values
+	if ($_.Count -ne 1) {throw "Invalid pair, expected hashtable @{X = Y}."}
+	$_.Keys
+	$_.Values
 }
 
-function *Ref*($$)
-{if ($$ -is [hashtable]) {*KV* $$} else {$$}}
+function *Ref*($_)
+{if ($_ -is [hashtable]) {*KV* $_} else {$_}}
 
 function *Alter*($Add, $Tasks, [switch]$After)
 {
@@ -233,17 +226,17 @@ function *Alter*($Add, $Tasks, [switch]$After)
 		$jobs = $it.Jobs
 		$i = $jobs.Count
 		if ($After) {
-			for($$ = $i - 1; $$ -ge 0; --$$) {
-				if ($jobs[$$] -is [scriptblock]) {
-					$i = $$ + 1
+			for($1 = $i - 1; $1 -ge 0; --$1) {
+				if ($jobs[$1] -is [scriptblock]) {
+					$i = $1 + 1
 					break
 				}
 			}
 		}
 		else {
-			for($$ = 0; $$ -lt $i; ++$$) {
-				if ($jobs[$$] -is [scriptblock]) {
-					$i = $$
+			for($1 = 0; $1 -lt $i; ++$1) {
+				if ($jobs[$1] -is [scriptblock]) {
+					$i = $1
 					break
 				}
 			}
@@ -293,16 +286,16 @@ function *IO*($Task)
 		})
 		if (${-paths}.Count -ne ${-out}.Count) {throw "Different input and output counts: $(${-paths}.Count) and $(${-out}.Count)."}
 
-		$$ = -1
+		$1 = -1
 		$in2 = [System.Collections.ArrayList]@()
 		$out2 = [System.Collections.ArrayList]@()
 		Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 		foreach($_ in ${-in}) {
-			++$$
-			$path = ${-out}[$$]
+			++$1
+			$path = ${-out}[$1]
 			$file = [System.IO.FileInfo]$PSCmdlet.GetUnresolvedProviderPathFromPSPath($path)
 			if (!$file.Exists -or $_.LastWriteTime -gt $file.LastWriteTime) {
-				$null = $in2.Add(${-paths}[$$]), $out2.Add($path)
+				$null = $in2.Add(${-paths}[$1]), $out2.Add($path)
 			}
 		}
 
@@ -411,7 +404,8 @@ function *Task*($Name, $Path)
 					if (${-it}.Partial) {
 						${private:-} = 0
 						$Inputs | .{process{
-							$$ = $Outputs[${-}]
+							$2 = $Outputs[${-}]
+							$$ = $2
 							++${-}
 							$_
 						}} | & ${-job}
@@ -471,7 +465,7 @@ function *Hook*
 {
 	if ($BuildHook) {
 		${private:-} = $BuildHook[$args[0]]
-		if (${-}) {. ${-}}
+		if (${-}) {& ${-}}
 	}
 }
 
@@ -526,6 +520,12 @@ ${private:-up} = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
 if (${-up}) {
 	${-up} = if (${-up}.Description -eq 'Invoke-Build') {${-up}.Value}
 }
+Set-Alias assert Assert-BuildTrue
+Set-Alias error Get-BuildError
+Set-Alias exec Invoke-BuildExec
+Set-Alias property Get-BuildProperty
+Set-Alias task Add-BuildTask
+Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
 Set-Alias Invoke-Builds (Join-Path (Split-Path $MyInvocation.MyCommand.Path) 'Invoke-Builds.ps1')
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))

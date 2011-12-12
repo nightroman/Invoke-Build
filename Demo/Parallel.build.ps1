@@ -28,7 +28,13 @@ task NoBuilds {
 # 1. Invoke-Builds with 1 build is allowed (but this is not normal).
 # 2. Get the build result using the [ref] variable.
 task OneBuild {
-	$Result = [ref]$null
+	#?? V3 does not return anything via [ref]
+	if ($PSVersionTable.PSVersion.Major -ge 3) {
+		$Result = @{}
+	}
+	else {
+		$Result = [ref]$null
+	}
 	Invoke-Builds @{File='Dynamic.build.ps1'} -Result $Result
 	assert ($Result.Value.Tasks.Count -eq 5)
 }
@@ -182,8 +188,8 @@ task ParallelErrorCases `
 @{ParallelBadParameters=1},
 {
 	Test-Error ParallelMissingEngine "Required script '*\Invoke-Build.ps1' does not exist.*At *\Parallel.build.ps1:*ObjectNotFound*"
-	Test-Error ParallelNoFileParameter "Build parameter File is missing or empty.*Invoke-Builds <<<<*InvalidArgument*"
-	Test-Error ParallelMissingFile "Build file '*\MissingFile' does not exist.*Invoke-Builds <<<<*ObjectNotFound*"
-	Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*Invoke-Builds <<<<*InvalidArgument*"
+	Test-Error ParallelNoFileParameter "Build parameter File is missing or empty.*@{Task='.'}*InvalidArgument*"
+	Test-Error ParallelMissingFile "Build file '*\MissingFile' does not exist.*@{File='MissingFile'}*ObjectNotFound*"
+	Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
 	Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*"
 }

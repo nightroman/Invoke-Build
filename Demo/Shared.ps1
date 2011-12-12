@@ -13,12 +13,12 @@
 	with some hosts due to internal errors:
 	https://connect.microsoft.com/PowerShell/feedback/details/708182
 #>
-function Format-Error($$)
+function Format-Error($Record)
 {
 	@"
-$$
-$($$.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n"))
-+ $($$.CategoryInfo)
+$Record
+$($Record.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n"))
++ $($Record.CategoryInfo)
 "@
 }
 

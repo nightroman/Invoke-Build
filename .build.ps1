@@ -48,11 +48,11 @@ task UpdateScript {
 	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
 	$target = 'Build.ps1', 'Invoke-Build.ps1', 'Invoke-Builds.ps1', "Invoke-Build.ps1-Help.xml"
 	$source = "$from\x.ps1", "$from\Invoke-Build.ps1", "$from\Invoke-Builds.ps1", "$from\Invoke-Build.ps1-Help.xml"
-	for($$ = 0; $$ -lt 4; ++$$) {
-		$s = Get-Item $source[$$]
-		$t = Get-Item $target[$$] -ErrorAction 0
+	for($1 = 0; $1 -lt 4; ++$1) {
+		$s = Get-Item $source[$1]
+		$t = Get-Item $target[$1] -ErrorAction 0
 		assert (!$t -or ($t.LastWriteTime -le $s.LastWriteTime)) "$s -> $t"
-		Copy-Item $s.FullName $target[$$]
+		Copy-Item $s.FullName $target[$1]
 	}
 }
 
@@ -137,7 +137,7 @@ like usual due to standard script parameters and script scope variables.
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
 }
 
-# Make zip and NuGet packages.
+# Make all packages.
 task Pack Zip, NuGet
 
 # Calls tests infinitely to be sure it works and nothing leaks.
@@ -172,15 +172,15 @@ task Test {
 	assert ($result.Messages.Count -ge 1)
 
 	# process and save the output
-	$outputPath = 'Invoke-Build-Test.log'
-	$samplePath = "$env:TEMP\Invoke-Build-Test.log"
+	$outputPath = "$BuildRoot\Invoke-Build-Test.log"
+	$samplePath = "$env:TEMP\Invoke-Build-Test.$($PSVersionTable.PSVersion.Major).log"
 	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?( )? *', '00:00:00.0000000$1'
-	Set-Content $outputPath $output
+	[System.IO.File]::WriteAllText($outputPath, $output, [System.Text.Encoding]::UTF8)
 
 	# compare outputs
 	$toCopy = $false
 	if (Test-Path $samplePath) {
-		$sample = (Get-Content $samplePath) -join "`r`n"
+		$sample = [System.IO.File]::ReadAllText($samplePath)
 		if ($output -ceq $sample) {
 			Write-BuildText Green 'The result is not changed.'
 			Remove-Item $outputPath

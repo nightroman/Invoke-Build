@@ -39,5 +39,5 @@ task MissingProperty {
 
 # Test error cases.
 task . @{MissingProperty=1}, {
-	Test-Error MissingProperty "*variable '_111126_181750' is not defined.*property <<<<*ObjectNotFound*"
+	Test-Error MissingProperty "PowerShell or environment variable '_111126_181750' is not defined.*At *\Property.build.ps1:*ObjectNotFound*"
 }

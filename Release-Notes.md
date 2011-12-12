@@ -1,6 +1,17 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.7
+
+Adapted for PowerShell V3 CTP2.
+
+Got rid of easy to type but controversial variable $$. There are issues in
+PowerShell V3, bugs or not, Invoke-Build does not use this variable anymore.
+
+As a result, it is recommended to replace automatic variables $$ with $2 in all
+partial incremental task code (if any). This version supports both variables $2
+(new) and $$ (deprecated). The deprecated $$ will not be supported in vNext.
+
 ## v1.2.6
 
 Refactoring of tests for decoupling and better grouping. Error cases moved from
