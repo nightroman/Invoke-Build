@@ -1,3 +1,6 @@
+z
 *.log
 *.htm
 *-Help.xml
+*.zip
+*.nupkg

@@ -1,7 +1,7 @@
 
 <#
 Invoke-Build - Build Automation in PowerShell
-Copyright (c) 2011 Roman Kuzmin
+Copyright (c) 2011-2012 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ param
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.2.7'}
+{[System.Version]'1.2.8'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -175,7 +175,7 @@ function Get-BuildFile($Path)
 }
 
 if ($MyInvocation.InvocationName -eq '.') {
-	"Invoke-Build.ps1 Version $(Get-BuildVersion)`r`nCopyright (c) 2011 Roman Kuzmin"
+	"Invoke-Build.ps1 Version $(Get-BuildVersion)`r`nCopyright (c) 2011-2012 Roman Kuzmin"
 	'Add-BuildTask', 'Use-BuildAlias', 'Invoke-BuildExec', 'Assert-BuildTrue', 'Get-BuildProperty', 'Get-BuildError', 'Get-BuildVersion','Write-BuildText' |
 	.{process{ Get-Help $_}} | Format-Table Name, Synopsis -AutoSize | Out-String
 	return
@@ -405,7 +405,6 @@ function *Task*($Name, $Path)
 						${private:-} = 0
 						$Inputs | .{process{
 							$2 = $Outputs[${-}]
-							$$ = $2
 							++${-}
 							$_
 						}} | & ${-job}

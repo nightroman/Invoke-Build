@@ -272,6 +272,7 @@ task TestVariables {
 		'LASTEXITCODE'
 		'PROFILE'
 		'PSCmdlet'
+		'PSItem'
 		'PWD'
 		'this'
 	)

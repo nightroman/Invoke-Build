@@ -102,13 +102,8 @@ task IncrementalAndPartial {
 	$script = {
 		task IncrementalAndPartial -Incremental @{} -Partial @{} { throw 'Unexpected.' }
 	}
-	#?? V3 gets not proper source
-	if ($PSVersionTable.PSVersion.Major -ge 3) {
-		Test "Parameter set cannot be resolved*At *\Shared.ps1:*try { Invoke-Build*InvalidArgument*" $script
-	}
-	else {
-		Test "Parameter set cannot be resolved*At*IncrementalAndPartial -Incremental*InvalidArgument*" $script
-	}
+	#! V3 CTP2 used to get not proper source, fixed in V3 Beta.
+	Test "Parameter set cannot be resolved*At*IncrementalAndPartial -Incremental*InvalidArgument*" $script
 }
 
 # Invalid Incremental/Partial hashtable.

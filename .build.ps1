@@ -173,7 +173,7 @@ task Test {
 
 	# process and save the output
 	$outputPath = "$BuildRoot\Invoke-Build-Test.log"
-	$samplePath = "$env:TEMP\Invoke-Build-Test.$($PSVersionTable.PSVersion.Major).log"
+	$samplePath = "$env:APPDATA\Invoke-Build-Test.$($PSVersionTable.PSVersion.Major).log"
 	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?( )? *', '00:00:00.0000000$1'
 	[System.IO.File]::WriteAllText($outputPath, $output, [System.Text.Encoding]::UTF8)
 

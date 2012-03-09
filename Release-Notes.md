@@ -1,16 +1,22 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.2.8
+
+Partial incremental tasks. Automatic variable `$$` is not supported, use `$2`.
+
+Adapted tests to PowerShell V3 Beta (changed error messages).
+
 ## v1.2.7
 
-Adapted for PowerShell V3 CTP2.
+Adapted to PowerShell V3 CTP2.
 
-Got rid of easy to type but controversial variable $$. There are issues in
+Got rid of easy to type but controversial variable `$$`. There are issues in
 PowerShell V3, bugs or not, Invoke-Build does not use this variable anymore.
 
-As a result, it is recommended to replace automatic variables $$ with $2 in all
-partial incremental task code (if any). This version supports both variables $2
-(new) and $$ (deprecated). The deprecated $$ will not be supported in vNext.
+As a result, it is recommended to replace automatic variables `$$` with `$2` in
+all partial incremental task code (if any). This version supports both `$2`
+(new) and `$$` (deprecated). `$$` will not be supported in vNext.
 
 ## v1.2.6
 

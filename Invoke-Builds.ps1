@@ -1,7 +1,7 @@
 
 <#
 Invoke-Build - Build Automation in PowerShell
-Copyright (c) 2011 Roman Kuzmin
+Copyright (c) 2011-2012 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
