@@ -27,6 +27,7 @@ change the process environment or anything global in the PowerShell session.
 * *Invoke-Builds.ps1* invokes parallel builds using the engine
 * *Invoke-Build.ps1-Help.xml* is content for Get-Help
 * *Build.ps1* is the wrapper with some more options
+* *Show-BuildGraph.ps1* makes and shows task graphs
 * *Demo* directory contains engine and scripts tests
 
 ## How Does It Work?

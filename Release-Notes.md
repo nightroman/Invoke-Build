@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.3.0
+
+New script *Show-BuildGraph.ps1* builds and shows build task graphs using
+[Graphviz](http://graphviz.org/). For an example see
+[Wiki](https://github.com/nightroman/Invoke-Build/wiki/Build-Graphs).
+
 ## v1.2.8
 
 Partial incremental tasks. Automatic variable `$$` is not supported, use `$2`.

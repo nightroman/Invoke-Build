@@ -30,7 +30,7 @@ param
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.2.8'}
+{[System.Version]'1.3.0'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask

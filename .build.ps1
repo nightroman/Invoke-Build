@@ -46,9 +46,9 @@ task GitStatus -If (Test-Path .git) {
 # Fail if the project files are newer, to be resolved manually.
 task UpdateScript {
 	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
-	$target = 'Build.ps1', 'Invoke-Build.ps1', 'Invoke-Builds.ps1', "Invoke-Build.ps1-Help.xml"
-	$source = "$from\x.ps1", "$from\Invoke-Build.ps1", "$from\Invoke-Builds.ps1", "$from\Invoke-Build.ps1-Help.xml"
-	for($1 = 0; $1 -lt 4; ++$1) {
+	$target = 'Build.ps1', 'Invoke-Build.ps1', 'Invoke-Builds.ps1', 'Invoke-Build.ps1-Help.xml', 'Show-BuildGraph.ps1'
+	$source = "$from\x.ps1", "$from\Invoke-Build.ps1", "$from\Invoke-Builds.ps1", "$from\Invoke-Build.ps1-Help.xml", "$from\Show-BuildGraph.ps1"
+	for($1 = 0; $1 -lt $target.Count; ++$1) {
 		$s = Get-Item $source[$1]
 		$t = Get-Item $target[$1] -ErrorAction 0
 		assert (!$t -or ($t.LastWriteTime -le $s.LastWriteTime)) "$s -> $t"
@@ -75,7 +75,8 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	Build.ps1,
 	Invoke-Build.ps1,
 	Invoke-Builds.ps1,
-	LICENSE.txt
+	LICENSE.txt,
+	Show-BuildGraph.ps1
 
 	# move generated files
 	Move-Item -Destination z\tools `
