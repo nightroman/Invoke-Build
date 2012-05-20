@@ -1,6 +1,15 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.3.1
+
+*Show-BuildGraph.ps1*
+
+- Replaced parameter `Graph` with `Code`. Any proper DOT code is allowed.
+- Switch `Number` tells to show task call numbers on graph edges.
+- Tasks with code are shown as boxes, without code as ovals.
+- Protected task calls are shown as dotted edges.
+
 ## v1.3.0
 
 New script *Show-BuildGraph.ps1* builds and shows build task graphs using

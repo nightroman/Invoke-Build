@@ -10,7 +10,19 @@
 
 	The script calls Invoke-Build.ps1 in order to get the tasks (WhatIf mode),
 	builds the DOT file and calls Graphviz's dot.exe in order to visualize it
-	using one of the supported output formats and associated applications.
+	using one of the supported output formats and the associated application.
+
+	Tasks with code are shown as boxes, tasks without code are shown as ovals.
+	Protected task calls are shown with dotted edges, regular calls are shown
+	with solid edges. Call numbers on edges are not shown by default.
+
+	EXAMPLES
+
+	# Make and show temporary PDF for the default build script
+	Show-BuildGraph
+
+	# Make Build.png with call numbers and calls from top to bottom
+	Show-BuildGraph -Number -Code '' -Output Build.png
 
 .Parameter File
 		See: help Invoke-Build -Parameter File
@@ -18,71 +30,90 @@
 .Parameter Output
 		The output file path and format specified by extension. For available
 		formats simply use unlikely supported one and check the error message.
-		The default is 'Graphviz.pdf' in the TEMP directory.
+		The default is "$env:TEMP\Graphviz.pdf".
 
-.Parameter Graph
-		Graph attributes, see Graphviz manuals. The default 'rankdir=LR' tells
-		graph edges to go from left to right.
+.Parameter Code
+		Custom DOT code added to the graph definition, see Graphviz manuals.
+		The default 'graph [rankdir=LR]' tells edges to go from left to right.
 
 .Parameter Parameters
-		See: help Invoke-Build -Parameter Parameters. Parameters may be needed
-		only if a build file creates different task sets depending on them.
+		See: help Invoke-Build -Parameter Parameters. Parameters are needed in
+		special cases when they alter build task sets or task dependencies.
 
 .Parameter NoShow
-		Tells only to not show the graph after creation.
+		Tells to not show the graph after creation.
+
+.Parameter Number
+		Tells to show task call numbers.
 #>
 
 param
 (
 	[Parameter(Position=1)][string]$File,
 	[Parameter(Position=2)][string]$Output = "$env:TEMP\Graphviz.pdf",
-	[string]$Graph = 'rankdir=LR',
+	[string]$Code = 'graph [rankdir=LR]',
 	[hashtable]$Parameters,
-	[switch]$NoShow
+	[switch]$NoShow,
+	[switch]$Number
 )
 
 try { # To amend errors
 
 # get dot.exe
 $dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {@(Get-Command dot.exe -ErrorAction Stop)[0].Path}
-if (!(Test-Path -LiteralPath $dot)) {throw "Cannot find 'dot.exe'. See the script requirements."}
+if (!(Test-Path -LiteralPath $dot)) {throw "Cannot find 'dot.exe'."}
 
 # output type
 $type = [System.IO.Path]::GetExtension($Output)
-if (!$type) {throw "Output file should have extension."}
+if (!$type) {throw "Output file name should have an extension."}
 $type = $type.Substring(1).ToLower()
 
 # get tasks
 Invoke-Build ? -File:$File -Parameters:$Parameters -Result:BuildList
 
 # DOT code
-$code = .{
+$text = @(
 	'digraph Tasks {'
-	"graph [$Graph];"
+	$Code
 	foreach($it in $BuildList.Values) {
 		$name = $it.Name
-		'"{0}";' -f $name
+		'"{0}"' -f $name
+		$n = 0
+		$script = $false
 		foreach($job in $it.Jobs) {
 			if ($job -is [string]) {
-				'"{0}" -> "{1}";' -f $name, $job
+				$edge = ' '
+				if ($Number) {
+					++$n
+					$edge += "label=$n "
+				}
+				if ($it.Try -contains $job) {
+					$edge += "style=dotted "
+				}
+				'"{0}" -> "{1}" [{2}]' -f $name, $job, $edge
 			}
+			else {
+				$script = $true
+			}
+		}
+		if ($script) {
+			'"{0}" [ shape=box ]' -f $name
 		}
 	}
 	'}'
-}
+)
 
 #! temp file UTF8 no BOM
 $temp = "$env:TEMP\Graphviz.dot"
-[System.IO.File]::WriteAllLines($temp, $code)
+[System.IO.File]::WriteAllLines($temp, $text)
 
 # make
 & $dot "-T$type" -o $Output $temp
 if ($LastExitCode) {return}
 
 # show
-if (!$NoShow) {
-	Invoke-Item $Output
-}
+if ($NoShow) {return}
+Invoke-Item $Output
 
 } catch {
 	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
