@@ -14,7 +14,7 @@ Invoke-Build Release Notes
 
 New script *Show-BuildGraph.ps1* builds and shows build task graphs using
 [Graphviz](http://graphviz.org/). For an example see
-[Wiki](https://github.com/nightroman/Invoke-Build/wiki/Build-Graphs).
+[Wiki](https://github.com/nightroman/Invoke-Build/wiki/Visualization-of-Build-Graphs).
 
 ## v1.2.8
 
