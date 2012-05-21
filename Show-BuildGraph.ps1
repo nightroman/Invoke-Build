@@ -44,7 +44,8 @@
 		Tells to not show the graph after creation.
 
 .Parameter Number
-		Tells to show task call numbers.
+		Tells to show task job numbers. Jobs are tasks (numbers are shown on
+		edges) and own scripts (numbers are shown in task boxes after names).
 #>
 
 param
@@ -78,14 +79,14 @@ $text = @(
 	foreach($it in $BuildList.Values) {
 		$name = $it.Name
 		'"{0}"' -f $name
-		$n = 0
-		$script = $false
+		$num = 0
+		$script = ''
 		foreach($job in $it.Jobs) {
+			++$num
 			if ($job -is [string]) {
 				$edge = ' '
 				if ($Number) {
-					++$n
-					$edge += "label=$n "
+					$edge += "label=$num "
 				}
 				if ($it.Try -contains $job) {
 					$edge += "style=dotted "
@@ -93,11 +94,16 @@ $text = @(
 				'"{0}" -> "{1}" [{2}]' -f $name, $job, $edge
 			}
 			else {
-				$script = $true
+				$script += "{$num}"
 			}
 		}
 		if ($script) {
-			'"{0}" [ shape=box ]' -f $name
+			if ($Number) {
+				'"{0}" [ shape=box label="{0} {1}" ]' -f $name, $script
+			}
+			else {
+				'"{0}" [ shape=box ]' -f $name
+			}
 		}
 	}
 	'}'

@@ -30,7 +30,7 @@ param
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.3.1'}
+{[System.Version]'1.3.2'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -462,8 +462,8 @@ function *Try-Task*($Try, $Task)
 
 function *Hook*
 {
-	if ($BuildHook) {
-		${private:-} = $BuildHook[$args[0]]
+	if ($args[0]) {
+		${private:-} = $args[0][$args[1]]
 		if (${-}) {& ${-}}
 	}
 }
@@ -507,7 +507,7 @@ try {
 	else {
 		$BuildFile = Get-BuildFile ${-location}
 		if (!$BuildFile) {
-			$BuildFile = *Hook* GetFile
+			$BuildFile = *Hook* $Hook GetFile
 			if (!$BuildFile) {throw "Default build file is not found."}
 		}
 	}
@@ -546,7 +546,6 @@ if ($Result) {
 	else {$Result.Value = $_}
 }
 $BuildTask = $Task
-$BuildHook = $Hook
 ${private:-Result} = $Result
 ${private:-Safe} = $Safe
 $_ = $Parameters

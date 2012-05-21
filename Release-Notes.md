@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.3.2
+
+*Invoke-Build.ps1*. Fixed use of not initialized `$BuildHook` in strict mode.
+
+*Show-BuildGraph.ps1*. With the `Number` switch task script blocks are also
+counted and their numbers are shown in task boxes. Note that this script is
+still under construction, some changes based on the feedback are expected.
+
 ## v1.3.1
 
 *Show-BuildGraph.ps1*
