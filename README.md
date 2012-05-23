@@ -89,7 +89,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 174 tasks, 34 errors, 1 warnings, 00:00:12
+    Build completed with errors. 183 tasks, 34 errors, 1 warnings, 00:00:12
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics

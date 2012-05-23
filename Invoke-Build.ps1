@@ -30,7 +30,7 @@ param
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.3.2'}
+{[System.Version]'1.4.0'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -359,7 +359,9 @@ function *Task*($Name, $Path)
 	${private:-count} = ${-it}.Jobs.Count
 	${private:-io} = $null -ne ${-it}.Inputs
 	${private:-skip} = $false
+
 	try {
+		if (!$WhatIf) {. Enter-BuildTask ${-it}}
 		foreach(${private:-job} in ${-it}.Jobs) {
 			++${-n}
 			if (${-job} -is [string]) {
@@ -398,23 +400,33 @@ function *Task*($Name, $Path)
 				}
 
 				Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
-				if ($null -eq ${-skip}) {
-					$Inputs = ${-it}.Inputs
-					$Outputs = ${-it}.Outputs
-					if (${-it}.Partial) {
-						${private:-} = 0
-						$Inputs | .{process{
-							$2 = $Outputs[${-}]
-							++${-}
-							$_
-						}} | & ${-job}
+				try {
+					if (!$WhatIf) {. Enter-BuildJob ${-it} ${-n}}
+					if ($null -eq ${-skip}) {
+						$Inputs = ${-it}.Inputs
+						$Outputs = ${-it}.Outputs
+						if (${-it}.Partial) {
+							${private:-} = 0
+							$Inputs | .{process{
+								$2 = $Outputs[${-}]
+								++${-}
+								$_
+							}} | & ${-job}
+						}
+						else {
+							$Inputs | & ${-job}
+						}
 					}
 					else {
-						$Inputs | & ${-job}
+						& ${-job}
 					}
 				}
-				else {
-					& ${-job}
+				catch {
+					${-it}.Error = $_
+					throw
+				}
+				finally {
+					if (!$WhatIf) {. Exit-BuildJob ${-it} ${-n}}
 				}
 
 				if (${-it}.Jobs.Count -ge 2) {
@@ -439,6 +451,7 @@ function *Task*($Name, $Path)
 	}
 	finally {
 		$null = $BuildInfo.Tasks.Add(${-it}), $BuildInfo.AllTasks.Add(${-it})
+		if (!$WhatIf) {. Exit-BuildTask ${-it}}
 	}
 }
 
@@ -496,6 +509,13 @@ function *Summary*($Done, $Tasks, $Errors, $Warnings, $Span)
 	else {'Green', 'Build succeeded'}
 	Write-BuildText $color "$text. $Tasks tasks, $Errors errors, $Warnings warnings, $Span"
 }
+
+function Enter-BuildScript {}
+function Exit-BuildScript {}
+function Enter-BuildTask {}
+function Exit-BuildTask {}
+function Enter-BuildJob {}
+function Exit-BuildJob {}
 
 $ErrorActionPreference = 'Stop'
 ${private:-location} = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
@@ -597,8 +617,14 @@ $($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) {$_} else {'{..}'} }) -join ', '
 		*Test-Task* $BuildTask
 	}
 
-	foreach($_ in $BuildTask) {
-		*Task* $_
+	try {
+		if (!$WhatIf) {. Enter-BuildScript}
+		foreach($_ in $BuildTask) {
+			*Task* $_
+		}
+	}
+	finally {
+		if (!$WhatIf) {. Exit-BuildScript}
 	}
 	${-done} = 1
 }

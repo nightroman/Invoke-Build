@@ -1,6 +1,21 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.4.0
+
+The build engine defines and calls the following empty functions:
+
+    * Enter-BuildScript - before the first task
+    * Exit-BuildScript  - after the last task
+    * Enter-BuildTask   - before each task
+    * Exit-BuildTask    - after each task
+    * Enter-BuildJob    - before each script job
+    * Exit-BuildJob     - after each script job
+
+Any of them can be redefined in scripts. See `help Invoke-Build.ps1`, section
+*EVENT FUNCTIONS* for details. These events can be used for advanced logging,
+initialization and releasing resources, etc.
+
 ## v1.3.2
 
 *Invoke-Build.ps1*. Fixed use of not initialized `$BuildHook` in strict mode.

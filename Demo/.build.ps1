@@ -141,6 +141,11 @@ task Dynamic {
 	assert ($result.Tasks.Count -eq 5)
 }
 
+# Test event functions.
+task Events {
+	Invoke-Build . Events.build.ps1
+}
+
 # Test exec, the alias of Invoke-BuildExec.
 task Exec {
 	Invoke-Build . Exec.build.ps1
@@ -233,6 +238,12 @@ task TestFunctions {
 	$exposed = @(
 		'Add-BuildTask'
 		'Assert-BuildTrue'
+		'Enter-BuildScript'
+		'Enter-BuildTask'
+		'Enter-BuildJob'
+		'Exit-BuildScript'
+		'Exit-BuildTask'
+		'Exit-BuildJob'
 		'Get-BuildError'
 		'Get-BuildFile'
 		'Get-BuildProperty'
@@ -332,6 +343,7 @@ Alter,
 Assert,
 Conditional,
 Dynamic,
+Events,
 Exec,
 Incremental,
 Invalid,

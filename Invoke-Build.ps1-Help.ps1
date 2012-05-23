@@ -57,6 +57,45 @@
 	can use it as their own, that is assign at first and then use. They must
 	not make any assumptions about its incoming value and use it without
 	assignment.
+
+	EVENT FUNCTIONS
+
+	The build engine defines and calls the following empty functions:
+
+		* Enter-BuildScript - before the first task
+		* Exit-BuildScript  - after the last task
+		* Enter-BuildTask   - before each task
+		* Exit-BuildTask    - after each task
+		* Enter-BuildJob    - before each script job
+		* Exit-BuildJob     - after each script job
+
+	A script can redefine them. Note that nested builds do not inherit events,
+	the engine always defines new empty functions before invoking a new script.
+
+	If Enter-* is called then its pair Exit-* is always called, too. Thus,
+	these functions are suitable for initializing and releasing resources.
+
+	Enter-BuildScript and Exit-BuildScript are invoked in the script scope
+	without any parameters. Enter-BuildScript is a good place for heavy
+	initialization, it does not have to care of possible WhatIf mode.
+
+	Enter-BuildTask and Exit-BuildTask are invoked in the same new scope which
+	is the parent for a task invoked between them. The task object is passed in
+	as the single argument. The following properties are available for reading
+	in both functions:
+
+		* Name - task name, [string]
+		* Started - start time, [DateTime]
+
+	Exit-BuildTask may read two extra properties:
+
+		* Error - error that stopped the task
+		* Elapsed - task duration, [TimeSpan]
+
+	Other properties should not be used, even for reading.
+
+	Enter-BuildJob and Exit-BuildJob are invoked in the same scope as
+	*-BuildTask and take two arguments - the task and the job number.
 '@
 	parameters = @{
 		Task = @'
