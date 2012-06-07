@@ -30,7 +30,7 @@ param
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.4.0'}
+{[System.Version]'1.4.1'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -187,8 +187,8 @@ if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost' -or !$Ho
 
 function Write-Warning([string]$Message)
 {
+	Microsoft.PowerShell.Utility\Write-Warning $Message
 	$_ = "WARNING: " + $Message
-	Write-BuildText Yellow $_
 	++$BuildInfo.WarningCount
 	++$BuildInfo.AllWarningCount
 	$null = $BuildInfo.Messages.Add($_), $BuildInfo.AllMessages.Add($_)

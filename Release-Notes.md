@@ -1,6 +1,15 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.4.1
+
+The internal `Write-Warning` (warning counter) is converted the true wrapper.
+That is, it calls the native cmdlet instead of `Write-BuildText`. As a result:
+
+- This fixes problems in functions writing data and warnings together.
+- The build engine still counts warnings and displays them in the end.
+- But warnings may not be "logged in the same way" as before.
+
 ## v1.4.0
 
 The build engine defines and calls the following empty functions:
