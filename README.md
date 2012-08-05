@@ -57,15 +57,22 @@ An easy way to get and update the package is
 
     NuGet install Invoke-Build
 
+This command checks for the latest available version, downloads, and unzips the
+package to a directory named *Invoke-Build.(version)*. The scripts and other
+files are located in its subdirectory *tools*.
+
 Alternatively, manually download and unzip the latest package from
 [Downloads](https://github.com/nightroman/Invoke-Build/downloads).
 
-Copy *Invoke-Build.ps1* and its help *Invoke-Build.ps1-Help.xml* to the path.
-As a result, the script can be called from any PowerShell code simply as
-`Invoke-Build` and `Get-Help` should work.
+Copy the script *Invoke-Build.ps1*, the help file *Invoke-Build.ps1-Help.xml*,
+and optionally other scripts to one of the directories included in the system
+path (`$env:PATH`). As a result, the script can be called from any PowerShell
+code simply as `Invoke-Build` and `Get-Help` should work.
 
-If you use the sources, they do not include *Invoke-Build.ps1-Help.xml*, get it
-with packages or build it using [Helps.ps1](https://github.com/nightroman/Helps).
+Note: yet another way is to get the scripts directly from the repository. But
+the help file *Invoke-Build.ps1-Help.xml* is not there. Get it from the latest
+package or build it using the utility script
+[Helps.ps1](https://github.com/nightroman/Helps).
 
 **Step 2:**
 Set the current location to the *Demo* directory of the package:
