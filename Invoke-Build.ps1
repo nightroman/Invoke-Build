@@ -22,6 +22,7 @@ param
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)][string]$File,
 	[Parameter(Position=2)][hashtable]$Parameters,
+	[string]$Checkpoint,
 	[hashtable]$Hook,
 	$Result,
 	[switch]$Safe,
@@ -30,7 +31,7 @@ param
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Get-BuildVersion
-{[System.Version]'1.4.1'}
+{[System.Version]'1.5.0'}
 
 #.ExternalHelp Invoke-Build.ps1-Help.xml
 function Add-BuildTask
@@ -332,7 +333,7 @@ function *Task*($Name, $Path)
 		Write-BuildText DarkGray "${-path} failed."
 		return
 	}
-	if (${-it}.Started) {
+	if (${-it}.Elapsed) {
 		Write-BuildText DarkGray "Done ${-path}"
 		return
 	}
@@ -438,6 +439,22 @@ function *Task*($Name, $Path)
 		$_ = [System.DateTime]::Now - ${-it}.Started
 		${-it}.Elapsed = $_
 		Write-BuildText DarkYellow "Done ${-path} $_"
+
+		if ($BuildInfo.Checkpoint) {
+			Export-Clixml $BuildInfo.Checkpoint -InputObject $(
+				, $BuildTask
+				$BuildFile
+				$BuildInfo.Parameters
+				$data = @{}
+				foreach($_ in $BuildList.Values) {
+					if ($_.Elapsed) {
+						$data[$_.Name] = $_.Elapsed
+					}
+				}
+				$data
+				Export-Build
+			)
+		}
 	}
 	catch {
 		${-it}.Elapsed = [System.DateTime]::Now - ${-it}.Started
@@ -516,11 +533,22 @@ function Enter-BuildTask {}
 function Exit-BuildTask {}
 function Enter-BuildJob {}
 function Exit-BuildJob {}
+function Export-Build {}
+function Import-Build {}
 
 $ErrorActionPreference = 'Stop'
+${private:-resume} = $null
 ${private:-location} = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
+
 try {
-	if ($File) {
+	if ($Checkpoint) {
+		$Checkpoint = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Checkpoint)
+	}
+	if ($Checkpoint -and !($Task -or $File -or $Parameters)) {
+		$_ = Import-Clixml $Checkpoint
+		$Task, $BuildFile, $Parameters, ${-resume}, ${private:-data} = $_
+	}
+	elseif ($File) {
 		$BuildFile = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($File)
 		if (!([System.IO.File]::Exists($BuildFile))) {throw "Build file does not exist: '$BuildFile'."}
 	}
@@ -539,6 +567,7 @@ ${private:-up} = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
 if (${-up}) {
 	${-up} = if (${-up}.Description -eq 'Invoke-Build') {${-up}.Value}
 }
+
 Set-Alias assert Assert-BuildTrue
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
@@ -548,8 +577,10 @@ Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build $MyInvocation.MyCommand.Path
 Set-Alias Invoke-Builds (Join-Path (Split-Path $MyInvocation.MyCommand.Path) 'Invoke-Builds.ps1')
 New-Variable -Name BuildList -Option Constant -Value ([System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase))
-New-Variable -Name BuildInfo -Option Constant -Description Invoke-Build -Value `
-(Select-Object AllTasks, AllMessages, AllErrorCount, AllWarningCount, Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed, Error -InputObject 1)
+New-Variable -Name BuildInfo -Option Constant -Description Invoke-Build -Value (
+	Select-Object -InputObject 1 -Property AllTasks, AllMessages, AllErrorCount, AllWarningCount, Tasks, Messages, ErrorCount, WarningCount,
+	Started, Elapsed, Error, Parameters, Checkpoint
+)
 $BuildInfo.AllTasks = [System.Collections.ArrayList]@()
 $BuildInfo.AllMessages = [System.Collections.ArrayList]@()
 $BuildInfo.AllErrorCount = 0
@@ -559,6 +590,8 @@ $BuildInfo.Messages = [System.Collections.ArrayList]@()
 $BuildInfo.ErrorCount = 0
 $BuildInfo.WarningCount = 0
 $BuildInfo.Started = [System.DateTime]::Now
+$BuildInfo.Parameters = $Parameters
+$BuildInfo.Checkpoint = $Checkpoint
 if ('?' -eq $Task) {$WhatIf = $true}
 if ($Result) {
 	$_ = if ('?' -eq $Task) {$BuildList} else {$BuildInfo}
@@ -568,13 +601,13 @@ if ($Result) {
 $BuildTask = $Task
 ${private:-Result} = $Result
 ${private:-Safe} = $Safe
-$_ = $Parameters
-Remove-Variable Task, File, Parameters, Result, Safe, Hook
+Remove-Variable Task, File, Parameters, Hook, Checkpoint, Result, Safe
 
 ${private:-done} = 0
 try {
 	Set-Location -LiteralPath $BuildRoot -ErrorAction Stop
 	Write-BuildText DarkYellow "Build $($BuildTask -join ', ') $BuildFile"
+	$_ = $BuildInfo.Parameters
 	$_ = if ($_) {. $BuildFile @_} else {. $BuildFile}
 	if (!$BuildList.Count) {throw "There is no task in '$BuildFile'."}
 	$_
@@ -619,8 +652,17 @@ $($_.Name) $(($_.Jobs | %{ if ($_ -is [string]) {$_} else {'{..}'} }) -join ', '
 
 	try {
 		if (!$WhatIf) {. Enter-BuildScript}
+		if (${-resume}) {
+			. Import-Build ${-data}
+			foreach($_ in ${-resume}.GetEnumerator()) {
+				$BuildList[$_.Key].Elapsed = $_.Value
+			}
+		}
 		foreach($_ in $BuildTask) {
 			*Task* $_
+		}
+		if ($BuildInfo.Checkpoint) {
+			[System.IO.File]::Delete($BuildInfo.Checkpoint)
 		}
 	}
 	finally {

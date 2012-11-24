@@ -1,6 +1,18 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.5.0
+
+Persistent builds are enabled by the new parameter `Checkpoint`. They can be
+resumed at a failed task after fixing problems which are not critical for
+repeating a failed task and processing remaining others.
+
+New event functions `Export-Build` and `Import-Build` are used for persistent
+builds with tasks that share some data, normally script scope variables.
+
+New test `Checkpoint.build.ps1` shows main features of persistent builds. The
+details are explained in its code comments.
+
 ## v1.4.1
 
 The internal `Write-Warning` (warning counter) is converted the true wrapper.

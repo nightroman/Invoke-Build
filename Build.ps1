@@ -29,6 +29,9 @@
 .Parameter Parameters
 		See: help Invoke-Build -Parameter Parameters
 
+.Parameter Checkpoint
+		See: help Invoke-Build -Parameter Checkpoint
+
 .Parameter WhatIf
 		See: help Invoke-Build -Parameter WhatIf
 
@@ -50,6 +53,7 @@ param
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)][string]$File,
 	[Parameter(Position=2)][hashtable]$Parameters,
+	[string]$Checkpoint,
 	[switch]$WhatIf,
 	[switch]$Tree,
 	[switch]$Comment,
@@ -75,10 +79,11 @@ $BuildHook = @{
 $private:_Task = $Task
 $private:_File = $File
 $private:_Parameters = $Parameters
+$private:_Checkpoint = $Checkpoint
 $private:_Tree = $Tree
 $private:_Comment = $Comment
 $private:_Summary = $Summary
-Remove-Variable Task, File, Parameters, Tree, Comment, Summary
+Remove-Variable Task, File, Parameters, Checkpoint, Tree, Comment, Summary
 
 try { # To amend errors
 
@@ -162,7 +167,7 @@ function *Err*($Text, $Info)
 ### Build with results
 try {
 	$Result = if ($_Summary) {'Result'}
-	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Hook:$BuildHook -WhatIf:$WhatIf -Result:$Result
+	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -Hook:$BuildHook -WhatIf:$WhatIf -Result:$Result
 }
 finally {
 	### Show summary

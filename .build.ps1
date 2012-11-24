@@ -160,10 +160,10 @@ task Test {
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 	if ($SkipTestDiff) { return }
 
-	assert (177 -eq $result.AllTasks.Count) $result.AllTasks.Count
-	assert (32 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (184 -eq $result.AllTasks.Count) $result.AllTasks.Count
+	assert (33 -eq $result.Tasks.Count) $result.Tasks.Count
 
-	assert (34 -eq $result.AllErrorCount) $result.AllErrorCount
+	assert (36 -eq $result.AllErrorCount) $result.AllErrorCount
 	assert (0 -eq $result.ErrorCount) $result.AllErrorCount
 
 	assert ($result.AllWarningCount -ge 1)

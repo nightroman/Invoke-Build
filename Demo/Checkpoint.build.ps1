@@ -1,0 +1,89 @@
+
+<#
+.Synopsis
+	Tests a persistent build.
+
+.Example
+	# Choose break or continue at the task2
+	Invoke-Build . Checkpoint.build.ps1
+
+	# Resume the broken build at the task2
+	Invoke-Build resume Checkpoint.build.ps1
+#>
+
+param($Test)
+
+# These data are shared and changed by tasks. They have to be persisted using
+# event functions Export-Build and Import-Build.
+$shared1 = 'shared1'
+$shared2 = 'shared2'
+
+# It outputs data to be exported to clixml. This example uses the most
+# straightforward way of persisting two script variables.
+function Export-Build {
+	$shared1
+	$shared2
+}
+
+# It restores data. The first argument is the output of Export-Build exported to
+# clixml and then imported back. This example uses the most straightforward way
+# of persisting two script variables. Note: Import-Build is invoked in the
+# script scope and variable names do not have to use the prefix `script:`.
+function Import-Build {
+	$shared1, $shared2 = $args[0]
+}
+
+task task1 {
+	'In task1'
+
+	# change the script data in order to check later that new data are saved to
+	# and then restored from the clixml file
+	$script:shared1 += 'new'
+	$script:shared2 += 'new'
+
+	# change the location, this should not break saving to clixml even if the
+	# parameter Checkpoint has not been defined as a full path
+	Set-Location $env:TEMP
+}
+
+task task2 task1, {
+	# check: shared data are restored
+	assert ($shared1 -eq 'shared1new')
+	assert ($shared2 -eq 'shared2new')
+
+	if (!$Test) {
+		# interactive break or continue
+		Read-Host 'In task2: Ctrl-C: break; Enter: continue'
+	}
+	elseif ($env:ResumeBuild) {
+		# non interactive continue
+		'Resumed task2'
+	}
+	else {
+		# non interactive break
+		throw 'Oops task2'
+	}
+}
+
+# Interactive demo.
+task . {
+	Invoke-Build task2 Checkpoint.build.ps1 -Checkpoint checkpoint.clixml
+}
+
+# Test resume at the task2. Note: -Checkpoint is used alone for resuming.
+task resume {
+	$env:ResumeBuild = 1
+	Invoke-Build -Checkpoint checkpoint.clixml
+	$env:ResumeBuild = $null
+}
+
+# Test non interactive break in the task2.
+task break {
+	#! issue: use 2 tasks
+	Invoke-Build task1, task2 Checkpoint.build.ps1 @{Test=$true} -Checkpoint checkpoint.clixml
+}
+
+# This is a test. Call the task `break` as protected because it fails. The
+# checkpoint should be created, as a result. Then call the task `resume` and
+# check that the checkpoint has been deleted.
+task test @{break=1}, {assert (Test-Path checkpoint.clixml)}, resume, {assert !(Test-Path checkpoint.clixml)}

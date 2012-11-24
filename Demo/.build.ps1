@@ -116,6 +116,11 @@ task Assert {
 	Invoke-Build . Assert.build.ps1
 }
 
+# Test persistent builds.
+task Checkpoint {
+	Invoke-Build test Checkpoint.build.ps1
+}
+
 # Test conditional tasks.
 # It also shows how to invoke build scripts with parameters.
 task Conditional {
@@ -238,16 +243,18 @@ task TestFunctions {
 	$exposed = @(
 		'Add-BuildTask'
 		'Assert-BuildTrue'
+		'Enter-BuildJob'
 		'Enter-BuildScript'
 		'Enter-BuildTask'
-		'Enter-BuildJob'
+		'Exit-BuildJob'
 		'Exit-BuildScript'
 		'Exit-BuildTask'
-		'Exit-BuildJob'
+		'Export-Build'
 		'Get-BuildError'
 		'Get-BuildFile'
 		'Get-BuildProperty'
 		'Get-BuildVersion'
+		'Import-Build'
 		'Invoke-BuildExec'
 		'Use-BuildAlias'
 		'Write-BuildText'
@@ -341,6 +348,7 @@ Dummy2,
 TestKV,
 Alter,
 Assert,
+Checkpoint,
 Conditional,
 Dynamic,
 Events,

@@ -21,6 +21,9 @@ session: sequential, nested, and even parallel (using *Invoke-Builds.ps1*).
 Every call maintains its state completely on the stack. The engine does not
 change the process environment or anything global in the PowerShell session.
 
+Long running or interactive processes with expected interruptions can be
+automated with persistent builds that can be resumed after interruptions.
+
 ## The Package
 
 * *Invoke-Build.ps1* invokes build scripts, this is the build engine
@@ -96,7 +99,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 183 tasks, 34 errors, 1 warnings, 00:00:12
+    Build completed with errors. 190 tasks, 36 errors, 1 warnings, 00:00:15
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics

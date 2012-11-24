@@ -68,6 +68,8 @@
 		* Exit-BuildTask    - after each task
 		* Enter-BuildJob    - before each script job
 		* Exit-BuildJob     - after each script job
+		* Export-Build      - after each task of a persistent build
+		* Import-Build      - once on resuming of a persistent build
 
 	A script can redefine them. Note that nested builds do not inherit events,
 	the engine always defines new empty functions before invoking a new script.
@@ -96,6 +98,11 @@
 
 	Enter-BuildJob and Exit-BuildJob are invoked in the same scope as
 	*-BuildTask and take two arguments - the task and the job number.
+
+	Export-Build and Import-Build are used with persistent builds. Export-Build
+	outputs data to be exported to clixml. Import-Build is called with a single
+	argument containing the original data imported from clixml. It is called in
+	the script scope and restores script scope variables.
 '@
 	parameters = @{
 		Task = @'
@@ -127,6 +134,22 @@
 		available for all tasks: for reading simply as $ParameterName, for
 		writing as $script:ParameterName. This is true as well for other
 		variables defined in the script scope.
+'@
+		Checkpoint = @'
+		Specifies the checkpoint file and makes the build persistent. It is
+		possible to resume an interrupted build starting at an interrupted
+		task. The checkpoint file is deleted on successful builds.
+
+		In order to start a persistent build also use one of the Task, File,
+		and Parameters, even with default values. In order to resume a build
+		the Checkpoint should be used alone. Task, File, and Parameters are
+		restored from the checkpoint file.
+
+		Persistent builds must be designed properly. Data shared by tasks are
+		exported and imported by the functions Export-Build and Import-Build.
+		Trivial script parameters normally do not have to be serialized.
+
+		NOTE: Some data are not suitable for clixml serialization.
 '@
 		Result = @'
 		Tells to output the task collection or build results using a variable.
