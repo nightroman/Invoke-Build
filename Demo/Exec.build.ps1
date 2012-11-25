@@ -36,6 +36,6 @@ ExecWorksCode42,
 {
 	assert ($script:ExecWorksCode0 -eq 'Code0')
 	assert ($script:ExecWorksCode42 -eq 'Code42')
-	Test-Error ExecFailsCode13 'The command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*{ cmd /c exit 13 }*'
+	Test-Error ExecFailsCode13 'Command { cmd /c exit 13 } exited with code 13.*At *\Exec.build.ps1:*{ cmd /c exit 13 }*'
 	Test-Error ExecFailsBadCommand "throw in ExecFailsBadCommand*At *\Exec.build.ps1:*'throw in ExecFailsBadCommand'*"
 }

@@ -261,7 +261,7 @@ task TestFunctions {
 		'Write-Warning'
 	)
 	Get-Command -CommandType Function | .{process{
-		if (($list -notcontains $_.Name) -and ($_.Name -notmatch '^\*.*\*$')) {
+		if (($list -notcontains $_.Name) -and ($_.Name[0] -ne '*')) {
 			if ($exposed -contains $_.Name) {
 				"Function $($_.Name) is from Invoke-Build."
 			}
@@ -328,16 +328,16 @@ task ShowHelp {
 	Out-String -Width 80
 }
 
-# Test the internal function *KV*
+# Test the internal function *KV
 task TestKV {
 	# protected references
 	$hash = @{Task=1}
-	$1, $2, $3 = *KV* $hash
+	$1, $2, $3 = *KV $hash
 	assert ($1 -eq 'Task' -and $2 -eq 1 -and $null -eq $3)
 
 	# inputs/outputs
 	$hash = @{(1..3)=(1..5)}
-	$1, $2, $3 = *KV* $hash
+	$1, $2, $3 = *KV $hash
 	assert ($1.Count -eq 3 -and $2.Count -eq 5 -and $null -eq $3)
 }
 

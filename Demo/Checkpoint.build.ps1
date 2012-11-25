@@ -23,6 +23,7 @@ $shared2 = 'shared2'
 function Export-Build {
 	$shared1
 	$shared2
+	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 }
 
 # It restores data. The first argument is the output of Export-Build exported to
@@ -43,7 +44,7 @@ task task1 {
 
 	# change the location, this should not break saving to clixml even if the
 	# parameter Checkpoint has not been defined as a full path
-	Set-Location $env:TEMP
+	Set-Location $HOME
 }
 
 task task2 task1, {

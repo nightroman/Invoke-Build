@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.5.1
+
+The engine sets the current location to the build root directory before calling
+event functions. Amended *Checkpoint.build.ps1* and *Events.build.ps1* in order
+to cover this.
+
 ## v1.5.0
 
 Persistent builds are enabled by the new parameter `Checkpoint`. They can be
@@ -12,6 +18,8 @@ builds with tasks that share some data, normally script scope variables.
 
 New test `Checkpoint.build.ps1` shows main features of persistent builds. The
 details are explained in its code comments.
+
+Added the wiki page about persistent builds.
 
 ## v1.4.1
 
