@@ -110,11 +110,9 @@ task Zip Package, {
 # Make the NuGet package.
 task NuGet Package, {
 	$text = @'
-Invoke-Build.ps1 (engine) and Invoke-Builds.ps1 (parallel engine) are build and
-test automation tools implemented as PowerShell scripts. They invoke tasks from
-scripts written in PowerShell with domain-specific language. Build flow and
-concepts are similar to MSBuild. Scripts are similar to psake but look more
-like usual due to standard script parameters and script scope variables.
+Invoke-Build introduces task based programming in PowerShell. It invokes tasks
+from scripts written in PowerShell with domain-specific language. This process
+is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 '@
 	# nuspec
 	Set-Content z\Package.nuspec @"
@@ -141,7 +139,7 @@ like usual due to standard script parameters and script scope variables.
 # Make all packages.
 task Pack Zip, NuGet
 
-# Calls tests infinitely to be sure it works and nothing leaks.
+# Calls tests infinitely.
 task Loop {
 	for(;;) {
 		$BuildInfo.AllTasks.Clear()
@@ -160,10 +158,10 @@ task Test {
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 	if ($SkipTestDiff) { return }
 
-	assert (184 -eq $result.AllTasks.Count) $result.AllTasks.Count
+	assert (187 -eq $result.AllTasks.Count) $result.AllTasks.Count
 	assert (33 -eq $result.Tasks.Count) $result.Tasks.Count
 
-	assert (36 -eq $result.AllErrorCount) $result.AllErrorCount
+	assert (38 -eq $result.AllErrorCount) $result.AllErrorCount
 	assert (0 -eq $result.ErrorCount) $result.AllErrorCount
 
 	assert ($result.AllWarningCount -ge 1)

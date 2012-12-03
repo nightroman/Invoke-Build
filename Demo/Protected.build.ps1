@@ -127,6 +127,31 @@ task AlmostSurvives2 @(
 task AlmostSurvives AlmostSurvives1, @{AlmostSurvives2=1}
 
 # Trigger tasks and check for expected results.
-task . @{AlmostSurvives=1}, {
+task TestAlmostSurvives @{AlmostSurvives=1}, {
 	Test-Error AlmostSurvives "Error4*At *\Protected.build.ps1*'Error4'*OperationStopped*"
+}
+
+### DependsOnFailedDirectlyAndIndirectly
+# This test covers issues fixed in 1.5.2
+
+task FailedUsedByMany {
+	throw 'Oops in FailedUsedByMany'
+}
+task DependsOnFailed FailedUsedByMany, {
+	throw 'Must not be called'
+}
+task DependsOnFailedDirectlyAndIndirectly @{FailedUsedByMany=1}, @{DependsOnFailed=1}, {
+	throw 'Must not be called'
+}
+task TestDependsOnFailedDirectlyAndIndirectly @{DependsOnFailedDirectlyAndIndirectly=1}, {
+	# error of initial failure
+	assert ("$(error FailedUsedByMany)" -eq 'Oops in FailedUsedByMany')
+
+	# no error because it is not called, even if it is called protected itself
+	# it also calls the failed task not protected
+	assert !(error DependsOnFailed)
+
+	# error, even if it calls the failed task protected it also calls another
+	# task which leads to not protected calls of the failed task
+	assert ("$(error DependsOnFailedDirectlyAndIndirectly)" -eq 'Oops in FailedUsedByMany')
 }

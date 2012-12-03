@@ -38,7 +38,7 @@ task NoTasks {
 # mistake when a script is defined starting from a new line (tasks are function
 # calls, not definitions).
 task ScriptOutput {
-	Test "Invalid build script syntax at the script block {*}*At *OperationStopped*" {
+	Test "Unexpected script block {*}*At *OperationStopped*" {
 		task task1
 		'It is fine to output some data ...'
 		task task2 task1
@@ -51,7 +51,7 @@ task ScriptOutput {
 # Task names should be unique. But it is fine to use the same task name several
 # times in a task job list (this does not make much sense though).
 task TaskAddedTwice {
-	Test "Task 'task1': Task name already exists:*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidArgument*" {
+	Test "Task 'task1': Task already exists:*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidArgument*" {
 		task task1 {}
 		# It is fine to reference a task 2+ times
 		task task2 task1, task1, task1
@@ -76,7 +76,7 @@ task InvalidJobType {
 
 # The task has invalid job value.
 task InvalidJobValue {
-	Test "Task 'InvalidJobValue': Invalid pair, expected hashtable @{X = Y}.*InvalidJobValue @(*InvalidArgument*" {
+	Test "Task 'InvalidJobValue': Expected hashtable @{X=Y}.*InvalidJobValue @(*InvalidArgument*" {
 		task InvalidJobValue @(
 			@{ task2 = 1; task1 = 1 }
 		)
@@ -85,14 +85,14 @@ task InvalidJobValue {
 
 # The task has invalid value in After.
 task InvalidJobValueAfter {
-	Test "Task 'InvalidAfter': Invalid pair, expected hashtable @{X = Y}.*InvalidAfter -After*OperationStopped*" {
+	Test "Task 'InvalidAfter': Expected hashtable @{X=Y}.*InvalidAfter -After*OperationStopped*" {
 		task InvalidAfter -After @{}
 	}
 }
 
 # The task has invalid value in Before.
 task InvalidJobValueBefore {
-	Test "Task 'InvalidBefore': Invalid pair, expected hashtable @{X = Y}.*InvalidBefore -Before*OperationStopped*" {
+	Test "Task 'InvalidBefore': Expected hashtable @{X=Y}.*InvalidBefore -Before*OperationStopped*" {
 		task InvalidBefore -Before @{}
 	}
 }
@@ -108,17 +108,17 @@ task IncrementalAndPartial {
 
 # Invalid Incremental/Partial hashtable.
 task IncrementalInvalidHashtable {
-	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*IncrementalInvalidHashtable -Incremental*InvalidArgument*" {
+	Test "Task 'IncrementalInvalidHashtable': Expected hashtable @{X=Y}.*IncrementalInvalidHashtable -Incremental*InvalidArgument*" {
 		task IncrementalInvalidHashtable -Incremental @{} { throw 'Unexpected.' }
 	}
-	Test "Task 'IncrementalInvalidHashtable': Invalid pair, expected hashtable @{X = Y}.*IncrementalInvalidHashtable -Partial*InvalidArgument*" {
+	Test "Task 'IncrementalInvalidHashtable': Expected hashtable @{X=Y}.*IncrementalInvalidHashtable -Partial*InvalidArgument*" {
 		task IncrementalInvalidHashtable -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
 # Missing task in jobs.
 task TaskNotDefined {
-	Test "Task 'task1': Task 'missing' is not defined.*At *\z.build.ps1:*OperationStopped*" {
+	Test "Task 'task1': Missing task 'missing'.*At *\z.build.ps1:*OperationStopped*" {
 		task TaskNotDefined task1, {}
 		task task1 missing, {}
 	}
@@ -126,14 +126,14 @@ task TaskNotDefined {
 
 # Missing task in After.
 task TaskNotDefinedAfter {
-	Test "Task 'AfterMissing': Task 'MissingTask' is not defined.*At *\z.build.ps1*OperationStopped*" {
+	Test "Task 'AfterMissing': Missing task 'MissingTask'.*At *\z.build.ps1*OperationStopped*" {
 		task AfterMissing -After MissingTask {}
 	}
 }
 
 # Missing task in Before.
 task TaskNotDefinedBefore {
-	Test "Task 'BeforeMissing': Task 'MissingTask' is not defined.*At *\z.build.ps1*OperationStopped*" {
+	Test "Task 'BeforeMissing': Missing task 'MissingTask'.*At *\z.build.ps1*OperationStopped*" {
 		task BeforeMissing -Before MissingTask {}
 	}
 }

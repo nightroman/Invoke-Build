@@ -1,6 +1,6 @@
 
 <#
-Invoke-Build - Build Automation in PowerShell
+Invoke-Build - PowerShell Task Scripting
 Copyright (c) 2011-2012 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,16 +30,10 @@ if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost' -or !$Ho
 	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text) {$Text}
 }
 else {
-	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text)
-	{
-		$saved = $Host.UI.RawUI.ForegroundColor
-		try {
-			$Host.UI.RawUI.ForegroundColor = $Color
-			$Text
-		}
-		finally {
-			$Host.UI.RawUI.ForegroundColor = $saved
-		}
+	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text){
+		$saved=$Host.UI.RawUI.ForegroundColor
+		try{$Host.UI.RawUI.ForegroundColor=$Color; $Text}
+		finally{$Host.UI.RawUI.ForegroundColor=$saved}
 	}
 }
 
@@ -52,7 +46,7 @@ function Die([string]$Message, [System.Management.Automation.ErrorCategory]$Cate
 ### main
 
 # info, result
-$info = (Select-Object Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed -InputObject 1)
+$info = 1 | Select-Object Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed
 $info.Tasks = [System.Collections.ArrayList]@()
 $info.Messages = [System.Collections.ArrayList]@()
 $info.ErrorCount = 0
@@ -68,7 +62,7 @@ if (!$Build) {return}
 
 ### engine
 $engine = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path), 'Invoke-Build.ps1')
-if (![System.IO.File]::Exists($engine)) {Die "Required script '$engine' does not exist." ObjectNotFound}
+if (![System.IO.File]::Exists($engine)) {Die "Missing script '$engine'." ObjectNotFound}
 
 ### works
 $works = @()
@@ -78,7 +72,7 @@ for ($1 = 0; $1 -lt $Build.Count; ++$1) {
 	$file = $b['File']
 	if (!$file) {Die "Build parameter File is missing or empty." InvalidArgument}
 	$file = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($file)
-	if (![System.IO.File]::Exists($file)) {Die "Build file '$file' does not exist." ObjectNotFound}
+	if (![System.IO.File]::Exists($file)) {Die "Missing script '$file'." ObjectNotFound}
 
 	$b.Result = @{}
 	$b.File = $file

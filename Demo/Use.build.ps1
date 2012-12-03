@@ -86,8 +86,8 @@ ResolvedPath,
 @{MissingDirectory=1},
 @{InvalidDirectory=1},
 {
-	Test-Error MissingFramework "Directory does not exist: '*\Microsoft.NET\Framework\MissingFramework'.*Framework\MissingFramework MSBuild*"
-	Test-Error InvalidFramework "Directory does not exist: '*\Microsoft.NET\Framework\<>'.*'Framework\<>'*"
-	Test-Error MissingDirectory "Directory does not exist: '*\MissingDirectory'.*MissingDirectory MyScript*"
+	Test-Error MissingFramework "Missing directory '*\Microsoft.NET\Framework\MissingFramework'.*Framework\MissingFramework MSBuild*"
+	Test-Error InvalidFramework "Missing directory '*\Microsoft.NET\Framework\<>'.*'Framework\<>'*"
+	Test-Error MissingDirectory "Missing directory '*\MissingDirectory'.*MissingDirectory MyScript*"
 	Test-Error InvalidDirectory "*'\<>' MyScript*"
 }

@@ -219,8 +219,8 @@ PartIncrementalTwoOutOfDate,
 	# thrown from the engine
 	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Incremental output cannot be empty.*try { Invoke-Build *OperationStopped*"
 	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different input and output counts: 1 and 0.*try { Invoke-Build *OperationStopped*"
-	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*try { Invoke-Build *OperationStopped*"
-	Test-Issue PartialMissingInputs Incremental.build.ps1 "Input file does not exist: '*\missing'.*try { Invoke-Build *OperationStopped*"
+	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Missing input file '*\missing'.*try { Invoke-Build *OperationStopped*"
+	Test-Issue PartialMissingInputs Incremental.build.ps1 "Missing input file '*\missing'.*try { Invoke-Build *OperationStopped*"
 
 	#! LiteralPath does not work in [ ] test.
 	Remove-Item z.new1.tmp, z.new2.tmp, z.old1.tmp, z.old2.tmp

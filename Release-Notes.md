@@ -1,6 +1,18 @@
 Invoke-Build Release Notes
 ==========================
 
+## v1.5.2
+
+**Potentially breaking but *minor* change**. Dropped support of nested lists in
+job lists. Value of this feature is low because such cases are very rare and
+unrolling is simple right in task definitions, see *Dynamic.build.ps1*.
+
+Simplified checkpoint files. Do not use old checkpoints with the new engine.
+
+Fixed false positive recoveries on protected task failures. Added tests.
+
+Other mostly cosmetic changes in scripts, messages, and tests.
+
 ## v1.5.1
 
 The engine sets the current location to the build root directory before calling

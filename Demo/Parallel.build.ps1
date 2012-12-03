@@ -169,7 +169,7 @@ task ParallelNoFileParameter {
 	Invoke-Builds @{Task='.'}
 }
 
-# Error: missing build File
+# Error: missing script
 task ParallelMissingFile {
 	Invoke-Builds @{File='MissingFile'}
 }
@@ -187,9 +187,9 @@ task ParallelErrorCases `
 @{ParallelBadMaximumBuilds=1},
 @{ParallelBadParameters=1},
 {
-	Test-Error ParallelMissingEngine "Required script '*\Invoke-Build.ps1' does not exist.*At *\Parallel.build.ps1:*ObjectNotFound*"
+	Test-Error ParallelMissingEngine "Missing script '*\Invoke-Build.ps1'.*At *\Parallel.build.ps1:*ObjectNotFound*"
 	Test-Error ParallelNoFileParameter "Build parameter File is missing or empty.*@{Task='.'}*InvalidArgument*"
-	Test-Error ParallelMissingFile "Build file '*\MissingFile' does not exist.*@{File='MissingFile'}*ObjectNotFound*"
+	Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 	Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
 	Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*"
 }

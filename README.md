@@ -1,20 +1,12 @@
 
-Invoke-Build - Build Automation in PowerShell
-=============================================
+Invoke-Build - PowerShell Task Scripting
+========================================
 
 ## Introduction
 
-Invoke-Build.ps1 (engine) and Invoke-Builds.ps1 (parallel engine) are build and
-test automation tools implemented as PowerShell scripts. They invoke tasks from
-scripts written in PowerShell with domain-specific language. Build flow and
-concepts are similar to MSBuild. Scripts are similar to psake but look more
-like usual due to standard script parameters and script scope variables.
-
-Invoke-Build is suitable not only for *building*. It can be used for testing in
-PowerShell oriented projects. It is easy and convenient to implement PowerShell
-tests as build tasks. The engine ensures test logging and time measurement, all
-tests are invoked once, no test is forgotten (`*`), tests may have dependencies
-and hierarchical structure, and etc.
+Invoke-Build introduces task based programming in PowerShell. It invokes tasks
+from scripts written in PowerShell with domain-specific language. This process
+is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 
 Invoke-Build is carefully designed for multiple calls in the same PowerShell
 session: sequential, nested, and even parallel (using *Invoke-Builds.ps1*).
@@ -22,30 +14,32 @@ Every call maintains its state completely on the stack. The engine does not
 change the process environment or anything global in the PowerShell session.
 
 Long running or interactive processes with expected interruptions can be
-automated with persistent builds that can be resumed after interruptions.
+automated with persistent builds which allow resuming after interruptions.
 
 ## The Package
+
+The standalone script *Invoke-Build.ps1* is enough for invoking build scripts.
+Other tools and files are for parallel builds, built-in help, graphs, and etc.
 
 * *Invoke-Build.ps1* invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* invokes parallel builds using the engine
 * *Invoke-Build.ps1-Help.xml* is content for Get-Help
 * *Build.ps1* is the wrapper with some more options
 * *Show-BuildGraph.ps1* makes and shows task graphs
-* *Demo* directory contains engine and scripts tests
+* *Demo* directory - scripts for learning and testing
 
 ## How Does It Work?
 
 The engine builds a sequence of tasks defined in build scripts by `task`
-statements which provide task names, dependencies, conditions, inputs and
-outputs, and script blocks. Then this sequence is checked for trivial issues
-like missing or cyclic dependencies. If everything is fine the initial tasks
-and their task trees are invoked according to the rules.
+statements which provide task names, references, conditions, inputs and
+outputs, and script blocks. The tasks are checked for issues like missing or
+cyclic references. Then the specified tasks and their references are invoked.
 
 [More...](https://github.com/nightroman/Invoke-Build/wiki/How-Build-Works)
 
 ## Comparison with MSBuild
 
-MSBuild is yet another build automation tool, part of the .NET Framework.
+MSBuild is a build automation tool which is the part of the .NET Framework.
 Invoke-Build is designed to be very similar. Of course, their scripts use
 different languages (PowerShell and XML) and different built-in and external
 tools. But build flow, script structure, and main concepts are almost the same.
@@ -99,7 +93,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 190 tasks, 36 errors, 1 warnings, 00:00:15
+    Build completed with errors. 193 tasks, 38 errors, 1 warnings, 00:00:15
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
@@ -130,13 +124,10 @@ tests, not real build scripts. Some build scripts used in projects listed in
 
 ## Credits
 
-Invoke-Build is inspired by [*psake*](https://github.com/psake/psake), the
-famous and probably the first build automation tool implemented in PowerShell.
-
-Build concepts come from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
-The goal was to make Invoke-Build similar to MSBuild (to some reasonable extent).
+Invoke-Build is inspired by [*psake*](https://github.com/psake/psake) and some
+concepts come from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
 
 ## See Also
 
 [Invoke-Build wiki](https://github.com/nightroman/Invoke-Build/wiki) -
-Online tutorial, build scripts in projects, tips and tricks, ...
+Online tutorial, example scripts in projects, tips and tricks, ...
