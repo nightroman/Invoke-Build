@@ -5,47 +5,38 @@
 
 .Description
 	This script calls Invoke-Build.ps1 with additional options.
-	It is mostly designed for interactive use in command lines.
-
-	If File is not specified and the default file is not found then the script
-	defined as $env:InvokeBuildGetFile is called. It optionally gets the file
-	path based on the current location.
-
-	If File is still not defined then this script searches for default build
-	files in the parent directory tree.
-
-	Parameters are main Invoke-Build parameters and some new:
-	* Summary, Tree, Comment.
+	It is designed for mostly interactive use in command lines.
 
 .Parameter Task
 		See: help Invoke-Build -Parameter Task
-
 .Parameter File
 		See: help Invoke-Build -Parameter File
 
-		If it is not specified and there is no standard default file then this
-		script searches for more candidates. See description for details.
-
+		If the file is not specified and the default file is not found then a
+		script defined by $env:InvokeBuildGetFile is called if it exists. It
+		optionally gets a build file path for the current location. If the file
+		is still not defined then this script searches for default build files
+		in all parent directories of the current.
 .Parameter Parameters
 		See: help Invoke-Build -Parameter Parameters
-
 .Parameter Checkpoint
 		See: help Invoke-Build -Parameter Checkpoint
-
 .Parameter WhatIf
 		See: help Invoke-Build -Parameter WhatIf
-
 .Parameter Tree
 		Tells to analyse task references and show parent tasks and child trees
 		for the specified or all tasks. Tasks are not invoked. Use the switch
 		Comment in order to show task comments as well.
-
 .Parameter Comment
 		Tells to show code comments preceding each task in the task tree. It is
 		used together with the switch Tree or on its own.
-
 .Parameter Summary
 		Tells to show task summary information after building.
+
+.Inputs
+	None.
+.Outputs
+	Build output or requested information.
 #>
 
 param
@@ -61,17 +52,12 @@ param
 )
 
 ### Hook
-$BuildHook = @{
-	GetFile = {
-		if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
-			$_ = & $env:InvokeBuildGetFile
-			if ($_) {return $_}
-		}
-
-		for($dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath(''); $dir; $dir = Split-Path $dir) {
-			$_ = Get-BuildFile $dir
-			if ($_) {return $_}
-		}
+function Get-BuildFileHook {
+	if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
+		if ($_ = & $env:InvokeBuildGetFile) {return $_}
+	}
+	for($dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath(''); $dir; $dir = Split-Path $dir) {
+		if ($_ = Get-BuildFile $dir) {return $_}
 	}
 }
 
@@ -90,7 +76,8 @@ try { # To amend errors
 ### Show tree
 if ($_Tree -or $_Comment) {
 	# get tasks
-	Invoke-Build ? -File:$_File -Parameters:$_Parameters -Hook:$BuildHook -Result:BuildList
+	Invoke-Build ? -File:$_File -Parameters:$_Parameters -Result:tasks
+	$tasks = $tasks.All
 
 	function ShowTaskTree($Task, $Step, $Comment)
 	{
@@ -107,18 +94,19 @@ if ($_Tree -or $_Comment) {
 
 		# name, parents
 		$info = $tab + $Task.Name
-		if ($Task.Reference.Count) {
-			$info += ' (' + (($Task.Reference.Keys | Sort-Object) -join ', ') + ')'
+		$reference = $references[$Task]
+		if ($reference.Count) {
+			$info += ' (' + (($reference.Keys | Sort-Object) -join ', ') + ')'
 		}
 		$info
 
 		# task jobs
-		foreach($_ in $Task.Jobs) {
+		foreach($_ in $Task.Job) {
 			if ($_ -is [string]) {
-				ShowTaskTree $BuildList[$_] $Step $Comment
+				ShowTaskTree $tasks[$_] $Step $Comment
 			}
 			else {
-				$tab + '    {..}'
+				$tab + '    {}'
 			}
 		}
 	}
@@ -147,27 +135,28 @@ if ($_Tree -or $_Comment) {
 	}
 
 	# references
-	foreach($it in $BuildList.Values) {
-		$it | Add-Member -MemberType NoteProperty -Name Reference -Value @{}
+	$references = @{}
+	foreach($it in $tasks.Values) {
+		$references[$it] = @{}
 	}
-	foreach($it in $BuildList.Values) { foreach($job in $it.Jobs) { if ($job -is [string]) {
-		$BuildList[$job].Reference[$it.Name] = 0
+	foreach($it in $tasks.Values) { foreach($job in $it.Job) { if ($job -is [string]) {
+		$references[$tasks[$job]][$it.Name] = 0
 	}}}
 
 	# show trees
-	foreach($name in $(if ($_Task -and '?' -ne $_Task) {$_Task} else {$BuildList.Keys})) {
-		ShowTaskTree $BuildList[$name] 0 $_Comment
+	foreach($name in $(if ($_Task -and '?' -ne $_Task) {$_Task} else {$tasks.Keys})) {
+		ShowTaskTree $tasks[$name] 0 $_Comment
 	}
 	return
 }
 
 function *Err*($Text, $Info)
-{"ERROR: $Text`r`n$($_ = $Info.PositionMessage; if ($_.StartsWith("`n")) {$_.Trim().Replace("`n", "`r`n")} else {$_})"}
+{"ERROR: $Text`r`n$($Info.PositionMessage.Trim())"}
 
 ### Build with results
 try {
 	$Result = if ($_Summary) {'Result'}
-	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -Hook:$BuildHook -WhatIf:$WhatIf -Result:$Result
+	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -WhatIf:$WhatIf -Result:$Result
 }
 finally {
 	### Show summary
@@ -177,7 +166,7 @@ finally {
 ---------- Build Summary ----------
 
 '@
-		foreach($_ in $Result.AllTasks) {
+		foreach($_ in $Result.Tasks) {
 			Write-Host ('{0,-16} {1} {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber)
 			if ($_.Error) {
 				Write-Host -ForegroundColor Red (*Err* $_.Error $_.Error.InvocationInfo)

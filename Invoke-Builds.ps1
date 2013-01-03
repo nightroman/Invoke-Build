@@ -1,7 +1,7 @@
 
 <#
 Invoke-Build - PowerShell Task Scripting
-Copyright (c) 2011-2012 Roman Kuzmin
+Copyright (c) 2011-2013 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,53 +16,48 @@ See the License for the specific language governing permissions and
 limitations under the License.
 #>
 
-#.ExternalHelp Invoke-Build.ps1-Help.xml
+#.ExternalHelp Invoke-Build-Help.xml
 param
 (
 	[Parameter(Position=0)][hashtable[]]$Build,
 	$Result,
 	[int]$Timeout = [int]::MaxValue,
-	[int]$MaximumBuilds = [System.Environment]::ProcessorCount
+	[int]$MaximumBuilds = [Environment]::ProcessorCount
 )
-Set-StrictMode -Version 2
 
-if ($Host.Name -eq 'Default Host' -or $Host.Name -eq 'ServerRemoteHost' -or !$Host.UI -or !$Host.UI.RawUI) {
-	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text) {$Text}
+if (!$Host.UI -or !$Host.UI.RawUI -or 'Default Host', 'ServerRemoteHost' -contains $Host.Name) {
+	function Write-Build($Color, [string]$Text)
+	{$Text}
 }
 else {
-	function Write-BuildText([System.ConsoleColor]$Color, [string]$Text){
-		$saved=$Host.UI.RawUI.ForegroundColor
-		try{$Host.UI.RawUI.ForegroundColor=$Color; $Text}
-		finally{$Host.UI.RawUI.ForegroundColor=$saved}
-	}
+	function Write-Build([ConsoleColor]$Color, [string]$Text)
+	{$i = $Host.UI.RawUI; $_ = $i.ForegroundColor; try {$i.ForegroundColor = $Color; $Text} finally {$i.ForegroundColor = $_}}
 }
 
-function Fix($_)
-{"$_`r`n$($1 = $_.InvocationInfo.PositionMessage; if ($1.StartsWith("`n")) {$1.Trim().Replace("`n", "`r`n")} else {$1})"}
+function *EI($_)
+{"$_`r`n$($_.InvocationInfo.PositionMessage.Trim())"}
 
-function Die([string]$Message, [System.Management.Automation.ErrorCategory]$Category = 0)
-{$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([System.Exception]$Message), $null, $Category, $null))}
+function *TE($M, $C=0)
+{$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))}
 
 ### main
 
 # info, result
-$info = 1 | Select-Object Tasks, Messages, ErrorCount, WarningCount, Started, Elapsed
-$info.Tasks = [System.Collections.ArrayList]@()
-$info.Messages = [System.Collections.ArrayList]@()
-$info.ErrorCount = 0
-$info.WarningCount = 0
-$info.Started = [System.DateTime]::Now
-if ($Result) {
-	if ($Result -is [string]) {New-Variable -Force -Scope 1 $Result $info}
-	else {$Result.Value = $info}
+$info = [PSCustomObject]@{
+	Tasks = [System.Collections.ArrayList]@()
+	Errors = [System.Collections.ArrayList]@()
+	Warnings = [System.Collections.ArrayList]@()
+	Started = [DateTime]::Now
+	Elapsed = $null
 }
+if ($Result) {if ($Result -is [string]) {New-Variable -Force -Scope 1 $Result $info} else {$Result.Value = $info}}
 
 # no builds
 if (!$Build) {return}
 
 ### engine
-$engine = [System.IO.Path]::Combine([System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path), 'Invoke-Build.ps1')
-if (![System.IO.File]::Exists($engine)) {Die "Missing script '$engine'." ObjectNotFound}
+$engine = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
+if (![System.IO.File]::Exists($engine)) {*TE "Missing script '$engine'." 13}
 
 ### works
 $works = @()
@@ -70,9 +65,9 @@ for ($1 = 0; $1 -lt $Build.Count; ++$1) {
 	$b = @{} + $Build[$1]
 
 	$file = $b['File']
-	if (!$file) {Die "Build parameter File is missing or empty." InvalidArgument}
+	if (!$file) {*TE "Build parameter File is missing or empty." 5}
 	$file = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($file)
-	if (![System.IO.File]::Exists($file)) {Die "Missing script '$file'." ObjectNotFound}
+	if (![System.IO.File]::Exists($file)) {*TE "Missing script '$file'." 13}
 
 	$b.Result = @{}
 	$b.File = $file
@@ -86,7 +81,7 @@ for ($1 = 0; $1 -lt $Build.Count; ++$1) {
 }
 
 # runspace pool
-if ($MaximumBuilds -lt 1) {Die "MaximumBuilds should be a positive number." InvalidArgument}
+if ($MaximumBuilds -lt 1) {*TE "MaximumBuilds should be a positive number." 5}
 $pool = [RunspaceFactory]::CreateRunspacePool(1, $MaximumBuilds)
 $failures = @()
 
@@ -122,14 +117,14 @@ try {
 	### wait
 	$stopwatch = [Diagnostics.Stopwatch]::StartNew()
 	foreach($work in $works) {
-		Write-BuildText Cyan $work.Title
+		Write-Build Cyan $work.Title
 		$t = $Timeout - $stopwatch.ElapsedMilliseconds
 		$work.Done = if ($t -gt 0) {$work.Job.AsyncWaitHandle.WaitOne($t)}
 	}
 
 	### end async
 	foreach($work in $works) {
-		Write-BuildText Cyan "Build $($work.Title):"
+		Write-Build Cyan "Build $($work.Title):"
 
 		$p = $work.Posh
 		$exception = $null
@@ -165,29 +160,28 @@ try {
 		$r = $work.Build.Result['Value']
 		$_ = if ($r) {
 			$r.Error
-			$info.Tasks.AddRange($r.AllTasks)
-			$info.Messages.AddRange($r.AllMessages)
-			$info.ErrorCount += $r.AllErrorCount
-			$info.WarningCount += $r.AllWarningCount
+			$info.Tasks.AddRange($r.Tasks)
+			$info.Errors.AddRange($r.Errors)
+			$info.Warnings.AddRange($r.Warnings)
 		}
 		else {
 			"'$($work.Build.File)' invocation failed: $exception"
 		}
 		if (!$_) {$_ = $exception}
 		if ($_) {
-			Write-BuildText Cyan "Build $($work.Title) FAILED."
-			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {Fix $_} else {"$_"}
-			Write-BuildText Red "ERROR: $_"
+			Write-Build Cyan "Build $($work.Title) FAILED."
+			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {*EI $_} else {"$_"}
+			Write-Build Red "ERROR: $_"
 			$failures += @{File=$work.Title; Error=$_}
 		}
 		else {
-			Write-BuildText Cyan "Build $($work.Title) succeeded."
+			Write-Build Cyan "Build $($work.Title) succeeded."
 		}
 	}
 
 	# fail
 	if ($failures) {
-		Die ($(
+		*TE ($(
 			"Failed builds:"
 			foreach($_ in $failures) {
 				"Build: $($_.File)"
@@ -198,17 +192,13 @@ try {
 }
 finally {
 	$pool.Close()
-	$errors = $info.ErrorCount
-	$warnings = $info.WarningCount
-	$info.Elapsed = [System.DateTime]::Now - $info.Started
+	$errors = $info.Errors.Count
+	$warnings = $info.Warnings.Count
+	$info.Elapsed = [DateTime]::Now - $info.Started
 
-	$up = $PSCmdlet.SessionState.PSVariable.Get('BuildInfo')
-	if ($up) {$up = if ($up.Description -eq 'Invoke-Build') {$up.Value}}
-	if ($up) {
-		$up.AllTasks.AddRange($info.Tasks)
-		$up.AllMessages.AddRange($info.Messages)
-		$up.AllErrorCount += $errors
-		$up.AllWarningCount += $warnings
+	$up = $PSCmdlet.SessionState.PSVariable.Get('*')
+	if ($up -and ($up = if ($up.Description -eq 'Invoke-Build') {$up.Value})) {
+		$up.Tasks.AddRange($info.Tasks); $up.Errors.AddRange($info.Errors); $up.Warnings.AddRange($info.Warnings)
 	}
 
 	$color, $text = if ($failures) {'Red', 'Builds FAILED'}
@@ -216,7 +206,7 @@ finally {
 	elseif ($warnings) {'Yellow', 'Builds succeeded with warnings'}
 	else {'Green', 'Builds succeeded'}
 
-	Write-BuildText $color @"
+	Write-Build $color @"
 Tasks: $($info.Tasks.Count) tasks, $errors errors, $warnings warnings
 $text. $($Build.Count) builds, $($failures.Count) failed, $($info.Elapsed)
 "@

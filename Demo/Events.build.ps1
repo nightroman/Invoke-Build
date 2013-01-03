@@ -13,17 +13,17 @@
 
 Set-Location $HOME
 
-# Enter-BuildScript is called before the first task in the script scope. Its
-# local variables become available for all tasks and other event functions.
-function Enter-BuildScript {
-	"Enter script"
+# Enter-Build is called before the first task in the script scope. Its local
+# variables become available for all tasks and other event functions.
+function Enter-Build {
+	"Enter build"
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
 }
 
-# Exit-BuildScript is called after the last task or on build failures.
-function Exit-BuildScript {
-	"Exit script"
+# Exit-Build is called after the last task or on build failures.
+function Exit-Build {
+	"Exit build"
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
 }

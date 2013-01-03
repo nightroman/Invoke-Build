@@ -29,43 +29,17 @@ function Test($ExpectedPattern, $Script, $Task = '.') {
 
 # Build scripts should have at least one task.
 task NoTasks {
-	Test "There is no task in '*\z.build.ps1'.*OperationStopped*" {
+	Test "No tasks in '*\z.build.ps1'.*OperationStopped*" {
 		# Script with no tasks
 	}
 }
 
-# Build scripts should not output script blocks. This often indicates a typical
-# mistake when a script is defined starting from a new line (tasks are function
-# calls, not definitions).
-task ScriptOutput {
-	Test "Unexpected script block {*}*At *OperationStopped*" {
-		task task1
-		'It is fine to output some data ...'
-		task task2 task1
-		{
-			'... but this script block is a mistake.'
-		}
-	}
-}
-
-# Task names should be unique. But it is fine to use the same task name several
-# times in a task job list (this does not make much sense though).
-task TaskAddedTwice {
-	Test "Task 'task1': Task already exists:*At*\z.build.ps1:2 *At*\z.build.ps1:6 *InvalidArgument*" {
-		task task1 {}
-		# It is fine to reference a task 2+ times
-		task task2 task1, task1, task1
-		# This is wrong, task1 is already defined
-		task task1 {}
-	}
-}
-
-# The task has three valid jobs and one invalid (42 ~ [int]).
+# The task has three valid jobs and one invalid (42 ~ invalid type).
 task InvalidJobType {
-	Test "Task 'InvalidJobType': Invalid job type.*At *InvalidArgument*" {
+	Test "Task 'InvalidJob': Invalid job.*At *InvalidArgument*" {
 		task task1 {}
 		task task2 {}
-		task InvalidJobType @(
+		task InvalidJob @(
 			'task1'        # [string] - task name
 			@{ task2 = 1 } # [hashtable] - tells to ignore task2 errors
 			{ $x = 123 }   # [scriptblock] - code invoked as this task
@@ -76,7 +50,7 @@ task InvalidJobType {
 
 # The task has invalid job value.
 task InvalidJobValue {
-	Test "Task 'InvalidJobValue': Expected hashtable @{X=Y}.*InvalidJobValue @(*InvalidArgument*" {
+	Test "Task 'InvalidJobValue': Invalid job.*InvalidJobValue @(*InvalidArgument*" {
 		task InvalidJobValue @(
 			@{ task2 = 1; task1 = 1 }
 		)
@@ -85,34 +59,15 @@ task InvalidJobValue {
 
 # The task has invalid value in After.
 task InvalidJobValueAfter {
-	Test "Task 'InvalidAfter': Expected hashtable @{X=Y}.*InvalidAfter -After*OperationStopped*" {
+	Test "Task 'InvalidAfter': Invalid job.*InvalidAfter -After*OperationStopped*" {
 		task InvalidAfter -After @{}
 	}
 }
 
 # The task has invalid value in Before.
 task InvalidJobValueBefore {
-	Test "Task 'InvalidBefore': Expected hashtable @{X=Y}.*InvalidBefore -Before*OperationStopped*" {
+	Test "Task 'InvalidBefore': Invalid job.*InvalidBefore -Before*OperationStopped*" {
 		task InvalidBefore -Before @{}
-	}
-}
-
-# Incremental and Partial cannot be used together.
-task IncrementalAndPartial {
-	$script = {
-		task IncrementalAndPartial -Incremental @{} -Partial @{} { throw 'Unexpected.' }
-	}
-	#! V3 CTP2 used to get not proper source, fixed in V3 Beta.
-	Test "Parameter set cannot be resolved*At*IncrementalAndPartial -Incremental*InvalidArgument*" $script
-}
-
-# Invalid Incremental/Partial hashtable.
-task IncrementalInvalidHashtable {
-	Test "Task 'IncrementalInvalidHashtable': Expected hashtable @{X=Y}.*IncrementalInvalidHashtable -Incremental*InvalidArgument*" {
-		task IncrementalInvalidHashtable -Incremental @{} { throw 'Unexpected.' }
-	}
-	Test "Task 'IncrementalInvalidHashtable': Expected hashtable @{X=Y}.*IncrementalInvalidHashtable -Partial*InvalidArgument*" {
-		task IncrementalInvalidHashtable -Partial @{} { throw 'Unexpected.' }
 	}
 }
 
@@ -154,6 +109,7 @@ task CyclicReferenceList {
 		task test2 test1
 	}
 }
+
 # Cyclic references should be caught on * as well.
 task CyclicReferenceStar {
 	Test -Task * "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {

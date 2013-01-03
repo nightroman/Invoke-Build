@@ -17,7 +17,7 @@ function Format-Error($Record)
 {
 	@"
 $Record
-$($Record.InvocationInfo.PositionMessage.Trim().Replace("`n", "`r`n"))
+$($Record.InvocationInfo.PositionMessage.Trim())
 + $($Record.CategoryInfo)
 "@
 }
@@ -31,7 +31,7 @@ function Test-Issue($Task, $File, $ExpectedPattern)
 	$message = ''
 	try { Invoke-Build $Task $File }
 	catch { $message = Format-Error $_ }
-	Write-BuildText Magenta $message
+	Write-Build Magenta $message
 	if ($message -notlike $ExpectedPattern) {
 		Write-Error -ErrorAction Stop @"
 Expected pattern [

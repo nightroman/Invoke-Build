@@ -19,7 +19,7 @@ $jobs = foreach($_ in 1..3) {
 # Yet another task. As it is called by parallel tests, let's use some Write-*
 # methods. They may have issues in some hosts. Also, let's use some not ASCII.
 task task0 {
-	Write-BuildText Cyan 'Cyan - Циан'
+	Write-Build Cyan 'Cyan - Циан'
 	Write-Verbose 'Verbose - Подробно' -Verbose
 }
 

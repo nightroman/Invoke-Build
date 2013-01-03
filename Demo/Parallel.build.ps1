@@ -79,12 +79,12 @@ task Many {
 	}
 	catch {
 		$message = "$_"
-		Write-BuildText Magenta $message
+		Write-Build Magenta $message
 	}
 
 	# Joined results
 	assert (8 -eq $Result.Tasks.Count)
-	assert (1 -eq $Result.ErrorCount)
+	assert (1 -eq $Result.Errors.Count)
 
 	# Input hashes was not changed.
 	assert ($build0.File -eq 'Dynamic.build.ps1')

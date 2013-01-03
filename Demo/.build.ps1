@@ -34,7 +34,7 @@ param
 $MyValue1 = "value 1"
 
 # Invoke-Build exposes $BuildFile and $BuildRoot. Test them.
-# Note: assert is the predefined alias of Assert-BuildTrue.
+# Note: assert is the predefined alias of Assert-Build.
 $MyPath = $MyInvocation.MyCommand.Path
 assert ($MyPath -eq $BuildFile)
 assert ((Split-Path $MyPath) -eq $BuildRoot)
@@ -53,7 +53,6 @@ Write-Warning "Ignore this warning."
 # But this information is not always the same as without -WhatIf.
 task WhatIf {
 	Invoke-Build . Conditional.build.ps1 @{Configuration='Debug'} -WhatIf -Result Result
-	assert ($Result.AllTasks.Count -eq 1)
 	assert ($Result.Tasks.Count -eq 1)
 }
 
@@ -67,7 +66,7 @@ task ListTask {
 
 	# get task list
 	Invoke-Build ? Assert.build.ps1 -Result Result
-	assert ($Result.Count -eq 3)
+	assert ($Result.All.Count -eq 3)
 }
 
 # ". Invoke-Build" is used in order to load exposed functions and use Get-Help.
@@ -96,9 +95,9 @@ task ParamsValues1 {
 	$script:MyNewValue1 = 42
 }
 
-# This task invokes (depends on) the task ParamsValues1 and then invokes its
-# own script. Dependent tasks and own scripts are specified by the parameter
-# Jobs. Any number and any order of jobs is allowed. Dependent tasks often go
+# This task invokes (references) the task ParamsValues1 and then invokes its
+# own script. Referenced tasks and own scripts are specified by the parameter
+# Job. Any number and any order of jobs is allowed. Referenced tasks often go
 # before own scripts but tasks are allowed after and between scripts as well.
 task ParamsValues2 ParamsValues1, {
 	"In ParamsValues2"
@@ -111,7 +110,7 @@ task Alter {
 	Invoke-Build * Alter.build.ps1
 }
 
-# Test assert, the alias of Assert-BuildTrue.
+# Test assert, the alias of Assert-Build.
 task Assert {
 	Invoke-Build . Assert.build.ps1
 }
@@ -132,14 +131,14 @@ task Conditional {
 	Invoke-Build TestScriptCondition, ConditionalErrors Conditional.build.ps1
 }
 
-# Test dynamic tasks (! and other issues !).
+# Test dynamic tasks (and other issues).
 task Dynamic {
 	# first, just request the task list and test it
-	Invoke-Build ? Dynamic.build.ps1 -Result tasks
-	assert ($tasks.Count -eq 5)
-	$last = $tasks.Item(4)
+	Invoke-Build ? Dynamic.build.ps1 -Result result
+	assert ($result.All.Count -eq 5)
+	$last = $result.All.Item(4)
 	assert ($last.Name -eq '.')
-	assert ($last.Jobs.Count -eq 4)
+	assert ($last.Job.Count -eq 4)
 
 	# invoke with results and test: 5 tasks are done
 	Invoke-Build . Dynamic.build.ps1 -Result result
@@ -217,11 +216,11 @@ task TestExitCode {
 
 # Test the internally defined alias Invoke-Build. It is strongly recommended
 # for nested calls instead of the script name Invoke-Build.ps1. In a new (!)
-# session set $BuildInfo, build, check for the alias. It also covers work
-# around "Default Host" exception on setting colors.
+# session set ${*}, build, check for the alias. It also covers work around
+# "Default Host" exception on setting colors.
 task TestSelfAlias {
     'task . { (Get-Alias Invoke-Build -ea Stop).Definition }' > z.build.ps1
-    $log = [PowerShell]::Create().AddScript("`$BuildInfo = 42; Invoke-Build . '$BuildRoot\z.build.ps1'").Invoke() | Out-String
+    $log = [PowerShell]::Create().AddScript("`${*} = 42; Invoke-Build . '$BuildRoot\z.build.ps1'").Invoke() | Out-String
     $log
     assert ($log.Contains('Build succeeded'))
     Remove-Item z.build.ps1
@@ -242,22 +241,23 @@ task TestFunctions {
 	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
 	$exposed = @(
 		'Add-BuildTask'
-		'Assert-BuildTrue'
+		'Assert-Build'
+		'Enter-Build'
 		'Enter-BuildJob'
-		'Enter-BuildScript'
 		'Enter-BuildTask'
+		'Exit-Build'
 		'Exit-BuildJob'
-		'Exit-BuildScript'
 		'Exit-BuildTask'
 		'Export-Build'
 		'Get-BuildError'
 		'Get-BuildFile'
+		'Get-BuildFileHook'
 		'Get-BuildProperty'
 		'Get-BuildVersion'
 		'Import-Build'
 		'Invoke-BuildExec'
 		'Use-BuildAlias'
-		'Write-BuildText'
+		'Write-Build'
 		'Write-Warning'
 	)
 	Get-Command -CommandType Function | .{process{
@@ -278,10 +278,6 @@ task TestFunctions {
 task TestVariables {
 	$0 = [PowerShell]::Create().AddScript({ Get-Variable | Select-Object -ExpandProperty Name }).Invoke()
 	$0 += @(
-		# build engine internals
-		'BuildList'
-		'BuildInfo'
-		'BuildHook'
 		# project build script
 		'Result'
 		'SkipTestDiff'
@@ -314,13 +310,13 @@ task ShowHelp {
 		'Invoke-Build'
 		'Invoke-Builds'
 		'Add-BuildTask'
-		'Assert-BuildTrue'
+		'Assert-Build'
 		'Get-BuildError'
 		'Get-BuildProperty'
 		'Get-BuildVersion'
 		'Invoke-BuildExec'
 		'Use-BuildAlias'
-		'Write-BuildText'
+		'Write-Build'
 	) | %{
 		'#'*77
 		Get-Help -Full $_
@@ -328,24 +324,10 @@ task ShowHelp {
 	Out-String -Width 80
 }
 
-# Test the internal function *KV
-task TestKV {
-	# protected references
-	$hash = @{Task=1}
-	$1, $2, $3 = *KV $hash
-	assert ($1 -eq 'Task' -and $2 -eq 1 -and $null -eq $3)
-
-	# inputs/outputs
-	$hash = @{(1..3)=(1..5)}
-	$1, $2, $3 = *KV $hash
-	assert ($1.Count -eq 3 -and $2.Count -eq 5 -and $null -eq $3)
-}
-
 # This task calls all test tasks.
 task Tests `
 Dummy1,
 Dummy2,
-TestKV,
 Alter,
 Assert,
 Checkpoint,
@@ -372,12 +354,12 @@ TestVariables
 task . ParamsValues2, ParamsValues1, SharedTask2, {
 	"In default, script 1"
 },
-# It is possible to have more than one script jobs.
+# It is possible to have several script jobs.
 {
 	"In default, script 2"
 	Invoke-Build SharedTask1 Shared.tasks.ps1
 },
-# Tasks can be referenced between or after scripts.
+# Tasks can be referenced between or after script jobs.
 Tests,
 WhatIf,
 ListTask,

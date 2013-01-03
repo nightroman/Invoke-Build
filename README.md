@@ -23,7 +23,7 @@ Other tools and files are for parallel builds, built-in help, graphs, and etc.
 
 * *Invoke-Build.ps1* invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* invokes parallel builds using the engine
-* *Invoke-Build.ps1-Help.xml* is content for Get-Help
+* *Invoke-Build-Help.xml* is external content for Get-Help
 * *Build.ps1* is the wrapper with some more options
 * *Show-BuildGraph.ps1* makes and shows task graphs
 * *Demo* directory - scripts for learning and testing
@@ -49,8 +49,8 @@ tools. But build flow, script structure, and main concepts are almost the same.
 ## Quick Start
 
 **Step 1:**
-An easy way to get and update the package is
-[NuGet.exe Command Line](http://nuget.codeplex.com/releases):
+Invoke-Build is distributed as a NuGet package. An easy way to get and update
+it is [NuGet.exe Command Line](http://nuget.codeplex.com/releases):
 
     NuGet install Invoke-Build
 
@@ -58,18 +58,10 @@ This command checks for the latest available version, downloads, and unzips the
 package to a directory named *Invoke-Build.(version)*. The scripts and other
 files are located in its subdirectory *tools*.
 
-Alternatively, manually download and unzip the latest package from
-[Downloads](https://github.com/nightroman/Invoke-Build/downloads).
-
-Copy the script *Invoke-Build.ps1*, the help file *Invoke-Build.ps1-Help.xml*,
-and optionally other scripts to one of the directories included in the system
-path (`$env:PATH`). As a result, the script can be called from any PowerShell
-code simply as `Invoke-Build` and `Get-Help` should work.
-
-Note: yet another way is to get the scripts directly from the repository. But
-the help file *Invoke-Build.ps1-Help.xml* is not there. Get it from the latest
-package or build it using the utility script
-[Helps.ps1](https://github.com/nightroman/Helps).
+Copy the script *Invoke-Build.ps1*, the help file *Invoke-Build-Help.xml*, and
+optionally other scripts to one of the directories included in the system path
+(`$env:PATH`). As a result, the script can be called from any PowerShell code
+simply as `Invoke-Build` and `Get-Help` should work.
 
 **Step 2:**
 Set the current location to the *Demo* directory of the package:
@@ -93,7 +85,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 193 tasks, 38 errors, 1 warnings, 00:00:15
+    Build completed with errors. 189 tasks, 38 errors, 1 warnings, 00:00:15
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
@@ -102,18 +94,18 @@ and create own scripts, read the
 
 ## Next Steps
 
-Take a look at help (ensure *Invoke-Build.ps1-Help.xml* is in the same
-directory as *Invoke-Build.ps1*):
+Read help for *Invoke-Build.ps1* (ensure *Invoke-Build-Help.xml* is in the same
+directory):
 
     help Invoke-Build -full
 
-And then at functions help, for example, `Add-BuildTask` (`task`). Note that
-Invoke-Build has to be dot-sourced once.
+Read help for functions. Note that Invoke-Build has to be dot-sourced for this:
 
     . Invoke-Build
-    help task -full
-    help property -full
-    ...
+
+The above command shows function names and makes their help available:
+
+    help Add-BuildTask -full
 
 Explore build scripts included into the package. With tutorial comments they
 show typical use cases and cover issues and mistakes.

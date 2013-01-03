@@ -56,7 +56,7 @@ task . @{AssertDefault=1}, @{AssertMessage=1}, {
 	assert ("$e" -eq 'Assertion failed.')
 
 	$e = error AssertMessage
-	assert ("$e" -eq 'Assertion failed: Custom assert message.')
+	assert ("$e" -eq 'Assertion failed. Custom assert message.')
 
 	'assert is tested.'
 }

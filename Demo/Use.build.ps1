@@ -7,9 +7,7 @@
 	Points of interest:
 
 	* If a build script changes the location it does not have to restore it.
-
 	* Tasks v2.0.50727 and v4.0.30319 are conditional (see the If parameter).
-
 	* Use of several frameworks simultaneously.
 
 .Example
@@ -19,8 +17,7 @@
 . .\Shared.ps1
 
 # Use the current framework at the script level (used by CurrentFramework).
-# In order to use the current framework pass $null or '':
-use $null MSBuild
+use ([System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) MSBuild
 
 # It is fine to change the location (used for -If) and leave it changed.
 Set-Location "$env:windir\Microsoft.NET\Framework"

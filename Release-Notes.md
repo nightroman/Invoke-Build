@@ -1,6 +1,53 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.0.0
+
+This version introduces major but mostly cosmetic changes in advanced features.
+Scripts using these features should be upgraded. If some scripts are not going
+to be upgraded then an old copy of tools can be used for building them. See
+[Portable Build Scripts][1].
+
+Renamed `Write-BuildText` to `Write-Build`.
+
+Renamed `Assert-BuildTrue` to `Assert-Build`. This change is not breaking if
+this function is used by its recommended alias `assert`.
+
+Renamed `Enter-BuildScript`, `Exit-BuildScript` to `Enter-Build`, `Exit-Build`.
+Old names are misleading, events are invoked before and after a build, not a
+build script.
+
+`Use-BuildAlias (use)` does not support the empty `Path` as a shortcut for
+`[System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()`.
+
+Changed syntax of incremental tasks to less cryptic and more like MSBuild.
+Replaced parameters `Incremental`, `Partial` with `Inputs`, `Outputs`, and
+`[switch]Partial`.
+
+It is allowed to add two or more tasks with the same name. The last added wins.
+So it is possible to redefine existing tasks. Well, it is also possible to use
+the same name by mistake. Flexibility or safety? MSBuild chooses flexibility,
+Invoke-Build follows.
+
+Task parameter `After` tells to add a task to the end of job lists. It used to
+be inserted after the last script job - this is often the same but not always.
+
+Removed `Invoke-Build.ps1`'s parameter `Hook`. If the default script is not
+found the command `Get-BuildFileHook` is called if it exists. See `Build.ps1`.
+
+Changed build results of `Invoke-Build.ps1` and `Invoke-Builds.ps1` in order to
+avoid excessive and duplicated data. See help.
+
+`Invoke-Build.ps1`'s parameter `Result` always returns an instance of build
+information. Its new property `All` contains all defined task objects.
+
+Replaced exposed internal variables `BuildInfo`, `BuildList`, and `BuildHook`
+with a new variable `*`. Build scripts should not use it. This change is not
+breaking unless internal variables are used (illegal) or `${*}` is used in
+scripts (unlikely).
+
+Renamed the help file `Invoke-Build.ps1-Help.xml` to `Invoke-Build-Help.xml`.
+
 ## v1.5.2
 
 **Potentially breaking but *minor* change**. Dropped support of nested lists in
@@ -149,8 +196,7 @@ failure information was shown. Fixed, build output should be always shown.
 New script *Invoke-Builds.ps1* invokes parallel builds by *Invoke-Build.ps1*.
 *Invoke-Builds.ps1* expects *Invoke-Build.ps1* to be in the same directory.
 Such script tandems should work without conflicts with others, say, newer
-versions in the path.
-See also: [Special Aliases][4]
+versions in the path. See also: [Portable Build Scripts][1]
 
 The engine script *Invoke-Build.ps1* does not require this new script. But the
 engine is aware of it (creates an alias `Invoke-Builds`) and helps it to get
@@ -196,7 +242,7 @@ concepts). From now on new features will be normally associated with minor
 version numbers. This release itself contains just improvements.
 
 Found and fixed a case when the internal alias *Invoke-Build* was not set.
-See also: [Special Aliases][1].
+See also: [Portable Build Scripts][1].
 
 Work around "Default Host" exceptions on setting colors in scenarios like
 
@@ -524,7 +570,6 @@ script blocks evaluated on task invocation. In the latter case a script is
 invoked as many times as the task is called until it gets `true` and the task
 is invoked.
 
-[1]: https://github.com/nightroman/Invoke-Build/wiki/Special-Aliases
+[1]: https://github.com/nightroman/Invoke-Build/wiki/Portable-Build-Scripts
 [2]: https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild
 [3]: https://github.com/nightroman/Invoke-Build/wiki/Special-Variables
-[4]: https://github.com/nightroman/Invoke-Build/wiki/Special-Aliases

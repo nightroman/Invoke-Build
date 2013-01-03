@@ -26,26 +26,26 @@
 
 .Parameter File
 		See: help Invoke-Build -Parameter File
-
 .Parameter Output
 		The output file path and format specified by extension. For available
 		formats simply use unlikely supported one and check the error message.
 		The default is "$env:TEMP\Graphviz.pdf".
-
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
 		The default 'graph [rankdir=LR]' tells edges to go from left to right.
-
 .Parameter Parameters
 		See: help Invoke-Build -Parameter Parameters. Parameters are needed in
 		special cases when they alter build task sets or task dependencies.
-
 .Parameter NoShow
 		Tells to not show the graph after creation.
-
 .Parameter Number
 		Tells to show task job numbers. Jobs are tasks (numbers are shown on
 		edges) and own scripts (numbers are shown in task boxes after names).
+
+.Inputs
+	None.
+.Outputs
+	None.
 #>
 
 param
@@ -70,18 +70,18 @@ if (!$type) {throw "Output file name should have an extension."}
 $type = $type.Substring(1).ToLower()
 
 # get tasks
-Invoke-Build ? -File:$File -Parameters:$Parameters -Result:BuildList
+Invoke-Build ? -File:$File -Parameters:$Parameters -Result:Result
 
 # DOT code
 $text = @(
 	'digraph Tasks {'
 	$Code
-	foreach($it in $BuildList.Values) {
+	foreach($it in $Result.All.Values) {
 		$name = $it.Name
 		'"{0}"' -f $name
 		$num = 0
 		$script = ''
-		foreach($job in $it.Jobs) {
+		foreach($job in $it.Job) {
 			++$num
 			if ($job -is [string]) {
 				$edge = ' '

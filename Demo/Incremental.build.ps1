@@ -30,16 +30,16 @@ $null > $new1
 $null > $new2
 
 # Empty inputs as an array. All (!) script jobs are not invoked.
-task EmptyInputs1 -Partial @{@() = {}} { throw 'Unexpected.' }, { throw 'Unexpected.' }
+task EmptyInputs1 -Partial -Inputs @() -Outputs {} {throw 'Unexpected.'}, {throw 'Unexpected.'}
 
 # Empty inputs as a script. All (!) script jobs are not invoked.
-task EmptyInputs2 -Partial @{{} = {}} { throw 'Unexpected.' }, { throw 'Unexpected.' }
+task EmptyInputs2 -Partial -Inputs {} -Outputs {} {throw 'Unexpected.'}, {throw 'Unexpected.'}
 
 # Outputs are up-to-date.
 # The script job is not invoked but the task-job is invoked before.
 $PreFullIncrementalOneUpToDate = 0
 task PreFullIncrementalOneUpToDate { ++$script:PreFullIncrementalOneUpToDate }
-task FullIncrementalOneUpToDate -Incremental @{{ 'Incremental.build.ps1' } = 'Incremental.build.ps1'} PreFullIncrementalOneUpToDate, {
+task FullIncrementalOneUpToDate -Inputs {'Incremental.build.ps1'} -Outputs Incremental.build.ps1 PreFullIncrementalOneUpToDate, {
 	throw 'Unexpected.'
 }
 
@@ -47,14 +47,14 @@ task FullIncrementalOneUpToDate -Incremental @{{ 'Incremental.build.ps1' } = 'In
 # The script job is not invoked but the task-job is invoked after.
 $PostPartIncrementalOneUpToDate = 0
 task PostPartIncrementalOneUpToDate { ++$script:PostPartIncrementalOneUpToDate }
-task PartIncrementalOneUpToDate -Partial @{{ 'Incremental.build.ps1' } = { 'Incremental.build.ps1' }} {
+task PartIncrementalOneUpToDate -Partial -Inputs {'Incremental.build.ps1'} -Outputs {'Incremental.build.ps1'} {
 	throw 'Unexpected.'
 }, PostPartIncrementalOneUpToDate
 
 # One missing output item.
 # The script job is invoked with the inputs.
 $FullIncrementalOneMissing = 0
-task FullIncrementalOneMissing -Incremental @{{ 'Incremental.build.ps1' } = 'missing'} {
+task FullIncrementalOneMissing -Inputs {'Incremental.build.ps1'} -Outputs 'missing' {
 	++$script:FullIncrementalOneMissing
 	assert ($Inputs.Count -eq 1)
 	assert ($Inputs[0] -eq "$BuildRoot\Incremental.build.ps1")
@@ -64,7 +64,7 @@ task FullIncrementalOneMissing -Incremental @{{ 'Incremental.build.ps1' } = 'mis
 # One missing output item.
 # The script job is invoked with the inputs.
 $PartIncrementalOneMissing = 0
-task PartIncrementalOneMissing -Partial @{{ 'Incremental.build.ps1' } = { 'missing' }} {
+task PartIncrementalOneMissing -Partial -Inputs {'Incremental.build.ps1'} -Outputs {'missing'} {
 	++$script:PartIncrementalOneMissing
 	assert ($Inputs.Count -eq 1)
 	assert ($Inputs[0] -eq "$BuildRoot\Incremental.build.ps1")
@@ -75,7 +75,7 @@ task PartIncrementalOneMissing -Partial @{{ 'Incremental.build.ps1' } = { 'missi
 # One out-of-date item.
 # The script job is invoked with the inputs.
 $FullIncrementalOneOutOfDate = 0
-task FullIncrementalOneOutOfDate -Incremental @{{ 'Incremental.build.ps1' } = $old1} {
+task FullIncrementalOneOutOfDate -Inputs {'Incremental.build.ps1'} -Outputs $old1 {
 	++$script:FullIncrementalOneOutOfDate
 	assert ($Inputs.Count -eq 1)
 	assert ($Inputs[0] -eq "$BuildRoot\Incremental.build.ps1")
@@ -85,7 +85,7 @@ task FullIncrementalOneOutOfDate -Incremental @{{ 'Incremental.build.ps1' } = $o
 # One out-of-date item.
 # The script job is invoked with the inputs.
 $PartIncrementalOneOutOfDate = 0
-task PartIncrementalOneOutOfDate -Partial @{{ 'Incremental.build.ps1' } = { $old1 }} {
+task PartIncrementalOneOutOfDate -Partial -Inputs {'Incremental.build.ps1'} -Outputs {$old1} {
 	++$script:PartIncrementalOneOutOfDate
 	assert ($Inputs.Count -eq 1)
 	assert ($Inputs[0] -eq "$BuildRoot\Incremental.build.ps1")
@@ -94,19 +94,19 @@ task PartIncrementalOneOutOfDate -Partial @{{ 'Incremental.build.ps1' } = { $old
 }
 
 # 2+ outputs are up-to-date. Inputs is an array.
-task FullIncrementalTwoUpToDate -Incremental @{@('Incremental.build.ps1', '.build.ps1') = $new1, $new2} {
+task FullIncrementalTwoUpToDate -Inputs Incremental.build.ps1, .build.ps1 -Outputs $new1, $new2 {
 	throw 'Unexpected.'
 }
 
 # 2+ outputs are up-to-date. Inputs is a script.
-task PartIncrementalTwoUpToDate -Partial @{{ 'Incremental.build.ps1'; '.build.ps1' } = { $new1; $new2 }} {
+task PartIncrementalTwoUpToDate -Partial -Inputs {'Incremental.build.ps1'; '.build.ps1'} -Outputs {$new1; $new2} {
 	throw 'Unexpected.'
 }
 
 # One output item is missing.
 # All input items are piped (2). Inputs is a script.
 $FullIncrementalTwoMissing = 0
-task FullIncrementalTwoMissing -Incremental @{{ 'Incremental.build.ps1'; '.build.ps1' } = 'missing', $new2} {
+task FullIncrementalTwoMissing -Inputs {'Incremental.build.ps1'; '.build.ps1'} -Outputs 'missing', $new2 {
 	++$script:FullIncrementalTwoMissing
 	assert ($Inputs.Count -eq 2)
 	assert ($Inputs[0] -eq "$BuildRoot\Incremental.build.ps1")
@@ -119,7 +119,7 @@ task FullIncrementalTwoMissing -Incremental @{{ 'Incremental.build.ps1'; '.build
 # One output item is missing.
 # Only items with missing output are piped (1). Inputs is an array.
 $PartIncrementalTwoMissing = 0
-task PartIncrementalTwoMissing -Partial @{@('Incremental.build.ps1', '.build.ps1') = { $new1, 'missing' }} {
+task PartIncrementalTwoMissing -Partial -Inputs Incremental.build.ps1, .build.ps1 -Outputs {$new1, 'missing'} {
 	++$script:PartIncrementalTwoMissing
 	assert ($Inputs.Count -eq 1)
 	assert ($Inputs[0] -eq "$BuildRoot\.build.ps1")
@@ -130,7 +130,7 @@ task PartIncrementalTwoMissing -Partial @{@('Incremental.build.ps1', '.build.ps1
 # One output item is out-of-date.
 # All input items are piped (2).
 $FullIncrementalTwoOutOfDate = 0
-task FullIncrementalTwoOutOfDate -Incremental @{{ 'Incremental.build.ps1'; '.build.ps1' } = $new1, $old2} {
+task FullIncrementalTwoOutOfDate -Inputs {'Incremental.build.ps1'; '.build.ps1'} -Outputs $new1, $old2 {
 	++$script:FullIncrementalTwoOutOfDate
 	assert ($Inputs.Count -eq 2)
 	assert ($Inputs[0] -eq "$BuildRoot\Incremental.build.ps1")
@@ -143,11 +143,11 @@ task FullIncrementalTwoOutOfDate -Incremental @{{ 'Incremental.build.ps1'; '.bui
 # One output item is out-of-date.
 # Only items with out-of-date output are piped (1).
 $PartIncrementalTwoOutOfDate = 0
-task PartIncrementalTwoOutOfDate -Partial @{{
+task PartIncrementalTwoOutOfDate -Partial -Inputs {
 	'Incremental.build.ps1'; '.build.ps1'
-} = {
+} -Outputs {
 	$new1, $old2
-}} {process{
+} {process{
 	++$script:PartIncrementalTwoOutOfDate
 	assert ($Inputs.Count -eq 1)
 	assert ($Inputs[0] -eq "$BuildRoot\.build.ps1")
@@ -158,21 +158,21 @@ task PartIncrementalTwoOutOfDate -Partial @{{
 }}
 
 # The inputs script fails.
-task IncrementalInputsFails -Incremental @{{ throw 'Throw in input.' } = {}} { throw }
-task PartialInputsFails -Partial @{{ throw 'Throw in input.' } = {}} { throw }
+task IncrementalInputsFails -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
+task PartialInputsFails -Partial -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
 
 # The outputs script fails.
-task IncrementalOutputsFails -Incremental @{{ '.build.ps1' } = { throw 'Throw in output.' }} { throw }
-task PartialOutputsFails -Partial @{{ '.build.ps1' } = { throw 'Throw in output.' }} { throw }
+task IncrementalOutputsFails -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
+task PartialOutputsFails -Partial -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
 
 # Error: incremental output is empty
 # Error: partial inputs and outputs have different number of items
-task IncrementalOutputsIsEmpty -Incremental @{{ '.build.ps1' } = {}} { throw }
-task InputsOutputsMismatch -Partial @{{ '.build.ps1' } = {}} { throw }
+task IncrementalOutputsIsEmpty -Inputs {'.build.ps1'} -Outputs {} {throw}
+task InputsOutputsMismatch -Partial -Inputs {'.build.ps1'} -Outputs {} {throw}
 
 # Error: one of the input items is missing.
-task IncrementalMissingInputs -Incremental @{{ 'missing' } = {}} { throw }
-task PartialMissingInputs -Partial @{{ 'missing' } = {}} { throw }
+task IncrementalMissingInputs -Inputs {'missing'} -Outputs {} {throw}
+task PartialMissingInputs -Partial -Inputs {'missing'} -Outputs {} {throw}
 
 # The default task calls all test tasks and then checks the expected results.
 task . `
@@ -217,8 +217,8 @@ PartIncrementalTwoOutOfDate,
 	Test-Error PartialOutputsFails "Throw in output.*At *\Incremental.build.ps1:*task PartialOutputsFails*"
 
 	# thrown from the engine
-	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Incremental output cannot be empty.*try { Invoke-Build *OperationStopped*"
-	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different input and output counts: 1 and 0.*try { Invoke-Build *OperationStopped*"
+	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Empty output.*try { Invoke-Build *OperationStopped*"
+	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different input/output: 1/0.*try { Invoke-Build *OperationStopped*"
 	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Missing input file '*\missing'.*try { Invoke-Build *OperationStopped*"
 	Test-Issue PartialMissingInputs Incremental.build.ps1 "Missing input file '*\missing'.*try { Invoke-Build *OperationStopped*"
 

@@ -84,7 +84,44 @@ task break {
 	Invoke-Build task1, task2 Checkpoint.build.ps1 @{Test=$true} -Checkpoint checkpoint.clixml
 }
 
+# Tests the code used for clixml export and import
+task TestSerialization {
+	&{
+		$task = [string[]]'t1'
+		$file = [string]'f1'
+		$parameters = $null
+		$load = 't1'
+		$data = {}
+		$(,$task; $file; $parameters; ,@(foreach($_ in $load){$_}); & $data) | Export-Clixml z.clixml
+	}
+	&{
+		$task, $file, $parameters, $load, $data = Import-Clixml z.clixml
+		assert ($task -is [System.Collections.ArrayList] -and $task.Count -eq 1 -and $task[0] -eq 't1')
+		assert ($file -is [string] -and $file -eq 'f1')
+		assert ($null -eq $parameters)
+		assert ($load -is [System.Collections.ArrayList] -and $load.Count -eq 1 -and $load[0] -eq 't1')
+		assert ($null -eq $data)
+	}
+	&{
+		$task = [string[]]('t1', 't2')
+		$file = [string]'f1'
+		$parameters = @{p1=11}
+		$load = @('t1', 't2')
+		$data = {22, 33, 44}
+		$(,$task; $file; $parameters; ,@(foreach($_ in $load){$_}); & $data) | Export-Clixml z.clixml
+	}
+	&{
+		$task, $file, $parameters, $load, $data = Import-Clixml z.clixml
+		assert ($task -is [System.Collections.ArrayList] -and $task.Count -eq 2)
+		assert ($file -is [string] -and $file -eq 'f1')
+		assert ($parameters -is [hashtable] -and $parameters.Count -eq 1)
+		assert ($load -is [System.Collections.ArrayList] -and $load.Count -eq 2)
+		assert ($data -is [object[]] -and $data.Count -eq 3)
+	}
+	Remove-Item z.clixml
+}
+
 # This is a test. Call the task `break` as protected because it fails. The
 # checkpoint should be created, as a result. Then call the task `resume` and
 # check that the checkpoint has been deleted.
-task test @{break=1}, {assert (Test-Path checkpoint.clixml)}, resume, {assert !(Test-Path checkpoint.clixml)}
+task test TestSerialization, @{break=1}, {assert (Test-Path checkpoint.clixml)}, resume, {assert !(Test-Path checkpoint.clixml)}

@@ -9,9 +9,7 @@
 	* Run tests and compare results with expected
 	* Build the help file (PowerShell MAML format)
 	* Convert markdown files to HTML for packages
-	* Create packages
-		* zip for the project downloads
-		* NuGet for the NuGet gallery
+	* Create NuGet package for the NuGet gallery
 #>
 
 param
@@ -19,11 +17,8 @@ param
 	[switch]$SkipTestDiff
 )
 
-# Set strict mode
+# Ensure Invoke-Build works fine in strict mode.
 Set-StrictMode -Version 2
-
-# Requires: 7z.exe
-Set-Alias 7z @(Get-Command 7z)[0].Definition
 
 # Import markdown tasks ConvertMarkdown and RemoveMarkdownHtml.
 # <https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks>
@@ -31,7 +26,7 @@ Markdown.tasks.ps1
 
 # Remove generated HTML and temp files.
 task Clean RemoveMarkdownHtml, {
-	Remove-Item z, Invoke-Build.ps1-Help.xml, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
+	Remove-Item z, Invoke-Build-Help.xml, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Warn about not empty git status if .git exists.
@@ -46,8 +41,8 @@ task GitStatus -If (Test-Path .git) {
 # Fail if the project files are newer, to be resolved manually.
 task UpdateScript {
 	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
-	$target = 'Build.ps1', 'Invoke-Build.ps1', 'Invoke-Builds.ps1', 'Invoke-Build.ps1-Help.xml', 'Show-BuildGraph.ps1'
-	$source = "$from\x.ps1", "$from\Invoke-Build.ps1", "$from\Invoke-Builds.ps1", "$from\Invoke-Build.ps1-Help.xml", "$from\Show-BuildGraph.ps1"
+	$target = 'Build.ps1', 'Invoke-Build.ps1', 'Invoke-Builds.ps1', 'Invoke-Build-Help.xml', 'Show-BuildGraph.ps1'
+	$source = "$from\x.ps1", "$from\Invoke-Build.ps1", "$from\Invoke-Builds.ps1", "$from\Invoke-Build-Help.xml", "$from\Show-BuildGraph.ps1"
 	for($1 = 0; $1 -lt $target.Count; ++$1) {
 		$s = Get-Item $source[$1]
 		$t = Get-Item $target[$1] -ErrorAction 0
@@ -56,14 +51,14 @@ task UpdateScript {
 	}
 }
 
-# Build the PowerShell help file.
+# Build the PowerShell help file in the working directory.
 task Help {
 	$dir = Split-Path (Get-Command Invoke-Build.ps1).Definition
 	. Helps.ps1
-	Convert-Helps Invoke-Build.ps1-Help.ps1 $dir\Invoke-Build.ps1-Help.xml
+	Convert-Helps Invoke-Build-Help.ps1 $dir\Invoke-Build-Help.xml
 }
 
-# Make the package in z\tools for Zip and NuGet.
+# Make the package directory z\tools for NuGet.
 task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	# temp package folder
 	Remove-Item [z] -Force -Recurse
@@ -80,7 +75,7 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 
 	# move generated files
 	Move-Item -Destination z\tools `
-	Invoke-Build.ps1-Help.xml,
+	Invoke-Build-Help.xml,
 	README.htm,
 	Release-Notes.htm
 }
@@ -101,12 +96,6 @@ task PackageTest Package, {
 },
 Clean
 
-# Make the zip package.
-task Zip Package, {
-	Set-Location z\tools
-	exec { & 7z a ..\..\Invoke-Build.$(Get-BuildVersion).zip * }
-}
-
 # Make the NuGet package.
 task NuGet Package, {
 	$text = @'
@@ -114,7 +103,7 @@ Invoke-Build introduces task based programming in PowerShell. It invokes tasks
 from scripts written in PowerShell with domain-specific language. This process
 is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 '@
-	# nuspec
+	# NuGet file
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
@@ -136,14 +125,12 @@ is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
 }
 
-# Make all packages.
-task Pack Zip, NuGet
-
-# Calls tests infinitely.
+# Calls tests infinitely. Note: normal scripts do not use ${*}.
 task Loop {
 	for(;;) {
-		$BuildInfo.AllTasks.Clear()
-		$BuildInfo.AllMessages.Clear()
+		${*}.Tasks.Clear()
+		${*}.Errors.Clear()
+		${*}.Warnings.Clear()
 		Invoke-Build . Demo\.build.ps1
 	}
 }
@@ -152,23 +139,15 @@ task Loop {
 # Invoke-Build-Test.log in %TEMP%. Then compare it with a new output file in
 # this directory. If they are the same then remove the new file. Otherwise
 # start %MERGE%.
-# * After tests call UpdateScript.
+# * After passed tests call UpdateScript.
 task Test {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 	if ($SkipTestDiff) { return }
 
-	assert (187 -eq $result.AllTasks.Count) $result.AllTasks.Count
-	assert (33 -eq $result.Tasks.Count) $result.Tasks.Count
-
-	assert (38 -eq $result.AllErrorCount) $result.AllErrorCount
-	assert (0 -eq $result.ErrorCount) $result.AllErrorCount
-
-	assert ($result.AllWarningCount -ge 1)
-	assert ($result.WarningCount -ge 1)
-
-	assert ($result.AllMessages.Count -ge 1)
-	assert ($result.Messages.Count -ge 1)
+	assert (183 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (38 -eq $result.Errors.Count) $result.Errors.Count
+	assert ($result.Warnings.Count -ge 1)
 
 	# process and save the output
 	$outputPath = "$BuildRoot\Invoke-Build-Test.log"
@@ -181,7 +160,7 @@ task Test {
 	if (Test-Path $samplePath) {
 		$sample = [System.IO.File]::ReadAllText($samplePath)
 		if ($output -ceq $sample) {
-			Write-BuildText Green 'The result is not changed.'
+			Write-Build Green 'The result is not changed.'
 			Remove-Item $outputPath
 		}
 		else {
@@ -199,11 +178,11 @@ task Test {
 
 	# copy actual to expected
 	if ($toCopy) {
-		Write-BuildText Cyan 'Saving the result as expected.'
+		Write-Build Cyan 'Saving the result as expected.'
 		Move-Item $outputPath $samplePath -Force
 	}
 },
 UpdateScript
 
-# Test some more and clean.
+# Test all and clean.
 task . Help, Test, Clean
