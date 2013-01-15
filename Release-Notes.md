@@ -1,6 +1,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.0.1
+
+Minor improvements in *Invoke-Builds.ps1*. The key `File` in parameters is now
+optional. The omitted one is resolved to the usual default build script. Added
+a test.
+
+Changed color of messages *Build < tasks > < file >* to dark green.
+
 ## v2.0.0
 
 This version introduces major but mostly cosmetic changes in advanced features.

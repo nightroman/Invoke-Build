@@ -117,7 +117,7 @@ is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>
 		<description>$text</description>
-		<tags>powershell build automation testing</tags>
+		<tags>powershell build automation</tags>
 	</metadata>
 </package>
 "@
@@ -145,8 +145,8 @@ task Test {
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 	if ($SkipTestDiff) { return }
 
-	assert (183 -eq $result.Tasks.Count) $result.Tasks.Count
-	assert (38 -eq $result.Errors.Count) $result.Errors.Count
+	assert (186 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (37 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 
 	# process and save the output

@@ -73,9 +73,9 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.0.0'}
+function Get-BuildVersion{[Version]'2.0.1'}
 if($MyInvocation.InvocationName -eq '.'){return @'
-Invoke-Build 2.0.0
+Invoke-Build 2.0.1
 Copyright (c) 2011-2013 Roman Kuzmin
 Add-BuildTask Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@}
@@ -108,7 +108,7 @@ function *EI($E, $I)
 {"$E`r`n$(*II $I)"}
 
 function *RJ($_)
-{if($_ -is [scriptblock] -or $_ -is [string]){$_}elseif($_ -isnot [hashtable] -or $_.Count -ne 1){throw "Invalid job."}else{$_.Keys; $_.Values}}
+{if($_ -is [scriptblock] -or $_ -is [string]){$_}elseif($_ -isnot [hashtable] -or $_.Count -ne 1){throw 'Invalid job.'}else{$_.Keys; $_.Values}}
 
 function *Bad($B, $J, $X)
 {foreach($_ in $J){if(($t=${*}.All[$_]) -and $t.If -and $(if($_ -eq $B){$X -notcontains $_}else{*Bad $B $t.Job $t.Try})){return 1}}}
@@ -216,7 +216,7 @@ try{
 	}elseif($Checkpoint -and !($Task -or $Parameters)){
 		$Task, $BuildFile, $Parameters, ${-xt}, ${private:-xd}=Import-Clixml $Checkpoint
 	}elseif(!($BuildFile=Get-BuildFile ${-cd})){
-		if(!($BuildFile=if(Get-Command [G]et-BuildFileHook){Get-BuildFileHook})){throw "Missing default script."}
+		if(!($BuildFile=if(Get-Command [G]et-BuildFileHook){Get-BuildFileHook})){throw 'Missing default script.'}
 	}
 }catch{*TE $_ 13}
 $BuildRoot=Split-Path $BuildFile
@@ -245,7 +245,7 @@ $BuildTask=$Task; ${private:-Result}=$Result; ${private:-Safe}=$Safe
 if($Result){if($Result -is [string]){New-Variable -Force -Scope 1 $Result ${*}}else{$Result.Value=${*}}}
 Remove-Variable Task,File,Parameters,Checkpoint,Result,Safe
 
-Write-Build 6 "Build $($BuildTask -join ', ') $BuildFile"
+Write-Build 2 "Build $($BuildTask -join ', ') $BuildFile"
 ${private:-r}=0
 try{
 	*SL
@@ -287,6 +287,6 @@ try{
 		elseif($e){14, 'Build completed with errors'}
 		elseif($w){14, 'Build succeeded with warnings'}
 		else{10, 'Build succeeded'}
-		Write-Build $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings, $_"
+		Write-Build $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings $_"
 	}
 }

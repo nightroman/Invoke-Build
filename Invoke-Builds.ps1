@@ -17,8 +17,7 @@ limitations under the License.
 #>
 
 #.ExternalHelp Invoke-Build-Help.xml
-param
-(
+param (
 	[Parameter(Position=0)][hashtable[]]$Build,
 	$Result,
 	[int]$Timeout = [int]::MaxValue,
@@ -34,11 +33,17 @@ else {
 	{$i = $Host.UI.RawUI; $_ = $i.ForegroundColor; try {$i.ForegroundColor = $Color; $Text} finally {$i.ForegroundColor = $_}}
 }
 
+function *FP($_)
+{$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)}
+
 function *EI($_)
 {"$_`r`n$($_.InvocationInfo.PositionMessage.Trim())"}
 
 function *TE($M, $C=0)
 {$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))}
+
+function Get-BuildFile($Path)
+{if(($_=[System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1){$_}else{$_ -like '*\.build.ps1'}}
 
 ### main
 
@@ -56,28 +61,26 @@ if ($Result) {if ($Result -is [string]) {New-Variable -Force -Scope 1 $Result $i
 if (!$Build) {return}
 
 ### engine
-$engine = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
-if (![System.IO.File]::Exists($engine)) {*TE "Missing script '$engine'." 13}
+$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
+if (![System.IO.File]::Exists($ib)) {*TE "Missing script '$ib'." 13}
 
 ### works
 $works = @()
-for ($1 = 0; $1 -lt $Build.Count; ++$1) {
+for ($1 = 0; $1 -lt $Build.Count;) {
 	$b = @{} + $Build[$1]
+	$Build[$1++] = $b
 
-	$file = $b['File']
-	if (!$file) {*TE "Build parameter File is missing or empty." 5}
-	$file = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($file)
-	if (![System.IO.File]::Exists($file)) {*TE "Missing script '$file'." 13}
+	if ($file = $b['File']) {if (![System.IO.File]::Exists(($file = *FP $file))) {*TE "Missing script '$file'." 13}}
+	elseif (!($file = Get-BuildFile (*FP))) {*TE "Missing default script in build $1." 5}
 
 	$b.Result = @{}
 	$b.File = $file
 	$b.Safe = $true
-	$Build[$1] = $b
 
 	$work = @{}
 	$works += $work
 	$work.Build = $b
-	$work.Title = "($($1 + 1)/$($Build.Count)) $file"
+	$work.Title = "($1/$($Build.Count)) $file"
 }
 
 # runspace pool
@@ -92,11 +95,9 @@ try {
 		$b = $work.Build
 
 		# log
-		$log = $b['Log']
-		if ($log) {
+		if ($log = $b['Log']) {
 			$b.Remove('Log')
-			$log = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($log)
-			[System.IO.File]::Delete($log)
+			[System.IO.File]::Delete(($log = *FP $log))
 		}
 		else {
 			$work.Temp = $true
@@ -108,7 +109,7 @@ try {
 		$p = [PowerShell]::Create()
 		$p.RunspacePool = $pool
 		$work.Posh = $p
-		$null = $p.AddCommand($engine).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log).AddParameter('Encoding', 'UTF8')
+		$null = $p.AddCommand($ib).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log).AddParameter('Encoding', 'UTF8')
 
 		# start
 		$work.Job = $p.BeginInvoke()
@@ -157,8 +158,7 @@ try {
 		}
 
 		# result, error
-		$r = $work.Build.Result['Value']
-		$_ = if ($r) {
+		$_ = if ($r = $work.Build.Result['Value']) {
 			$r.Error
 			$info.Tasks.AddRange($r.Tasks)
 			$info.Errors.AddRange($r.Errors)
@@ -196,18 +196,17 @@ finally {
 	$warnings = $info.Warnings.Count
 	$info.Elapsed = [DateTime]::Now - $info.Started
 
-	$up = $PSCmdlet.SessionState.PSVariable.Get('*')
-	if ($up -and ($up = if ($up.Description -eq 'Invoke-Build') {$up.Value})) {
+	if (($up = $PSCmdlet.SessionState.PSVariable.Get('*')) -and ($up = if ($up.Description -eq 'Invoke-Build') {$up.Value})) {
 		$up.Tasks.AddRange($info.Tasks); $up.Errors.AddRange($info.Errors); $up.Warnings.AddRange($info.Warnings)
 	}
 
-	$color, $text = if ($failures) {'Red', 'Builds FAILED'}
-	elseif ($errors) {'Red', 'Builds completed with errors'}
-	elseif ($warnings) {'Yellow', 'Builds succeeded with warnings'}
-	else {'Green', 'Builds succeeded'}
+	$color, $text = if ($failures) {12, 'Builds FAILED'}
+	elseif ($errors) {14, 'Builds completed with errors'}
+	elseif ($warnings) {14, 'Builds succeeded with warnings'}
+	else {10, 'Builds succeeded'}
 
 	Write-Build $color @"
 Tasks: $($info.Tasks.Count) tasks, $errors errors, $warnings warnings
-$text. $($Build.Count) builds, $($failures.Count) failed, $($info.Elapsed)
+$text. $($Build.Count) builds, $($failures.Count) failed $($info.Elapsed)
 "@
 }

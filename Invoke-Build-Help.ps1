@@ -300,28 +300,22 @@
 	command = 'Add-BuildTask'
 	synopsis = 'Defines a build task and adds it to the internal task list.'
 	description = @'
-	It is normally called by its alias 'task'. This is the main feature of
-	build scripts. At least one task must be added. It is used in the build
-	script scope and should not be called from tasks.
+	Its recommended alias is 'task'. This is the main feature of build scripts.
+	At least one task must be added. It is used in the build script scope only.
 
-	In fact, this function is literally all that build scripts really need.
+	In fact, this feature is literally all that build scripts really need.
 	Other build functions are just helpers, scripts do not have to use them.
 '@
 	parameters = @{
 		Name = @'
-		The task name. Names with special wildcard characters are deprecated.
-
-		Consider to use simple names without punctuation. Task names are used
-		in the protected call notation @{TaskName = 1}. If a name is simple
-		then it is easy to use there. Compare:
-		@{TaskName = 1}    # name is used as it is
-		@{'Task-Name' = 1} # name has to be used with ' or "
+		The task name. Wildcard characters are deprecated. Duplicated names are
+		allowed, each added task overrides previously added with the same name.
 '@
 		Jobs = @'
 		One or more task jobs. Valid job types are:
-		* [string] - referenced task, an existing task name;
-		* [hashtable] - referenced task with an option, @{TaskName = Option};
-		* [scriptblock] - script job, a script block is invoked for this task.
+		* [string] - name of an existing referenced task;
+		* [hashtable] - referenced task with options, @{TaskName = Option};
+		* [scriptblock] - script job, a script block invoked for this task.
 
 		Notation @{TaskName = Option} assigns an option to the referenced task.
 		The only supported option 1 makes a task reference protected. It tells
@@ -331,7 +325,7 @@
 		Tells to add this task to the end of the specified task job lists.
 
 		Altered tasks are defined as names or constructs @{Task = 1}. In the
-		latter case this extra task is called protected (see Jobs for details).
+		latter case this task is called protected, see Jobs for details.
 
 		Parameters After and Before are used in order to alter build task jobs
 		in special cases when direct changes in task jobs are not suitable.
@@ -344,8 +338,8 @@
 '@
 		If = @'
 		Tells whether to invoke the task ($true) or skip it ($false). The
-		default is $true. The value is either a script block evaluated on
-		task invocation or any value treated as Boolean. In WhatIf mode a
+		default is $true. The value is either a script block evaluated on task
+		invocation or any value treated as Boolean. In WhatIf mode a
 		scriptblock treated as $true without invocation.
 
 		If it is a script block and the task is called several times then it is
@@ -360,26 +354,26 @@
 		Outputs are file paths or a script block which gets them.
 
 		Automatic variables for task script jobs:
-		- $Inputs - full input paths, array of strings
-		- $Outputs - result of the evaluated parameter Outputs
+		* $Inputs - full input paths, array of strings
+		* $Outputs - result of the evaluated parameter Outputs
 
-		If the switch Partial is used the task is partial incremental. There
-		must be one-to-one correspondence between Inputs and Outputs items.
+		With the switch Partial the task is processed as partial incremental.
+		There must be one-to-one correspondence between Inputs and Outputs.
 
 		Partial Outputs are file paths or a script block which is invoked with
-		full input paths piped to it in order to transform into output paths.
+		input paths piped to it in order to transform them into output paths.
 
 		In addition to automatic variables $Inputs and $Outputs, inside
 		process{} blocks of a partial task two more variables are defined:
-		- $_ - current full input path
-		- $2 - current output path
+		* $_ - current full input path
+		* $2 - current output path
 
-		See more about incremental and partial incremental tasks:
+		Wiki about incremental and partial incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks
 		https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks
 '@
 		Outputs = @'
-		Specifies the output paths of the incremental task. Its used together
+		Specifies the output paths of the incremental task. It is used together
 		with Inputs. See Inputs for details.
 '@
 		Partial = @'
@@ -402,9 +396,9 @@
 	command = 'Get-BuildError'
 	synopsis = 'Gets an error of the specified task if the task has failed.'
 	description = @'
-	It is normally called by its alias 'error'. It is used when some referenced
-	tasks are protected (@{Task=1}) and the current task is about to analyse
-	their potential errors.
+	Its recommended alias is 'error'. It is used when some referenced tasks are
+	protected (@{Task=1}) and the current task is about to analyse their
+	potential errors.
 '@
 	parameters = @{
 		Task = @'
@@ -430,8 +424,8 @@
 	command = 'Assert-Build'
 	synopsis = 'Checks for a condition.'
 	description = @'
-	It is normally called by its alias 'assert'. It checks for a condition and
-	if it is not true throws an error with an optional message text.
+	Its recommended alias is 'assert'. It checks for a condition and if it is
+	not true throws an error with an optional message text.
 '@
 	parameters = @{
 		Condition = @'
@@ -450,9 +444,9 @@
 	command = 'Get-BuildProperty'
 	synopsis = 'Gets PowerShell or environment variable or the default.'
 	description = @'
-	It is normally called by its alias 'property'. It gets the first not null
-	value of these three: PowerShell variable, environment variable, specified
-	default value. Otherwise an error is thrown.
+	Its recommended alias is 'property'. It gets the first not null value of
+	these three: PowerShell variable, environment variable, specified default
+	value. Otherwise an error is thrown.
 
 	CAUTION: Properties should be used sparingly with carefully chosen names
 	that unlikely can already exist and be not related to the build script.
@@ -495,9 +489,17 @@
 ### Get-BuildVersion
 @{
 	command = 'Get-BuildVersion'
-	synopsis = 'Gets Invoke-Build version.'
+	synopsis = 'Gets the current Invoke-Build version.'
 	inputs = @()
 	outputs = @{ type = 'System.Version' }
+	examples = @{
+		code = {assert ((Get-BuildVersion).Major -ge 2)}
+		remarks = @'
+This command works like `require version`. It can be used as the first command
+in a build script in order to ensure that the script is being built by a proper
+engine (version 2+).
+'@
+	}
 }
 
 ### Invoke-BuildExec
@@ -505,9 +507,9 @@
 	command = 'Invoke-BuildExec'
 	synopsis = 'Invokes the command and checks for the $LastExitCode.'
 	description = @'
-	It is normally called by its alias 'exec'. It invokes the specified script
-	block which is supposed to call an executable. Then the $LastExitCode is
-	checked. By default if the code is not 0 then the function throws an error.
+	Its recommended alias is 'exec'. It invokes the specified script block
+	which is supposed to call an executable. Then the $LastExitCode is checked.
+	By default if the code is not 0 then the function throws an error.
 
 	It is common to call .NET tools, e.g. MSBuild. See Use-BuildAlias.
 '@
@@ -549,9 +551,9 @@
 	command = 'Use-BuildAlias'
 	synopsis = '(use) Sets framework/directory tool aliases.'
 	description = @'
-	It is normally called by its alias 'use'. Invoke-Build does not change the
-	system path in order to make framework tools available by names. This is
-	not suitable for using mixed framework tools (in different tasks, scripts,
+	Its recommended alias is 'use'. Invoke-Build does not change the system
+	path in order to make framework tools available by names. This is not
+	suitable for using mixed framework tools (in different tasks, scripts,
 	parallel builds). Instead, this function is used for setting tool aliases
 	in the scope where it is called from.
 
@@ -645,20 +647,14 @@
 	Invokes parallel builds by Invoke-Build.ps1
 '@
 	description = @'
-	This script invokes several build scripts simultaneously. Exact number of
-	parallel builds is limited by the number of processors by default. It can
-	be changed by the parameter MaximumBuilds.
-
-	The build engine script Invoke-Build.ps1 has to be in the same directory.
-	Such script tandems should work without conflicts with others, say, their
-	newer versions in the path.
+	This script invokes build scripts simultaneously using Invoke-Build.ps1
+	which has to be in the same directory. Number of simultaneous builds is
+	limited by the number of processors by default.
 '@
 	parameters = @{
 		Build = @'
-		Build parameter set hashtables. Keys/values:
-		* Task - Invoke-Build parameter Task
-		* File - Invoke-Build parameter File
-		* Parameters - Invoke-Build parameter Parameters
+		Build parameters defined as hashtables with these keys/data:
+		* Task, File, Parameters - Invoke-Build.ps1 parameters
 		* Log - Tells to write build output to the specified file
 
 		Any number of builds is allowed, including 0 and 1. Maximum number of
@@ -667,8 +663,7 @@
 
 		If exactly a [hashtable[]] (not [object[]]) is passed in then after the
 		call it contains modified copies of input hashtables used as parameters
-		of Invoke-Build. Their Result.Value contain build results or nulls if
-		invocations fail.
+		passed in Invoke-Build. Their Result.Value contain build result info.
 '@
 		Result = @'
 		Tells to output build results using a variable. It is either a name of

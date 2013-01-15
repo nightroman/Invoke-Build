@@ -142,7 +142,7 @@ ERROR: Build timed out.*
 '@) "[[$message]]"
 
 	# Check the log files: the first is complete, the others are not.
-	assert ((Get-Content z.1)[-1] -like 'Build succeeded. 1 tasks, 0 errors, 0 warnings, *')
+	assert ((Get-Content z.1)[-1] -like 'Build succeeded. 1 tasks, 0 errors, 0 warnings *')
 	assert (!(Test-Path z.2) -or (Get-Content z.2)[-1] -eq 'begin - начало')
 	assert (!(Test-Path z.2) -or (Get-Content z.3)[-1] -eq 'begin - начало')
 	Remove-Item z.?
@@ -164,11 +164,6 @@ task ParallelMissingEngine {
 	}
 }
 
-# Error: missing mandatory File
-task ParallelNoFileParameter {
-	Invoke-Builds @{Task='.'}
-}
-
 # Error: missing script
 task ParallelMissingFile {
 	Invoke-Builds @{File='MissingFile'}
@@ -182,14 +177,57 @@ task ParallelBadParameters {
 # Test error cases.
 task ParallelErrorCases `
 @{ParallelMissingEngine=1},
-@{ParallelNoFileParameter=1},
 @{ParallelMissingFile=1},
 @{ParallelBadMaximumBuilds=1},
 @{ParallelBadParameters=1},
 {
 	Test-Error ParallelMissingEngine "Missing script '*\Invoke-Build.ps1'.*At *\Parallel.build.ps1:*ObjectNotFound*"
-	Test-Error ParallelNoFileParameter "Build parameter File is missing or empty.*@{Task='.'}*InvalidArgument*"
 	Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 	Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
 	Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*"
+}
+
+# v2.0.1 - It is fine to omit the key File in build parameters.
+task OmittedBuildParameterFile {
+	# new temp directory
+	$null = mkdir z -Force
+
+	# new build script; its default task calls two parallel builds in the same script
+	@'
+task t1 { 'out 1' }
+task t2 { 'out 2' }
+task . { Invoke-Builds @{Task='t1'}, @{Task='t2'} }
+'@ > z\.build.ps1
+
+	Push-Location z
+	$out = Invoke-Build | Out-String
+
+	Write-Build Magenta $out
+	assert ($out -like @'
+Build  *\z\.build.ps1
+/. (1/1):
+(1/2) *\z\.build.ps1
+(2/2) *\z\.build.ps1
+Build (1/2) *\z\.build.ps1:
+Build t1 *\z\.build.ps1
+/t1 (1/1):
+out 1
+Done /t1 00:00:*
+Build succeeded. 1 tasks, 0 errors, 0 warnings 00:00:*
+Build (1/2) *\z\.build.ps1 succeeded.
+Build (2/2) *\z\.build.ps1:
+Build t2 *\z\.build.ps1
+/t2 (1/1):
+out 2
+Done /t2 00:00:*
+Build succeeded. 1 tasks, 0 errors, 0 warnings 00:00:*
+Build (2/2) *\z\.build.ps1 succeeded.
+Tasks: 2 tasks, 0 errors, 0 warnings
+Builds succeeded. 2 builds, 0 failed 00:00:*
+Done /. 00:00:*
+Build succeeded. 3 tasks, 0 errors, 0 warnings 00:00:*
+'@)
+
+	Pop-Location
+	Remove-Item z -Recurse
 }
