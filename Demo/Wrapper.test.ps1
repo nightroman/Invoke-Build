@@ -4,7 +4,7 @@
 	Tests the wrapper script Build.ps1.
 
 .Example
-	Invoke-Build . Wrapper.build.ps1
+	Invoke-Build * Wrapper.test.ps1
 #>
 
 # Skip all preparations on WhatIf calls (when Tree and Comment are tested).
@@ -69,7 +69,7 @@ task InvokeBuildGetFile {
 
 	# make the hook script which gets a build file
 	#! `> $env:InvokeBuildGetFile` fails in [ ]
-	$path = "$BuildRoot\Property.build.ps1"
+	$path = "$BuildRoot\Property.test.ps1"
 	[System.IO.File]::WriteAllText($env:InvokeBuildGetFile, "'$path'")
 
 	# invoke (remove the test script, if any)
@@ -88,28 +88,28 @@ task InvokeBuildGetFile {
 
 task Tree {
 	# no task
-	$log = Build -File Wrapper.build.ps1 -Tree | Out-String
+	$log = Build -File Wrapper.test.ps1 -Tree | Out-String
 	$log
 	assert ($log -like '*ParentHasManyCandidates (.)*TreeAndComment (.)*    Tree (TreeAndComment)*        Tree (TreeAndComment)*')
 	assert (!$log.Contains('#'))
 
 	# ? task has the same effect
-	$log2 = Build -File Wrapper.build.ps1 -Tree | Out-String
+	$log2 = Build -File Wrapper.test.ps1 -Tree | Out-String
 	assert ($log2 -eq $log)
 }
 
 task Comment {
 	# -Comment works on its own
-	$log = Build . Wrapper.build.ps1 -Comment | Out-String
+	$log = Build . Wrapper.test.ps1 -Comment | Out-String
 	$log
 
 	# -Comment works with -Tree with the same effect
-	$log2 = Build . Wrapper.build.ps1 -Tree -Comment | Out-String
+	$log2 = Build . Wrapper.test.ps1 -Tree -Comment | Out-String
 	assert ($log2 -eq $log)
 
 	# ensure comments are there
 	$log = $log -replace '\r\n', '='
-	assert ($log.Contains('\Wrapper.build.ps1==# Call tests and clean.=# The comment is tested.=.=    ParentHasManyCandidates (.)=')) $log
+	assert ($log.Contains('\Wrapper.test.ps1==# Call tests and clean.=# The comment is tested.=.=    ParentHasManyCandidates (.)=')) $log
 	assert ($log.Contains('=    <#=    Call tree tests.=    The comment is tested.=    #>=    TreeAndComment (.)=        Tree (TreeAndComment)=')) $log
 }
 

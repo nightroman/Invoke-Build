@@ -7,6 +7,7 @@
 	# Choose break or continue at the task2
 	Invoke-Build . Checkpoint.build.ps1
 
+.Example
 	# Resume the broken build at the task2
 	Invoke-Build resume Checkpoint.build.ps1
 #>

@@ -85,7 +85,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 192 tasks, 37 errors, 1 warnings 00:00:15
+    Build completed with errors. 183 tasks, 37 errors, 1 warnings 00:00:15
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
@@ -110,8 +110,8 @@ The above command shows function names and makes their help available:
 Explore build scripts included into the package. With tutorial comments they
 show typical use cases and cover issues and mistakes.
 
-*Demo* scripts are good for getting familiar with the concepts but they are
-tests, not real build scripts. Some build scripts used in projects listed in
+*Demo* scripts are good for getting familiar with the concepts. But they are
+tests, not real build scripts. Some real project build scripts are listed in
 [here](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects).
 
 ## Credits

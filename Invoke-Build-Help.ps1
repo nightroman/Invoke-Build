@@ -8,6 +8,7 @@
 @{
 	command = 'Invoke-Build.ps1'
 	synopsis = 'Invoke-Build - PowerShell Task Scripting'
+
 	description = @'
 	Install: copy Invoke-Build.ps1 and Invoke-Build.ps1-Help.xml to the path.
 
@@ -113,6 +114,7 @@
 	argument containing the original data imported from clixml. It is called in
 	the script scope and normally restores script scope variables.
 '@
+
 	parameters = @{
 		Task = @'
 		One or more tasks to be invoked. If it is not specified, null, empty,
@@ -123,13 +125,17 @@
 
 		SPECIAL TASKS
 
-		* - Tells to invoke all root tasks. This is useful for scripts where
-		each task tests something. Such test tasks are often invoked together.
-
 		? - Tells to list the tasks with brief information without invoking. It
 		also checks tasks and throws errors on missing or cyclic references. If
 		it is used together with Result then tasks are returned as the property
 		All of the result object. ? sets WhatIf to $true.
+
+		* - Tells to invoke all root tasks. This is useful for scripts where
+		each task tests something. Such test tasks are often invoked together.
+
+		** - Invokes * for all files *.test.ps1 found recursively in the
+		current directory or a directory specified by the parameter File.
+		Other parameters except Result are not used.
 '@
 		File = @'
 		A build script which defines build tasks by Add-BuildTask (task).
@@ -212,6 +218,7 @@
 		it may check for $WhatIf and skip some actions.
 '@
 	}
+
 	inputs = @()
 	outputs = @(
 		@{
@@ -222,38 +229,45 @@
 '@
 		}
 	)
+
 	examples = @(
-		@{
-			code = {
-	# Invoke the default task in the default script:
+		@{code={
+	# Invoke the default task in the default script
+
 	Invoke-Build
 	Invoke-Build .
-			}
-		}
-		@{
-			code = {
-	# Invoke the specified tasks and script with parameters
-	# (the script .build.ps1 defines parameters by 'param', as usual)
+		}}
+
+		@{code={
+	# Invoke tasks Build and Test from .build.ps1 with parameters.
+	# The script .build.ps1 defines parameters by 'param' as usual.
+
 	Invoke-Build Build, Test .build.ps1 @{Log='log.txt'; WarningLevel=4 }
-			}
-		}
-		@{
-			code = {
-	# Show the tasks in the default script and the specified script:
+		}}
+
+		@{code={
+	# Show tasks in the default script and the specified script
+
 	Invoke-Build ?
 	Invoke-Build ? Project.build.ps1
-			}
-		}
-		@{
-			code = {
-	# Get the tasks without invoking (for listing, TabExpansion, etc.)
-	Invoke-Build ? -Result Tasks
-	$Tasks
-			}
-		}
-		@{
-			code = {
-	# Using the the build results (e.g. performance analysis)
+		}}
+
+		@{code={
+	# Get all tasks without invoking for listing, TabExpansion, etc.
+
+	Invoke-Build ? -Result Result
+	$Result.All
+		}}
+
+		@{code={
+	# Invoke all in Test1.test.ps1 and all in Tests\...\*.test.ps1
+
+	Invoke-Build * Test1.test.ps1
+	Invoke-Build ** Tests
+		}}
+
+		@{code={
+	# Using the build results, e.g. for performance analysis
 
 	# Invoke the build and keep results in the variable Result
 	Invoke-Build -Result Result
@@ -265,11 +279,10 @@
 		Name = 'Task'
 		Expression = {$_.Name + ' @ ' + $_.InvocationInfo.ScriptName}
 	}
-			}
-		}
-		@{
-			code = {
-	# Using the the build results (e.g. tasks summary)
+		}}
+
+		@{code={
+	# Using the build results, e.g. for tasks summary
 
 	try {
 		# Invoke the build and keep results in the variable Result
@@ -279,9 +292,9 @@
 		# Show task summary information after the build
 		$result.Tasks | Format-Table Elapsed, Name, Error -AutoSize
 	}
-			}
-		}
+		}}
 	)
+
 	links = @(
 		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
@@ -299,6 +312,7 @@
 @{
 	command = 'Add-BuildTask'
 	synopsis = 'Defines a build task and adds it to the internal task list.'
+
 	description = @'
 	Its recommended alias is 'task'. This is the main feature of build scripts.
 	At least one task must be added. It is used in the build script scope only.
@@ -306,6 +320,7 @@
 	In fact, this feature is literally all that build scripts really need.
 	Other build functions are just helpers, scripts do not have to use them.
 '@
+
 	parameters = @{
 		Name = @'
 		The task name. Wildcard characters are deprecated. Duplicated names are
@@ -381,8 +396,10 @@
 		used together with Inputs and Outputs. See Inputs for details.
 '@
 	}
+
 	inputs = @()
 	outputs = @()
+
 	links = @(
 		@{ text = 'Get-BuildError' }
 		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial' }
@@ -395,16 +412,19 @@
 @{
 	command = 'Get-BuildError'
 	synopsis = 'Gets an error of the specified task if the task has failed.'
+
 	description = @'
 	Its recommended alias is 'error'. It is used when some referenced tasks are
 	protected (@{Task=1}) and the current task is about to analyse their
 	potential errors.
 '@
+
 	parameters = @{
 		Task = @'
 		Name of the task which error is requested.
 '@
 	}
+
 	inputs = @()
 	outputs = @(
 		@{
@@ -414,6 +434,7 @@
 '@
 		}
 	)
+
 	links = @(
 		@{ text = 'Add-BuildTask' }
 	)
@@ -423,10 +444,12 @@
 @{
 	command = 'Assert-Build'
 	synopsis = 'Checks for a condition.'
+
 	description = @'
 	Its recommended alias is 'assert'. It checks for a condition and if it is
 	not true throws an error with an optional message text.
 '@
+
 	parameters = @{
 		Condition = @'
 		The condition.
@@ -435,6 +458,7 @@
 		A user friendly message describing the assertion condition.
 '@
 	}
+
 	inputs = @()
 	outputs = @()
 }
@@ -443,6 +467,7 @@
 @{
 	command = 'Get-BuildProperty'
 	synopsis = 'Gets PowerShell or environment variable or the default.'
+
 	description = @'
 	Its recommended alias is 'property'. It gets the first not null value of
 	these three: PowerShell variable, environment variable, specified default
@@ -451,6 +476,7 @@
 	CAUTION: Properties should be used sparingly with carefully chosen names
 	that unlikely can already exist and be not related to the build script.
 '@
+
 	parameters = @{
 		Name = @'
 		PowerShell or environment variable name.
@@ -461,6 +487,7 @@
 		then an error is thrown.
 '@
 	}
+
 	inputs = @()
 	outputs = @(
 		@{
@@ -470,19 +497,19 @@
 '@
 		}
 	)
+
 	examples = @(
-		@{
-			code = {
+		@{code={
 	# Inherit the existing value or throw an error
+
 	$OutputPath = property OutputPath
-			}
-		}
-		@{
-			code = {
+		}}
+
+		@{code={
 	# Get an existing value or use the default
+
 	$WarningLevel = property WarningLevel 4
-			}
-		}
+		}}
 	)
 }
 
@@ -490,8 +517,10 @@
 @{
 	command = 'Get-BuildVersion'
 	synopsis = 'Gets the current Invoke-Build version.'
+
 	inputs = @()
 	outputs = @{ type = 'System.Version' }
+
 	examples = @{
 		code = {assert ((Get-BuildVersion).Major -ge 2)}
 		remarks = @'
@@ -506,6 +535,7 @@ engine (version 2+).
 @{
 	command = 'Invoke-BuildExec'
 	synopsis = 'Invokes the command and checks for the $LastExitCode.'
+
 	description = @'
 	Its recommended alias is 'exec'. It invokes the specified script block
 	which is supposed to call an executable. Then the $LastExitCode is checked.
@@ -513,6 +543,7 @@ engine (version 2+).
 
 	It is common to call .NET tools, e.g. MSBuild. See Use-BuildAlias.
 '@
+
 	parameters = @{
 		Command = @'
 		A command that invokes an executable which exit code is checked. It is
@@ -524,6 +555,7 @@ engine (version 2+).
 		Valid exit codes (e.g. 0..3 for robocopy). The default is 0.
 '@
 	}
+
 	inputs = @()
 	outputs = @(
 		@{
@@ -533,14 +565,15 @@ engine (version 2+).
 '@
 		}
 	)
+
 	examples = @(
-		@{
-			code = {
-	# Call robocopy (0..3 are valid exit codes):
+		@{code={
+	# Call robocopy (0..3 are valid exit codes)
+
 	exec { robocopy Source Target /mir } (0..3)
-			}
-		}
+		}}
 	)
+
 	links = @(
 		@{ text = 'Use-BuildAlias' }
 	)
@@ -550,6 +583,7 @@ engine (version 2+).
 @{
 	command = 'Use-BuildAlias'
 	synopsis = '(use) Sets framework/directory tool aliases.'
+
 	description = @'
 	Its recommended alias is 'use'. Invoke-Build does not change the system
 	path in order to make framework tools available by names. This is not
@@ -567,6 +601,7 @@ engine (version 2+).
 		use Framework\v3.5 MSBuild
 		use Framework\v2.0.50727 MSBuild
 '@
+
 	parameters = @{
 		Path = @'
 		The tool directory. If it is like Framework* then it is assumed to be
@@ -580,17 +615,19 @@ engine (version 2+).
 		should be used later exactly as specified in here.
 '@
 	}
+
 	inputs = @()
 	outputs = @()
+
 	examples = @(
-		@{
-			code = {
+		@{code={
 	# Use .NET 4.0 tools MSBuild, csc, ngen. Then call MSBuild.
+
 	use Framework\v4.0.30319 MSBuild, csc, ngen
 	exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
-			}
-		}
+		}}
 	)
+
 	links = @(
 		@{ text = 'Invoke-BuildExec' }
 	)
@@ -600,10 +637,12 @@ engine (version 2+).
 @{
 	command = 'Write-Build'
 	synopsis = 'Writes colored text (if this makes sense for the output).'
+
 	description = @'
 	This function is used in order to output colored text (e.g. to a console).
 	Unlike Write-Host it is suitable for redirected output, e.g. to a file.
 '@
+
 	parameters = @{
 		Color = @'
 		[System.ConsoleColor] value or its string representation.
@@ -612,6 +651,7 @@ engine (version 2+).
 		Text to be printed using colors or just sent to the output.
 '@
 	}
+
 	inputs = @()
 	outputs = @(
 		@{
@@ -623,19 +663,20 @@ engine (version 2+).
 ### Get-BuildFile
 @{
 	command = 'Get-BuildFile'
-	synopsis = @'
-	Gets full path of the default build file in a directory.
-'@
+	synopsis = 'Gets full path of the default build file in a directory.'
+
 	description = @'
 	This function is not designed for build scripts and tasks. It is used
 	internally and exposed only for Get-BuildFileHook in wrapper scripts.
 '@
+
 	parameters = @{
 		Path = @'
 		A full directory path used to get the default build file. A file does
 		not have to be located in this directory.
 '@
 	}
+
 	inputs = @()
 	outputs = @{ type = 'String' }
 }
@@ -643,14 +684,14 @@ engine (version 2+).
 ### Invoke-Builds.ps1
 @{
 	command = 'Invoke-Builds.ps1'
-	synopsis = @'
-	Invokes parallel builds by Invoke-Build.ps1
-'@
+	synopsis = 'Invokes parallel builds by Invoke-Build.ps1'
+
 	description = @'
 	This script invokes build scripts simultaneously using Invoke-Build.ps1
 	which has to be in the same directory. Number of simultaneous builds is
 	limited by the number of processors by default.
 '@
+
 	parameters = @{
 		Build = @'
 		Build parameters defined as hashtables with these keys/data:
@@ -684,21 +725,23 @@ engine (version 2+).
 		Maximum number of builds invoked at the same time.
 '@
 	}
+
 	inputs = @()
 	outputs = @{
 		type = 'text'
 		description = 'Output of invoked builds and other log messages.'
 	}
+
 	examples = @(
 		@{
 			code = {
-				Invoke-Builds @(
-					@{File='Project1.build.ps1'}
-					@{File='Project2.build.ps1'; Task='MakeHelp'}
-					@{File='Project2.build.ps1'; Task='Build', 'Test'}
-					@{File='Project3.build.ps1'; Log='C:\TEMP\Project3.log'}
-					@{File='Project4.build.ps1'; Parameters=@{Configuration='Release'}}
-				)
+	Invoke-Builds @(
+		@{File='Project1.build.ps1'}
+		@{File='Project2.build.ps1'; Task='MakeHelp'}
+		@{File='Project2.build.ps1'; Task='Build', 'Test'}
+		@{File='Project3.build.ps1'; Log='C:\TEMP\Project3.log'}
+		@{File='Project4.build.ps1'; Parameters=@{Configuration='Release'}}
+	)
 			}
 			remarks = @'
 	Five parallel builds are invoked with various combinations of parameters.
@@ -707,6 +750,7 @@ engine (version 2+).
 '@
 		}
 	)
+
 	links = @(
 		@{ text = 'Invoke-Build' }
 	)

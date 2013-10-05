@@ -4,7 +4,7 @@
 	Tests parallel builds called by Invoke-Builds
 
 .Example
-	Invoke-Build * Parallel.build.ps1
+	Invoke-Build * Parallel.test.ps1
 #>
 
 . .\Shared.ps1
@@ -49,7 +49,7 @@ Four parallel builds of this test could be invoked as simple as this
 
 	Invoke-Builds @(
 		@{File='Dynamic.build.ps1'}
-		@{File='Protected.build.ps1'; Task='Error1'}
+		@{File='Protected.test.ps1'; Task='Error1'}
 		@{File='Dynamic.build.ps1'; Task='Task0'}
 		@{File='Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
 	)
@@ -61,7 +61,7 @@ techniques useful for advanced build result analysis.
 task Many {
 	# These build parameter hashes are not changed (to be tested).
 	$build0 = @{File='Dynamic.build.ps1'}
-	$build1 = @{File='Protected.build.ps1'; Task='Error1'}
+	$build1 = @{File='Protected.test.ps1'; Task='Error1'}
 	$build2 = @{File='Dynamic.build.ps1'; Task='Task0'}
 	$build3 = @{File='Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
 
@@ -95,7 +95,7 @@ task Many {
 	assert ($build[0].Result.Value)
 
 	# The call itself failed.
-	assert ($message -like "Failed builds:*Build: *\Protected.build.ps1*ERROR: Error1*At *\Protected.build.ps1:*")
+	assert ($message -like "Failed builds:*Build: *\Protected.test.ps1*ERROR: Error1*At *\Protected.test.ps1:*")
 
 	# Check each build error; note that three builds succeeded because the
 	# parallel build engine lets all builds to work, even if some fail.
@@ -181,7 +181,7 @@ task ParallelErrorCases `
 @{ParallelBadMaximumBuilds=1},
 @{ParallelBadParameters=1},
 {
-	Test-Error ParallelMissingEngine "Missing script '*\Invoke-Build.ps1'.*At *\Parallel.build.ps1:*ObjectNotFound*"
+	Test-Error ParallelMissingEngine "Missing script '*\Invoke-Build.ps1'.*At *\Parallel.test.ps1:*ObjectNotFound*"
 	Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 	Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
 	Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*"

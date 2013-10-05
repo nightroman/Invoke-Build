@@ -4,9 +4,9 @@
 	Example/test build script with a few use cases and tutorial comments.
 
 .Description
-	This build script invokes tests of typical use/problem cases. Most of them
-	are grouped by categories in the *.build.ps1 files in this directory. But
-	this script shows a few points of interest as well.
+	This script invokes tests of typical use/problem cases. They are grouped by
+	categories in other scripts in this directory. But this script shows a few
+	points of interest as well.
 
 	The build shows many errors and warnings because that is what it basically
 	tests. But the build itself should not fail, all errors should be caught.
@@ -59,13 +59,13 @@ task WhatIf {
 # "Invoke-Build ?" lists tasks:
 # 1) show tasks with brief information (just ?);
 # 2) get task list (use ? with the parameter Result).
-# The wrapper Build.ps1 uses ? and Result in order to show detailed task trees.
+# The Wrapper.test.ps1 uses ? and Result in order to show detailed task trees.
 task ListTask {
 	# show tasks
-	Invoke-Build ? Assert.build.ps1
+	Invoke-Build ? Assert.test.ps1
 
 	# get task list
-	Invoke-Build ? Assert.build.ps1 -Result Result
+	Invoke-Build ? Assert.test.ps1 -Result Result
 	assert ($Result.All.Count -eq 3)
 }
 
@@ -104,15 +104,14 @@ task ParamsValues2 ParamsValues1, {
 	"MyParam1='$MyParam1' MyValue1='$MyValue1' MyNewValue1='$MyNewValue1'"
 }
 
-# Test After and Before tasks.
-# * is used to invoke all tests.
-task Alter {
-	Invoke-Build * Alter.build.ps1
-}
+# Invoke all tasks in all *.test.ps1 scripts using the special task **.
+# (Another special task * is used to invoke all tasks in one build file).
+task AllTestScripts {
+	# ** invokes all *.test.ps1
+	Invoke-Build ** -Result Result
 
-# Test assert, the alias of Assert-Build.
-task Assert {
-	Invoke-Build . Assert.build.ps1
+	# Result can be used with **
+	assert ($Result.Tasks.Count -gt 0)
 }
 
 # Test persistent builds.
@@ -145,51 +144,9 @@ task Dynamic {
 	assert ($result.Tasks.Count -eq 5)
 }
 
-# Test event functions.
-task Events {
-	Invoke-Build . Events.build.ps1
-}
-
-# Test exec, the alias of Invoke-BuildExec.
-task Exec {
-	Invoke-Build . Exec.build.ps1
-}
-
 # Test incremental and partial incremental tasks.
 task Incremental {
 	Invoke-Build . Incremental.build.ps1
-}
-
-# Test invalid tasks.
-# * is used to invoke all tests.
-task Invalid {
-	Invoke-Build * Invalid.build.ps1
-}
-
-# Test parallel builds (Invoke-Builds.ps1).
-task Parallel {
-	Invoke-Build * Parallel.build.ps1
-}
-
-# Test property, the alias of Get-BuildProperty.
-task Property {
-	Invoke-Build . Property.build.ps1
-}
-
-# Test protected tasks (@{Task=1} notation).
-# * is used to invoke all tests.
-task Protected {
-	Invoke-Build * Protected.build.ps1
-}
-
-# Test use, the alias of Use-BuildAlias.
-task Use {
-	Invoke-Build . Use.build.ps1
-}
-
-# Test the wrapper script Build.ps1.
-task Wrapper {
-	Invoke-Build . Wrapper.build.ps1
 }
 
 # Test the default parameter.
@@ -210,7 +167,7 @@ task TestExitCode {
 	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Dynamic.build.ps1
 	assert ($LastExitCode -eq 1)
 
-	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 AssertDefault Assert.build.ps1
+	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 AssertDefault Assert.test.ps1
 	assert ($LastExitCode -eq 1)
 }
 
@@ -328,20 +285,11 @@ task ShowHelp {
 task Tests `
 Dummy1,
 Dummy2,
-Alter,
-Assert,
+AllTestScripts,
 Checkpoint,
 Conditional,
 Dynamic,
-Events,
-Exec,
 Incremental,
-Invalid,
-Property,
-Parallel,
-Protected,
-Use,
-Wrapper,
 TestDefaultParameter,
 TestExitCode,
 TestSelfAlias,

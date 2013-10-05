@@ -73,7 +73,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.0.1'}
+function Get-BuildVersion{[Version]'2.1.0'}
 if($MyInvocation.InvocationName -eq '.'){return @'
 Invoke-Build 2.0.1
 Copyright (c) 2011-2013 Roman Kuzmin
@@ -209,17 +209,22 @@ function *Task{
 $ErrorActionPreference='Stop'
 ${private:-cd}=*FP
 ${private:-xt}=$null
-if($Checkpoint){$Checkpoint=*FP $Checkpoint}
-try{
-	if($File){
-		if(!([System.IO.File]::Exists(($BuildFile=*FP $File)))){throw "Missing script '$BuildFile'."}
-	}elseif($Checkpoint -and !($Task -or $Parameters)){
-		$Task, $BuildFile, $Parameters, ${-xt}, ${private:-xd}=Import-Clixml $Checkpoint
-	}elseif(!($BuildFile=Get-BuildFile ${-cd})){
-		if(!($BuildFile=if(Get-Command [G]et-BuildFileHook){Get-BuildFileHook})){throw 'Missing default script.'}
-	}
-}catch{*TE $_ 13}
-$BuildRoot=Split-Path $BuildFile
+if($Task -eq '**'){
+	$BuildFile=Get-ChildItem -LiteralPath $(if($File){$File}else{'.'}) -Recurse *.test.ps1
+	$BuildRoot=${-cd}
+}else{
+	if($Checkpoint){$Checkpoint=*FP $Checkpoint}
+	try{
+		if($File){
+			if(!([System.IO.File]::Exists(($BuildFile=*FP $File)))){throw "Missing script '$BuildFile'."}
+		}elseif($Checkpoint -and !($Task -or $Parameters)){
+			$Task, $BuildFile, $Parameters, ${-xt}, ${private:-xd}=Import-Clixml $Checkpoint
+		}elseif(!($BuildFile=Get-BuildFile ${-cd})){
+			if(!($BuildFile=if(Get-Command [G]et-BuildFileHook){Get-BuildFileHook})){throw 'Missing default script.'}
+		}
+	}catch{*TE $_ 13}
+	$BuildRoot=Split-Path $BuildFile
+}
 
 function Enter-Build{} function Exit-Build{}
 function Enter-BuildJob{} function Exit-BuildJob{}
@@ -248,30 +253,34 @@ Remove-Variable Task,File,Parameters,Checkpoint,Result,Safe
 Write-Build 2 "Build $($BuildTask -join ', ') $BuildFile"
 ${private:-r}=0
 try{
-	*SL
-	if($_){. $BuildFile @_}else{. $BuildFile}
-	if(!${-a}.Count){throw "No tasks in '$BuildFile'."}
-	try{foreach(${private:-} in ${-a}.Values){if(${-}.Before){${-}.Before|*AB ${-}.Name 1} if(${-}.After){${-}.After|*AB ${-}.Name}}}
-	catch{throw *EI "Task '$(${-}.Name)': $_" ${-}}
+	if($BuildTask -eq '**'){
+		foreach($_ in $BuildFile){Invoke-Build * $_.FullName}
+	}else{
+		*SL
+		if($_){. $BuildFile @_}else{. $BuildFile}
+		if(!${-a}.Count){throw "No tasks in '$BuildFile'."}
+		try{foreach(${private:-} in ${-a}.Values){if(${-}.Before){${-}.Before|*AB ${-}.Name 1} if(${-}.After){${-}.After|*AB ${-}.Name}}}
+		catch{throw *EI "Task '$(${-}.Name)': $_" ${-}}
 
-	if('?' -eq $BuildTask){
-		${-a}.Keys|*Try
-		if(!${-Result}){${-a}.Values|%{"$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)"}}
-		return
-	}
-	if('*' -eq $BuildTask){
-		$BuildTask=foreach($_ in ${-a}.Keys){foreach(${-} in ${-a}.Values){if(${-}.Job -contains $_){$_|*Try; $_=@(); break}} $_}
-	}elseif(!$BuildTask -or '.' -eq $BuildTask){
-		$BuildTask=if(${-a}['.']){'.'}else{${-a}.Item(0).Name}
-	}
-	$BuildTask|*Try
+		if('?' -eq $BuildTask){
+			${-a}.Keys|*Try
+			if(!${-Result}){${-a}.Values|%{"$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)"}}
+			return
+		}
+		if('*' -eq $BuildTask){
+			$BuildTask=foreach($_ in ${-a}.Keys){foreach(${-} in ${-a}.Values){if(${-}.Job -contains $_){$_|*Try; $_=@(); break}} $_}
+		}elseif(!$BuildTask -or '.' -eq $BuildTask){
+			$BuildTask=if(${-a}['.']){'.'}else{${-a}.Item(0).Name}
+		}
+		$BuildTask|*Try
 
-	try{
-		. *UC Enter-Build
-		if(${-xt}){foreach($_ in ${-xt}){${-a}[$_].Elapsed=[TimeSpan]::Zero} . *UC Import-Build ${-xd}}
-		foreach($_ in $BuildTask){*Task $_}
-		if($_=${*}.Checkpoint){[System.IO.File]::Delete($_)}
-	}finally{. *UC Exit-Build}
+		try{
+			. *UC Enter-Build
+			if(${-xt}){foreach($_ in ${-xt}){${-a}[$_].Elapsed=[TimeSpan]::Zero} . *UC Import-Build ${-xd}}
+			foreach($_ in $BuildTask){*Task $_}
+			if($_=${*}.Checkpoint){[System.IO.File]::Delete($_)}
+		}finally{. *UC Exit-Build}
+	}
 	${-r}=1
 }catch{
 	${-r}=2

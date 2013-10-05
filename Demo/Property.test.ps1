@@ -7,7 +7,7 @@
 	This script should be called with no parameters.
 
 .Example
-	Invoke-Build . Property.build.ps1
+	Invoke-Build * Property.test.ps1
 #>
 
 param
@@ -39,5 +39,5 @@ task MissingProperty {
 
 # Test error cases.
 task . @{MissingProperty=1}, {
-	Test-Error MissingProperty "Missing variable '_111126_181750'.*At *\Property.build.ps1:*ObjectNotFound*"
+	Test-Error MissingProperty "Missing variable '_111126_181750'.*At *\Property.test.ps1:*ObjectNotFound*"
 }

@@ -8,7 +8,7 @@
 	calling the location is restored to $BuildRoot.
 
 .Example
-	Invoke-Build . Events.build.ps1
+	Invoke-Build * Events.test.ps1
 #>
 
 Set-Location $HOME

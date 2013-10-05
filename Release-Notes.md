@@ -1,6 +1,16 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.1.0
+
+New special task `**` invokes `*` (all tasks, normally tests) for all files
+`*.test.ps1` found recursively in the current directory or a directory
+specified by the parameter `File`. It simplifies invocation of tests
+represented by tasks in several scripts in a directory tree.
+
+Renamed some test scripts to `*.test.ps1` and made them called automatically
+with the new special task `**`.
+
 ## v2.0.1
 
 Minor improvements in *Invoke-Builds.ps1*. The key `File` in parameters is now

@@ -9,7 +9,7 @@
 	script creates and tests temporary scripts, one issue each.
 
 .Example
-	Invoke-Build * Invalid.build.ps1
+	Invoke-Build * Invalid.test.ps1
 #>
 
 . .\Shared.ps1

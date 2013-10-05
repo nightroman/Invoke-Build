@@ -16,11 +16,11 @@
 	The script also shows how to use script variables shared between tasks.
 
 .Example
-	># Debug configuration
+	# Debug configuration
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
 
 .Example
-	># Release configuration
+	# Release configuration
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
 #>
 

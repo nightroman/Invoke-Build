@@ -11,7 +11,7 @@
 	* Use of several frameworks simultaneously.
 
 .Example
-	Invoke-Build . Use.build.ps1
+	Invoke-Build * Use.test.ps1
 #>
 
 . .\Shared.ps1

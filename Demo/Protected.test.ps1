@@ -4,7 +4,7 @@
 	Example of protected task jobs (@{Task=1} notation).
 
 .Example
-	Invoke-Build * Protected.build.ps1
+	Invoke-Build * Protected.test.ps1
 #>
 
 . .\Shared.ps1
@@ -128,7 +128,7 @@ task AlmostSurvives AlmostSurvives1, @{AlmostSurvives2=1}
 
 # Trigger tasks and check for expected results.
 task TestAlmostSurvives @{AlmostSurvives=1}, {
-	Test-Error AlmostSurvives "Error4*At *\Protected.build.ps1*'Error4'*OperationStopped*"
+	Test-Error AlmostSurvives "Error4*At *\Protected.test.ps1*'Error4'*OperationStopped*"
 }
 
 ### DependsOnFailedDirectlyAndIndirectly
