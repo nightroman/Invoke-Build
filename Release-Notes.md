@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.1.1
+
+Adapted Invoke-Build for `Set-StrictMode -Version Latest`
+
 ## v2.1.0
 
 New special task `**` invokes `*` (all tasks, normally tests) for all files

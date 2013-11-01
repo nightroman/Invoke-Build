@@ -17,8 +17,9 @@ param
 	[switch]$SkipTestDiff
 )
 
-# Ensure Invoke-Build works fine in strict mode.
-Set-StrictMode -Version 2
+# Ensure Invoke-Build works in the most strict mode.
+# Version Latest checks indexes out of array bounds.
+Set-StrictMode -Version Latest
 
 # Import markdown tasks ConvertMarkdown and RemoveMarkdownHtml.
 # <https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks>

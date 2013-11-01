@@ -73,7 +73,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.1.0'}
+function Get-BuildVersion{[Version]'2.1.1'}
 if($MyInvocation.InvocationName -eq '.'){return @'
 Invoke-Build 2.0.1
 Copyright (c) 2011-2013 Roman Kuzmin
@@ -98,7 +98,10 @@ function *FP($_)
 function *SL($_=$BuildRoot)
 {Set-Location -LiteralPath $_ -ErrorAction 1}
 
-function *UC
+function *U1
+{if(!$WhatIf){*SL; . $args[0]}}
+
+function *U2
 {if(!$WhatIf){*SL; . $args[0] $args[1]}}
 
 function *II($_)
@@ -156,7 +159,8 @@ function *IO{
 }
 
 function *Task{
-	${private:-}=${*}.All[$args[0]]; ${private:-p}="$($args[1])/$(${-}.Name)"
+	${private:-}, ${private:-p}=$args
+	${-}=${*}.All[${-}]; ${-p}="${-p}/$(${-}.Name)"
 	if(${-}.Error){Write-Build 8 "${-p} failed."; return}
 	if(${-}.Elapsed){Write-Build 8 "Done ${-p}"; return}
 
@@ -166,7 +170,7 @@ function *Task{
 	${private:-n}=0; ${private:-a}=${-}.Job; ${private:-i}=[int]($null -ne ${-}.Inputs)
 	${-}.Started=[DateTime]::Now
 	try{
-		. *UC Enter-BuildTask ${-}
+		. *U2 Enter-BuildTask ${-}
 		foreach(${private:-j} in ${-a}){
 			++${-n}
 			if(${-j} -is [string]){
@@ -190,11 +194,11 @@ function *Task{
 				}
 			}catch{${-}.Error=$_; throw}
 			finally{*SL; . Exit-BuildJob ${-} ${-n}}
-			if(${-a}[1]){Write-Build 6 "Done ${-m}"}
+			if(${-a}.Count -ge 2){Write-Build 6 "Done ${-m}"}
 		}
 		${-}.Elapsed=$_=[DateTime]::Now - ${-}.Started
 		Write-Build 6 "Done ${-p} $_"
-		if($_=${*}.Checkpoint){$(,$BuildTask; $BuildFile; ${*}.Parameters; ,@(${*}.All.Values|%{if($_.Elapsed){$_.Name}}); *UC Export-Build)|Export-Clixml $_}
+		if($_=${*}.Checkpoint){$(,$BuildTask; $BuildFile; ${*}.Parameters; ,@(${*}.All.Values|%{if($_.Elapsed){$_.Name}}); *U1 Export-Build)|Export-Clixml $_}
 	}catch{
 		Write-Build 14 (*II ${-})
 		${-}.Error=$_; ${-}.Elapsed=[DateTime]::Now - ${-}.Started
@@ -202,7 +206,7 @@ function *Task{
 		throw
 	}finally{
 		$null=${*}.Tasks.Add(${-})
-		. *UC Exit-BuildTask ${-}
+		. *U2 Exit-BuildTask ${-}
 	}
 }
 
@@ -275,11 +279,11 @@ try{
 		$BuildTask|*Try
 
 		try{
-			. *UC Enter-Build
-			if(${-xt}){foreach($_ in ${-xt}){${-a}[$_].Elapsed=[TimeSpan]::Zero} . *UC Import-Build ${-xd}}
+			. *U1 Enter-Build
+			if(${-xt}){foreach($_ in ${-xt}){${-a}[$_].Elapsed=[TimeSpan]::Zero} . *U2 Import-Build ${-xd}}
 			foreach($_ in $BuildTask){*Task $_}
 			if($_=${*}.Checkpoint){[System.IO.File]::Delete($_)}
-		}finally{. *UC Exit-Build}
+		}finally{. *U1 Exit-Build}
 	}
 	${-r}=1
 }catch{
