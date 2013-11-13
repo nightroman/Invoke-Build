@@ -5,13 +5,8 @@
 #>
 
 <#
-.Synopsis
-	Formats error information.
-
-.Description
-	It replaces formatting by Out-String which does not work in strict mode
-	with some hosts due to internal errors:
-	https://connect.microsoft.com/PowerShell/feedback/details/708182
+Formats the error safely. Out-String may not work in strict mode:
+https://connect.microsoft.com/PowerShell/feedback/details/708182
 #>
 function Format-Error($Record)
 {
@@ -22,47 +17,26 @@ $($Record.InvocationInfo.PositionMessage.Trim())
 "@
 }
 
-<#
-.Synopsis
-	Invokes a failing build and compares the error with a pattern.
-#>
-function Test-Issue($Task, $File, $ExpectedPattern)
+# Invokes the failing build and compares the error with a sample.
+function Test-Issue($Task, $File, $Sample)
 {
 	$message = ''
 	try { Invoke-Build $Task $File }
 	catch { $message = Format-Error $_ }
 	Write-Build Magenta $message
-	if ($message -notlike $ExpectedPattern) {
-		Write-Error -ErrorAction Stop @"
-Expected pattern [
-$ExpectedPattern
-]
-Actual error [
-$message
-]
-"@
+	if ($message -notlike $Sample) {
+		Write-Error -ErrorAction Stop "Different errors:`n Sample : $Sample`n Result : $message"
 	}
 }
 
-<#
-.Synopsis
-	Checks a task error for an expected pattern.
-#>
-function Test-Error($Task, $ExpectedPattern)
+# Checks the task for its error and compares it with a sample.
+function Test-Error($Task, $Sample)
 {
 	$e = error $Task
 	if (!$e) {Write-Error -ErrorAction Stop "Task '$Task' has not failed."}
 
 	$message = Format-Error $e
-	if ($message -notlike $ExpectedPattern) {
-		Write-Error -ErrorAction Stop @"
-Task '$Task' error:
-Expected pattern [
-$ExpectedPattern
-]
-Actual error [
-$message
-]
-"@
+	if ($message -notlike $Sample) {
+		Write-Error -ErrorAction Stop "Task '$Task': different error:`n Sample : $Sample`n Result : $message"
 	}
 }

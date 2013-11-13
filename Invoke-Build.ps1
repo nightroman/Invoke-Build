@@ -60,10 +60,14 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [Parameter(Mandatory=1)][string[]]$Name){
+function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name){
 	try{
-		$d=if($Path -like 'Framework*'){"$env:windir\Microsoft.NET\$Path"}else{*FP $Path}
-		if(![System.IO.Directory]::Exists($d)){throw "Missing directory '$d'."}
+		$d=switch -regex ($Path){
+			'^\d+\.' {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$Path", 'MSBuildToolsPath', '')}
+			'^Framework' {"$env:windir\Microsoft.NET\$Path"}
+			default {*FP $Path}
+		}
+		if(![System.IO.Directory]::Exists($d)){throw "Cannot resolve '$Path'."}
 	}catch{*TE $_ 5}
 	foreach($_ in $Name){Set-Alias $_ (Join-Path $d $_) -Scope 1}
 }
@@ -73,7 +77,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.1.1'}
+function Get-BuildVersion{[Version]'2.2.0'}
 if($MyInvocation.InvocationName -eq '.'){return @'
 Invoke-Build 2.0.1
 Copyright (c) 2011-2013 Roman Kuzmin

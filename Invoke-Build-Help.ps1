@@ -595,20 +595,25 @@ engine (version 2+).
 	scope aliases. But it can be called from tasks in order to use more tools
 	including other frameworks or tool directories.
 
-	MSBuild is one of frequently used tools. Its samples:
+	MSBuild is one of frequently used tools. Examples:
 
-		use Framework\v4.0.30319 MSBuild
-		use Framework\v3.5 MSBuild
+		use 4.0 MSBuild
 		use Framework\v2.0.50727 MSBuild
 '@
 
 	parameters = @{
 		Path = @'
-		The tool directory. If it is like Framework* then it is assumed to be
-		relative to Microsoft.NET in the Windows directory. Otherwise it is a
-		full or relative literal path of any directory, not necessarily .NET.
+		Specifies the tools directory.
 
-		Examples: Framework\v4.0.30319, Framework\v2.0.50727, .\Tools
+		If it starts with digits followed by a dot then it is assumed to be a
+		MSBuild version and the path is taken from the registry.
+
+		If it is like Framework* then it is assumed to be a path relative to
+		Microsoft.NET in the Windows directory.
+
+		Otherwise it is a full or relative literal path of any directory.
+
+		Examples: 4.0, Framework\v4.0.30319, Framework\v2.0.50727, .\Tools
 '@
 		Name = @'
 		Tool names to set aliases for. These names also become aliases and they

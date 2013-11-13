@@ -1,6 +1,11 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.2.0
+
+`use` (`Use-BuildAlias`) accepts MSBuild version strings (e.g. `'4.0'`,
+`'2.0'`) and resolves them to paths using information from the registry.
+
 ## v2.1.1
 
 Adapted Invoke-Build for `Set-StrictMode -Version Latest`
