@@ -49,14 +49,14 @@ tools. But build flow, script structure, and main concepts are almost the same.
 ## Quick Start
 
 **Step 1:**
-Invoke-Build is distributed as a NuGet package. An easy way to get and update
-it is [NuGet.exe Command Line](http://nuget.codeplex.com/releases):
+Invoke-Build is distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
+Download it to the current location as the directory *"Invoke-Build"* by this PowerShell command:
 
-    NuGet install Invoke-Build
+    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.github.com/nightroman/Invoke-Build/master/Download.ps1')
 
-This command checks for the latest available version, downloads, and unzips the
-package to a directory named *Invoke-Build.(version)*. The scripts and other
-files are located in its subdirectory *tools*.
+Alternatively, download it by NuGet tools or [directly](http://nuget.org/api/v2/package/Invoke-Build).
+In the latter case rename the package to *".zip"* and unzip. Use the package
+subdirectory *"tools"*.
 
 Copy the script *Invoke-Build.ps1*, the help file *Invoke-Build-Help.xml*, and
 optionally other scripts to one of the directories included in the system path
