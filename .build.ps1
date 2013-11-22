@@ -99,6 +99,11 @@ Clean
 
 # Make the NuGet package.
 task NuGet Package, {
+	# get and test version
+	$version = Get-BuildVersion
+	$r = Select-String -SimpleMatch "Invoke-Build $version" -Path Invoke-Build.ps1
+	assert ($r) 'Missing or outdated line Invoke-Build <version>.'
+
 	$text = @'
 Invoke-Build introduces task based programming in PowerShell. It invokes tasks
 from scripts written in PowerShell with domain-specific language. This process
@@ -110,7 +115,7 @@ is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>Invoke-Build</id>
-		<version>$(Get-BuildVersion)</version>
+		<version>$version</version>
 		<authors>Roman Kuzmin</authors>
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>

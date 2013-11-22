@@ -32,6 +32,8 @@
 		used together with the switch Tree or on its own.
 .Parameter Summary
 		Tells to show task summary information after building.
+.Parameter NoExit
+		Tells to prompt "Press enter to exit".
 
 .Inputs
 	None.
@@ -48,7 +50,8 @@ param
 	[switch]$WhatIf,
 	[switch]$Tree,
 	[switch]$Comment,
-	[switch]$Summary
+	[switch]$Summary,
+	[switch]$NoExit
 )
 
 ### Hook
@@ -69,7 +72,8 @@ $private:_Checkpoint = $Checkpoint
 $private:_Tree = $Tree
 $private:_Comment = $Comment
 $private:_Summary = $Summary
-Remove-Variable Task, File, Parameters, Checkpoint, Tree, Comment, Summary
+$private:_NoExit = $NoExit
+Remove-Variable Task, File, Parameters, Checkpoint, Tree, Comment, Summary, NoExit
 
 try { # To amend errors
 
@@ -178,4 +182,6 @@ finally {
 } catch {
 	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
 	$PSCmdlet.ThrowTerminatingError($_)
+} finally {
+	if ($_NoExit) { Read-Host 'Press enter to exit' }
 }

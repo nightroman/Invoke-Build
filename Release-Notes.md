@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.3.0
+
+`Build.ps1`
+
+New switch `NoExit` tells to prompt "Press enter to exit".
+
 ## v2.2.0
 
 `use` (`Use-BuildAlias`) accepts MSBuild version strings (e.g. `'4.0'`,
