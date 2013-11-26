@@ -41,7 +41,7 @@
 	[1] Write-Warning is redefined internally in order to count warnings in
 	tasks, build and other scripts. But warnings in modules are not counted.
 
-	[2] Exposed for Get-BuildFileHook.
+	[2] Exists only as a pattern for wrappers.
 
 	SPECIAL ALIASES
 
@@ -151,10 +151,6 @@
 		If it is not specified then Invoke-Build looks for "*.build.ps1" files
 		in the current location. A single file is used as the script. If there
 		are more files then ".build.ps1" is used.
-
-		If the file is not found the command Get-BuildFileHook is called if it
-		exists. It gets full path of an existing build file for the current
-		location, e.g. when it is not suitable to have a build file there.
 '@
 		Parameters = @'
 		A hashtable of parameters passed in the build script. Scripts define
@@ -680,7 +676,7 @@ engine (version 2+).
 
 	description = @'
 	This function is not designed for build scripts and tasks. It is used
-	internally and exposed only for Get-BuildFileHook in wrapper scripts.
+	internally and exists only as a pattern to follow for wrapper scripts.
 '@
 
 	parameters = @{

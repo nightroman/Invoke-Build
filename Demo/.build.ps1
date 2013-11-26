@@ -212,7 +212,6 @@ task TestFunctions {
 		'Export-Build'
 		'Get-BuildError'
 		'Get-BuildFile'
-		'Get-BuildFileHook'
 		'Get-BuildProperty'
 		'Get-BuildVersion'
 		'Import-Build'

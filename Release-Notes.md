@@ -3,20 +3,56 @@ Invoke-Build Release Notes
 
 ## v2.4.0
 
+**Dynamic build script parameters in Build.ps1**
+
+If a build script parameters do not intersect with *Build.ps1* parameters then
+they can be specified directly for *Build.ps1*.
+
+Example. If a build script parameters are
+
+    param
+    (
+        $Platform = 'Win32',
+        $Configuration = 'Release'
+    )
+
+then it is fine to call it naturally
+
+    Build -Platform x64 -Configuration Debug
+
+instead of not so easy to type
+
+    Build -Parameters @{Platform = 'x64'; Configuration = 'Debug'}
+
+Note that TabExpansion works with dynamic parameters.
+
+For now dynamic parameters are used by the interactive wrapper *Build.ps1*. If
+this concept works fine then it might be propagated to *Invoke-Build.ps1* as
+well. In this case `Parameters` will be dropped.
+
+**TabExpansionProfile.Invoke-Build.ps1**
+
+This new script is `TabExpansion2` profile with custom completers for
+*Invoke-Build.ps1* and *Build.ps1*. It can be used either directly with
+[TabExpansion2.ps1](https://farnet.googlecode.com/svn/trunk/PowerShellFar/TabExpansion2.ps1)
+or slightly adapted for other replacements of build-in `TabExpansion2`.
+It completes arguments of parameters *Task* (task names from a build file) and
+*File* (normally suggests available *.build.ps1* and *.test.ps1* files).
+
 **Warning on script output**
 
 Output from scripts on adding tasks is treated as unexpected. It is intercepted
-and written as a warning. Firstly, this helps to catch common mistakes like
-below: the script outputs a script block instead of adding a task with it:
+and written as a warning. Firstly, this catches a common mistake. Example: the
+script outputs a script block instead of adding a task with it
 
     task Task1
     {
         ...
     }
 
-Secondly, script output produces noise data on getting tasks for analysis.
+Secondly, this avoids noise data on getting tasks for analysis.
 
-**New special task `??`**
+**New special task ??**
 
 The task `??` is used to get tasks without invoking. It replaces the old not so
 easy to use approach. This new simple code
@@ -30,9 +66,9 @@ is used instead of
 
 The task `?` is now used only to show brief task information.
 
-This change does not affect normal build script scenarios. But some wrapper
-scripts which get tasks for analysis like *Build.ps1*, *Show-BuildGraph.ps1*,
-*TabExpansion* should be upgraded.
+This change does not affect normal build script scenarios. But wrapper scripts
+which get tasks for analysis like *Build.ps1*, *Show-BuildGraph.ps1* should be
+upgraded.
 
 **Combined special tasks**
 
@@ -46,9 +82,16 @@ Get task dictionaries for all *.test.ps1* files:
 
     Invoke-Build ??, **
 
-Note that the interactive helper *Build.ps1* supports these new features. In
-particular it can be used now for getting task dictionaries (it was able only
-to display, analyse, and etc. but not to return).
+Note that the helper *Build.ps1* supports these new features. In particular it
+can be used now for getting task dictionaries (it was able only to display,
+analyse, and etc. but not to return).
+
+**Other changes**
+
+The `Get-BuildFileHook` is dropped. Wrapper scripts should provide a file if
+the default is missing. They can use a copy of the function `Get-BuildFile`.
+This approach seems to be simple and natural comparing with a callback. For
+example, see how *Build.ps1* uses `Get-BuildFile` and extends it.
 
 ## v2.3.0
 

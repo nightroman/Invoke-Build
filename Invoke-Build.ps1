@@ -228,7 +228,7 @@ if($Task -eq '**'){
 		}elseif($Checkpoint -and !($Task -or $Parameters)){
 			$Task, $BuildFile, $Parameters, ${-xt}, ${private:-xd}=Import-Clixml $Checkpoint
 		}elseif(!($BuildFile=Get-BuildFile ${-cd})){
-			if(!($BuildFile=if(Get-Command [G]et-BuildFileHook){Get-BuildFileHook})){throw 'Missing default script.'}
+			throw 'Missing default script.'
 		}
 	}catch{*TE $_ 13}
 	$BuildRoot=Split-Path $BuildFile

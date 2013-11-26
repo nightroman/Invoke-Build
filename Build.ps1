@@ -7,6 +7,9 @@
 	This script calls Invoke-Build.ps1 with additional options.
 	It is designed for mostly interactive use in command lines.
 
+	Dynamic script parameters. If a build script parameters do not conflict
+	with Build.ps1 parameters then they can be specified for Build.ps1 itself.
+
 .Parameter Task
 		See: help Invoke-Build -Parameter Task
 .Parameter File
@@ -19,6 +22,7 @@
 		in all parent directories of the current.
 .Parameter Parameters
 		See: help Invoke-Build -Parameter Parameters
+		It cannot be used together with dynamic parameters.
 .Parameter Checkpoint
 		See: help Invoke-Build -Parameter Checkpoint
 .Parameter WhatIf
@@ -53,135 +57,187 @@ param
 	[switch]$Summary,
 	[switch]$NoExit
 )
+DynamicParam {
+	$private:names = 'Task', 'File', 'Parameters', 'Checkpoint', 'WhatIf', 'Tree', 'Comment', 'Summary', 'NoExit'
 
-### Hook
-function Get-BuildFileHook {
-	if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
-		if ($_ = & $env:InvokeBuildGetFile) {return $_}
-	}
-	for($dir = Split-Path $PSCmdlet.GetUnresolvedProviderPathFromPSPath(''); $dir; $dir = Split-Path $dir) {
-		if ($_ = Get-BuildFile $dir) {return $_}
-	}
-}
+	function Get-BuildFile($Path)
+	{if(($_=[System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1){$_}else{$_ -like '*\.build.ps1'}}
 
-# Hide variables
-$private:_Task = $Task
-$private:_File = $File
-$private:_Parameters = $Parameters
-$private:_Checkpoint = $Checkpoint
-$private:_Tree = $Tree
-$private:_Comment = $Comment
-$private:_Summary = $Summary
-$private:_NoExit = $NoExit
-$private:query = $Task -eq '?' -or $Task -eq '??'
-Remove-Variable Task, File, Parameters, Checkpoint, Tree, Comment, Summary, NoExit
-
-try { # To amend errors
-
-### Show tree
-if ($_Tree -or $_Comment) {
-	# get tasks
-	$tasks = Invoke-Build ?? -File:$_File -Parameters:$_Parameters
-
-	function ShowTaskTree($Task, $Step, $Comment)
-	{
-		if ($Step -eq 0) {''}
-		$tab = '    ' * $Step
-		++$Step
-
-		# comment
-		if ($Comment) {
-			foreach($_ in GetTaskComment $Task) {
-				if ($_) {$tab + $_}
-			}
+	try {
+		# resolve File
+		$File = Get-Variable -Name [F]ile -ValueOnly -Scope 0
+		if ($File) {
+			$File = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($File)
+			if (![System.IO.File]::Exists($File)) {throw "Missing script '$File'."}
 		}
-
-		# name, parents
-		$info = $tab + $Task.Name
-		$reference = $references[$Task]
-		if ($reference.Count) {
-			$info += ' (' + (($reference.Keys | Sort-Object) -join ', ') + ')'
-		}
-		$info
-
-		# task jobs
-		foreach($_ in $Task.Job) {
-			if ($_ -is [string]) {
-				ShowTaskTree $tasks[$_] $Step $Comment
+		else {
+			if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
+				$File = & $env:InvokeBuildGetFile
 			}
-			else {
-				$tab + '    {}'
-			}
-		}
-	}
-
-	# gets comments
-	$file2docs = @{}
-	function GetTaskComment($Task) {
-		$file = $Task.InvocationInfo.ScriptName
-		$docs = $file2docs[$file]
-		if (!$docs) {
-			$docs = New-Object System.Collections.Specialized.OrderedDictionary
-			$file2docs[$file] = $docs
-			foreach($token in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $file), [ref]$null)) {
-				if ($token.Type -eq 'Comment') {
-					$docs[[object]$token.EndLine] = $token.Content
+			if (!$File) {
+				for($_ = $PSCmdlet.GetUnresolvedProviderPathFromPSPath(''); $_; $_ = Split-Path $_) {
+					if ($File = Get-BuildFile $_) {break}
 				}
 			}
+			if (!$File) {throw 'Missing default script.'}
 		}
-		$rem = ''
-		for($1 = $Task.InvocationInfo.ScriptLineNumber - 1; $1 -ge 1; --$1) {
-			$doc = $docs[[object]$1]
-			if (!$doc) {break}
-			$rem = $doc.Replace("`t", '    ') + "`n" + $rem
+		$private:defaultFile = $File
+
+		# Parameters?
+		if (Get-Variable -Name [P]arameters -Scope 0) {return}
+
+		# get command
+		$private:command = Get-Command -Name $File -CommandType ExternalScript -ErrorAction 1
+		if (!$command.Parameters) {return}
+
+		# dynamic parameters
+		$private:param = New-Object Management.Automation.RuntimeDefinedParameterDictionary
+		$private:attrs = New-Object Collections.ObjectModel.Collection[Attribute]
+		$attrs.Add((New-Object Management.Automation.ParameterAttribute))
+		foreach($_ in $command.Parameters.Values) {
+			if ($names -notcontains $_.Name) {
+				$param.Add($_.Name, (New-Object Management.Automation.RuntimeDefinedParameter $_.Name, $_.ParameterType, $attrs))
+			}
 		}
-		[regex]::Split($rem.TrimEnd(), '[\r\n]+')
+		$param
 	}
-
-	# references
-	$references = @{}
-	foreach($it in $tasks.Values) {
-		$references[$it] = @{}
+	catch {
+		$PSCmdlet.ThrowTerminatingError($_)
 	}
-	foreach($it in $tasks.Values) { foreach($job in $it.Job) { if ($job -is [string]) {
-		$references[$tasks[$job]][$it.Name] = 0
-	}}}
-
-	# show trees
-	foreach($name in $(if ($_Task -and !$query) {$_Task} else {$tasks.Keys})) {
-		ShowTaskTree $tasks[$name] 0 $_Comment
-	}
-	return
 }
+end {
+	# Hide variables
+	$private:_Task = $Task
+	$private:_File = if ($File) {$File} else {$defaultFile}
+	$private:_Parameters = $Parameters
+	$private:_Checkpoint = $Checkpoint
+	$private:_Tree = $Tree
+	$private:_Comment = $Comment
+	$private:_Summary = $Summary
+	$private:_NoExit = $NoExit
+	$private:query = $Task -eq '?' -or $Task -eq '??'
+	Remove-Variable Task, File, Parameters, Checkpoint, Tree, Comment, Summary, NoExit
 
-function *Err*($Text, $Info)
-{"ERROR: $Text`r`n$($Info.PositionMessage.Trim())"}
+	# To amend errors
+	try {
+		### Show tree
+		if ($_Tree -or $_Comment) {
+			# get tasks
+			$tasks = Invoke-Build ?? -File:$_File -Parameters:$_Parameters
 
-### Build with results
-try {
-	$Result = if ($_Summary) {'Result'}
-	Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -WhatIf:$WhatIf -Result:$Result
-}
-finally {
-	### Show summary
-	if ($_Summary -and !$query) {
-		Write-Host @'
+			function ShowTaskTree($Task, $Step, $Comment)
+			{
+				if ($Step -eq 0) {''}
+				$tab = '    ' * $Step
+				++$Step
+
+				# comment
+				if ($Comment) {
+					foreach($_ in GetTaskComment $Task) {
+						if ($_) {$tab + $_}
+					}
+				}
+
+				# name, parents
+				$info = $tab + $Task.Name
+				$reference = $references[$Task]
+				if ($reference.Count) {
+					$info += ' (' + (($reference.Keys | Sort-Object) -join ', ') + ')'
+				}
+				$info
+
+				# task jobs
+				foreach($_ in $Task.Job) {
+					if ($_ -is [string]) {
+						ShowTaskTree $tasks[$_] $Step $Comment
+					}
+					else {
+						$tab + '    {}'
+					}
+				}
+			}
+
+			# gets comments
+			$file2docs = @{}
+			function GetTaskComment($Task) {
+				$file = $Task.InvocationInfo.ScriptName
+				$docs = $file2docs[$file]
+				if (!$docs) {
+					$docs = New-Object System.Collections.Specialized.OrderedDictionary
+					$file2docs[$file] = $docs
+					foreach($token in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $file), [ref]$null)) {
+						if ($token.Type -eq 'Comment') {
+							$docs[[object]$token.EndLine] = $token.Content
+						}
+					}
+				}
+				$rem = ''
+				for($1 = $Task.InvocationInfo.ScriptLineNumber - 1; $1 -ge 1; --$1) {
+					$doc = $docs[[object]$1]
+					if (!$doc) {break}
+					$rem = $doc.Replace("`t", '    ') + "`n" + $rem
+				}
+				[regex]::Split($rem.TrimEnd(), '[\r\n]+')
+			}
+
+			# references
+			$references = @{}
+			foreach($it in $tasks.Values) {
+				$references[$it] = @{}
+			}
+			foreach($it in $tasks.Values) { foreach($job in $it.Job) { if ($job -is [string]) {
+				$references[$tasks[$job]][$it.Name] = 0
+			}}}
+
+			# show trees
+			foreach($name in $(if ($_Task -and !$query) {$_Task} else {$tasks.Keys})) {
+				ShowTaskTree $tasks[$name] 0 $_Comment
+			}
+			return
+		}
+
+		function *Err*($Text, $Info)
+		{"ERROR: $Text`r`n$($Info.PositionMessage.Trim())"}
+
+		### Build with results
+		try {
+			if (!$_Parameters) {
+				$_Parameters = @{}
+				foreach($_ in $PSBoundParameters.GetEnumerator()) {
+					if ($names -notcontains $_.Key) {
+						$_Parameters.Add($_.Key, $_.Value)
+					}
+				}
+				if (!$_Parameters.Count) {
+					$_Parameters = $null
+				}
+			}
+
+			$Result = if ($_Summary) {'Result'}
+			Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -WhatIf:$WhatIf -Result:$Result
+		}
+		finally {
+			### Show summary
+			if ($_Summary -and !$query) {
+				Write-Host @'
 
 ---------- Build Summary ----------
 
 '@
-		foreach($_ in $Result.Tasks) {
-			Write-Host ('{0,-16} {1} {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber)
-			if ($_.Error) {
-				Write-Host -ForegroundColor Red (*Err* $_.Error $_.Error.InvocationInfo)
+				foreach($_ in $Result.Tasks) {
+					Write-Host ('{0,-16} {1} {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber)
+					if ($_.Error) {
+						Write-Host -ForegroundColor Red (*Err* $_.Error $_.Error.InvocationInfo)
+					}
+				}
 			}
 		}
 	}
-}
-
-} catch {
-	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
-	$PSCmdlet.ThrowTerminatingError($_)
-} finally {
-	if ($_NoExit) { Read-Host 'Press enter to exit' }
+	catch {
+		if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
+		$PSCmdlet.ThrowTerminatingError($_)
+	}
+	finally {
+		if ($_NoExit) { Read-Host 'Press enter to exit' }
+	}
 }

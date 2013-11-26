@@ -152,6 +152,87 @@ task TreeCyclicReference {
 	Build . z\test.build.ps1 -Tree
 }
 
+task DynamicDefaultFileSpecifyParam {
+	@'
+param(
+	[int]$i1=0,
+	[switch]$s1
+)
+task . {
+	$d.i1 = $i1
+	$d.s1 = $s1
+}
+'@ > z\.build.ps1
+
+	$d = @{}
+	Set-Location z
+	Build -i1 42 -s1
+	assert ($d.i1 -eq 42)
+	assert ($d.s1)
+
+	Set-Location $BuildRoot
+	Remove-Item z\.build.ps1
+}
+
+#! keep it as it is, weird
+task DynamicSyntaxError {
+	@'
+param(
+	$a1
+	$a2
+)
+task .
+'@ > z\.build.ps1
+
+	Set-Location z
+	$e = ''
+	try { Build ? } catch { $e = "$_" }
+	assert ($e -like "*Missing ')' in function parameter list.*") "$e"
+
+	Set-Location $BuildRoot
+	Remove-Item z\.build.ps1
+}
+
+task DynamicConflictParam {
+	Set-Location z
+	@'
+param(
+	$File = 'default'
+)
+task . {
+	$d.File = $File
+}
+'@ > z.build.ps1
+
+	$d = @{}
+
+	Build
+	assert ($d.File -ceq 'default')
+
+	Build -Parameter @{File = 'custom'}
+	assert ($d.File -ceq 'custom')
+
+	Remove-Item z.build.ps1
+}
+
+task DynamicMissingScript {
+	Set-Location $env:TEMP
+
+	# missing custom
+	$$ = ''
+	try {Build . missing.ps1}
+	catch {$$ = $_}
+	assert ($$ -like "Missing script '*\missing.ps1'.")
+	assert ($$.InvocationInfo.Line -like '*{Build . missing.ps1}*')
+
+	# missing default
+	$$ = ''
+	try {Build}
+	catch {$$ = $_}
+	assert ($$ -like 'Missing default script.')
+	assert ($$.InvocationInfo.Line -like '*{Build}*')
+}
+
 # Call tests and clean.
 # The comment is tested.
 task . `

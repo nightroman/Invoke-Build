@@ -31,9 +31,9 @@ param
 
 . .\Shared.ps1
 
-$BeforeConditional = 'TODO'
-$AfterConditional = 'TODO'
-$Conditional = 'TODO'
+$BeforeConditional = 'To do.'
+$AfterConditional = 'To do.'
+$Conditional = 'To do.'
 
 # Test of the default parameter value (called from .build.ps1)
 task TestDefaultParameter {
@@ -41,25 +41,25 @@ task TestDefaultParameter {
 }
 
 # These tasks are referenced by the Conditional
-task BeforeConditional { $script:BeforeConditional = 'DONE' }
-task AfterConditional { $script:AfterConditional = 'DONE' }
+task BeforeConditional { $script:BeforeConditional = 'Done.' }
+task AfterConditional { $script:AfterConditional = 'Done.' }
 
 # This task is called if the configuration is Release
-task Conditional -If ($Configuration -eq 'Release') BeforeConditional, { $script:Conditional = 'DONE' }, AfterConditional
+task Conditional -If ($Configuration -eq 'Release') BeforeConditional, { $script:Conditional = 'Done.' }, AfterConditional
 
 # The default task tests whether the Conditional is called depending on the configuration.
 task . Conditional, {
 	switch($Configuration) {
 		'Debug' {
-			assert ($BeforeConditional -eq 'TODO')
-			assert ($AfterConditional -eq 'TODO')
-			assert ($Conditional -eq 'TODO')
+			assert ($BeforeConditional -eq 'To do.')
+			assert ($AfterConditional -eq 'To do.')
+			assert ($Conditional -eq 'To do.')
 			'Tested Debug.'
 		}
 		'Release' {
-			assert ($BeforeConditional -eq 'DONE')
-			assert ($AfterConditional -eq 'DONE')
-			assert ($Conditional -eq 'DONE')
+			assert ($BeforeConditional -eq 'Done.')
+			assert ($AfterConditional -eq 'Done.')
+			assert ($Conditional -eq 'Done.')
 			'Tested Release.'
 		}
 		default {

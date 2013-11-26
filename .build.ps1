@@ -67,18 +67,19 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 
 	# copy project files
 	Copy-Item -Destination z\tools -Recurse `
-	Demo,
-	Build.ps1,
-	Invoke-Build.ps1,
-	Invoke-Builds.ps1,
-	LICENSE.txt,
-	Show-BuildGraph.ps1
+	.\Demo,
+	.\Build.ps1,
+	.\Invoke-Build.ps1,
+	.\Invoke-Builds.ps1,
+	.\LICENSE.txt,
+	.\Show-BuildGraph.ps1,
+	.\TabExpansionProfile.Invoke-Build.ps1
 
 	# move generated files
 	Move-Item -Destination z\tools `
-	Invoke-Build-Help.xml,
-	README.htm,
-	Release-Notes.htm
+	.\Invoke-Build-Help.xml,
+	.\README.htm,
+	.\Release-Notes.htm
 }
 
 # Make the package, test in it with Demo renamed to [ ], clean.
@@ -151,7 +152,7 @@ task Test {
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 	if ($SkipTestDiff) { return }
 
-	assert (182 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (189 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (38 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 

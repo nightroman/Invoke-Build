@@ -26,6 +26,7 @@ Other tools and files are for parallel builds, built-in help, graphs, and etc.
 * *Invoke-Build-Help.xml* is external content for Get-Help
 * *Build.ps1* is the wrapper with some more options
 * *Show-BuildGraph.ps1* makes and shows task graphs
+* *TabExpansionProfile.Invoke-Build.ps1* - completers
 * *Demo* directory - scripts for learning and testing
 
 ## How Does It Work?
@@ -85,7 +86,7 @@ warnings, they are expected during this test. If it starts with "Build FAILED"
 please submit an issue (tests sensitive to UI culture may fail, only en-US was
 tested).
 
-    Build completed with errors. 183 tasks, 37 errors, 1 warnings 00:00:15
+    Build completed with errors. 195 tasks, 38 errors, 1 warnings 00:00:15
 
 This is it, Invoke-Build is ready to build scripts. If building existing scripts
 is all that you need then you are done. Otherwise, in order to learn the basics
