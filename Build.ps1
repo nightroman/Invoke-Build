@@ -73,6 +73,7 @@ $private:_Tree = $Tree
 $private:_Comment = $Comment
 $private:_Summary = $Summary
 $private:_NoExit = $NoExit
+$private:query = $Task -eq '?' -or $Task -eq '??'
 Remove-Variable Task, File, Parameters, Checkpoint, Tree, Comment, Summary, NoExit
 
 try { # To amend errors
@@ -80,8 +81,7 @@ try { # To amend errors
 ### Show tree
 if ($_Tree -or $_Comment) {
 	# get tasks
-	Invoke-Build ? -File:$_File -Parameters:$_Parameters -Result:tasks
-	$tasks = $tasks.All
+	$tasks = Invoke-Build ?? -File:$_File -Parameters:$_Parameters
 
 	function ShowTaskTree($Task, $Step, $Comment)
 	{
@@ -148,7 +148,7 @@ if ($_Tree -or $_Comment) {
 	}}}
 
 	# show trees
-	foreach($name in $(if ($_Task -and '?' -ne $_Task) {$_Task} else {$tasks.Keys})) {
+	foreach($name in $(if ($_Task -and !$query) {$_Task} else {$tasks.Keys})) {
 		ShowTaskTree $tasks[$name] 0 $_Comment
 	}
 	return
@@ -164,7 +164,7 @@ try {
 }
 finally {
 	### Show summary
-	if ($_Summary) {
+	if ($_Summary -and !$query) {
 		Write-Host @'
 
 ---------- Build Summary ----------

@@ -1,6 +1,55 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.0
+
+**Warning on script output**
+
+Output from scripts on adding tasks is treated as unexpected. It is intercepted
+and written as a warning. Firstly, this helps to catch common mistakes like
+below: the script outputs a script block instead of adding a task with it:
+
+    task Task1
+    {
+        ...
+    }
+
+Secondly, script output produces noise data on getting tasks for analysis.
+
+**New special task `??`**
+
+The task `??` is used to get tasks without invoking. It replaces the old not so
+easy to use approach. This new simple code
+
+    $tasks = Invoke-Build ??
+
+is used instead of
+
+    $null = Invoke-Build ? -Result result
+    $tasks = $Result.All
+
+The task `?` is now used only to show brief task information.
+
+This change does not affect normal build script scenarios. But some wrapper
+scripts which get tasks for analysis like *Build.ps1*, *Show-BuildGraph.ps1*,
+*TabExpansion* should be upgraded.
+
+**Combined special tasks**
+
+`?` and `??` can be combined with `**`.
+
+Show all tasks from all *.test.ps1* files:
+
+    Invoke-Build ?, **
+
+Get task dictionaries for all *.test.ps1* files:
+
+    Invoke-Build ??, **
+
+Note that the interactive helper *Build.ps1* supports these new features. In
+particular it can be used now for getting task dictionaries (it was able only
+to display, analyse, and etc. but not to return).
+
 ## v2.3.0
 
 `Build.ps1`

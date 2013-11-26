@@ -126,9 +126,13 @@
 		SPECIAL TASKS
 
 		? - Tells to list the tasks with brief information without invoking. It
-		also checks tasks and throws errors on missing or cyclic references. If
-		it is used together with Result then tasks are returned as the property
-		All of the result object. ? sets WhatIf to $true.
+		also checks tasks and throws errors on missing or cyclic references.
+
+		?? - Tells to collect and get all tasks as a dictionary. It can is used
+		by external tools for task analysis, TabExpansion, and etc.
+
+		Tasks ? and ?? sets WhatIf to true. Properly designed build scripts
+		should not perform anything significant if WhatIf is set to true.
 
 		* - Tells to invoke all root tasks. This is useful for scripts where
 		each task tests something. Such test tasks are often invoked together.
@@ -136,6 +140,10 @@
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
 		Other parameters except Result are not used.
+
+		Tasks ? and ?? can be combined with **
+		?, ** - Tells to show all test tasks without invoking.
+		??, ** - Tells to get task dictionaries for all test files.
 '@
 		File = @'
 		A build script which defines build tasks by Add-BuildTask (task).
@@ -255,8 +263,8 @@
 		@{code={
 	# Get all tasks without invoking for listing, TabExpansion, etc.
 
-	Invoke-Build ? -Result Result
-	$Result.All
+	$all = Invoke-Build ??
+	$all.Keys
 		}}
 
 		@{code={

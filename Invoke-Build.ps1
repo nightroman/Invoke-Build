@@ -77,9 +77,9 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.3.0'}
+function Get-BuildVersion{[Version]'2.4.0'}
 if($MyInvocation.InvocationName -eq '.'){return @'
-Invoke-Build 2.3.0
+Invoke-Build 2.4.0
 Copyright (c) 2011-2013 Roman Kuzmin
 Add-BuildTask Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@}
@@ -253,29 +253,32 @@ New-Variable * -Description Invoke-Build ([PSCustomObject]@{
 	All=${private:-a}=[System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Parameters=$_=$Parameters; Checkpoint=$Checkpoint; Started=[DateTime]::Now; Elapsed=$null; Error=$null
 })
-if('?' -eq $Task){$WhatIf=$true}
+if(${private:-q}=$Task -eq '??' -or $Task -eq '?'){$WhatIf=$true}
 $BuildTask=$Task; ${private:-Result}=$Result; ${private:-Safe}=$Safe
 if($Result){if($Result -is [string]){New-Variable -Force -Scope 1 $Result ${*}}else{$Result.Value=${*}}}
 Remove-Variable Task,File,Parameters,Checkpoint,Result,Safe
 
-Write-Build 2 "Build $($BuildTask -join ', ') $BuildFile"
 ${private:-r}=0
 try{
 	if($BuildTask -eq '**'){
-		foreach($_ in $BuildFile){Invoke-Build * $_.FullName}
+		$BuildTask = @('*'; $BuildTask -ne '**')
+		foreach($_ in $BuildFile){Invoke-Build $BuildTask $_.FullName}
 	}else{
 		*SL
-		if($_){. $BuildFile @_}else{. $BuildFile}
+		if($_=if($_){. $BuildFile @_}else{. $BuildFile}){Write-Warning "$BuildFile output:`n$_"}
 		if(!${-a}.Count){throw "No tasks in '$BuildFile'."}
 		try{foreach(${private:-} in ${-a}.Values){if(${-}.Before){${-}.Before|*AB ${-}.Name 1} if(${-}.After){${-}.After|*AB ${-}.Name}}}
 		catch{throw *EI "Task '$(${-}.Name)': $_" ${-}}
 
-		if('?' -eq $BuildTask){
+		if(${-q}){
 			${-a}.Keys|*Try
-			if(!${-Result}){${-a}.Values|%{"$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)"}}
+			if($BuildTask -eq '??') {${-a}}
+			else {${-a}.Values|%{"$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)"}}
 			return
 		}
-		if('*' -eq $BuildTask){
+
+		Write-Build 2 "Build $($BuildTask -join ', ') $BuildFile"
+		if($BuildTask -eq '*'){
 			$BuildTask=foreach($_ in ${-a}.Keys){foreach(${-} in ${-a}.Values){if(${-}.Job -contains $_){$_|*Try; $_=@(); break}} $_}
 		}elseif(!$BuildTask -or '.' -eq $BuildTask){
 			$BuildTask=if(${-a}['.']){'.'}else{${-a}.Item(0).Name}
@@ -296,7 +299,7 @@ try{
 	if(!${-Safe}){if(*My){$PSCmdlet.ThrowTerminatingError($_)} throw}
 }finally{
 	*SL ${-cd}
-	if(${-r}){
+	if(${-r} -and !${-q}){
 		${*}.Elapsed=$_=[DateTime]::Now - ${*}.Started
 		$t=${*}.Tasks; ($e=${*}.Errors); ($w=${*}.Warnings)
 		if(${-*}){${-*}.Tasks.AddRange($t); ${-*}.Errors.AddRange($e); ${-*}.Warnings.AddRange($w)}

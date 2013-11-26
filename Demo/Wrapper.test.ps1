@@ -18,48 +18,38 @@ if (!$WhatIf) {
 	# Make directories in here (many build files) and in the parent (one file).
 	Remove-Item [z] -Force -Recurse
 	$null = mkdir z\1\2
-
-	# This directory has many build files, the default is
-	$ManyDefault = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('.build.ps1')
-
-	# This path will represent a single build file
-	$OneDefault = "$BuildRoot\z\test.build.ps1"
 }
 
 task ParentHasManyCandidates {
 	Set-Location z
 	$PWD.Path
-	$log = Build ?
-	$log
-	assert ($log[0].StartsWith("Build ? $ManyDefault"))
+	$tasks = Build ??
+	assert ($tasks.Contains('AllTestScripts'))
 }
 
 task GrandParentHasManyCandidates {
 	Set-Location z\1
 	$PWD.Path
-	$log = Build ?
-	$log
-	assert ($log[0].StartsWith("Build ? $ManyDefault"))
+	$tasks = Build ??
+	assert ($tasks.Contains('AllTestScripts'))
 }
 
 task MakeSingleScript {
-	'task .' > z\test.build.ps1
+	'task SingleScript' > z\test.build.ps1
 }
 
 task ParentHasOneCandidate MakeSingleScript, {
 	Set-Location z\1
 	$PWD.Path
-	$log = Build ?
-	$log
-	assert ($log[0].StartsWith("Build ? $OneDefault"))
+	$tasks = Build ??
+	assert ($tasks.Contains('SingleScript'))
 }
 
 task GrandParentHasOneCandidate MakeSingleScript, {
 	Set-Location z\1\2
 	$PWD.Path
-	$log = Build ?
-	$log
-	assert ($log[0].StartsWith("Build ? $OneDefault"))
+	$tasks = Build ??
+	assert ($tasks.Contains('SingleScript'))
 }
 
 task InvokeBuildGetFile {
@@ -76,14 +66,13 @@ task InvokeBuildGetFile {
 	Set-Location z
 	Remove-Item test.build.ps1 -ErrorAction 0
 	$PWD.Path
-	$log = Build ?
-	$log
+	$tasks = Build ??
 
 	# restore the hook
 	$env:InvokeBuildGetFile = $saved
 
 	# test: the script returned by the hook is invoked
-	assert ($log[0].StartsWith("Build ? $path"))
+	assert ($tasks.Contains('MissingProperty'))
 }
 
 task Tree {
@@ -109,7 +98,7 @@ task Comment {
 
 	# ensure comments are there
 	$log = $log -replace '\r\n', '='
-	assert ($log.Contains('\Wrapper.test.ps1==# Call tests and clean.=# The comment is tested.=.=    ParentHasManyCandidates (.)=')) $log
+	assert ($log.Contains('=# Call tests and clean.=# The comment is tested.=.=    ParentHasManyCandidates (.)=')) $log
 	assert ($log.Contains('=    <#=    Call tree tests.=    The comment is tested.=    #>=    TreeAndComment (.)=        Tree (TreeAndComment)=')) $log
 }
 

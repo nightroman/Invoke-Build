@@ -62,11 +62,15 @@ task WhatIf {
 # The Wrapper.test.ps1 uses ? and Result in order to show detailed task trees.
 task ListTask {
 	# show tasks
-	Invoke-Build ? Assert.test.ps1
+	$r = Invoke-Build ? Assert.test.ps1
+	$r
+	assert ($r.Count -eq 3)
+	assert ($r[0] -match '\(\d+\): AssertDefault$')
+	assert ($r[2] -match '\(\d+\): \.$')
 
 	# get task list
-	Invoke-Build ? Assert.test.ps1 -Result Result
-	assert ($Result.All.Count -eq 3)
+	$all = Invoke-Build ?? Assert.test.ps1
+	assert ($all.Count -eq 3)
 }
 
 # ". Invoke-Build" is used in order to load exposed functions and use Get-Help.
@@ -133,9 +137,9 @@ task Conditional {
 # Test dynamic tasks (and other issues).
 task Dynamic {
 	# first, just request the task list and test it
-	Invoke-Build ? Dynamic.build.ps1 -Result result
-	assert ($result.All.Count -eq 5)
-	$last = $result.All.Item(4)
+	$all = Invoke-Build ?? Dynamic.build.ps1
+	assert ($all.Count -eq 5)
+	$last = $all.Item(4)
 	assert ($last.Name -eq '.')
 	assert ($last.Job.Count -eq 4)
 

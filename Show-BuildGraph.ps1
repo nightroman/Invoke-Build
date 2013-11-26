@@ -70,13 +70,13 @@ if (!$type) {throw "Output file name should have an extension."}
 $type = $type.Substring(1).ToLower()
 
 # get tasks
-Invoke-Build ? -File:$File -Parameters:$Parameters -Result:Result
+$all = Invoke-Build ?? -File:$File -Parameters:$Parameters
 
 # DOT code
 $text = @(
 	'digraph Tasks {'
 	$Code
-	foreach($it in $Result.All.Values) {
+	foreach($it in $all.Values) {
 		$name = $it.Name
 		'"{0}"' -f $name
 		$num = 0
