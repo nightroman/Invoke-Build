@@ -77,9 +77,9 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.4.0'}
+function Get-BuildVersion{[Version]'2.4.1'}
 if($MyInvocation.InvocationName -eq '.'){return @'
-Invoke-Build 2.4.0
+Invoke-Build 2.4.1
 Copyright (c) 2011-2013 Roman Kuzmin
 Add-BuildTask Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@}

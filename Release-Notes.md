@@ -1,6 +1,15 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.1
+
+Finishing touches on dynamic parameters of *Build.ps1*.
+
+Updated the wiki with information about recently added features.
+
+* [Build.ps1](https://github.com/nightroman/Invoke-Build/wiki/Build.ps1)
+* [TabExpansion2](https://github.com/nightroman/Invoke-Build/wiki/TabExpansion2)
+
 ## v2.4.0
 
 **Dynamic build script parameters in Build.ps1**
@@ -25,10 +34,6 @@ instead of not so easy to type
     Build -Parameters @{Platform = 'x64'; Configuration = 'Debug'}
 
 Note that TabExpansion works with dynamic parameters.
-
-For now dynamic parameters are used by the interactive wrapper *Build.ps1*. If
-this concept works fine then it might be propagated to *Invoke-Build.ps1* as
-well. In this case `Parameters` will be dropped.
 
 **TabExpansionProfile.Invoke-Build.ps1**
 

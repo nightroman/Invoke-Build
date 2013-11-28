@@ -199,25 +199,22 @@ end {
 		function *Err*($Text, $Info)
 		{"ERROR: $Text`r`n$($Info.PositionMessage.Trim())"}
 
-		### Build with results
-		try {
-			if (!$_Parameters) {
-				$_Parameters = @{}
-				foreach($_ in $PSBoundParameters.GetEnumerator()) {
-					if ($names -notcontains $_.Key) {
-						$_Parameters.Add($_.Key, $_.Value)
-					}
-				}
-				if (!$_Parameters.Count) {
-					$_Parameters = $null
+		# param
+		if (!$_Parameters) {
+			foreach($_ in $PSBoundParameters.GetEnumerator()) {
+				if ($names -notcontains $_.Key) {
+					if ($_Parameters) { $_Parameters.Add($_.Key, $_.Value) }
+					else { $_Parameters = @{$_.Key = $_.Value} }
 				}
 			}
+		}
 
-			$Result = if ($_Summary) {'Result'}
-			Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -WhatIf:$WhatIf -Result:$Result
+		### Build
+		try {
+			Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -WhatIf:$WhatIf -Result:Result
 		}
 		finally {
-			### Show summary
+			# summary
 			if ($_Summary -and !$query) {
 				Write-Host @'
 

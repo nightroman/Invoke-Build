@@ -152,26 +152,61 @@ task TreeCyclicReference {
 	Build . z\test.build.ps1 -Tree
 }
 
-task DynamicDefaultFileSpecifyParam {
+task DynamicExampleParam {
+	Set-Location z
 	@'
 param(
-	[int]$i1=0,
-	[switch]$s1
+	$Platform = 'Win32',
+	$Configuration = 'Release'
 )
 task . {
-	$d.i1 = $i1
-	$d.s1 = $s1
+	$d.Platform = $Platform
+	$d.Configuration = $Configuration
 }
-'@ > z\.build.ps1
+'@ > z.build.ps1
 
 	$d = @{}
-	Set-Location z
-	Build -i1 42 -s1
-	assert ($d.i1 -eq 42)
-	assert ($d.s1)
+	Build
+	assert ($d.Platform -ceq 'Win32' -and $d.Configuration -ceq 'Release')
 
-	Set-Location $BuildRoot
-	Remove-Item z\.build.ps1
+	$d = @{}
+	Build -Platform x64 -Configuration Debug
+	assert ($d.Platform -ceq 'x64' -and $d.Configuration -ceq 'Debug')
+
+	$d = @{}
+	Build -Parameters @{Platform = 'x64'; Configuration = 'Debug'}
+	assert ($d.Platform -ceq 'x64' -and $d.Configuration -ceq 'Debug')
+
+	Remove-Item z.build.ps1
+}
+
+task DynamicConflictParam {
+	Set-Location z
+	@'
+param(
+	$Own1 = 'default1',
+	$File = 'default2'
+)
+task . {
+	$d.Own1 = $Own1
+	$d.File = $File
+}
+'@ > z.build.ps1
+
+	$d = @{}
+	Build
+	assert ($d.Own1 -ceq 'default1' -and $d.File -ceq 'default2')
+
+	$d = @{}
+	Build -Parameter @{Own1 = 'custom1'; File = 'custom2'}
+	assert ($d.Own1 -ceq 'custom1' -and $d.File -ceq 'custom2')
+
+	$$=''
+	try { Build -Own1 '' -Parameter @{File = ''} }
+	catch {$$=$_}
+	assert ($$ -like "*A parameter cannot be found that matches parameter name 'Own1'.")
+
+	Remove-Item z.build.ps1
 }
 
 #! keep it as it is, weird
@@ -191,28 +226,6 @@ task .
 
 	Set-Location $BuildRoot
 	Remove-Item z\.build.ps1
-}
-
-task DynamicConflictParam {
-	Set-Location z
-	@'
-param(
-	$File = 'default'
-)
-task . {
-	$d.File = $File
-}
-'@ > z.build.ps1
-
-	$d = @{}
-
-	Build
-	assert ($d.File -ceq 'default')
-
-	Build -Parameter @{File = 'custom'}
-	assert ($d.File -ceq 'custom')
-
-	Remove-Item z.build.ps1
 }
 
 task DynamicMissingScript {
