@@ -59,35 +59,37 @@ param
 )
 DynamicParam {
 	$private:names = 'Task', 'File', 'Parameters', 'Checkpoint', 'WhatIf', 'Tree', 'Comment', 'Summary', 'NoExit'
+	$private:path = $null
 
-	function Get-BuildFile($Path)
-	{if(($_=[System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1){$_}else{$_ -like '*\.build.ps1'}}
+	$Task = Get-Variable -Name [T]ask -ValueOnly -Scope 0
+	if ($Task -eq '**') {return}
 
 	try {
-		# resolve File
-		$File = Get-Variable -Name [F]ile -ValueOnly -Scope 0
-		if ($File) {
-			$File = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($File)
-			if (![System.IO.File]::Exists($File)) {throw "Missing script '$File'."}
+		# default
+		$path = Get-Variable -Name [F]ile -ValueOnly -Scope 0
+		if ($path) {
+			$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($path)
+			if (![System.IO.File]::Exists($path)) {throw "Missing script '$path'."}
 		}
 		else {
 			if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {
-				$File = & $env:InvokeBuildGetFile
+				$path = & $env:InvokeBuildGetFile
 			}
-			if (!$File) {
-				for($_ = $PSCmdlet.GetUnresolvedProviderPathFromPSPath(''); $_; $_ = Split-Path $_) {
-					if ($File = Get-BuildFile $_) {break}
-				}
+			if (!$path) {
+				function Get-BuildFile($Path)
+				{if(($_=[System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1){$_}else{$_ -like '*\.build.ps1'}}
+
+				$_ = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
+				do {$path = Get-BuildFile $_} while(!$path -and ($_ = Split-Path $_))
 			}
-			if (!$File) {throw 'Missing default script.'}
+			if (!$path) {throw 'Missing default script.'}
 		}
-		$private:defaultFile = $File
 
 		# Parameters?
 		if (Get-Variable -Name [P]arameters -Scope 0) {return}
 
 		# get command
-		$private:command = Get-Command -Name $File -CommandType ExternalScript -ErrorAction 1
+		$private:command = Get-Command -Name $path -CommandType ExternalScript -ErrorAction 1
 		if (!$command.Parameters) {return}
 
 		# dynamic parameters
@@ -108,7 +110,7 @@ DynamicParam {
 end {
 	# Hide variables
 	$private:_Task = $Task
-	$private:_File = if ($File) {$File} else {$defaultFile}
+	$private:_File = if ($File) {$File} else {$path}
 	$private:_Parameters = $Parameters
 	$private:_Checkpoint = $Checkpoint
 	$private:_Tree = $Tree

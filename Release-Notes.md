@@ -1,6 +1,15 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.2
+
+Fixed
+
+- PS v2/v3 differences of `Invoke-Build ** missing-directory`.
+- *Build.ps1* with the special task `**`.
+
+Amended *TabExpansionProfile.Invoke-Build.ps1*.
+
 ## v2.4.1
 
 Finishing touches on dynamic parameters of *Build.ps1*.

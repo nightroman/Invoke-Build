@@ -77,9 +77,9 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.4.1'}
+function Get-BuildVersion{[Version]'2.4.2'}
 if($MyInvocation.InvocationName -eq '.'){return @'
-Invoke-Build 2.4.1
+Invoke-Build 2.4.2
 Copyright (c) 2011-2013 Roman Kuzmin
 Add-BuildTask Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@}
@@ -218,7 +218,8 @@ $ErrorActionPreference='Stop'
 ${private:-cd}=*FP
 ${private:-xt}=$null
 if($Task -eq '**'){
-	$BuildFile=Get-ChildItem -LiteralPath $(if($File){$File}else{'.'}) -Recurse *.test.ps1
+	if(![System.IO.Directory]::Exists(($File=*FP $File))){throw "Missing directory '$File'."}
+	$BuildFile=@(Get-ChildItem -LiteralPath $File -Recurse *.test.ps1)
 	$BuildRoot=${-cd}
 }else{
 	if($Checkpoint){$Checkpoint=*FP $Checkpoint}

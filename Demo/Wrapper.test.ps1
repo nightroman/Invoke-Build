@@ -152,6 +152,34 @@ task TreeCyclicReference {
 	Build . z\test.build.ps1 -Tree
 }
 
+#! Fixed differences of PS v2/v3
+task StarsMissingDirectory {
+	$$=''
+	try { Build ** miss }
+	catch {$$=$_}
+	assert ($$ -like "Missing directory '*\Demo\miss'.")
+}
+
+#! Test StarsMissingDirectory first
+task Stars StarsMissingDirectory, {
+	# no .test.ps1 files
+	$r = Build **, ? z
+	assert (!$r)
+	$r = Build **, ?? z
+	assert (!$r)
+
+	# fast task info, test first and last to be sure that there is not a header or footer
+	$r = Build **, ?
+	assert ($r[0] -match '\\Alter\.test\.ps1\(\d+\): PreTask1$')
+	assert ($r[-1] -match '\\Wrapper\.test\.ps1\(\d+\): \.$')
+
+	# full task info
+	$r = Build **, ??
+	assert ($r.Count -ge 10) # *.test.ps1 files
+	assert ($r[0] -is [System.Collections.Specialized.OrderedDictionary])
+	assert ($r[-1] -is [System.Collections.Specialized.OrderedDictionary])
+}
+
 task DynamicExampleParam {
 	Set-Location z
 	@'
