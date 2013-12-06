@@ -154,9 +154,7 @@ task TreeCyclicReference {
 
 #! Fixed differences of PS v2/v3
 task StarsMissingDirectory {
-	$$=''
-	try { Build ** miss }
-	catch {$$=$_}
+	$$ = try {Build ** miss} catch {$_}
 	assert ($$ -like "Missing directory '*\Demo\miss'.")
 }
 
@@ -229,9 +227,7 @@ task . {
 	Build -Parameter @{Own1 = 'custom1'; File = 'custom2'}
 	assert ($d.Own1 -ceq 'custom1' -and $d.File -ceq 'custom2')
 
-	$$=''
-	try { Build -Own1 '' -Parameter @{File = ''} }
-	catch {$$=$_}
+	$$ = try { Build -Own1 '' -Parameter @{File = ''} } catch {$_}
 	assert ($$ -like "*A parameter cannot be found that matches parameter name 'Own1'.")
 
 	Remove-Item z.build.ps1
@@ -248,9 +244,8 @@ task .
 '@ > z\.build.ps1
 
 	Set-Location z
-	$e = ''
-	try { Build ? } catch { $e = "$_" }
-	assert ($e -like "*Missing ')' in function parameter list.*") "$e"
+	$$ = try { Build ? } catch {$_}
+	assert ($$ -like "*Missing ')' in function parameter list.*")
 
 	Set-Location $BuildRoot
 	Remove-Item z\.build.ps1
@@ -260,16 +255,12 @@ task DynamicMissingScript {
 	Set-Location $env:TEMP
 
 	# missing custom
-	$$ = ''
-	try {Build . missing.ps1}
-	catch {$$ = $_}
+	$$ = try {Build . missing.ps1} catch {$_}
 	assert ($$ -like "Missing script '*\missing.ps1'.")
 	assert ($$.InvocationInfo.Line -like '*{Build . missing.ps1}*')
 
 	# missing default
-	$$ = ''
-	try {Build}
-	catch {$$ = $_}
+	$$ = try {Build} catch {$_}
 	assert ($$ -like 'Missing default script.')
 	assert ($$.InvocationInfo.Line -like '*{Build}*')
 }

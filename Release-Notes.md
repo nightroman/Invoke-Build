@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.3
+
+Amended *TabExpansionProfile.Invoke-Build.ps1*. If it is used in ISE then
+completion lists should show proper icons. If the referenced
+`TabExpansions2.ps1` is used then update it, too.
+
 ## v2.4.2
 
 Fixed
