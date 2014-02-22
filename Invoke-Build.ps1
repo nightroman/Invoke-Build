@@ -1,7 +1,7 @@
 
 <#
 Invoke-Build - PowerShell Task Scripting
-Copyright (c) 2011-2013 Roman Kuzmin
+Copyright (c) 2011-2014 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -77,10 +77,10 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.4.3'}
+function Get-BuildVersion{[Version]'2.4.4'}
 if($MyInvocation.InvocationName -eq '.'){return @'
-Invoke-Build 2.4.3
-Copyright (c) 2011-2013 Roman Kuzmin
+Invoke-Build 2.4.4
+Copyright (c) 2011-2014 Roman Kuzmin
 Add-BuildTask Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@}
 
@@ -182,11 +182,11 @@ function *Task{
 				continue
 			}
 
-			${private:-m}="${-p} (${-n}/$(${-a}.Count))"; Write-Build 6 "${-m}:"
+			${private:-m}="${-p} (${-n}/$(${-a}.Count))"; Write-Build 11 "${-m}:"
 			if($WhatIf){${-j}; continue}
 
 			if(1 -eq ${-i}){${-i}=*IO ${-}}
-			if(${-i}){Write-Build 6 ${-i}; continue}
+			if(${-i}){Write-Build 11 ${-i}; continue}
 
 			try{
 				*SL; . Enter-BuildJob ${-} ${-n}; *SL
@@ -198,10 +198,10 @@ function *Task{
 				}
 			}catch{${-}.Error=$_; throw}
 			finally{*SL; . Exit-BuildJob ${-} ${-n}}
-			if(${-a}.Count -ge 2){Write-Build 6 "Done ${-m}"}
+			if(${-a}.Count -ge 2){Write-Build 11 "Done ${-m}"}
 		}
 		${-}.Elapsed=$_=[DateTime]::Now - ${-}.Started
-		Write-Build 6 "Done ${-p} $_"
+		Write-Build 11 "Done ${-p} $_"
 		if($_=${*}.Checkpoint){$(,$BuildTask; $BuildFile; ${*}.Parameters; ,@(${*}.All.Values|%{if($_.Elapsed){$_.Name}}); *U1 Export-Build)|Export-Clixml $_}
 	}catch{
 		Write-Build 14 (*II ${-})
@@ -278,7 +278,7 @@ try{
 			return
 		}
 
-		Write-Build 2 "Build $($BuildTask -join ', ') $BuildFile"
+		Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 		if($BuildTask -eq '*'){
 			$BuildTask=foreach($_ in ${-a}.Keys){foreach(${-} in ${-a}.Values){if(${-}.Job -contains $_){$_|*Try; $_=@(); break}} $_}
 		}elseif(!$BuildTask -or '.' -eq $BuildTask){

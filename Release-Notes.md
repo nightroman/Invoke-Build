@@ -1,6 +1,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.4
+
+Replaced dark yellow build messages with cyan. Dark yellow looks like white or
+gray in Microsoft PowerShell "noble blue" consoles. Besides, MSBuild prints
+similar build messages as cyan.
+
 ## v2.4.3
 
 Amended *TabExpansionProfile.Invoke-Build.ps1*. If it is used in ISE then

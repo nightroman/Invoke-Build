@@ -98,13 +98,16 @@ task PackageTest Package, {
 },
 Clean
 
-# Make the NuGet package.
-task NuGet Package, {
+# Set $script:Version.
+task Version {
 	# get and test version
-	$version = Get-BuildVersion
-	$r = Select-String -SimpleMatch "Invoke-Build $version" -Path Invoke-Build.ps1
+	($script:Version = (Get-BuildVersion).ToString())
+	$r = Select-String -SimpleMatch "Invoke-Build $Version" -Path Invoke-Build.ps1
 	assert ($r) 'Missing or outdated line Invoke-Build <version>.'
+}
 
+# Make the NuGet package.
+task NuGet Version, Package, {
 	$text = @'
 Invoke-Build introduces task based programming in PowerShell. It invokes tasks
 from scripts written in PowerShell with domain-specific language. This process
@@ -116,7 +119,7 @@ is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>Invoke-Build</id>
-		<version>$version</version>
+		<version>$Version</version>
 		<authors>Roman Kuzmin</authors>
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
@@ -124,13 +127,29 @@ is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>
 		<description>$text</description>
-		<tags>powershell build automation</tags>
+		<tags>PowerShell Build Automation</tags>
 	</metadata>
 </package>
 "@
 	# pack
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
 }
+
+# Push commits with a version tag.
+task PushRelease Version, {
+	$changes = exec { git status --short }
+	assert (!$changes) "Please, commit changes."
+
+	exec { git push }
+	exec { git tag -a "v$Version" -m "v$Version" }
+	exec { git push origin "v$Version" }
+}
+
+# Push NuGet package.
+task PushNuGet NuGet, {
+	exec { NuGet push "Invoke-Build.$Version.nupkg" }
+},
+Clean
 
 # Calls tests infinitely. Note: normal scripts do not use ${*}.
 task Loop {

@@ -632,7 +632,7 @@ engine (version 2+).
 		@{code={
 	# Use .NET 4.0 tools MSBuild, csc, ngen. Then call MSBuild.
 
-	use Framework\v4.0.30319 MSBuild, csc, ngen
+	use 4.0 MSBuild, csc, ngen
 	exec { MSBuild Some.csproj /t:Build /p:Configuration=Release }
 		}}
 	)

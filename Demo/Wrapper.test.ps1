@@ -109,7 +109,11 @@ The comment is tested.
 task TreeAndComment Tree, Comment
 
 task Summary {
+	# to skip some checks on debugging/tracing
+	$debugging = Test-Path Variable:\_Debugger
+
 	# fake
+	$log = [System.Collections.ArrayList]@()
 	function Write-Host($Text, $ForegroundColor) { $null = $log.Add($Text) }
 
 	# build succeeds
@@ -117,11 +121,10 @@ task Summary {
 task task1 { Start-Sleep -Milliseconds 1 }
 task . task1
 '@ > z\test.build.ps1
-	$log = [System.Collections.ArrayList]@()
 	Build . z\test.build.ps1 -Summary
-	$log = ($log -join "`r`n")
-	Write-Build Magenta $log
-	assert ($log -like '*- Build Summary -*00:00:00*task1*\z\test.build.ps1:1*00:00:00*.*\z\test.build.ps1:2')
+	$text = ($log -join "`r`n")
+	Write-Build Magenta $text
+	assert ($debugging -or ($text -like '*- Build Summary -*00:00:00*task1*\z\test.build.ps1:1*00:00:00*.*\z\test.build.ps1:2'))
 
 	# build fails
 	@'
@@ -130,9 +133,9 @@ task . @{task1=1}
 '@ > z\test.build.ps1
 	$log = [System.Collections.ArrayList]@()
 	Build . z\test.build.ps1 -Summary
-	$log = ($log -join "`r`n")
-	Write-Build Magenta $log
-	assert ($log -like '*- Build Summary -*00:00:00*task1*\z\test.build.ps1:1*Demo error in task1.*00:00:00*.*\z\test.build.ps1:2')
+	$text = ($log -join "`r`n")
+	Write-Build Magenta $text
+	assert ($debugging -or ($text -like '*- Build Summary -*00:00:00*task1*\z\test.build.ps1:1*Demo error in task1.*00:00:00*.*\z\test.build.ps1:2'))
 }
 
 task TreeTaskNotDefined {
