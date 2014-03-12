@@ -58,8 +58,10 @@ param
 	[switch]$NoExit
 )
 DynamicParam {
-	$private:names = 'Task', 'File', 'Parameters', 'Checkpoint', 'WhatIf', 'Tree', 'Comment', 'Summary', 'NoExit'
 	$private:path = $null
+	$private:names =
+	'Task', 'File', 'Parameters', 'Checkpoint', 'WhatIf', 'Tree', 'Comment', 'Summary', 'NoExit',
+	'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer'
 
 	$Task = Get-Variable -Name [T]ask -ValueOnly -Scope 0
 	if ($Task -eq '**') {return}

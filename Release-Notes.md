@@ -1,6 +1,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.5
+
+*Build.ps1*: fixed issues on scripts with cmdlet binding parameters.
+
 ## v2.4.4
 
 Replaced dark yellow build messages with cyan. Dark yellow looks like white or

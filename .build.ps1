@@ -41,14 +41,21 @@ task GitStatus -If (Test-Path .git) {
 # Copy scripts and help from working location to the project.
 # Fail if the project files are newer, to be resolved manually.
 task UpdateScript {
-	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
-	$target = 'Build.ps1', 'Invoke-Build.ps1', 'Invoke-Builds.ps1', 'Invoke-Build-Help.xml', 'Show-BuildGraph.ps1'
-	$source = "$from\x.ps1", "$from\Invoke-Build.ps1", "$from\Invoke-Builds.ps1", "$from\Invoke-Build-Help.xml", "$from\Show-BuildGraph.ps1"
-	for($1 = 0; $1 -lt $target.Count; ++$1) {
-		$s = Get-Item $source[$1]
-		$t = Get-Item $target[$1] -ErrorAction 0
+	$from = Split-Path (Get-Command Build.ps1).Definition
+	$files = @(
+		'Build.ps1'
+		'Invoke-Build.ps1'
+		'Invoke-Build-Help.xml'
+		'Invoke-Builds.ps1'
+		'Show-BuildGraph.ps1'
+		'TabExpansionProfile.Invoke-Build.ps1'
+	)
+	foreach($file in $files) {
+		$file
+		$s = Get-Item "$from\$file"
+		$t = Get-Item $file -ErrorAction 0
 		assert (!$t -or ($t.LastWriteTime -le $s.LastWriteTime)) "$s -> $t"
-		Copy-Item $s.FullName $target[$1]
+		Copy-Item $s.FullName $file
 	}
 }
 
@@ -161,12 +168,11 @@ task Loop {
 	}
 }
 
-# * Test Demo scripts and compare the output with expected. Create and keep
-# Invoke-Build-Test.log in %TEMP%. Then compare it with a new output file in
-# this directory. If they are the same then remove the new file. Otherwise
-# start %MERGE%.
-# * After passed tests call UpdateScript.
-task Test {
+# UpdateScript, test Demo scripts, and compare the output with expected. Create
+# and keep Invoke-Build-Test.log in %TEMP%. Then compare it with a new output
+# file in this directory. If they are the same then remove the new file.
+# Otherwise start %MERGE%. Requires Assert-SameFile from PowerShelf.
+task Test UpdateScript, {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 	if ($SkipTestDiff) { return }
@@ -176,39 +182,15 @@ task Test {
 	assert ($result.Warnings.Count -ge 1)
 
 	# process and save the output
-	$outputPath = "$BuildRoot\Invoke-Build-Test.log"
-	$samplePath = "$env:APPDATA\Invoke-Build-Test.$($PSVersionTable.PSVersion.Major).log"
+	$resultPath = "$BuildRoot\Invoke-Build-Test.log"
+	$samplePath = "$HOME\data\Invoke-Build-Test.$($PSVersionTable.PSVersion.Major).log"
 	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?( )? *', '00:00:00.0000000$1'
-	[System.IO.File]::WriteAllText($outputPath, $output, [System.Text.Encoding]::UTF8)
+	[System.IO.File]::WriteAllText($resultPath, $output, [System.Text.Encoding]::UTF8)
 
 	# compare outputs
-	$toCopy = $false
-	if (Test-Path $samplePath) {
-		$sample = [System.IO.File]::ReadAllText($samplePath)
-		if ($output -ceq $sample) {
-			Write-Build Green 'The result is not changed.'
-			Remove-Item $outputPath
-		}
-		else {
-			Write-Warning 'The result is changed.'
-			if ($env:MERGE) {
-				& $env:MERGE $outputPath $samplePath
-			}
-			do {} until ((Read-Host "[] Continue [1] Save the result") -match '^(1)?$')
-			$toCopy = 1 -eq $matches[1]
-		}
-	}
-	else {
-		$toCopy = $true
-	}
-
-	# copy actual to expected
-	if ($toCopy) {
-		Write-Build Cyan 'Saving the result as expected.'
-		Move-Item $outputPath $samplePath -Force
-	}
-},
-UpdateScript
+	Assert-SameFile $samplePath $resultPath $env:MERGE
+	Remove-Item $resultPath
+}
 
 # Test all and clean.
 task . Help, Test, Clean

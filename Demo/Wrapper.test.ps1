@@ -181,10 +181,12 @@ task Stars StarsMissingDirectory, {
 	assert ($r[-1] -is [System.Collections.Specialized.OrderedDictionary])
 }
 
+# fixed v2.4.5 cmdlet binding
 task DynamicExampleParam {
 	Set-Location z
 	@'
 param(
+	[Parameter()]
 	$Platform = 'Win32',
 	$Configuration = 'Release'
 )
