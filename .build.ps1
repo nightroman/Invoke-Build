@@ -4,16 +4,16 @@
 	Build script (https://github.com/nightroman/Invoke-Build)
 
 .Description
-	The script automates project tasks like:
+	The script automates tasks like:
 	* Clean the project directory
 	* Run tests and compare results with expected
-	* Build the help file (PowerShell MAML format)
+	* Build the help file, PowerShell MAML format
 	* Convert markdown files to HTML for packages
-	* Create NuGet package for the NuGet gallery
+	* Push the release with a tag to GitHub
+	* Make and push the package to NuGet
 #>
 
-param
-(
+param(
 	[switch]$SkipTestDiff
 )
 
@@ -59,7 +59,8 @@ task UpdateScript {
 	}
 }
 
-# Build the PowerShell help file in the working directory.
+# Build the PowerShell help file.
+# <https://github.com/nightroman/Helps>
 task Help {
 	$dir = Split-Path (Get-Command Invoke-Build.ps1).Definition
 	. Helps.ps1
@@ -73,8 +74,7 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	$null = mkdir z\tools
 
 	# copy project files
-	Copy-Item -Destination z\tools -Recurse `
-	.\Demo,
+	Copy-Item -Destination z\tools `
 	.\Build.ps1,
 	.\Invoke-Build.ps1,
 	.\Invoke-Builds.ps1,
@@ -89,22 +89,6 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	.\Release-Notes.htm
 }
 
-# Make the package, test in it with Demo renamed to [ ], clean.
-#! It is not supposed to be called with other tasks.
-task PackageTest Package, {
-	# make it much harder with square brackets
-	Move-Item -LiteralPath z\tools\Demo 'z\tools\[ ]'
-	# test in the package using tools exactly from the package
-	Set-Alias Invoke-Build "$BuildRoot\z\tools\Invoke-Build.ps1"
-	Set-Location -LiteralPath 'z\tools\[ ]'
-	..\Build.ps1
-
-	# the last sanity check: expected package item count
-	$count = (Get-ChildItem .. -Force -Recurse).Count
-	assert (24 -eq $count) "Unexpected package item count: $count"
-},
-Clean
-
 # Set $script:Version.
 task Version {
 	# get and test version
@@ -116,11 +100,10 @@ task Version {
 # Make the NuGet package.
 task NuGet Version, Package, {
 	$text = @'
-Invoke-Build introduces task based programming in PowerShell. It invokes tasks
-from scripts written in PowerShell with domain-specific language. This process
-is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
+Invoke-Build invokes specified tasks defined in a PowerShell script.
+This process is called build. Tasks are pieces of code with optional
+relations. Concepts are similar to MSBuild and psake.
 '@
-	# NuGet file
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
@@ -138,11 +121,10 @@ is called build. Concepts are similar to MSBuild. Scripts are similar to psake.
 	</metadata>
 </package>
 "@
-	# pack
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
 }
 
-# Push commits with a version tag.
+# Push with a version tag.
 task PushRelease Version, {
 	$changes = exec { git status --short }
 	assert (!$changes) "Please, commit changes."
@@ -158,9 +140,9 @@ task PushNuGet NuGet, {
 },
 Clean
 
-# Calls tests infinitely. Note: normal scripts do not use ${*}.
+# Calls tests infinitely. NOTE: normal scripts do not use ${*}.
 task Loop {
-	for(;;) {
+	for() {
 		${*}.Tasks.Clear()
 		${*}.Errors.Clear()
 		${*}.Warnings.Clear()
@@ -168,14 +150,12 @@ task Loop {
 	}
 }
 
-# UpdateScript, test Demo scripts, and compare the output with expected. Create
-# and keep Invoke-Build-Test.log in %TEMP%. Then compare it with a new output
-# file in this directory. If they are the same then remove the new file.
-# Otherwise start %MERGE%. Requires Assert-SameFile from PowerShelf.
+# UpdateScript, test Demo scripts, and compare the output file with the
+# sample. Requires Assert-SameFile from PowerShelf.
 task Test UpdateScript, {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
-	if ($SkipTestDiff) { return }
+	if ($SkipTestDiff) {return}
 
 	assert (193 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (38 -eq $result.Errors.Count) $result.Errors.Count

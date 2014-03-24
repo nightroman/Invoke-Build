@@ -19,13 +19,15 @@
 	is invoked with the current location set to $BuildRoot, the build script
 	directory. $ErrorActionPreference is set to 'Stop'.
 
-	In order to get help for functions used in scripts invoke Invoke-Build.ps1
-	by the operator . and then use Get-Help:
+	In order to get help for special functions dot-source
+	Invoke-Build.ps1 by the operator . and then use Get-Help:
 
-		PS> . Invoke-Build.ps1  # shows available function names
-		PS> Get-Help <function> # help for one of the functions
+		PS> . Invoke-Build.ps1  # shows special function names
+		PS> Get-Help <function> # get help for a function
 
 	EXPOSED FUNCTIONS AND ALIASES
+
+	Scripts should use available aliases instead of function names.
 
 		* Add-BuildTask (task)
 		* Assert-Build (assert)
@@ -39,7 +41,7 @@
 		* Get-BuildFile [2]
 
 	[1] Write-Warning is redefined internally in order to count warnings in
-	tasks, build and other scripts. But warnings in modules are not counted.
+	tasks, build, and other scripts. But warnings in modules are not counted.
 
 	[2] Exists only as a pattern for wrappers.
 
@@ -67,18 +69,18 @@
 
 		${*}
 
-	NOTE: The special variable $_ can be defined and visible. Scripts and tasks
+	NOTE: The special variable $_ may be defined and visible. Scripts and tasks
 	can use it as their own, that is assign at first. Only in special cases it
-	can be used as an input without assignment.
+	is used as an input.
 
 	EVENT FUNCTIONS
 
 	The build engine defines and calls the following empty functions:
 
-		* Enter-Build     - before the first task
+		* Enter-Build     - before all tasks
 		* Enter-BuildTask - before each task
 		* Enter-BuildJob  - before each job
-		* Exit-Build      - after the last task
+		* Exit-Build      - after all tasks
 		* Exit-BuildTask  - after each task
 		* Exit-BuildJob   - after each job
 		* Export-Build    - after each task of a persistent build
@@ -103,7 +105,7 @@
 
 	Exit-BuildTask may read two extra properties:
 
-		* Error - error that stopped the task
+		* Error - an error stopped the task
 		* Elapsed - task duration, [TimeSpan]
 
 	Enter-BuildJob and Exit-BuildJob are invoked in the same scope as
@@ -121,7 +123,7 @@
 		or equal to '.' then the task '.' is invoked if it exists, otherwise
 		the first added task is invoked.
 
-		NOTE: Names with wildcard characters are reserved for special tasks.
+		Names with wildcard characters are reserved for special tasks.
 
 		SPECIAL TASKS
 
@@ -131,8 +133,8 @@
 		?? - Tells to collect and get all tasks as a dictionary. It can is used
 		by external tools for task analysis, TabExpansion, and etc.
 
-		Tasks ? and ?? sets WhatIf to true. Properly designed build scripts
-		should not perform anything significant if WhatIf is set to true.
+		Tasks ? and ?? sets $WhatIf to true. Properly designed build scripts
+		should not perform anything significant if $WhatIf is set to true.
 
 		* - Tells to invoke all root tasks. This is useful for scripts where
 		each task tests something. Such test tasks are often invoked together.
@@ -146,7 +148,7 @@
 		??, ** - Tells to get task dictionaries for all test files.
 '@
 		File = @'
-		A build script which defines build tasks by Add-BuildTask (task).
+		A build script which defines tasks by the alias "task" (Add-BuildTask).
 
 		If it is not specified then Invoke-Build looks for "*.build.ps1" files
 		in the current location. A single file is used as the script. If there
@@ -180,12 +182,6 @@
 		of variable to be created or any object with the property Value to be
 		assigned (e.g. a [ref] or [hashtable]).
 
-		If the Task is ? then the build script is invoked in WhatIf mode, tasks
-		are checked for missing and cyclic references and returned object as
-		the property All.
-
-		Otherwise tasks are invoked and the variable contains build results.
-
 		Result object properties:
 		* All - all defined tasks
 		* Error - a terminating build error
@@ -198,7 +194,7 @@
 		* Error - task error
 		* Started - start time
 		* Elapsed - task duration
-		* InvocationInfo.ScriptName, .ScriptLineNumber - task location.
+		* InvocationInfo{.ScriptName|.ScriptLineNumber} - task location.
 
 		Other result and task data should not be used. These data should not be
 		changed, especially if they are requested for a nested build, parent
@@ -219,7 +215,7 @@
 		WhatIf = @'
 		Tells to show preprocessed tasks and their scripts instead of invoking
 		them. If a script does anything but adding and configuring tasks then
-		it may check for $WhatIf and skip some actions.
+		it should check for $WhatIf and skip some significant actions.
 '@
 	}
 
@@ -318,7 +314,7 @@
 	synopsis = 'Defines a build task and adds it to the internal task list.'
 
 	description = @'
-	Its recommended alias is 'task'. This is the main feature of build scripts.
+	Scripts use its alias 'task'. This is the main feature of build scripts.
 	At least one task must be added. It is used in the build script scope only.
 
 	In fact, this feature is literally all that build scripts really need.
@@ -418,7 +414,7 @@
 	synopsis = 'Gets an error of the specified task if the task has failed.'
 
 	description = @'
-	Its recommended alias is 'error'. It is used when some referenced tasks are
+	Scripts use its alias 'error'. It is used when some referenced tasks are
 	protected (@{Task=1}) and the current task is about to analyse their
 	potential errors.
 '@
@@ -450,8 +446,8 @@
 	synopsis = 'Checks for a condition.'
 
 	description = @'
-	Its recommended alias is 'assert'. It checks for a condition and if it is
-	not true throws an error with an optional message text.
+	Scripts use its alias 'assert'. It checks for a condition and if it is not
+	true throws an error with an optional message text.
 '@
 
 	parameters = @{
@@ -473,9 +469,9 @@
 	synopsis = 'Gets PowerShell or environment variable or the default.'
 
 	description = @'
-	Its recommended alias is 'property'. It gets the first not null value of
-	these three: PowerShell variable, environment variable, specified default
-	value. Otherwise an error is thrown.
+	Scripts use its alias 'property'. It gets the first not null value of these
+	three: PowerShell variable, environment variable, specified default value.
+	Otherwise an error is thrown.
 
 	CAUTION: Properties should be used sparingly with carefully chosen names
 	that unlikely can already exist and be not related to the build script.
@@ -541,9 +537,9 @@ engine (version 2+).
 	synopsis = 'Invokes the command and checks for the $LastExitCode.'
 
 	description = @'
-	Its recommended alias is 'exec'. It invokes the specified script block
-	which is supposed to call an executable. Then the $LastExitCode is checked.
-	By default if the code is not 0 then the function throws an error.
+	Scripts use its alias 'exec'. It invokes the specified script block which
+	is supposed to call an executable. Then the $LastExitCode is checked. By
+	default if the code is not 0 then the function throws an error.
 
 	It is common to call .NET tools, e.g. MSBuild. See Use-BuildAlias.
 '@
@@ -589,11 +585,11 @@ engine (version 2+).
 	synopsis = '(use) Sets framework/directory tool aliases.'
 
 	description = @'
-	Its recommended alias is 'use'. Invoke-Build does not change the system
-	path in order to make framework tools available by names. This is not
-	suitable for using mixed framework tools (in different tasks, scripts,
-	parallel builds). Instead, this function is used for setting tool aliases
-	in the scope where it is called from.
+	Scripts use its alias 'use'. Invoke-Build does not change the system path
+	in order to make framework tools available by names. This is not suitable
+	for using mixed framework tools (in different tasks, scripts, parallel
+	builds). Instead, this function is used for setting tool aliases in the
+	scope where it is called from.
 
 	This function is often called from a build script and all tasks use script
 	scope aliases. But it can be called from tasks in order to use more tools

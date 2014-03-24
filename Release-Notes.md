@@ -1,6 +1,16 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.6
+
+Amended documentation.
+
+The first line "Build ...": write resolved task names, i.e. write the actual
+default task name instead of nothing or `'.'` and task list instead of `'*'`.
+
+*Demo* scripts are excluded. They are more boring tests than useful examples.
+In any case they are available online at the project site.
+
 ## v2.4.5
 
 *Build.ps1*: fixed issues on scripts with cmdlet binding parameters.

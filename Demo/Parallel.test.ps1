@@ -204,7 +204,7 @@ task . { Invoke-Builds @{Task='t1'}, @{Task='t2'} }
 
 	Write-Build Magenta $out
 	assert ($out -like @'
-Build  *\z\.build.ps1
+Build . *\z\.build.ps1
 /. (1/1):
 (1/2) *\z\.build.ps1
 (2/2) *\z\.build.ps1

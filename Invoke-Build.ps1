@@ -77,9 +77,9 @@ function Write-Build([ConsoleColor]$Color, [string]$Text)
 {$i=$Host.UI.RawUI; $_=$i.ForegroundColor; try{$i.ForegroundColor=$Color; $Text}finally{$i.ForegroundColor=$_}}
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion{[Version]'2.4.5'}
+function Get-BuildVersion{[Version]'2.4.6'}
 if($MyInvocation.InvocationName -eq '.'){return @'
-Invoke-Build 2.4.5
+Invoke-Build 2.4.6
 Copyright (c) 2011-2014 Roman Kuzmin
 Add-BuildTask Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@}
@@ -278,12 +278,12 @@ try{
 			return
 		}
 
-		Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 		if($BuildTask -eq '*'){
 			$BuildTask=foreach($_ in ${-a}.Keys){foreach(${-} in ${-a}.Values){if(${-}.Job -contains $_){$_|*Try; $_=@(); break}} $_}
 		}elseif(!$BuildTask -or '.' -eq $BuildTask){
 			$BuildTask=if(${-a}['.']){'.'}else{${-a}.Item(0).Name}
 		}
+		Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 		$BuildTask|*Try
 
 		try{
