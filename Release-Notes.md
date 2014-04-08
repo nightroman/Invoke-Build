@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.4.7
+
+Issue #1. Per user request, reduced density of the source code of
+*Invoke-Build.ps1*, for better readability, easier debugging, etc.
+
+Joined two internal functions `*U1` and `*U2`.
+
 ## v2.4.6
 
 Amended documentation.
