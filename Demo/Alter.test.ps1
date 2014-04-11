@@ -28,11 +28,11 @@ task BeforeTask -Before Task1, Task2 {
 }
 
 # Invoke after Task3, fail but allow the build to survive.
-task AfterTask3 -After @{Task3=1} {
+task AfterTask3 -After (job Task3 -Safe) {
 	throw 'In AfterTask3'
 }
 
 # Invoke before Task3, fail but allow the build to survive.
-task BeforeTask3 -Before @{Task3=1} {
+task BeforeTask3 -Before (job Task3 -Safe) {
 	throw 'In BeforeTask3'
 }

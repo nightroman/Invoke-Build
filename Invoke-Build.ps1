@@ -37,7 +37,8 @@ function Add-BuildTask(
 	$Inputs,
 	$Outputs,
 	[switch]$Partial
-){
+)
+{
 	${*}.All[$Name] = [PSCustomObject]@{
 		Name = $Name
 		Error = $null
@@ -66,6 +67,20 @@ function Add-BuildTask(
 		catch {
 			*TE "Task '$Name': $_" 5
 		}
+	}
+}
+
+#.ExternalHelp Invoke-Build-Help.xml
+function New-BuildJob(
+	[Parameter(Position=0, Mandatory=1)][string]$Name,
+	[switch]$Safe
+)
+{
+	if ($Safe) {
+		@{$Name = 1}
+	}
+	else {
+		$Name
 	}
 }
 
@@ -116,7 +131,7 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name){
+function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
 	try {
 		$d = switch -regex ($Path) {
 			'^\d+\.' {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$Path", 'MSBuildToolsPath', '')}
@@ -147,13 +162,14 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.4.7'}
+function Get-BuildVersion {[Version]'2.5.0'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.4.7
+Invoke-Build 2.5.0
 Copyright (c) 2011-2014 Roman Kuzmin
-Add-BuildTask Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
+
+Add-BuildTask New-BuildJob Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@
 }
 
@@ -250,6 +266,7 @@ filter *Try($T, $P = [System.Collections.Stack]@()) {
 
 function *IO {
 	${private:-} = $args[0]
+
 	if ((${private:-i} = ${-}.Inputs) -is [scriptblock]) {
 		*SL
 		${-i} = @(& ${-i})
@@ -407,7 +424,7 @@ function *Task {
 				,$BuildTask
 				$BuildFile
 				${*}.Parameters
-				,@(${*}.All.Values | %{if($_.Elapsed){$_.Name}})
+				,@(${*}.All.Values | %{if ($_.Elapsed) {$_.Name}})
 				*UC Export-Build
 			) | Export-Clixml $_
 		}
@@ -453,18 +470,14 @@ else {
 	$BuildRoot = Split-Path $BuildFile
 }
 
-function Enter-Build {}
-function Exit-Build {}
-function Enter-BuildJob {}
-function Exit-BuildJob {}
-function Enter-BuildTask {}
-function Exit-BuildTask {}
-function Export-Build{}
-function Import-Build{}
+function Enter-Build {} function Enter-BuildTask {} function Enter-BuildJob {}
+function Exit-Build {} function Exit-BuildTask {} function Exit-BuildJob {}
+function Export-Build {} function Import-Build {}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
+Set-Alias job New-BuildJob
 Set-Alias property Get-BuildProperty
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
@@ -597,7 +610,7 @@ finally {
 			${-*}.Errors.AddRange($e)
 			${-*}.Warnings.AddRange($w)
 		}
-		$c, $m = if(${-r} -eq 2) {12, 'Build FAILED'}
+		$c, $m = if (${-r} -eq 2) {12, 'Build FAILED'}
 		elseif ($e) {14, 'Build completed with errors'}
 		elseif ($w) {14, 'Build succeeded with warnings'}
 		else {10, 'Build succeeded'}

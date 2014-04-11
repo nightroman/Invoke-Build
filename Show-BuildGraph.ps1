@@ -13,8 +13,8 @@
 	using one of the supported output formats and the associated application.
 
 	Tasks with code are shown as boxes, tasks without code are shown as ovals.
-	Protected task calls are shown with dotted edges, regular calls are shown
-	with solid edges. Call numbers on edges are not shown by default.
+	Safe references are shown with dotted edges, regular calls are shown with
+	solid edges. Call numbers on edges are not shown by default.
 
 	EXAMPLES
 

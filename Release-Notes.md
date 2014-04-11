@@ -1,6 +1,25 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.5.0
+
+Some changes in terminology and syntax, not breaking for now. Allowed to fail
+task references are now called "safe". They are created by the new command
+*job* (*New-BuildJob*) with the switch *Safe*. In other words,
+
+DO (new):
+
+    task Task2 (job Task1 -Safe), { ... }
+
+DON'T (old):
+
+    task Task2 @{ Task1 = 1 }, { ... }
+
+The new syntax is less cryptic, self describing, and easy to extend.
+
+The old syntax for now works as well. But it is deprecated, not documented, and
+very likely will stop working if the command *job* introduces more options.
+
 ## v2.4.7
 
 Issue #1. Per user request, reduced density of the source code of

@@ -43,8 +43,8 @@ task AssertMessage {
 }
 
 # The default task calls the others and tests the result errors.
-# Note use of @{Task=1} references to failing tasks.
-task . @{AssertDefault=1}, @{AssertMessage=1}, {
+# Note use of safe references to failing tasks.
+task . (job AssertDefault -Safe), (job AssertMessage -Safe), {
 	# Check $ErrorActionPreference and change it.
 	assert ($ErrorActionPreference -eq 'Stop')
 	$ErrorActionPreference = 0

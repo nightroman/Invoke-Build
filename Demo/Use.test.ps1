@@ -105,13 +105,13 @@ task MissingDirectory {
 }
 
 # The default task calls the others and checks that InvalidFramework and
-# DoNotDotSource have failed. Failing tasks are referenced as @{Task=1}.
+# DoNotDotSource have failed. Failing tasks are referenced as safe.
 task . `
-@{MissingVersion=1},
-@{MissingFramework=1},
-@{InvalidFramework=1},
-@{MissingDirectory=1},
-@{InvalidDirectory=1},
+(job MissingVersion -Safe),
+(job MissingFramework -Safe),
+(job InvalidFramework -Safe),
+(job MissingDirectory -Safe),
+(job InvalidDirectory -Safe),
 {
 	Test-Error MissingVersion   "Cannot resolve '3.14'.*"
 	Test-Error InvalidFramework "Cannot resolve 'Framework\<>'.*"

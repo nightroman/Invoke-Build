@@ -38,6 +38,6 @@ task MissingProperty {
 }
 
 # Test error cases.
-task . @{MissingProperty=1}, {
+task . (job MissingProperty -Safe), {
 	Test-Error MissingProperty "Missing variable '_111126_181750'.*At *\Property.test.ps1:*ObjectNotFound*"
 }

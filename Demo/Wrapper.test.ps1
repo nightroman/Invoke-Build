@@ -129,7 +129,7 @@ task . task1
 	# build fails
 	@'
 task task1 { throw 'Demo error in task1.' }
-task . @{task1=1}
+task . (job task1 -Safe)
 '@ > z\test.build.ps1
 	$log = [System.Collections.ArrayList]@()
 	Build . z\test.build.ps1 -Summary
@@ -280,8 +280,8 @@ GrandParentHasOneCandidate,
 InvokeBuildGetFile,
 TreeAndComment,
 Summary,
-@{TreeTaskNotDefined=1},
-@{TreeCyclicReference=1},
+(job TreeTaskNotDefined -Safe),
+(job TreeCyclicReference -Safe),
 {
 	$e = error TreeTaskNotDefined
 	assert ("$e" -like "Task 'task1': Missing task 'missing'.*At *z\test.build.ps1:2 *")

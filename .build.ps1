@@ -118,6 +118,7 @@ relations. Concepts are similar to MSBuild and psake.
 		<summary>$text</summary>
 		<description>$text</description>
 		<tags>PowerShell Build Automation</tags>
+		<releaseNotes>https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md</releaseNotes>
 	</metadata>
 </package>
 "@

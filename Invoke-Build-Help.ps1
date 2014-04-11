@@ -30,6 +30,7 @@
 	Scripts should use available aliases instead of function names.
 
 		* Add-BuildTask (task)
+		* New-BuildJob (job)
 		* Assert-Build (assert)
 		* Get-BuildError (error)
 		* Get-BuildProperty (property)
@@ -299,6 +300,7 @@
 		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
 		@{ text = 'Add-BuildTask' }
+		@{ text = 'New-BuildJob' }
 		@{ text = 'Assert-Build' }
 		@{ text = 'Get-BuildError' }
 		@{ text = 'Get-BuildProperty' }
@@ -318,7 +320,7 @@
 	At least one task must be added. It is used in the build script scope only.
 
 	In fact, this feature is literally all that build scripts really need.
-	Other build functions are just helpers, scripts do not have to use them.
+	Other functions are mostly helpers, scripts do not have to use them.
 '@
 
 	parameters = @{
@@ -328,19 +330,15 @@
 '@
 		Jobs = @'
 		One or more task jobs. Valid job types are:
-		* [string] - name of an existing referenced task;
-		* [hashtable] - referenced task with options, @{TaskName = Option};
+		* [string] - simple reference, name of an existing task;
+		* [object] - advanced reference created by 'job' (New-BuildJob);
 		* [scriptblock] - script job, a script block invoked for this task.
-
-		Notation @{TaskName = Option} assigns an option to the referenced task.
-		The only supported option 1 makes a task reference protected. It tells
-		to ignore task errors if other tasks also reference TaskName protected.
 '@
 		After = @'
 		Tells to add this task to the end of the specified task job lists.
 
-		Altered tasks are defined as names or constructs @{Task = 1}. In the
-		latter case this task is called protected, see Jobs for details.
+		Altered tasks are defined as by their names or by the command 'job'.
+		In the latter case options are applied to the added task reference.
 
 		Parameters After and Before are used in order to alter build task jobs
 		in special cases when direct changes in task jobs are not suitable.
@@ -352,14 +350,14 @@
 		See the parameter After for details.
 '@
 		If = @'
-		Tells whether to invoke the task ($true) or skip it ($false). The
-		default is $true. The value is either a script block evaluated on task
-		invocation or any value treated as Boolean. In WhatIf mode a
-		scriptblock treated as $true without invocation.
+		Tells whether to invoke the task or skip it. The default is $true. The
+		value is a script block evaluated on task invocation or any other that
+		is treated as Boolean on definition. In WhatIf mode a scriptblock is
+		treated as $true without invocation.
 
 		If it is a script block and the task is called several times then it is
-		possible that the task is at first skipped but still invoked later when
-		this block gets true.
+		possible that the task is skipped at first but invoked later when this
+		block gets true.
 '@
 		Inputs = @'
 		Tells to process the task as incremental and requires the parameter
@@ -401,10 +399,44 @@
 	outputs = @()
 
 	links = @(
+		@{ text = 'New-BuildJob' }
 		@{ text = 'Get-BuildError' }
 		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial' }
 		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks' }
 		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks' }
+	)
+}
+
+### New-BuildJob
+@{
+	command = 'New-BuildJob'
+	synopsis = 'Creates a new task reference with options.'
+
+	description = @'
+	Scripts use its alias 'job'. It is called on job list creation for a task.
+	It creates a reference to another task with options. The only used option
+	is the switch Safe.
+'@
+
+	parameters = @{
+		Name = @'
+		The referenced task name.
+'@
+		Safe = @'
+		Tells to create a safe task job. If the referenced task fails the build
+		continues if this task is safe everywhere in the current build. Other
+		tasks use 'error' (Get-BuildError) in order to check for errors.
+'@
+	}
+
+	inputs = @()
+	outputs = @{
+		type = 'Object'
+		description = 'A new job used as an argument on task creation.'
+	}
+
+	links = @(
+		@{ text = 'Get-BuildError' }
 	)
 }
 
@@ -414,9 +446,8 @@
 	synopsis = 'Gets an error of the specified task if the task has failed.'
 
 	description = @'
-	Scripts use its alias 'error'. It is used when some referenced tasks are
-	protected (@{Task=1}) and the current task is about to analyse their
-	potential errors.
+	Scripts use its alias 'error'. It is used when some tasks are referenced
+	safe as (job Task -Safe) in order to analyse their potential errors.
 '@
 
 	parameters = @{
@@ -437,6 +468,7 @@
 
 	links = @(
 		@{ text = 'Add-BuildTask' }
+		@{ text = 'New-BuildJob' }
 	)
 }
 

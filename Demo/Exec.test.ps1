@@ -31,8 +31,8 @@ task ExecFailsBadCommand {
 task . `
 ExecWorksCode0,
 ExecWorksCode42,
-@{ExecFailsCode13=1},
-@{ExecFailsBadCommand=1},
+(job ExecFailsCode13 -Safe),
+(job ExecFailsBadCommand -Safe),
 {
 	assert ($script:ExecWorksCode0 -eq 'Code0')
 	assert ($script:ExecWorksCode42 -eq 'Code42')

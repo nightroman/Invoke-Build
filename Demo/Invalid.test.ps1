@@ -40,10 +40,10 @@ task InvalidJobType {
 		task task1 {}
 		task task2 {}
 		task InvalidJob @(
-			'task1'        # [string] - task name
-			@{ task2 = 1 } # [hashtable] - tells to ignore task2 errors
-			{ $x = 123 }   # [scriptblock] - code invoked as this task
-			42             # all other types are invalid
+			'task1'           # [string] - task name
+			(job task2 -Safe) # [object] - tells to ignore task2 errors
+			{ $x = 123 }      # [scriptblock] - code invoked as this task
+			42                # all other types are invalid
 		)
 	}
 }

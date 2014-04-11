@@ -190,10 +190,10 @@ FullIncrementalTwoMissing,
 PartIncrementalTwoMissing,
 FullIncrementalTwoOutOfDate,
 PartIncrementalTwoOutOfDate,
-@{IncrementalInputsFails=1},
-@{PartialInputsFails=1},
-@{IncrementalOutputsFails=1},
-@{PartialOutputsFails=1},
+(job IncrementalInputsFails -Safe),
+(job PartialInputsFails -Safe),
+(job IncrementalOutputsFails -Safe),
+(job PartialOutputsFails -Safe),
 {
 	assert ($PreFullIncrementalOneUpToDate -eq 1)
 	assert ($PostPartIncrementalOneUpToDate -eq 1)

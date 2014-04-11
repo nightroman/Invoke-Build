@@ -216,6 +216,7 @@ task TestFunctions {
 		'Get-BuildVersion'
 		'Import-Build'
 		'Invoke-BuildExec'
+		'New-BuildJob'
 		'Use-BuildAlias'
 		'Write-Build'
 		'Write-Warning'
