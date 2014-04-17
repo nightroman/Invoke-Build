@@ -1,6 +1,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.5.1
+
+Function and variable names starting with `*` are reserved for the engine. For
+technical reasons they cannot be completely hidden from scripts. Scripts should
+not use functions and variables with such names. It is unlikely that they ever
+do this but this is possible and should be avoided.
+
 ## v2.5.0
 
 Some changes in terminology and syntax, not breaking for now. Allowed to fail

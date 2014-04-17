@@ -33,9 +33,8 @@ The engine builds a sequence of tasks defined in a build script by `task`
 statements which provide task names, script blocks, references, conditions,
 inputs and outputs. The tasks are checked for issues like missing or cyclic
 references. Then the specified tasks are invoked together with other tasks
-referenced by them recursively.
-
-[More...](https://github.com/nightroman/Invoke-Build/wiki/How-Build-Works)
+referenced by them recursively. Why is this needed at all? See
+[Concepts](https://github.com/nightroman/Invoke-Build/wiki/Concepts).
 
 ## Installation
 

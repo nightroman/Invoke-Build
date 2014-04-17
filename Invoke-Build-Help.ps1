@@ -25,6 +25,12 @@
 		PS> . Invoke-Build.ps1  # shows special function names
 		PS> Get-Help <function> # get help for a function
 
+	RESERVED FUNCTION AND VARIABLE NAMES
+
+	Function and variable names starting with "*" are reserved for the engine.
+	For technical reasons they cannot be completely hidden from scripts.
+	Scripts should not use functions and variables with such names.
+
 	EXPOSED FUNCTIONS AND ALIASES
 
 	Scripts should use available aliases instead of function names.
@@ -57,18 +63,12 @@
 
 	EXPOSED VARIABLES
 
-	Only documented variables should be visible for build scripts and tasks.
-
 	Exposed variables designed for build scripts and tasks:
 
 		$WhatIf    - WhatIf mode, Invoke-Build parameter
 		$BuildRoot - build script location
 		$BuildFile - build script path
 		$BuildTask - initial tasks
-
-	Variable for internal use by the engine:
-
-		${*}
 
 	NOTE: The special variable $_ may be defined and visible. Scripts and tasks
 	can use it as their own, that is assign at first. Only in special cases it

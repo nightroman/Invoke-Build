@@ -27,7 +27,7 @@ Markdown.tasks.ps1
 
 # Remove generated HTML and temp files.
 task Clean RemoveMarkdownHtml, {
-	Remove-Item z, Invoke-Build-Help.xml, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
+	Remove-Item z, Invoke-Build-Help.xml, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Warn about not empty git status if .git exists.
@@ -95,6 +95,12 @@ task Version {
 	($script:Version = (Get-BuildVersion).ToString())
 	$r = Select-String -SimpleMatch "Invoke-Build $Version" -Path Invoke-Build.ps1
 	assert ($r) 'Missing or outdated line Invoke-Build <version>.'
+}
+
+# Make the zip package.
+task Zip Version, Package, {
+	Set-Location z\tools
+	exec { & 7z a ..\..\Invoke-Build.$(Get-BuildVersion).zip * }
 }
 
 # Make the NuGet package.

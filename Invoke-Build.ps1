@@ -121,12 +121,12 @@ function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0) {
-	${private:-c} = $Command
-	${private:-x} = $ExitCode
+	${private:*c} = $Command
+	${private:*x} = $ExitCode
 	Remove-Variable Command, ExitCode
-	. ${-c}
-	if (${-x} -notcontains $LastExitCode) {
-		*TE "Command {${-c}} exited with code $LastExitCode." 8
+	. ${*c}
+	if (${*x} -notcontains $LastExitCode) {
+		*TE "Command {${*c}} exited with code $LastExitCode." 8
 	}
 }
 
@@ -162,18 +162,18 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.5.0'}
+function Get-BuildVersion {[Version]'2.5.1'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.5.0
+Invoke-Build 2.5.1
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask New-BuildJob Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
 '@
 }
 
-if (!$Host.UI -or !$Host.UI.RawUI -or 'Default Host','ServerRemoteHost' -contains $Host.Name) {
+if (!$Host.UI -or !$Host.UI.RawUI -or 'Default Host', 'ServerRemoteHost' -contains $Host.Name) {
 	function Write-Build($Color, [string]$Text) {$Text}
 }
 
@@ -198,10 +198,10 @@ function *SL($_ = $BuildRoot) {
 	Set-Location -LiteralPath $_ -ErrorAction 1
 }
 
-function *UC(${-u}) {
+function *UC(${*u}) {
 	if (!$WhatIf) {
 		*SL
-		. ${-u} @args
+		. ${*u} @args
 	}
 }
 
@@ -265,55 +265,55 @@ filter *Try($T, $P = [System.Collections.Stack]@()) {
 }
 
 function *IO {
-	${private:-} = $args[0]
+	${private:**} = $args[0]
 
-	if ((${private:-i} = ${-}.Inputs) -is [scriptblock]) {
+	if ((${private:*i} = ${**}.Inputs) -is [scriptblock]) {
 		*SL
-		${-i} = @(& ${-i})
+		${*i} = @(& ${*i})
 	}
 	*SL
-	${private:-p} = [System.Collections.ArrayList]@()
-	${-i} = foreach($_ in ${-i}) {
+	${private:*p} = [System.Collections.ArrayList]@()
+	${*i} = foreach($_ in ${*i}) {
 		if ($_ -isnot [System.IO.FileInfo]) {$_ = [System.IO.FileInfo](*FP $_)}
 		if (!$_.Exists) {throw "Missing input file '$_'."}
 		$_
-		$null = ${-p}.Add($_.FullName)
+		$null = ${*p}.Add($_.FullName)
 	}
-	if (!${-p}) {return 'Skipping empty input.'}
+	if (!${*p}) {return 'Skipping empty input.'}
 
-	${private:-o} = ${-}.Outputs
-	if (${-}.Partial) {
-		${-o} = @(
-			if (${-o} -is [scriptblock]) {
-				${-p} | & ${-o}
+	${private:*o} = ${**}.Outputs
+	if (${**}.Partial) {
+		${*o} = @(
+			if (${*o} -is [scriptblock]) {
+				${*p} | & ${*o}
 				*SL
 			}
 			else {
-				${-o}
+				${*o}
 			}
 		)
-		if (${-p}.Count -ne ${-o}.Count) {throw "Different input/output: $(${-p}.Count)/$(${-o}.Count)."}
+		if (${*p}.Count -ne ${*o}.Count) {throw "Different input/output: $(${*p}.Count)/$(${*o}.Count)."}
 
 		$k = -1
-		${-}.Inputs = $i = [System.Collections.ArrayList]@()
-		${-}.Outputs = $o = [System.Collections.ArrayList]@()
-		foreach($_ in ${-i}) {
-			if ($_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime((*FP ($p = ${-o}[++$k])))) {
-				$null = $i.Add(${-p}[$k]), $o.Add($p)
+		${**}.Inputs = $i = [System.Collections.ArrayList]@()
+		${**}.Outputs = $o = [System.Collections.ArrayList]@()
+		foreach($_ in ${*i}) {
+			if ($_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime((*FP ($p = ${*o}[++$k])))) {
+				$null = $i.Add(${*p}[$k]), $o.Add($p)
 			}
 		}
 		if ($i) {return}
 	}
 	else {
-		if (${-o} -is [scriptblock]) {
-			${-}.Outputs = ${-o} = & ${-o}
+		if (${*o} -is [scriptblock]) {
+			${**}.Outputs = ${*o} = & ${*o}
 			*SL
 		}
-		if (!${-o}) {throw 'Empty output.'}
+		if (!${*o}) {throw 'Empty output.'}
 
-		${-}.Inputs = ${-p}
-		$m = (${-i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
-		foreach($_ in ${-o}) {
+		${**}.Inputs = ${*p}
+		$m = (${*i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
+		foreach($_ in ${*o}) {
 			if ($m -gt [System.IO.File]::GetLastWriteTime((*FP $_)).Ticks) {return}
 		}
 	}
@@ -321,135 +321,135 @@ function *IO {
 }
 
 function *Task {
-	${private:-}, ${private:-p} = $args
+	${private:**}, ${private:*p} = $args
 
-	${-} = ${*}.All[${-}]
-	${-p} = "${-p}/$(${-}.Name)"
-	if (${-}.Error) {
-		Write-Build 8 "${-p} failed."
+	${**} = ${*}.All[${**}]
+	${*p} = "${*p}/$(${**}.Name)"
+	if (${**}.Error) {
+		Write-Build 8 "${*p} failed."
 		return
 	}
-	if (${-}.Elapsed) {
-		Write-Build 8 "Done ${-p}"
+	if (${**}.Elapsed) {
+		Write-Build 8 "Done ${*p}"
 		return
 	}
 
-	if ((${private:-x} = ${-}.If) -is [scriptblock]) {
+	if ((${private:*x} = ${**}.If) -is [scriptblock]) {
 		if (!$WhatIf) {
 			*SL
 			try {
-				${-x} = & ${-x}
+				${*x} = & ${*x}
 			}
 			catch {
-				${-}.Error = $_
+				${**}.Error = $_
 				throw
 			}
 		}
 	}
-	if (!${-x}) {
-		Write-Build 8 "${-p} skipped."
+	if (!${*x}) {
+		Write-Build 8 "${*p} skipped."
 		return
 	}
 
-	${private:-n} = 0
-	${private:-a} = ${-}.Job
-	${private:-i} = [int]($null -ne ${-}.Inputs)
-	${-}.Started = [DateTime]::Now
+	${private:*n} = 0
+	${private:*a} = ${**}.Job
+	${private:*i} = [int]($null -ne ${**}.Inputs)
+	${**}.Started = [DateTime]::Now
 	try {
-		. *UC Enter-BuildTask ${-}
-		foreach(${private:-j} in ${-a}) {
-			++${-n}
-			if (${-j} -is [string]) {
+		. *UC Enter-BuildTask ${**}
+		foreach(${private:*j} in ${*a}) {
+			++${*n}
+			if (${*j} -is [string]) {
 				try {
-					*Task ${-j} ${-p}
+					*Task ${*j} ${*p}
 				}
 				catch {
-					if (*Bad ${-j} $BuildTask) {throw}
+					if (*Bad ${*j} $BuildTask) {throw}
 					Write-Build 12 (*EI "ERROR: $_" $_)
 				}
 				continue
 			}
 
-			${private:-m} = "${-p} (${-n}/$(${-a}.Count))"
-			Write-Build 11 "${-m}:"
+			${private:*m} = "${*p} (${*n}/$(${*a}.Count))"
+			Write-Build 11 "${*m}:"
 			if ($WhatIf) {
-				${-j}
+				${*j}
 				continue
 			}
 
-			if (1 -eq ${-i}) {${-i} = *IO ${-}}
-			if (${-i}) {
-				Write-Build 11 ${-i}
+			if (1 -eq ${*i}) {${*i} = *IO ${**}}
+			if (${*i}) {
+				Write-Build 11 ${*i}
 				continue
 			}
 
 			try {
 				*SL
-				. Enter-BuildJob ${-} ${-n}
+				. Enter-BuildJob ${**} ${*n}
 				*SL
-				if (0 -eq ${-i}) {
-					& ${-j}
+				if (0 -eq ${*i}) {
+					& ${*j}
 				}
 				else {
-					$Inputs = ${-}.Inputs
-					$Outputs = ${-}.Outputs
-					if (${-}.Partial) {
-						${-x} = 0
+					$Inputs = ${**}.Inputs
+					$Outputs = ${**}.Outputs
+					if (${**}.Partial) {
+						${*x} = 0
 						$Inputs | .{process{
-							$2 = $Outputs[${-x}++]
+							$2 = $Outputs[${*x}++]
 							$_
-						}} | & ${-j}
+						}} | & ${*j}
 					}
 					else {
-						$Inputs | & ${-j}
+						$Inputs | & ${*j}
 					}
 				}
 			}
 			catch {
-				${-}.Error = $_
+				${**}.Error = $_
 				throw
 			}
 			finally {
 				*SL
-				. Exit-BuildJob ${-} ${-n}
+				. Exit-BuildJob ${**} ${*n}
 			}
-			if (${-a}.Count -ge 2) {
-				Write-Build 11 "Done ${-m}"
+			if (${*a}.Count -ge 2) {
+				Write-Build 11 "Done ${*m}"
 			}
 		}
-		${-}.Elapsed = $_ = [DateTime]::Now - ${-}.Started
-		Write-Build 11 "Done ${-p} $_"
+		${**}.Elapsed = $_ = [DateTime]::Now - ${**}.Started
+		Write-Build 11 "Done ${*p} $_"
 		if ($_ = ${*}.Checkpoint) {
 			$(
-				,$BuildTask
+				, $BuildTask
 				$BuildFile
 				${*}.Parameters
-				,@(${*}.All.Values | %{if ($_.Elapsed) {$_.Name}})
+				, @(${*}.All.Values | .{process{ if ($_.Elapsed) {$_.Name} }})
 				*UC Export-Build
 			) | Export-Clixml $_
 		}
 	}
 	catch {
-		Write-Build 14 (*II ${-})
-		${-}.Error = $_
-		${-}.Elapsed = [DateTime]::Now - ${-}.Started
-		${-x} = "ERROR: Task ${-p}: $_"
-		$null = ${*}.Errors.Add($(if (*My) {${-x}} else {*EI ${-x} $_}))
+		Write-Build 14 (*II ${**})
+		${**}.Error = $_
+		${**}.Elapsed = [DateTime]::Now - ${**}.Started
+		${*x} = "ERROR: Task ${*p}: $_"
+		$null = ${*}.Errors.Add($(if (*My) {${*x}} else {*EI ${*x} $_}))
 		throw
 	}
 	finally {
-		$null = ${*}.Tasks.Add(${-})
-		. *UC Exit-BuildTask ${-}
+		$null = ${*}.Tasks.Add(${**})
+		. *UC Exit-BuildTask ${**}
 	}
 }
 
 $ErrorActionPreference = 'Stop'
-${private:-cd} = *FP
-${private:-xt} = $null
+${private:*cd} = *FP
+${private:*xt} = $null
 if ($Task -eq '**') {
 	if (![System.IO.Directory]::Exists(($File = *FP $File))) {throw "Missing directory '$File'."}
 	$BuildFile = @(Get-ChildItem -LiteralPath $File -Recurse *.test.ps1)
-	$BuildRoot = ${-cd}
+	$BuildRoot = ${*cd}
 }
 else {
 	if ($Checkpoint) {$Checkpoint = *FP $Checkpoint}
@@ -458,9 +458,9 @@ else {
 			if (!([System.IO.File]::Exists(($BuildFile = *FP $File)))) {throw "Missing script '$BuildFile'."}
 		}
 		elseif ($Checkpoint -and !($Task -or $Parameters)) {
-			$Task, $BuildFile, $Parameters, ${-xt}, ${private:-xd} = Import-Clixml $Checkpoint
+			$Task, $BuildFile, $Parameters, ${*xt}, ${private:*xd} = Import-Clixml $Checkpoint
 		}
-		elseif (!($BuildFile = Get-BuildFile ${-cd})) {
+		elseif (!($BuildFile = Get-BuildFile ${*cd})) {
 			throw 'Missing default script.'
 		}
 	}
@@ -484,28 +484,27 @@ Set-Alias use Use-BuildAlias
 
 $_ = $MyInvocation.MyCommand.Path
 Set-Alias Invoke-Build $_
-Set-Alias Invoke-Builds (Join-Path (Split-Path $_) 'Invoke-Builds.ps1')
+Set-Alias Invoke-Builds (Join-Path (Split-Path $_) Invoke-Builds.ps1)
 
-if (${private:-*} = $PSCmdlet.SessionState.PSVariable.Get('*')) {
-	${-*} = if (${-*}.Description -eq 'Invoke-Build') {${-*}.Value}
+if (${private:*0} = $PSCmdlet.SessionState.PSVariable.Get('*')) {
+	${*0} = if (${*0}.Description -eq 'Invoke-Build') {${*0}.Value}
 }
 New-Variable * -Description Invoke-Build ([PSCustomObject]@{
 	Tasks = [System.Collections.ArrayList]@()
 	Errors = [System.Collections.ArrayList]@()
 	Warnings = [System.Collections.ArrayList]@()
-	All = ${private:-a} = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
+	All = ${private:*a} = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Parameters = $_ = $Parameters
 	Checkpoint = $Checkpoint
 	Started = [DateTime]::Now
 	Elapsed = $null
 	Error = $null
 })
-if (${private:-q} = $Task -eq '??' -or $Task -eq '?') {
+if (${private:*q} = $Task -eq '??' -or $Task -eq '?') {
 	$WhatIf = $true
 }
 $BuildTask = $Task
-${private:-Result} = $Result
-${private:-Safe} = $Safe
+${private:*Safe} = $Safe
 if ($Result) {
 	if ($Result -is [string]) {
 		New-Variable -Force -Scope 1 $Result ${*}
@@ -514,9 +513,9 @@ if ($Result) {
 		$Result.Value = ${*}
 	}
 }
-Remove-Variable Task,File,Parameters,Checkpoint,Result,Safe
+Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe
 
-${private:-r} = 0
+${private:*r} = 0
 try {
 	if ($BuildTask -eq '**') {
 		$BuildTask = @('*'; $BuildTask -ne '**')
@@ -528,33 +527,33 @@ try {
 		if ($_ = if ($_) {. $BuildFile @_} else {. $BuildFile}) {
 			Write-Warning "$BuildFile output:`n$_"
 		}
-		if (!${-a}.Count) {throw "No tasks in '$BuildFile'."}
+		if (!${*a}.Count) {throw "No tasks in '$BuildFile'."}
 
 		try {
-			foreach(${private:-} in ${-a}.Values) {
-				if (${-}.Before) {${-}.Before | *AB ${-}.Name 1}
-				if (${-}.After) {${-}.After | *AB ${-}.Name}
+			foreach(${private:**} in ${*a}.Values) {
+				if (${**}.Before) {${**}.Before | *AB ${**}.Name 1}
+				if (${**}.After) {${**}.After | *AB ${**}.Name}
 			}
 		}
 		catch {
-			throw *EI "Task '$(${-}.Name)': $_" ${-}
+			throw *EI "Task '$(${**}.Name)': $_" ${**}
 		}
 
-		if (${-q}) {
-			${-a}.Keys | *Try
+		if (${*q}) {
+			${*a}.Keys | *Try
 			if ($BuildTask -eq '??') {
-				${-a}
+				${*a}
 			}
 			else {
-				${-a}.Values | %{"$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)"}
+				${*a}.Values | .{process{ "$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)" }}
 			}
 			return
 		}
 
 		if ($BuildTask -eq '*') {
-			$BuildTask = foreach($_ in ${-a}.Keys) {
-				foreach(${-} in ${-a}.Values) {
-					if (${-}.Job -contains $_) {
+			$BuildTask = foreach($_ in ${*a}.Keys) {
+				foreach(${**} in ${*a}.Values) {
+					if (${**}.Job -contains $_) {
 						$_ | *Try
 						$_ = @()
 						break
@@ -564,18 +563,18 @@ try {
 			}
 		}
 		elseif (!$BuildTask -or '.' -eq $BuildTask) {
-			$BuildTask = if (${-a}['.']) {'.'} else {${-a}.Item(0).Name}
+			$BuildTask = if (${*a}['.']) {'.'} else {${*a}.Item(0).Name}
 		}
 		Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 		$BuildTask | *Try
 
 		try {
 			. *UC Enter-Build
-			if (${-xt}) {
-				foreach($_ in ${-xt}) {
-					${-a}[$_].Elapsed = [TimeSpan]::Zero
+			if (${*xt}) {
+				foreach($_ in ${*xt}) {
+					${*a}[$_].Elapsed = [TimeSpan]::Zero
 				}
-				. *UC Import-Build ${-xd}
+				. *UC Import-Build ${*xd}
 			}
 			foreach($_ in $BuildTask) {
 				*Task $_
@@ -588,29 +587,29 @@ try {
 			. *UC Exit-Build
 		}
 	}
-	${-r} = 1
+	${*r} = 1
 }
 catch {
-	${-r} = 2
+	${*r} = 2
 	${*}.Error = $_
-	if (!${-Safe}) {
+	if (!${*Safe}) {
 		if (*My) {$PSCmdlet.ThrowTerminatingError($_)}
 		throw
 	}
 }
 finally {
-	*SL ${-cd}
-	if (${-r} -and !${-q}) {
+	*SL ${*cd}
+	if (${*r} -and !${*q}) {
 		${*}.Elapsed = $_ =[DateTime]::Now - ${*}.Started
 		$t = ${*}.Tasks
 		($e = ${*}.Errors)
 		($w = ${*}.Warnings)
-		if (${-*}) {
-			${-*}.Tasks.AddRange($t)
-			${-*}.Errors.AddRange($e)
-			${-*}.Warnings.AddRange($w)
+		if (${*0}) {
+			${*0}.Tasks.AddRange($t)
+			${*0}.Errors.AddRange($e)
+			${*0}.Warnings.AddRange($w)
 		}
-		$c, $m = if (${-r} -eq 2) {12, 'Build FAILED'}
+		$c, $m = if (${*r} -eq 2) {12, 'Build FAILED'}
 		elseif ($e) {14, 'Build completed with errors'}
 		elseif ($w) {14, 'Build succeeded with warnings'}
 		else {10, 'Build succeeded'}

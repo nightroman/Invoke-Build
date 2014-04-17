@@ -252,7 +252,7 @@ task TestVariables {
 		'this'
 	)
 	Get-Variable | .{process{
-		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notmatch '^(-|My)')) {
+		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notmatch '^(\*|My)')) {
 			switch($_.Name) {
 				# exposed by Invoke-Build
 				'BuildTask' { 'BuildTask - build task name list' }
