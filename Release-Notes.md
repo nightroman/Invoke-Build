@@ -1,6 +1,20 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.5.2
+
+Minor tweaks in help.
+
+*Build.ps1* - There was a subtle conflict between the parameter `Checkpoint`
+and advanced resolution of `File`. Instead of introducing caveats for `File`
+and making things more complex we drop `Checkpoint`, i.e. it should be used
+with *Invoke-Build.ps1*, not with the command line helper *Build.ps1*.
+
+Notes:
+
+- If somebody wants this feature back then submit a request with reasons.
+- This change is "not breaking", *Build.ps1* is for typing in command lines.
+
 ## v2.5.1
 
 Function and variable names starting with `*` are reserved for the engine. For

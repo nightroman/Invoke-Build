@@ -1,6 +1,6 @@
 
 <#
-Invoke-Build - PowerShell Task Scripting
+Invoke-Build - Build Automation in PowerShell
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");

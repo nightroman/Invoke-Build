@@ -1,12 +1,12 @@
 
-Invoke-Build - PowerShell Task Scripting
-========================================
+Build Automation in PowerShell
+==============================
 
 ## Introduction
 
-Invoke-Build invokes specified tasks defined in a PowerShell script.
-This process is called build. Tasks are pieces of code with optional
-relations. Concepts are similar to MSBuild and psake.
+Invoke-Build is a build automation tool which invokes tasks defined in a
+PowerShell script. Tasks are pieces of code with optional relations.
+Concepts are similar to psake and MSBuild.
 
 The engine is carefully designed for multiple calls: sequential, nested, and
 even parallel. Each call maintains its data in its scope. It does not change

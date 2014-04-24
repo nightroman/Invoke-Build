@@ -23,8 +23,6 @@
 .Parameter Parameters
 		See: help Invoke-Build -Parameter Parameters
 		It cannot be used together with dynamic parameters.
-.Parameter Checkpoint
-		See: help Invoke-Build -Parameter Checkpoint
 .Parameter WhatIf
 		See: help Invoke-Build -Parameter WhatIf
 .Parameter Tree
@@ -50,7 +48,6 @@ param
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)][string]$File,
 	[Parameter(Position=2)][hashtable]$Parameters,
-	[string]$Checkpoint,
 	[switch]$WhatIf,
 	[switch]$Tree,
 	[switch]$Comment,
@@ -60,7 +57,7 @@ param
 DynamicParam {
 	$private:path = $null
 	$private:names =
-	'Task', 'File', 'Parameters', 'Checkpoint', 'WhatIf', 'Tree', 'Comment', 'Summary', 'NoExit',
+	'Task', 'File', 'Parameters', 'WhatIf', 'Tree', 'Comment', 'Summary', 'NoExit',
 	'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer'
 
 	$Task = Get-Variable -Name [T]ask -ValueOnly -Scope 0
@@ -78,8 +75,14 @@ DynamicParam {
 				$path = & $env:InvokeBuildGetFile
 			}
 			if (!$path) {
-				function Get-BuildFile($Path)
-				{if(($_=[System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1){$_}else{$_ -like '*\.build.ps1'}}
+				function Get-BuildFile($Path) {
+					if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {
+						$_
+					}
+					else {
+						$_ -like '*\.build.ps1'
+					}
+				}
 
 				$_ = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
 				do {$path = Get-BuildFile $_} while(!$path -and ($_ = Split-Path $_))
@@ -114,13 +117,12 @@ end {
 	$private:_Task = $Task
 	$private:_File = if ($File) {$File} else {$path}
 	$private:_Parameters = $Parameters
-	$private:_Checkpoint = $Checkpoint
 	$private:_Tree = $Tree
 	$private:_Comment = $Comment
 	$private:_Summary = $Summary
 	$private:_NoExit = $NoExit
 	$private:query = $Task -eq '?' -or $Task -eq '??'
-	Remove-Variable Task, File, Parameters, Checkpoint, Tree, Comment, Summary, NoExit
+	Remove-Variable Task, File, Parameters, Tree, Comment, Summary, NoExit
 
 	# To amend errors
 	try {
@@ -215,7 +217,7 @@ end {
 
 		### Build
 		try {
-			Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -Checkpoint:$_Checkpoint -WhatIf:$WhatIf -Result:Result
+			Invoke-Build -Task:$_Task -File:$_File -Parameters:$_Parameters -WhatIf:$WhatIf -Result:Result
 		}
 		finally {
 			# summary

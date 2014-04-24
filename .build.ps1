@@ -54,7 +54,7 @@ task UpdateScript {
 		$file
 		$s = Get-Item "$from\$file"
 		$t = Get-Item $file -ErrorAction 0
-		assert (!$t -or ($t.LastWriteTime -le $s.LastWriteTime)) "$s -> $t"
+		assert (!$t -or ($s.LastWriteTime -ge $t.LastWriteTime)) "$s -> $t"
 		Copy-Item $s.FullName $file
 	}
 }
@@ -106,9 +106,9 @@ task Zip Version, Package, {
 # Make the NuGet package.
 task NuGet Version, Package, {
 	$text = @'
-Invoke-Build invokes specified tasks defined in a PowerShell script.
-This process is called build. Tasks are pieces of code with optional
-relations. Concepts are similar to MSBuild and psake.
+Invoke-Build is a build automation tool which invokes tasks defined in a
+PowerShell script. Tasks are pieces of code with optional relations.
+Concepts are similar to psake and MSBuild.
 '@
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>

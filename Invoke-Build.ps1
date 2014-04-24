@@ -1,6 +1,6 @@
 
 <#
-Invoke-Build - PowerShell Task Scripting
+Invoke-Build - Build Automation in PowerShell
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -162,14 +162,22 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.5.1'}
+function Get-BuildVersion {[Version]'2.5.2'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.5.1
+Invoke-Build 2.5.2
 Copyright (c) 2011-2014 Roman Kuzmin
 
-Add-BuildTask New-BuildJob Use-BuildAlias Invoke-BuildExec Assert-Build Get-BuildProperty Get-BuildError Get-BuildVersion Write-Build
+Add-BuildTask (task)
+Assert-Build (assert)
+Get-BuildError (error)
+Get-BuildProperty (property)
+Get-BuildVersion
+Invoke-BuildExec (exec)
+New-BuildJob (job)
+Use-BuildAlias (use)
+Write-Build
 '@
 }
 

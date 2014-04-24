@@ -7,13 +7,13 @@
 ### Invoke-Build.ps1
 @{
 	command = 'Invoke-Build.ps1'
-	synopsis = 'Invoke-Build - PowerShell Task Scripting'
+	synopsis = 'Invoke-Build - Build Automation in PowerShell'
 
 	description = @'
 	Install: copy Invoke-Build.ps1 and Invoke-Build.ps1-Help.xml to the path.
 
 	This script invokes specified tasks defined in a PowerShell script. This
-	process is called build and its concepts are similar to MSBuild and psake.
+	process is called build and its concepts are similar to psake and MSBuild.
 
 	A build script defines parameters, variables, tasks, and events. Any code
 	is invoked with the current location set to $BuildRoot, the build script
@@ -35,17 +35,17 @@
 
 	Scripts should use available aliases instead of function names.
 
-		* Add-BuildTask (task)
-		* New-BuildJob (job)
-		* Assert-Build (assert)
-		* Get-BuildError (error)
-		* Get-BuildProperty (property)
-		* Get-BuildVersion
-		* Invoke-BuildExec (exec)
-		* Use-BuildAlias (use)
-		* Write-Build
-		* Write-Warning [1]
-		* Get-BuildFile [2]
+		Add-BuildTask (task)
+		Assert-Build (assert)
+		Get-BuildError (error)
+		Get-BuildProperty (property)
+		Get-BuildVersion
+		Invoke-BuildExec (exec)
+		New-BuildJob (job)
+		Use-BuildAlias (use)
+		Write-Build
+		Write-Warning [1]
+		Get-BuildFile [2]
 
 	[1] Write-Warning is redefined internally in order to count warnings in
 	tasks, build, and other scripts. But warnings in modules are not counted.
@@ -54,8 +54,8 @@
 
 	SPECIAL ALIASES
 
-		* Invoke-Build
-		* Invoke-Builds
+		Invoke-Build
+		Invoke-Builds
 
 	These aliases are for the scripts Invoke-Build.ps1 and Invoke-Builds.ps1.
 	Use them for calling nested builds, i.e. omit script extensions and paths.
@@ -78,14 +78,14 @@
 
 	The build engine defines and calls the following empty functions:
 
-		* Enter-Build     - before all tasks
-		* Enter-BuildTask - before each task
-		* Enter-BuildJob  - before each job
-		* Exit-Build      - after all tasks
-		* Exit-BuildTask  - after each task
-		* Exit-BuildJob   - after each job
-		* Export-Build    - after each task of a persistent build
-		* Import-Build    - once on resuming of a persistent build
+		Enter-Build     - before all tasks
+		Enter-BuildTask - before each task
+		Enter-BuildJob  - before each job
+		Exit-Build      - after all tasks
+		Exit-BuildTask  - after each task
+		Exit-BuildJob   - after each job
+		Export-Build    - after each task of a persistent build
+		Import-Build    - once on resuming of a persistent build
 
 	A script can redefine them. Note that nested builds do not inherit events,
 	the engine always defines new empty functions before invoking a new script.
@@ -101,13 +101,13 @@
 	as the single argument. The following task properties are available for
 	reading in both functions:
 
-		* Name - task name, [string]
-		* Started - start time, [DateTime]
+		Name - task name, [string]
+		Started - start time, [DateTime]
 
 	Exit-BuildTask may read two extra properties:
 
-		* Error - an error stopped the task
-		* Elapsed - task duration, [TimeSpan]
+		Error - an error stopped the task
+		Elapsed - task duration, [TimeSpan]
 
 	Enter-BuildJob and Exit-BuildJob are invoked in the same scope as
 	*-BuildTask and take two arguments - the task and the job number.
@@ -184,18 +184,20 @@
 		assigned (e.g. a [ref] or [hashtable]).
 
 		Result object properties:
-		* All - all defined tasks
-		* Error - a terminating build error
-		* Tasks - invoked tasks including nested
-		* Errors - error messages including nested
-		* Warnings - warning messages including nested
+
+			All - all defined tasks
+			Error - a terminating build error
+			Tasks - invoked tasks including nested
+			Errors - error messages including nested
+			Warnings - warning messages including nested
 
 		Task object properties:
-		* Name - task name
-		* Error - task error
-		* Started - start time
-		* Elapsed - task duration
-		* InvocationInfo{.ScriptName|.ScriptLineNumber} - task location.
+
+			Name - task name
+			Error - task error
+			Started - start time
+			Elapsed - task duration
+			InvocationInfo{.ScriptName|.ScriptLineNumber} - task location.
 
 		Other result and task data should not be used. These data should not be
 		changed, especially if they are requested for a nested build, parent
@@ -291,7 +293,7 @@
 	}
 	finally {
 		# Show task summary information after the build
-		$result.Tasks | Format-Table Elapsed, Name, Error -AutoSize
+		$Result.Tasks | Format-Table Elapsed, Name, Error -AutoSize
 	}
 		}}
 	)
@@ -329,10 +331,15 @@
 		allowed, each added task overrides previously added with the same name.
 '@
 		Jobs = @'
-		One or more task jobs. Valid job types are:
-		* [string] - simple reference, name of an existing task;
-		* [object] - advanced reference created by 'job' (New-BuildJob);
-		* [scriptblock] - script job, a script block invoked for this task.
+		Specifies task jobs, i.e. other task references and own script jobs.
+		References are often specified before scripts (classic scenario) but
+		they can also be specified after and even between several own scripts.
+
+		Valid job types are:
+
+			[string] - simple reference, name of an existing task;
+			[object] - advanced reference created by 'job' (New-BuildJob);
+			[scriptblock] - script job, a script block invoked for this task.
 '@
 		After = @'
 		Tells to add this task to the end of the specified task job lists.
@@ -367,8 +374,9 @@
 		Outputs are file paths or a script block which gets them.
 
 		Automatic variables for task script jobs:
-		* $Inputs - full input paths, array of strings
-		* $Outputs - result of the evaluated parameter Outputs
+
+			$Inputs - full input paths, array of strings
+			$Outputs - result of the evaluated parameter Outputs
 
 		With the switch Partial the task is processed as partial incremental.
 		There must be one-to-one correspondence between Inputs and Outputs.
@@ -378,8 +386,9 @@
 
 		In addition to automatic variables $Inputs and $Outputs, inside
 		process{} blocks of a partial task two more variables are defined:
-		* $_ - current full input path
-		* $2 - current output path
+
+			$_ - current full input path
+			$2 - current output path
 
 		Wiki about incremental and partial incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks
@@ -732,8 +741,9 @@ engine (version 2+).
 	parameters = @{
 		Build = @'
 		Build parameters defined as hashtables with these keys/data:
-		* Task, File, Parameters - Invoke-Build.ps1 parameters
-		* Log - Tells to write build output to the specified file
+
+			Task, File, Parameters - Invoke-Build.ps1 parameters
+			Log - Tells to write build output to the specified file
 
 		Any number of builds is allowed, including 0 and 1. Maximum number of
 		parallel builds is limited by number of processors by default. It can
@@ -749,11 +759,12 @@ engine (version 2+).
 		Value to be assigned ([ref], [hashtable]).
 
 		Result properties:
-		* Tasks - tasks (see: help Invoke-Build -Parameter Result)
-		* Errors - error messages
-		* Warnings - warning messages
-		* Started - start time
-		* Elapsed - elapsed time span
+
+			Tasks - tasks (see: help Invoke-Build -Parameter Result)
+			Errors - error messages
+			Warnings - warning messages
+			Started - start time
+			Elapsed - elapsed time span
 '@
 		Timeout = @'
 		Maximum overall build time in milliseconds.
