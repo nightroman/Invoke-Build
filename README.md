@@ -12,7 +12,7 @@ The engine is carefully designed for multiple calls: sequential, nested, and
 even parallel. Each call maintains its data in its scope. It does not change
 itself anything global including the environment.
 
-Long running or interactive processes with expected interruptions can be
+Long running or interactive workflows with expected interruptions can be
 automated with persistent builds which allow resuming after interruptions.
 
 ## The Package

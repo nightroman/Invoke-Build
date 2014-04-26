@@ -12,7 +12,11 @@
 	Invoke-Build resume Checkpoint.build.ps1
 #>
 
-param($Test)
+param(
+	$Test,
+	$Param1,
+	$Param2 = 'param2'
+)
 
 # These data are shared and changed by tasks. They have to be persisted using
 # event functions Export-Build and Import-Build.
@@ -42,6 +46,7 @@ task task1 {
 	# and then restored from the clixml file
 	$script:shared1 += 'new'
 	$script:shared2 += 'new'
+	$script:param2 += 'new'
 
 	# change the location, this should not break saving to clixml even if the
 	# parameter Checkpoint has not been defined as a full path
@@ -50,6 +55,8 @@ task task1 {
 
 task task2 task1, {
 	# check: shared data are restored
+	assert ($Param1 -eq $null)
+	assert ($Param2 -eq 'param2new')
 	assert ($shared1 -eq 'shared1new')
 	assert ($shared2 -eq 'shared2new')
 

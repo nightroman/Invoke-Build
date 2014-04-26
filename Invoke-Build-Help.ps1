@@ -96,10 +96,9 @@
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
 	a good place for heavy initialization, it does not have to care of WhatIf.
 
-	Enter-BuildTask and Exit-BuildTask are invoked in the same new scope which
-	is the parent for a task invoked between them. The task object is passed in
-	as the single argument. The following task properties are available for
-	reading in both functions:
+	Enter-BuildTask and Exit-BuildTask are invoked in the same scope which is
+	the parent for a task invoked between them. An argument is the task. The
+	following task properties are available for reading:
 
 		Name - task name, [string]
 		Started - start time, [DateTime]
@@ -115,7 +114,9 @@
 	Export-Build and Import-Build are used with persistent builds. Export-Build
 	outputs data to be exported to clixml. Import-Build is called with a single
 	argument containing the original data imported from clixml. It is called in
-	the script scope and normally restores script scope variables.
+	the script scope and normally restores script scope variables. Note that
+	this is not needed for script parameters, the engine takes care of them.
+	Variables may be declared as parameters just in order to be persistent.
 '@
 
 	parameters = @{
@@ -131,14 +132,14 @@
 		? - Tells to list the tasks with brief information without invoking. It
 		also checks tasks and throws errors on missing or cyclic references.
 
-		?? - Tells to collect and get all tasks as a dictionary. It can is used
-		by external tools for task analysis, TabExpansion, and etc.
+		?? - Tells to collect and get all tasks as a ordered dictionary. It can
+		be used by external tools for task analysis, TabExpansion, and etc.
 
 		Tasks ? and ?? sets $WhatIf to true. Properly designed build scripts
 		should not perform anything significant if $WhatIf is set to true.
 
-		* - Tells to invoke all root tasks. This is useful for scripts where
-		each task tests something. Such test tasks are often invoked together.
+		* - Tells to invoke all tasks. This is useful when all tasks are tests
+		or steps in a sequence that can be stopped and resumed, see Checkpoint.
 
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
@@ -174,9 +175,16 @@
 
 		Persistent builds must be designed properly. Data shared by tasks are
 		exported and imported by the functions Export-Build and Import-Build.
-		Trivial script parameters normally do not have to be serialized.
 
-		NOTE: Some data are not suitable for clixml serialization.
+		Note that this is not needed for script parameters, the engine takes
+		care of them. Some variables may be declared as parameters simply in
+		order to be persistent and custom export and import may be avoided.
+
+		Notes
+		- Think carefully of what the persistent build state is.
+		- Some data are not suitable for persistence in clixml files.
+		- Changes in stopped build scripts may cause incorrect resuming.
+		- Checkpoint files must not be used with different engine versions.
 '@
 		Result = @'
 		Tells to output build information using a variable. It is either a name
@@ -208,12 +216,8 @@
 		Result and return quietly. A caller should use Result and check its
 		Error in order to analyse build failures.
 
-		NOTE: Some exceptions are possible even in safe mode. They show serious
+		Some exceptions are possible even in safe mode. They show serious
 		errors, not build failures. For example, a build script is missing.
-
-		NOTE: Errors thrown in normal mode and errors stored in safe mode are
-		often but not always the same. Some thrown errors are enhanced caught
-		errors. Stored errors are exactly caught errors.
 '@
 		WhatIf = @'
 		Tells to show preprocessed tasks and their scripts instead of invoking
@@ -235,10 +239,10 @@
 
 	examples = @(
 		@{code={
-	# Invoke the default task in the default script
+	# Invoke the default task ("." or the first added) in the default script
+	# (a single file like *.build.ps1 or .build.ps1 if there are two or more)
 
 	Invoke-Build
-	Invoke-Build .
 		}}
 
 		@{code={
@@ -256,7 +260,7 @@
 		}}
 
 		@{code={
-	# Get all tasks without invoking for listing, TabExpansion, etc.
+	# Get task names without invoking for listing, TabExpansion, etc.
 
 	$all = Invoke-Build ??
 	$all.Keys
@@ -267,6 +271,14 @@
 
 	Invoke-Build * Test1.test.ps1
 	Invoke-Build ** Tests
+		}}
+
+		@{code={
+	# Invoke a persistent workflow of steps defined as tasks
+	Invoke-Build * Workflow.build.ps1 -Checkpoint temp.clixml
+
+	# Resume the above workflow at the stopped task
+	Invoke-Build -Checkpoint temp.clixml
 		}}
 
 		@{code={
@@ -302,11 +314,11 @@
 		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
 		@{ text = 'Add-BuildTask' }
-		@{ text = 'New-BuildJob' }
 		@{ text = 'Assert-Build' }
 		@{ text = 'Get-BuildError' }
 		@{ text = 'Get-BuildProperty' }
 		@{ text = 'Invoke-BuildExec' }
+		@{ text = 'New-BuildJob' }
 		@{ text = 'Use-BuildAlias' }
 		@{ text = 'Write-Build' }
 	)

@@ -1,5 +1,18 @@
+
 Invoke-Build Release Notes
 ==========================
+
+## v2.6.0
+
+**Easier persistent builds**
+
+Build script parameters are automatically exported and imported on persistent
+builds. Custom `Export-Build` and `Import-Build` do not have to care of them.
+Moreover, some script variables may be declared as parameters simply in order
+to be persistent and `Export-Build` and `Import-Build` may be dropped if they
+deal with these variables and do nothing else.
+
+Reminder: checkpoint files from other versions must not be used.
 
 ## v2.5.2
 

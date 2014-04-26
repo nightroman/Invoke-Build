@@ -162,11 +162,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.5.2'}
+function Get-BuildVersion {[Version]'2.6.0'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.5.2
+Invoke-Build 2.6.0
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -328,6 +328,27 @@ function *IO {
 	'Skipping up-to-date output.'
 }
 
+function *CP {
+	$_ = @{
+		User = *UC Export-Build
+		Task = $BuildTask
+		File = $BuildFile
+		Prm1 = ${*}.Parameters
+		Prm2 = @{}
+		Done = foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}}
+	}
+
+	$p = (Get-Command -Name $BuildFile -CommandType ExternalScript).Parameters
+	if ($p.Count) {
+		foreach($k in $p.Keys) {
+			$v = Get-Variable -Name $k -Scope Script
+			$_.Prm2[$v.Name] = $v.Value
+		}
+	}
+
+	$_ | Export-Clixml ${*}.Checkpoint
+}
+
 function *Task {
 	${private:**}, ${private:*p} = $args
 
@@ -427,15 +448,7 @@ function *Task {
 		}
 		${**}.Elapsed = $_ = [DateTime]::Now - ${**}.Started
 		Write-Build 11 "Done ${*p} $_"
-		if ($_ = ${*}.Checkpoint) {
-			$(
-				, $BuildTask
-				$BuildFile
-				${*}.Parameters
-				, @(${*}.All.Values | .{process{ if ($_.Elapsed) {$_.Name} }})
-				*UC Export-Build
-			) | Export-Clixml $_
-		}
+		if (${*}.Checkpoint) {*CP}
 	}
 	catch {
 		Write-Build 14 (*II ${**})
@@ -453,7 +466,7 @@ function *Task {
 
 $ErrorActionPreference = 'Stop'
 ${private:*cd} = *FP
-${private:*xt} = $null
+${private:*cp} = $null
 if ($Task -eq '**') {
 	if (![System.IO.Directory]::Exists(($File = *FP $File))) {throw "Missing directory '$File'."}
 	$BuildFile = @(Get-ChildItem -LiteralPath $File -Recurse *.test.ps1)
@@ -466,7 +479,10 @@ else {
 			if (!([System.IO.File]::Exists(($BuildFile = *FP $File)))) {throw "Missing script '$BuildFile'."}
 		}
 		elseif ($Checkpoint -and !($Task -or $Parameters)) {
-			$Task, $BuildFile, $Parameters, ${*xt}, ${private:*xd} = Import-Clixml $Checkpoint
+			${private:*cp} = Import-Clixml $Checkpoint
+			$Task = ${*cp}.Task
+			$BuildFile = ${*cp}.File
+			$Parameters = ${*cp}.Prm1
 		}
 		elseif (!($BuildFile = Get-BuildFile ${*cd})) {
 			throw 'Missing default script.'
@@ -578,11 +594,14 @@ try {
 
 		try {
 			. *UC Enter-Build
-			if (${*xt}) {
-				foreach($_ in ${*xt}) {
+			if (${*cp}) {
+				foreach($_ in ${*cp}.Done) {
 					${*a}[$_].Elapsed = [TimeSpan]::Zero
 				}
-				. *UC Import-Build ${*xd}
+				foreach($_ in ${*cp}.Prm2.GetEnumerator()) {
+					Set-Variable -Name $_.Key -Value $_.Value
+				}
+				. *UC Import-Build ${*cp}.User
 			}
 			foreach($_ in $BuildTask) {
 				*Task $_
@@ -608,7 +627,7 @@ catch {
 finally {
 	*SL ${*cd}
 	if (${*r} -and !${*q}) {
-		${*}.Elapsed = $_ =[DateTime]::Now - ${*}.Started
+		${*}.Elapsed = $_ = [DateTime]::Now - ${*}.Started
 		$t = ${*}.Tasks
 		($e = ${*}.Errors)
 		($w = ${*}.Warnings)
