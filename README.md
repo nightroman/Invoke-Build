@@ -23,9 +23,10 @@ Other files and tools are for built-in help, parallel builds, graphs, and etc.
 * *Invoke-Build.ps1* invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* invokes parallel builds using the engine
 * *Invoke-Build-Help.xml* is external content for Get-Help
+* *Invoke-TaskFromISE.ps1* invokes a task from ISE
 * *Build.ps1* is the helper designed for command lines
-* *Show-BuildGraph.ps1* makes and shows task graphs
 * *TabExpansionProfile.Invoke-Build.ps1* - completers
+* *Show-BuildGraph.ps1* makes and shows task graphs
 
 ## How It Works
 

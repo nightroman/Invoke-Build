@@ -1,7 +1,9 @@
 
 <#
 .Synopsis
-	Invoke-Build.ps1 wrapper.
+	Invoke-Build helper designed for command lines.
+	Invoke-Build - Build Automation in PowerShell
+	Copyright (c) 2011-2014 Roman Kuzmin
 
 .Description
 	This script calls Invoke-Build.ps1 with additional options.
@@ -41,6 +43,9 @@
 	None.
 .Outputs
 	Build output or requested information.
+
+.Link
+	https://github.com/nightroman/Invoke-Build
 #>
 
 param

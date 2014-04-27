@@ -1,7 +1,9 @@
 
 <#
 .Synopsis
-	TabExpansion2 profile for Invoke-Build.
+	TabExpansion2 profile for Invoke-Build completers.
+	Invoke-Build - Build Automation in PowerShell
+	Copyright (c) 2011-2014 Roman Kuzmin
 
 .Description
 	This script should be in the path. It is invoked on the first call of the
@@ -10,6 +12,9 @@
 
 	This profile adds completers for Task and File arguments of Build.ps1 and
 	Invoke-Build.ps1
+
+.Link
+	https://github.com/nightroman/Invoke-Build
 #>
 
 # Common completer for Task of Build.ps1 and Invoke-Build.ps1.

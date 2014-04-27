@@ -2,6 +2,8 @@
 <#
 .Synopsis
 	Shows Invoke-Build task graph using Graphviz.
+	Invoke-Build - Build Automation in PowerShell
+	Copyright (c) 2011-2014 Roman Kuzmin
 
 .Description
 	Requires:
@@ -43,9 +45,12 @@
 		edges) and own scripts (numbers are shown in task boxes after names).
 
 .Inputs
-	None.
+	None
 .Outputs
-	None.
+	None
+
+.Link
+	https://github.com/nightroman/Invoke-Build
 #>
 
 param

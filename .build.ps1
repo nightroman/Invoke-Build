@@ -47,6 +47,7 @@ task UpdateScript {
 		'Invoke-Build.ps1'
 		'Invoke-Build-Help.xml'
 		'Invoke-Builds.ps1'
+		'Invoke-TaskFromISE.ps1'
 		'Show-BuildGraph.ps1'
 		'TabExpansionProfile.Invoke-Build.ps1'
 	)

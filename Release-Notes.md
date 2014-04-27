@@ -2,6 +2,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.6.1
+
+*Invoke-TaskFromISE.ps1*
+
+This new script invokes the current task from the build script being edited in
+PowerShell ISE. It is invoked either in ISE or in PowerShell console. See the
+script help comments for the details, e.g. how to associate with shortcuts.
+
 ## v2.6.0
 
 **Easier persistent builds**
