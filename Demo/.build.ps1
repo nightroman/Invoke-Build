@@ -196,7 +196,8 @@ task TestStartJob {
     assert ($log[-1].StartsWith('Build succeeded. 5 tasks'))
 }
 
-# Test/show "unexpected" functions.
+# Invoke-Build should expose only documented functions. The test warns about
+# unknowns. In a clean session there must be no warnings.
 task TestFunctions {
 	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
 	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
@@ -233,16 +234,16 @@ task TestFunctions {
 	}}
 }
 
-# Invoke-Build should expose only documented variables. If this test shows
-# warnings about unknown variables (very likely) and they are presumably
-# created by Invoke-Build (less likely), please let the author know.
+# Invoke-Build should expose only documented variables. The test warns about
+# unknowns. In a clean session there must be no warnings.
 task TestVariables {
-	$0 = [PowerShell]::Create().AddScript({ Get-Variable | Select-Object -ExpandProperty Name }).Invoke()
-	$0 += @(
-		# project build script
+	$MyKnown = [PowerShell]::Create().AddScript({ Get-Variable | Select-Object -ExpandProperty Name }).Invoke()
+	$MyKnown += @(
+		# exposed by the project script
 		'Result'
 		'SkipTestDiff'
 		# system variables
+		'_'
 		'foreach'
 		'LASTEXITCODE'
 		'PROFILE'
@@ -252,12 +253,13 @@ task TestVariables {
 		'this'
 	)
 	Get-Variable | .{process{
-		if (($0 -notcontains $_.Name) -and ($_.Name.Length -ge 2) -and ($_.Name -notmatch '^(\*|My)')) {
+		if (($MyKnown -notcontains $_.Name) -and ($_.Name -notlike 'My*')) {
 			switch($_.Name) {
 				# exposed by Invoke-Build
-				'BuildTask' { 'BuildTask - build task name list' }
-				'BuildFile' { 'BuildFile - build script file path - ' + $BuildFile}
-				'BuildRoot' { 'BuildRoot - build script root path - ' + $BuildRoot }
+				'*' { '* - internal build data' }
+				'BuildFile' { 'BuildFile - build script path - ' + $BuildFile }
+				'BuildRoot' { 'BuildRoot - build script root - ' + $BuildRoot }
+				'BuildTask' { 'BuildTask - initial task list - ' + $BuildTask }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
 				default { Write-Warning "Unknown variable '$_'." }
 			}

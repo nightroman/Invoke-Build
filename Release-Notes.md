@@ -2,6 +2,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.6.2
+
+*Invoke-TaskFromISE.ps1* also supports the form `task [...] -Name TaskName`.
+Still, not all possible forms are recognized, see the script help notes.
+
+Avoided a recently introduced internal variable exposed to tasks.
+
 ## v2.6.1
 
 *Invoke-TaskFromISE.ps1*

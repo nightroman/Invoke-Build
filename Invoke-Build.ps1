@@ -54,19 +54,18 @@ function Add-BuildTask(
 		Partial = $Partial
 		InvocationInfo = $MyInvocation
 	}
-	if ($Jobs) {
-		try {
-			foreach($_ in $Jobs) {
-				$r, $d = *RJ $_
-				$null = $1.Add($r)
-				if (1 -eq $d) {
-					$null = $2.Add($r)
-				}
+	if (!$Jobs) {return}
+	try {
+		foreach($_ in $Jobs) {
+			$r, $d = *RJ $_
+			$null = $1.Add($r)
+			if (1 -eq $d) {
+				$null = $2.Add($r)
 			}
 		}
-		catch {
-			*TE "Task '$Name': $_" 5
-		}
+	}
+	catch {
+		*TE "Task '$Name': $_" 5
 	}
 }
 
@@ -76,12 +75,7 @@ function New-BuildJob(
 	[switch]$Safe
 )
 {
-	if ($Safe) {
-		@{$Name = 1}
-	}
-	else {
-		$Name
-	}
+	if ($Safe) {@{$Name = 1}} else {$Name}
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -101,12 +95,8 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildFile($Path) {
-	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {
-		$_
-	}
-	else {
-		$_ -like '*\.build.ps1'
-	}
+	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {return $_}
+	$_ -like '*\.build.ps1'
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -162,11 +152,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.6.1'}
+function Get-BuildVersion {[Version]'2.6.2'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.6.1
+Invoke-Build 2.6.2
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -206,10 +196,10 @@ function *SL($_ = $BuildRoot) {
 	Set-Location -LiteralPath $_ -ErrorAction 1
 }
 
-function *UC(${*u}) {
+function *UC($_) {
 	if (!$WhatIf) {
 		*SL
-		. ${*u} @args
+		. $_ @args
 	}
 }
 
@@ -363,16 +353,14 @@ function *Task {
 		return
 	}
 
-	if ((${private:*x} = ${**}.If) -is [scriptblock]) {
-		if (!$WhatIf) {
-			*SL
-			try {
-				${*x} = & ${*x}
-			}
-			catch {
-				${**}.Error = $_
-				throw
-			}
+	if ((${private:*x} = ${**}.If) -is [scriptblock] -and !$WhatIf) {
+		*SL
+		try {
+			${*x} = & ${*x}
+		}
+		catch {
+			${**}.Error = $_
+			throw
 		}
 	}
 	if (!${*x}) {
@@ -524,7 +512,7 @@ New-Variable * -Description Invoke-Build ([PSCustomObject]@{
 	Elapsed = $null
 	Error = $null
 })
-if (${private:*q} = $Task -eq '??' -or $Task -eq '?') {
+if (${private:*?} = $Task -eq '??' -or $Task -eq '?') {
 	$WhatIf = $true
 }
 $BuildTask = $Task
@@ -546,7 +534,8 @@ try {
 		foreach($_ in $BuildFile) {
 			Invoke-Build $BuildTask $_.FullName
 		}
-	}else{
+	}
+	else {
 		*SL
 		if ($_ = if ($_) {. $BuildFile @_} else {. $BuildFile}) {
 			Write-Warning "$BuildFile output:`n$_"
@@ -563,24 +552,23 @@ try {
 			throw *EI "Task '$(${**}.Name)': $_" ${**}
 		}
 
-		if (${*q}) {
+		if (${*?}) {
 			${*a}.Keys | *Try
 			if ($BuildTask -eq '??') {
 				${*a}
 			}
 			else {
-				${*a}.Values | .{process{ "$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)" }}
+				foreach($_ in ${*a}.Values) {"$($_.InvocationInfo.ScriptName)($($_.InvocationInfo.ScriptLineNumber)): $($_.Name)"}
 			}
 			return
 		}
 
 		if ($BuildTask -eq '*') {
-			$BuildTask = foreach($_ in ${*a}.Keys) {
+			$BuildTask = :task foreach($_ in ${*a}.Keys) {
 				foreach(${**} in ${*a}.Values) {
 					if (${**}.Job -contains $_) {
 						$_ | *Try
-						$_ = @()
-						break
+						continue task
 					}
 				}
 				$_
@@ -626,7 +614,7 @@ catch {
 }
 finally {
 	*SL ${*cd}
-	if (${*r} -and !${*q}) {
+	if (${*r} -and !${*?}) {
 		${*}.Elapsed = $_ = [DateTime]::Now - ${*}.Started
 		$t = ${*}.Tasks
 		($e = ${*}.Errors)

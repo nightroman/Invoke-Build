@@ -36,8 +36,15 @@
 		PS> $profile
 		C:\Users\...\Documents\WindowsPowerShell\Microsoft.PowerShellISE_profile.ps1
 
+	NOTES
+
+	The script recognizes the following tasks. The command 'task' should be the
+	first token in a line. A task name should be a string or number in the same
+	line, either 'task <Name>' or 'task [...] -Name <Name>'. Other forms cannot
+	be invoked from ISE by this script.
+
 .Parameter Console
-		Tells to invoke the current task in the PowerShell console.
+		Tells to invoke the current task in an external PowerShell console.
 		By default the task is invoked in ISE.
 
 .Inputs
@@ -78,13 +85,25 @@ try {
 	for($private:y = $y1; $y -ge 1; --$y) {
 		$editor.SetCaretPosition($y, 1)
 		if (($private:text = $editor.CaretLineText) -match '^\s*task\b') {
-			$null, $private:t2, $null = [System.Management.Automation.PSParser]::Tokenize($text, [ref]$null)
-			if (!$t2 -or !($t2.Type -eq 'CommandArgument' -or $t2.Type -eq 'String' -or $t2.Type -eq 'Number')) {
-				$x1 = 1
-				$y1 = $y
-				Write-Error "Cannot get the task name at line $y"
+			$private:tokens = [System.Management.Automation.PSParser]::Tokenize($text, [ref]$null)
+			$private:index = 0
+			for($private:i = $tokens.Count - 2; $i -ge 1; --$i) {
+				$private:t = $tokens[$i]
+				if ($t.Type -eq 'CommandParameter' -and '-Name' -like ($t.Content + '*')) {
+					$index = $i
+					break
+				}
 			}
-			$task = $t2.Content
+			if (++$index -ge $tokens.Count) {
+				$x1 = 1; $y1 = $y
+				Write-Error "Incomplete task at line $y."
+			}
+			$t = $tokens[$index]
+			if ($t.Type -ne 'CommandArgument' -and $t.Type -ne 'String' -and $t.Type -ne 'Number') {
+				$x1 = 1; $y1 = $y
+				Write-Error "Cannot get the task name at line $y."
+			}
+			$task = $t.Content
 			break
 		}
 	}

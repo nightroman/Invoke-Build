@@ -17,7 +17,7 @@ limitations under the License.
 #>
 
 #.ExternalHelp Invoke-Build-Help.xml
-param (
+param(
 	[Parameter(Position=0)][hashtable[]]$Build,
 	$Result,
 	[int]$Timeout = [int]::MaxValue,
@@ -25,25 +25,39 @@ param (
 )
 
 if (!$Host.UI -or !$Host.UI.RawUI -or 'Default Host', 'ServerRemoteHost' -contains $Host.Name) {
-	function Write-Build($Color, [string]$Text)
-	{$Text}
+	function Write-Build($Color, [string]$Text) {$Text}
 }
 else {
-	function Write-Build([ConsoleColor]$Color, [string]$Text)
-	{$i = $Host.UI.RawUI; $_ = $i.ForegroundColor; try {$i.ForegroundColor = $Color; $Text} finally {$i.ForegroundColor = $_}}
+	function Write-Build([ConsoleColor]$Color, [string]$Text) {
+		$i = $Host.UI.RawUI
+		$_ = $i.ForegroundColor
+		try {
+			$i.ForegroundColor = $Color
+			$Text
+		}
+		finally {
+			$i.ForegroundColor = $_
+		}
+	}
 }
 
-function *FP($_)
-{$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)}
+function *FP($_) {
+	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)
+}
 
 function *EI($_)
-{"$_`r`n$($_.InvocationInfo.PositionMessage.Trim())"}
+{
+	"$_`r`n$($_.InvocationInfo.PositionMessage.Trim())"
+}
 
-function *TE($M, $C=0)
-{$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))}
+function *TE($M, $C = 0) {
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
+}
 
-function Get-BuildFile($Path)
-{if(($_=[System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1){$_}else{$_ -like '*\.build.ps1'}}
+function Get-BuildFile($Path) {
+	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {return $_}
+	$_ -like '*\.build.ps1'
+}
 
 ### main
 
@@ -66,7 +80,7 @@ if (![System.IO.File]::Exists($ib)) {*TE "Missing script '$ib'." 13}
 
 ### works
 $works = @()
-for ($1 = 0; $1 -lt $Build.Count;) {
+for ($1 = 0; $1 -lt $Build.Count) {
 	$b = @{} + $Build[$1]
 	$Build[$1++] = $b
 
@@ -147,7 +161,10 @@ try {
 		if ($work['Temp']) {
 			try {
 				$read = [System.IO.File]::OpenText($log)
-				for(;;) { $_ = $read.ReadLine(); if ($null -eq $_) {break}; $_ }
+				for() {
+					if ($null -eq ($_ = $read.ReadLine())) {break}
+					$_
+				}
 				$read.Close()
 			}
 			catch {}

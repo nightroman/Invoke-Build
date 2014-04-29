@@ -81,12 +81,8 @@ DynamicParam {
 			}
 			if (!$path) {
 				function Get-BuildFile($Path) {
-					if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {
-						$_
-					}
-					else {
-						$_ -like '*\.build.ps1'
-					}
+					if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {return $_}
+					$_ -like '*\.build.ps1'
 				}
 
 				$_ = $PSCmdlet.GetUnresolvedProviderPathFromPSPath('')
@@ -196,7 +192,7 @@ end {
 			foreach($it in $tasks.Values) {
 				$references[$it] = @{}
 			}
-			foreach($it in $tasks.Values) { foreach($job in $it.Job) { if ($job -is [string]) {
+			foreach($it in $tasks.Values) {foreach($job in $it.Job) {if ($job -is [string]) {
 				$references[$tasks[$job]][$it.Name] = 0
 			}}}
 
@@ -214,8 +210,8 @@ end {
 		if (!$_Parameters) {
 			foreach($_ in $PSBoundParameters.GetEnumerator()) {
 				if ($names -notcontains $_.Key) {
-					if ($_Parameters) { $_Parameters.Add($_.Key, $_.Value) }
-					else { $_Parameters = @{$_.Key = $_.Value} }
+					if ($_Parameters) {$_Parameters.Add($_.Key, $_.Value)}
+					else {$_Parameters = @{$_.Key = $_.Value}}
 				}
 			}
 		}
@@ -246,6 +242,6 @@ end {
 		$PSCmdlet.ThrowTerminatingError($_)
 	}
 	finally {
-		if ($_NoExit) { Read-Host 'Press enter to exit' }
+		if ($_NoExit) {Read-Host 'Press enter to exit'}
 	}
 }
