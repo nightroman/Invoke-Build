@@ -70,10 +70,7 @@ function Add-BuildTask(
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function New-BuildJob(
-	[Parameter(Position=0, Mandatory=1)][string]$Name,
-	[switch]$Safe
-)
+function New-BuildJob([Parameter(Mandatory=1)][string]$Name, [switch]$Safe)
 {
 	if ($Safe) {@{$Name = 1}} else {$Name}
 }
@@ -152,11 +149,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.6.2'}
+function Get-BuildVersion {[Version]'2.6.3'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.6.2
+Invoke-Build 2.6.3
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)

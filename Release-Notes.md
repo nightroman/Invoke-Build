@@ -2,6 +2,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.6.3 - PS v4.0 upgrade
+
+*Build.ps1*: Adjusted for the new common parameter *PipelineVariable*.
+
 ## v2.6.2
 
 *Invoke-TaskFromISE.ps1* also supports the form `task [...] -Name TaskName`.

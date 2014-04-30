@@ -63,7 +63,7 @@ DynamicParam {
 	$private:path = $null
 	$private:names =
 	'Task', 'File', 'Parameters', 'WhatIf', 'Tree', 'Comment', 'Summary', 'NoExit',
-	'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer'
+	'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable'
 
 	$Task = Get-Variable -Name [T]ask -ValueOnly -Scope 0
 	if ($Task -eq '**') {return}

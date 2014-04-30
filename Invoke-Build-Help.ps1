@@ -231,8 +231,11 @@
 		@{
 			type = 'Text'
 			description = @'
-		Build process diagnostics, warning, and error messages, and output of
-		scripts, tasks, and commands that they invoke.
+		Build process log which includes task starts, ends with durations,
+		warnings, errors, and output of tasks and commands that they invoke.
+
+		Build scripts should not output anything. Unexpected output is shown as
+		a warning. Output is expected from tasks and special event functions.
 '@
 		}
 	)
