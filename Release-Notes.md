@@ -2,6 +2,36 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.7.0 - Dynamic parameters
+
+As far as *Build.ps1* dynamic parameters work well, *Invoke-Build.ps1* adopts
+them as well. Dynamic parameters make command lines simple and neat. This is
+especially important on composing in batch or MSBuild files. Compare two
+examples:
+
+New way of specifying build script parameters:
+
+    Invoke-Build -Configuration Release -Platform x64
+
+Old way (it will continue to exist for special cases):
+
+    Invoke-Build -Parameters @{Configuration='Release'; Platform='x64'}
+
+Mind an extra bonus, TabExpansion works fine with dynamic parameters.
+
+**v2.7 roadmap**
+
+(Remarks and suggestions are welcome, the sooner the better.)
+
+*Build.ps1* features to be adopted by *Invoke-Build*:
+
+- Advanced resolution of the default build script.
+- Switch `Summary` to output summary in the end.
+- Switch `NoExit` or similar (not sure yet).
+
+*Build.ps1* will be transformed into another script, say, *Show-...*.
+It will be used to show build script information, not to invoke builds.
+
 ## v2.6.3 - PS v4.0 upgrade
 
 *Build.ps1*: Adjusted for the new common parameter *PipelineVariable*.

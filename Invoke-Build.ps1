@@ -27,6 +27,82 @@ param(
 	[switch]$WhatIf
 )
 
+dynamicparam {
+
+#todo remove it from public?
+#.ExternalHelp Invoke-Build-Help.xml
+function Get-BuildFile($Path) {
+	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {return $_}
+	$_ -like '*\.build.ps1'
+}
+
+if ($MyInvocation.InvocationName -eq '.') {return}
+
+function *FP($_) {
+	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)
+}
+
+function *TE($M, $C = 0) {
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
+}
+
+$BuildTask = Get-Variable -Name [T]ask -Scope 0 -ValueOnly
+$BuildFile = Get-Variable -Name [F]ile -Scope 0 -ValueOnly
+${private:*Parameters} = Get-Variable -Name [P]arameters -Scope 0 -ValueOnly
+${private:*Checkpoint} = Get-Variable -Name [C]heckpoint -Scope 0 -ValueOnly
+${private:*cd} = *FP
+${private:*cp} = $null
+${private:*names} =
+'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'WhatIf',
+'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable'
+
+try {
+	if ($BuildTask -eq '**') {
+		if (![System.IO.Directory]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing directory '$BuildFile'."}
+		$BuildFile = @(Get-ChildItem -LiteralPath $BuildFile -Recurse *.test.ps1)
+		return
+	}
+
+	if (${*Checkpoint}) {${*Checkpoint} = *FP ${*Checkpoint}}
+	if ($BuildFile) {
+		if (!([System.IO.File]::Exists(($BuildFile = *FP $BuildFile)))) {throw "Missing script '$BuildFile'."}
+	}
+	elseif (${*Checkpoint} -and !($BuildTask -or ${*Parameters})) {
+		${*cp} = Import-Clixml ${*Checkpoint}
+		$BuildTask = ${*cp}.Task
+		$BuildFile = ${*cp}.File
+		${*Parameters} = ${*cp}.Prm1
+		$BuildRoot = Split-Path $BuildFile
+		return
+	}
+	elseif (!($BuildFile = Get-BuildFile ${*cd})) {
+		throw 'Missing default script.'
+	}
+}
+catch {
+	*TE $_ 13
+}
+$BuildRoot = Split-Path $BuildFile
+
+if (${*Parameters}) {return}
+
+$command = Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1
+if (!$command.Parameters) {return}
+
+$param = New-Object Management.Automation.RuntimeDefinedParameterDictionary
+$attrs = New-Object Collections.ObjectModel.Collection[Attribute]
+$attrs.Add((New-Object Management.Automation.ParameterAttribute))
+foreach($_ in $command.Parameters.Values) {
+	if (${*names} -notcontains $_.Name) {
+		$param.Add($_.Name, (New-Object Management.Automation.RuntimeDefinedParameter $_.Name, $_.ParameterType, $attrs))
+	}
+}
+$param
+Remove-Variable -Name command, param, attrs -Scope 0
+
+}
+end {
+
 #.ExternalHelp Invoke-Build-Help.xml
 function Add-BuildTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
@@ -88,12 +164,6 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 		*TE "Missing task '$Task'." 13
 	}
 	$_.Error
-}
-
-#.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildFile($Path) {
-	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {return $_}
-	$_ -like '*\.build.ps1'
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -177,16 +247,8 @@ function Write-Warning($Message) {
 	$null = ${*}.Warnings.Add("WARNING: $Message")
 }
 
-function *TE($M, $C = 0) {
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
-}
-
 function *My {
 	$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'
-}
-
-function *FP($_) {
-	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)
 }
 
 function *SL($_ = $BuildRoot) {
@@ -450,33 +512,13 @@ function *Task {
 }
 
 $ErrorActionPreference = 'Stop'
-${private:*cd} = *FP
-${private:*cp} = $null
-if ($Task -eq '**') {
-	if (![System.IO.Directory]::Exists(($File = *FP $File))) {throw "Missing directory '$File'."}
-	$BuildFile = @(Get-ChildItem -LiteralPath $File -Recurse *.test.ps1)
-	$BuildRoot = ${*cd}
-}
-else {
-	if ($Checkpoint) {$Checkpoint = *FP $Checkpoint}
-	try {
-		if ($File) {
-			if (!([System.IO.File]::Exists(($BuildFile = *FP $File)))) {throw "Missing script '$BuildFile'."}
-		}
-		elseif ($Checkpoint -and !($Task -or $Parameters)) {
-			${private:*cp} = Import-Clixml $Checkpoint
-			$Task = ${*cp}.Task
-			$BuildFile = ${*cp}.File
-			$Parameters = ${*cp}.Prm1
-		}
-		elseif (!($BuildFile = Get-BuildFile ${*cd})) {
-			throw 'Missing default script.'
+if (!${*Parameters}) {
+	foreach($_ in $PSBoundParameters.GetEnumerator()) {
+		if (${*names} -notcontains $_.Key) {
+			if (${*Parameters}) {${*Parameters}.Add($_.Key, $_.Value)}
+			else {${*Parameters} = @{$_.Key = $_.Value}}
 		}
 	}
-	catch {
-		*TE $_ 13
-	}
-	$BuildRoot = Split-Path $BuildFile
 }
 
 function Enter-Build {} function Enter-BuildTask {} function Enter-BuildJob {}
@@ -503,16 +545,15 @@ New-Variable * -Description Invoke-Build ([PSCustomObject]@{
 	Errors = [System.Collections.ArrayList]@()
 	Warnings = [System.Collections.ArrayList]@()
 	All = ${private:*a} = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
-	Parameters = $_ = $Parameters
-	Checkpoint = $Checkpoint
+	Parameters = $_ = ${*Parameters}
+	Checkpoint = ${*Checkpoint}
 	Started = [DateTime]::Now
 	Elapsed = $null
 	Error = $null
 })
-if (${private:*?} = $Task -eq '??' -or $Task -eq '?') {
+if (${private:*?} = $BuildTask -eq '??' -or $BuildTask -eq '?') {
 	$WhatIf = $true
 }
-$BuildTask = $Task
 ${private:*Safe} = $Safe
 if ($Result) {
 	if ($Result -is [string]) {
@@ -627,4 +668,6 @@ finally {
 		else {10, 'Build succeeded'}
 		Write-Build $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings $_"
 	}
+}
+
 }

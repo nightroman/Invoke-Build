@@ -157,11 +157,20 @@
 		are more files then ".build.ps1" is used.
 '@
 		Parameters = @'
-		A hashtable of parameters passed in the build script. Scripts define
-		parameters as usual using standard PowerShell syntax. Parameters are
-		available for all tasks: for reading simply as $ParameterName, for
-		writing as $script:ParameterName. This is true as well for other
-		variables defined in the script scope.
+		A hashtable of parameters passed in the build script. It is needed only
+		in special cases. Normally build script parameters may be specified for
+		Invoke-Build itself, thanks to PowerShell dynamic parameters.
+
+		Dynamic parameters and the table Parameters are not used together. If
+		build script parameters conflict with Invoke-Build parameters then the
+		table Parameters is the only way to pass them in the script.
+
+		Build scripts define parameters using standard syntax. Parameters are
+		shared between tasks: for reading as $ParameterName, for writing as
+		$script:ParameterName.
+
+		Build script parameters are automatically exported and imported by the
+		engine on persistent builds, see Checkpoint.
 '@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is
