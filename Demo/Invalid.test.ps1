@@ -117,3 +117,8 @@ task CyclicReferenceStar {
 		task test2 test1
 	}
 }
+
+task ResumeWithoutCheckpoint {
+	$$ = try { Invoke-Build -Resume } catch {$_}
+	assert ($$ -like 'Checkpoint must be defined for Resume.')
+}

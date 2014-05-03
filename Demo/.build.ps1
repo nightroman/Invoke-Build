@@ -18,9 +18,9 @@
 #>
 
 # Build scripts can use parameters passed in as
-# PS> Invoke-Build ... -Parameters @{...}
-param
-(
+# PS> Invoke-Build ... -MyParam1 ...
+# PS> Invoke-Build ... -Parameters @{ MyParam1 = ...}
+param(
 	# This value is available for all tasks ($MyParam1).
 	# Build script parameters often have default values.
 	# Actual values are specified on Invoke-Build calls.
@@ -52,7 +52,7 @@ Write-Warning "Ignore this warning."
 # Note: -Result can be used in order to get some information as well.
 # But this information is not always the same as without -WhatIf.
 task WhatIf {
-	Invoke-Build . Conditional.build.ps1 @{Configuration='Debug'} -WhatIf -Result Result
+	Invoke-Build . Conditional.build.ps1 -WhatIf -Result Result -Configuration Debug
 	assert ($Result.Tasks.Count -eq 1)
 }
 
@@ -126,9 +126,9 @@ task Checkpoint {
 # Test conditional tasks.
 # It also shows how to invoke build scripts with parameters.
 task Conditional {
-	# call with Debug
-	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Debug' }
-	# call with Release
+	# call with Debug, use the dynamic parameter
+	Invoke-Build . Conditional.build.ps1 -Configuration Debug
+	# call with Release, use the parameter Parameters
 	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
 	# call default (! there was an issue !) and also test errors
 	Invoke-Build TestScriptCondition, ConditionalErrors Conditional.build.ps1

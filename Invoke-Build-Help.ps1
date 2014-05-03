@@ -175,12 +175,12 @@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is
 		possible to resume an interrupted build starting at an interrupted
-		task. The checkpoint file is deleted on successful builds.
+		task. The checkpoint file is written after each completed task and
+		deleted when the build completes.
 
-		In order to start a persistent build also use one of the Task, File,
-		and Parameters, even with default values. In order to resume a build
-		the Checkpoint should be used alone. Task, File, and Parameters are
-		restored from the checkpoint file.
+		In order to resume an interrupted persistent build specify the same
+		checkpoint file and the switch Resume. The tasks, build file and
+		parameters are ignored on resuming, their values are restored.
 
 		Persistent builds must be designed properly. Data shared by tasks are
 		exported and imported by the functions Export-Build and Import-Build.
@@ -194,6 +194,11 @@
 		- Some data are not suitable for persistence in clixml files.
 		- Changes in stopped build scripts may cause incorrect resuming.
 		- Checkpoint files must not be used with different engine versions.
+'@
+		Resume = @'
+		Tells to resume an interrupted persistent build from a checkpoint file
+		specified by Checkpoint. Initial tasks, build files and parameters are
+		ignored on resuming, values are restored from the file.
 '@
 		Result = @'
 		Tells to output build information using a variable. It is either a name
@@ -258,10 +263,10 @@
 		}}
 
 		@{code={
-	# Invoke tasks Build and Test from .build.ps1 with parameters.
-	# The script .build.ps1 defines parameters by 'param' as usual.
+	# Invoke tasks Build and Test from the default script with parameters.
+	# The script defines parameters Log and WarningLevel by 'param' as usual.
 
-	Invoke-Build Build, Test .build.ps1 @{Log='log.txt'; WarningLevel=4 }
+	Invoke-Build Build, Test -Log log.txt -WarningLevel 4
 		}}
 
 		@{code={
@@ -286,11 +291,11 @@
 		}}
 
 		@{code={
-	# Invoke a persistent workflow of steps defined as tasks
-	Invoke-Build * Workflow.build.ps1 -Checkpoint temp.clixml
+	# Invoke a persistent sequence of steps defined as tasks
+	Invoke-Build * Steps.build.ps1 -Checkpoint temp.clixml
 
-	# Resume the above workflow at the stopped task
-	Invoke-Build -Checkpoint temp.clixml
+	# Resume the above steps at the stopped one
+	Invoke-Build -Checkpoint temp.clixml -Resume
 		}}
 
 		@{code={

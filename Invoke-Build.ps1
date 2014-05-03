@@ -24,12 +24,12 @@ param(
 	[string]$Checkpoint,
 	$Result,
 	[switch]$Safe,
+	[switch]$Resume,
 	[switch]$WhatIf
 )
 
 dynamicparam {
 
-#todo remove it from public?
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildFile($Path) {
 	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {return $_}
@@ -50,10 +50,11 @@ $BuildTask = Get-Variable -Name [T]ask -Scope 0 -ValueOnly
 $BuildFile = Get-Variable -Name [F]ile -Scope 0 -ValueOnly
 ${private:*Parameters} = Get-Variable -Name [P]arameters -Scope 0 -ValueOnly
 ${private:*Checkpoint} = Get-Variable -Name [C]heckpoint -Scope 0 -ValueOnly
+${private:*Resume} = Get-Variable -Name [R]esume -Scope 0 -ValueOnly
 ${private:*cd} = *FP
 ${private:*cp} = $null
 ${private:*names} =
-'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'WhatIf',
+'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'Resume', 'WhatIf',
 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable'
 
 try {
@@ -64,16 +65,18 @@ try {
 	}
 
 	if (${*Checkpoint}) {${*Checkpoint} = *FP ${*Checkpoint}}
-	if ($BuildFile) {
-		if (!([System.IO.File]::Exists(($BuildFile = *FP $BuildFile)))) {throw "Missing script '$BuildFile'."}
-	}
-	elseif (${*Checkpoint} -and !($BuildTask -or ${*Parameters})) {
+	if (${*Resume}) {
+		if (!${*Checkpoint}) {throw 'Checkpoint must be defined for Resume.'}
 		${*cp} = Import-Clixml ${*Checkpoint}
 		$BuildTask = ${*cp}.Task
 		$BuildFile = ${*cp}.File
 		${*Parameters} = ${*cp}.Prm1
 		$BuildRoot = Split-Path $BuildFile
 		return
+	}
+
+	if ($BuildFile) {
+		if (!([System.IO.File]::Exists(($BuildFile = *FP $BuildFile)))) {throw "Missing script '$BuildFile'."}
 	}
 	elseif (!($BuildFile = Get-BuildFile ${*cd})) {
 		throw 'Missing default script.'
@@ -219,11 +222,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.6.3'}
+function Get-BuildVersion {[Version]'2.7.0'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.6.3
+Invoke-Build 2.7.0
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -563,7 +566,7 @@ if ($Result) {
 		$Result.Value = ${*}
 	}
 }
-Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe
+Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe, Resume
 
 ${private:*r} = 0
 try {

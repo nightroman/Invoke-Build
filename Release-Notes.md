@@ -4,33 +4,43 @@ Invoke-Build Release Notes
 
 ## v2.7.0 - Dynamic parameters
 
-As far as *Build.ps1* dynamic parameters work well, *Invoke-Build.ps1* adopts
-them as well. Dynamic parameters make command lines simple and neat. This is
-especially important on composing in batch or MSBuild files. Compare two
-examples:
+**Persistent builds, incompatible change**
 
-New way of specifying build script parameters:
+Invoke-Build uses the new switch `Resume` in order to resume persistent builds.
+It makes use of persistent builds easier and avoids conflicts with dynamic
+parameters and coming soon changes.
+
+The new switch must be added to old commands which resume builds. Hopefully it
+should not break much because resuming is often supposed to be done manually.
+
+**Dynamic parameters**
+
+As far as *Build.ps1* dynamic parameters work well, *Invoke-Build.ps1* adopts
+them, too. Dynamic parameters make command lines simple and neat. Compare:
+
+New way, it really cannot be simpler:
 
     Invoke-Build -Configuration Release -Platform x64
 
-Old way (it will continue to exist for special cases):
+Old way, still used in special cases:
 
-    Invoke-Build -Parameters @{Configuration='Release'; Platform='x64'}
+    Invoke-Build -Parameters @{Configuration = 'Release'; Platform = 'x64'}
 
-Mind an extra bonus, TabExpansion works fine with dynamic parameters.
+Mind an extra bonus: TabExpansion works fine with dynamic parameters.
 
-**v2.7 roadmap**
+**Coming soon in v2.7.x**
 
-(Remarks and suggestions are welcome, the sooner the better.)
+(Remarks and suggestions are welcome, the sooner the better)
 
-*Build.ps1* features to be adopted by *Invoke-Build*:
+*Build.ps1* features to be moved by *Invoke-Build*:
 
 - Advanced resolution of the default build script.
-- Switch `Summary` to output summary in the end.
-- Switch `NoExit` or similar (not sure yet).
+- Switch `Summary` to write summary after build.
+- Switch `NoExit` will be dropped, more likely.
 
-*Build.ps1* will be transformed into another script, say, *Show-...*.
-It will be used to show build script information, not to invoke builds.
+Helper *Build.ps1* will be transformed into another script, say, *Show-...*. It
+will be used to show build script information. Builds will be invoked by
+*Invoke-Build* and *Invoke-Builds*.
 
 ## v2.6.3 - PS v4.0 upgrade
 

@@ -13,7 +13,7 @@
 #>
 
 param(
-	$Test,
+	[switch]$Test,
 	$Param1,
 	$Param2 = 'param2'
 )
@@ -82,14 +82,14 @@ task . {
 # Test resume at the task2. Note: -Checkpoint is used alone for resuming.
 task resume {
 	$env:ResumeBuild = 1
-	Invoke-Build -Checkpoint checkpoint.clixml
+	Invoke-Build -Resume -Checkpoint checkpoint.clixml
 	$env:ResumeBuild = $null
 }
 
 # Test non interactive break in the task2.
 task break {
 	#! issue: use 2 tasks
-	Invoke-Build task1, task2 Checkpoint.build.ps1 @{Test=$true} -Checkpoint checkpoint.clixml
+	Invoke-Build task1, task2 Checkpoint.build.ps1 -Checkpoint checkpoint.clixml -Test
 }
 
 # Tests the code used for clixml export and import
