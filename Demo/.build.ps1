@@ -65,8 +65,8 @@ task ListTask {
 	$r = Invoke-Build ? Assert.test.ps1
 	$r
 	assert ($r.Count -eq 3)
-	assert ($r[0] -match '\(\d+\): AssertDefault$')
-	assert ($r[2] -match '\(\d+\): \.$')
+	assert ($r[0] -match '^AssertDefault - {} - .*:\d+$')
+	assert ($r[2] -match '^\. - AssertDefault, AssertMessage, {} - .*:\d+$')
 
 	# get task list
 	$all = Invoke-Build ?? Assert.test.ps1

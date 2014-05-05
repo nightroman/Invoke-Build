@@ -155,6 +155,11 @@
 		If it is not specified then Invoke-Build looks for "*.build.ps1" files
 		in the current location. A single file is used as the script. If there
 		are more files then ".build.ps1" is used.
+
+		If the build file is not found then a script defined by the environment
+		variable InvokeBuildGetFile is called. It may get a not standard build
+		file for the current location. If the file is still not defined then
+		Invoke-Build looks for it in all parent directories.
 '@
 		Parameters = @'
 		A hashtable of parameters passed in the build script. It is needed only
@@ -232,6 +237,10 @@
 
 		Some exceptions are possible even in safe mode. They show serious
 		errors, not build failures. For example, a build script is missing.
+'@
+		Summary = @'
+		Tells to show summary information after the build. It includes task
+		durations, names, locations, and error messages.
 '@
 		WhatIf = @'
 		Tells to show preprocessed tasks and their scripts instead of invoking

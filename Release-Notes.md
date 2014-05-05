@@ -2,6 +2,28 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.7.1
+
+This version mostly completes changes announced for v2.7.
+
+*Invoke-Build*
+
+- *Build.ps1* features moved to *Invoke-Build*:
+    - Switch `Summary` tells to write summary after build.
+    - Advanced resolution of the default build script.
+- Shows some more details in task listings.
+- Logs task starts as "Task X:".
+
+*Show-BuildTree.ps1*
+
+- The rest of *Build.ps1* transformed to *Show-BuildTree.ps1*.
+- By default it shows the default task tree, not all trees.
+- The special task `*` tells to show all root task trees.
+
+*TabExpansionProfile.Invoke-Build.ps1*
+
+- Removed not needed *Build.ps1* completers.
+
 ## v2.7.0 - Dynamic parameters
 
 **Persistent builds, incompatible change**
@@ -28,19 +50,13 @@ Old way, still used in special cases:
 
 Mind an extra bonus: TabExpansion works fine with dynamic parameters.
 
-**Coming soon in v2.7.x**
+**Coming soon in v2.7**
 
-(Remarks and suggestions are welcome, the sooner the better)
-
-*Build.ps1* features to be moved by *Invoke-Build*:
+*Build.ps1* features to be moved to *Invoke-Build*:
 
 - Advanced resolution of the default build script.
 - Switch `Summary` to write summary after build.
-- Switch `NoExit` will be dropped, more likely.
-
-Helper *Build.ps1* will be transformed into another script, say, *Show-...*. It
-will be used to show build script information. Builds will be invoked by
-*Invoke-Build* and *Invoke-Builds*.
+- Switch `NoExit` will be dropped.
 
 ## v2.6.3 - PS v4.0 upgrade
 

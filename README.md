@@ -15,7 +15,7 @@ itself anything global including the environment.
 Long running or interactive workflows with expected interruptions can be
 automated with persistent builds which allow resuming after interruptions.
 
-## The Package
+## The package
 
 The standalone script *Invoke-Build.ps1* is enough for invoking build scripts.
 Other files and tools are for built-in help, parallel builds, graphs, and etc.
@@ -24,11 +24,11 @@ Other files and tools are for built-in help, parallel builds, graphs, and etc.
 * *Invoke-Builds.ps1* invokes parallel builds using the engine
 * *Invoke-Build-Help.xml* is external content for Get-Help
 * *Invoke-TaskFromISE.ps1* invokes a task from ISE
-* *Build.ps1* is the helper designed for command lines
+* *Show-BuildTree.ps1* shows task trees as text
+* *Show-BuildGraph.ps1* shows task trees by Graphviz
 * *TabExpansionProfile.Invoke-Build.ps1* - completers
-* *Show-BuildGraph.ps1* makes and shows task graphs
 
-## How It Works
+## How it works
 
 The engine builds a sequence of tasks defined in a build script by `task`
 statements which provide task names, script blocks, references, conditions,
@@ -42,17 +42,17 @@ referenced by them recursively. Why is this needed at all? See
 Invoke-Build is distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
 Download it to the current location as the directory *"Invoke-Build"* by this PowerShell command:
 
-    Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.github.com/nightroman/Invoke-Build/master/Download.ps1')
+    iex (New-Object Net.WebClient).DownloadString('https://raw.github.com/nightroman/Invoke-Build/master/Download.ps1')
 
 Alternatively, download it by NuGet tools or [directly](http://nuget.org/api/v2/package/Invoke-Build).
 In the latter case rename the package to *".zip"* and unzip. Use the package
 subdirectory *"tools"*.
 
 Copy *Invoke-Build.ps1*, *Invoke-Build-Help.xml*, and optionally other scripts
-to a directory in the path. As a result, the engine can be called from any
-PowerShell code as `Invoke-Build` and `Get-Help` should work.
+to a directory in the path. As a result, the engine is called from PowerShell
+as `Invoke-Build` and help for `Get-Help` is available.
 
-## Getting Help
+## Getting help
 
 To get help for *Invoke-Build.ps1* make sure *Invoke-Build-Help.xml* is in the
 same directory and invoke this command:
@@ -67,12 +67,12 @@ The above command shows function names and makes their help available:
 
     help Add-BuildTask -full
 
-## Online Resources
+## Online resources
 
 - [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial)
 : Take a look in order to get familiar with scripts.
-- [Project's Wiki](https://github.com/nightroman/Invoke-Build/wiki)
-: Full online tutorial, tools, and tips and tricks.
+- [Project Wiki](https://github.com/nightroman/Invoke-Build/wiki)
+: Detailed tutorials, helpers, notes, and etc.
 - [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
 : Build scripts used in various projects.
 - [Demo](https://github.com/nightroman/Invoke-Build/tree/master/Demo)

@@ -41,14 +41,14 @@ task GitStatus -If (Test-Path .git) {
 # Copy scripts and help from working location to the project.
 # Fail if the project files are newer, to be resolved manually.
 task UpdateScript {
-	$from = Split-Path (Get-Command Build.ps1).Definition
+	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
 	$files = @(
-		'Build.ps1'
 		'Invoke-Build.ps1'
 		'Invoke-Build-Help.xml'
 		'Invoke-Builds.ps1'
 		'Invoke-TaskFromISE.ps1'
 		'Show-BuildGraph.ps1'
+		'Show-BuildTree.ps1'
 		'TabExpansionProfile.Invoke-Build.ps1'
 	)
 	foreach($file in $files) {
@@ -76,18 +76,18 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 
 	# copy project files
 	Copy-Item -Destination z\tools `
-	.\Build.ps1,
-	.\Invoke-Build.ps1,
-	.\Invoke-Builds.ps1,
-	.\LICENSE.txt,
-	.\Show-BuildGraph.ps1,
-	.\TabExpansionProfile.Invoke-Build.ps1
+	Invoke-Build.ps1,
+	Invoke-Builds.ps1,
+	LICENSE.txt,
+	Show-BuildGraph.ps1,
+	Show-BuildTree.ps1,
+	TabExpansionProfile.Invoke-Build.ps1
 
 	# move generated files
 	Move-Item -Destination z\tools `
-	.\Invoke-Build-Help.xml,
-	.\README.htm,
-	.\Release-Notes.htm
+	Invoke-Build-Help.xml,
+	README.htm,
+	Release-Notes.htm
 }
 
 # Set $script:Version.
@@ -165,8 +165,8 @@ task Test UpdateScript, {
 	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
 	if ($SkipTestDiff) {return}
 
-	assert (194 -eq $result.Tasks.Count) $result.Tasks.Count
-	assert (38 -eq $result.Errors.Count) $result.Errors.Count
+	assert (195 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (39 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 
 	# process and save the output
