@@ -78,6 +78,7 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	Copy-Item -Destination z\tools `
 	Invoke-Build.ps1,
 	Invoke-Builds.ps1,
+	Invoke-TaskFromISE.ps1,
 	LICENSE.txt,
 	Show-BuildGraph.ps1,
 	Show-BuildTree.ps1,

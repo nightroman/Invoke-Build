@@ -223,11 +223,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.7.2'}
+function Get-BuildVersion {[Version]'2.7.3'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.7.2
+Invoke-Build 2.7.3
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)

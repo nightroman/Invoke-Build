@@ -2,9 +2,11 @@
 Invoke-Build Release Notes
 ==========================
 
-## v2.7.2
+## v2.7.2, v2.7.3
 
-Minor tweaks.
+Added missing *Invoke-TaskFromISE.ps1*.
+
+Minor tweaks in code and help.
 
 ## v2.7.1
 
