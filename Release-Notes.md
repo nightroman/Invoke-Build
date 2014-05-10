@@ -2,6 +2,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.7.2
+
+Minor tweaks.
+
 ## v2.7.1
 
 This version mostly completes changes announced for v2.7.

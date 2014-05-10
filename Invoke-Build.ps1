@@ -72,7 +72,6 @@ try {
 		$BuildTask = ${*cp}.Task
 		$BuildFile = ${*cp}.File
 		${*Parameters} = ${*cp}.Prm1
-		$BuildRoot = Split-Path $BuildFile
 		return
 	}
 
@@ -88,23 +87,22 @@ try {
 catch {
 	*TE $_ 13
 }
-$BuildRoot = Split-Path $BuildFile
 
 if (${*Parameters}) {return}
 
-$command = Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1
-if (!($_ = $command.Parameters) -or !$_.Count) {return}
+$_ = Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1
+if (!($_ = $_.Parameters) -or !$_.Count) {return}
 
-$param = New-Object Management.Automation.RuntimeDefinedParameterDictionary
-$attrs = New-Object Collections.ObjectModel.Collection[Attribute]
-$attrs.Add((New-Object Management.Automation.ParameterAttribute))
+$p = New-Object Management.Automation.RuntimeDefinedParameterDictionary
+$a = New-Object Collections.ObjectModel.Collection[Attribute]
+$a.Add((New-Object Management.Automation.ParameterAttribute))
 foreach($_ in $_.Values) {
 	if (${*names} -notcontains $_.Name) {
-		$param.Add($_.Name, (New-Object Management.Automation.RuntimeDefinedParameter $_.Name, $_.ParameterType, $attrs))
+		$p.Add($_.Name, (New-Object Management.Automation.RuntimeDefinedParameter $_.Name, $_.ParameterType, $a))
 	}
 }
-$param
-Remove-Variable -Name command, param, attrs
+$p
+Remove-Variable -Name p, a
 
 }
 end {
@@ -225,11 +223,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.7.1'}
+function Get-BuildVersion {[Version]'2.7.2'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.7.1
+Invoke-Build 2.7.2
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -288,13 +286,11 @@ function *RJ($_) {
 	if ($_ -is [scriptblock] -or $_ -is [string]) {
 		$_
 	}
-	elseif ($_ -isnot [hashtable] -or $_.Count -ne 1) {
-		throw 'Invalid job.'
-	}
-	else {
+	elseif ($_ -is [hashtable] -and $_.Count -eq 1) {
 		$_.Keys
 		$_.Values
 	}
+	else {throw 'Invalid job.'}
 }
 
 function *Bad($B, $J, $X) {
@@ -579,7 +575,7 @@ try {
 		return
 	}
 
-	*SL
+	*SL ($BuildRoot = Split-Path $BuildFile)
 	if ($_ = if ($_) {. $BuildFile @_} else {. $BuildFile}) {
 		Write-Warning "$BuildFile output:`r`n$_"
 	}

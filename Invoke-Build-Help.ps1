@@ -249,7 +249,6 @@
 '@
 	}
 
-	inputs = @()
 	outputs = @(
 		@{
 			type = 'Text'
@@ -369,15 +368,15 @@
 		allowed, each added task overrides previously added with the same name.
 '@
 		Jobs = @'
-		Specifies task jobs, i.e. other task references and own script jobs.
-		References are often specified before scripts (classic scenario) but
-		they can also be specified after and even between several own scripts.
+		Specifies the task jobs. Jobs are other task references and own
+		actions. Any number of jobs is allowed. Jobs are invoked in the
+		specified order.
 
 		Valid job types are:
 
 			[string] - simple reference, name of an existing task;
 			[object] - advanced reference created by 'job' (New-BuildJob);
-			[scriptblock] - script job, a script block invoked for this task.
+			[scriptblock] - action, a script block invoked for this task.
 '@
 		After = @'
 		Tells to add this task to the end of the specified task job lists.
@@ -442,9 +441,6 @@
 '@
 	}
 
-	inputs = @()
-	outputs = @()
-
 	links = @(
 		@{ text = 'New-BuildJob' }
 		@{ text = 'Get-BuildError' }
@@ -476,7 +472,6 @@
 '@
 	}
 
-	inputs = @()
 	outputs = @{
 		type = 'Object'
 		description = 'A new job used as an argument on task creation.'
@@ -503,7 +498,6 @@
 '@
 	}
 
-	inputs = @()
 	outputs = @(
 		@{
 			type = 'Error'
@@ -537,9 +531,6 @@
 		A user friendly message describing the assertion condition.
 '@
 	}
-
-	inputs = @()
-	outputs = @()
 }
 
 ### Get-BuildProperty
@@ -567,7 +558,6 @@
 '@
 	}
 
-	inputs = @()
 	outputs = @(
 		@{
 			type = 'Object'
@@ -597,7 +587,6 @@
 	command = 'Get-BuildVersion'
 	synopsis = 'Gets the current Invoke-Build version.'
 
-	inputs = @()
 	outputs = @{ type = 'System.Version' }
 
 	examples = @{
@@ -635,7 +624,6 @@ engine (version 2+).
 '@
 	}
 
-	inputs = @()
 	outputs = @(
 		@{
 			type = 'Objects'
@@ -700,9 +688,6 @@ engine (version 2+).
 '@
 	}
 
-	inputs = @()
-	outputs = @()
-
 	examples = @(
 		@{code={
 	# Use .NET 4.0 tools MSBuild, csc, ngen. Then call MSBuild.
@@ -736,7 +721,6 @@ engine (version 2+).
 '@
 	}
 
-	inputs = @()
 	outputs = @(
 		@{
 			type = 'String'
@@ -761,7 +745,6 @@ engine (version 2+).
 '@
 	}
 
-	inputs = @()
 	outputs = @{ type = 'String' }
 }
 
@@ -812,7 +795,6 @@ engine (version 2+).
 '@
 	}
 
-	inputs = @()
 	outputs = @{
 		type = 'text'
 		description = 'Output of invoked builds and other log messages.'
