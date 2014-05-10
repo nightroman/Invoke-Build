@@ -28,17 +28,17 @@ function Exit-Build {
 	Set-Location $HOME
 }
 
-# Enter-BuildTask is called before each task. It takes one argument - the task.
+# Enter-BuildTask is called before each task.
 # The scope is new, the parent for the task script jobs.
-function Enter-BuildTask($Task) {
+function Enter-BuildTask {
 	'Enter task {0}' -f $Task.Name
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
 }
 
-# Exit-BuildTask is called after each task. Arguments and the scope are the
-# same as for Enter-BuildTask.
-function Exit-BuildTask($Task) {
+# Exit-BuildTask is called after each task.
+# The scope is the same as for Enter-BuildTask.
+function Exit-BuildTask {
 	'Exit task {0}' -f $Task.Name
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME

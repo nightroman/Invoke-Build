@@ -332,9 +332,7 @@ filter *Try($T, $P = [System.Collections.Stack]@()) {
 }
 
 function *IO {
-	${private:**} = $args[0]
-
-	if ((${private:*i} = ${**}.Inputs) -is [scriptblock]) {
+	if ((${private:*i} = $Task.Inputs) -is [scriptblock]) {
 		*SL
 		${*i} = @(& ${*i})
 	}
@@ -348,8 +346,8 @@ function *IO {
 	}
 	if (!${*p}) {return 'Skipping empty input.'}
 
-	${private:*o} = ${**}.Outputs
-	if (${**}.Partial) {
+	${private:*o} = $Task.Outputs
+	if ($Task.Partial) {
 		${*o} = @(
 			if (${*o} -is [scriptblock]) {
 				${*p} | & ${*o}
@@ -362,8 +360,8 @@ function *IO {
 		if (${*p}.Count -ne ${*o}.Count) {throw "Different input/output: $(${*p}.Count)/$(${*o}.Count)."}
 
 		$k = -1
-		${**}.Inputs = $i = [System.Collections.ArrayList]@()
-		${**}.Outputs = $o = [System.Collections.ArrayList]@()
+		$Task.Inputs = $i = [System.Collections.ArrayList]@()
+		$Task.Outputs = $o = [System.Collections.ArrayList]@()
 		foreach($_ in ${*i}) {
 			if ($_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime((*FP ($p = ${*o}[++$k])))) {
 				$null = $i.Add(${*p}[$k]), $o.Add($p)
@@ -373,12 +371,12 @@ function *IO {
 	}
 	else {
 		if (${*o} -is [scriptblock]) {
-			${**}.Outputs = ${*o} = & ${*o}
+			$Task.Outputs = ${*o} = & ${*o}
 			*SL
 		}
 		if (!${*o}) {throw 'Empty output.'}
 
-		${**}.Inputs = ${*p}
+		$Task.Inputs = ${*p}
 		$m = (${*i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
 		foreach($_ in ${*o}) {
 			if ($m -gt [System.IO.File]::GetLastWriteTime((*FP $_)).Ticks) {return}
@@ -405,27 +403,27 @@ function *CP {
 	$_ | Export-Clixml ${*}.Checkpoint
 }
 
-function *Task {
-	${private:**}, ${private:*p} = $args
+function *Task($Task) {
+	${private:*p} = $args
 
-	${**} = ${*}.All[${**}]
-	${*p} = "${*p}/$(${**}.Name)"
-	if (${**}.Error) {
+	$Task = ${*}.All[$Task]
+	${*p} = "${*p}/$($Task.Name)"
+	if ($Task.Error) {
 		Write-Build 8 "Task ${*p} failed."
 		return
 	}
-	if (${**}.Elapsed) {
+	if ($Task.Elapsed) {
 		Write-Build 8 "Done ${*p}"
 		return
 	}
 
-	if ((${private:*x} = ${**}.If) -is [scriptblock] -and !$WhatIf) {
+	if ((${private:*x} = $Task.If) -is [scriptblock] -and !$WhatIf) {
 		*SL
 		try {
 			${*x} = & ${*x}
 		}
 		catch {
-			${**}.Error = $_
+			$Task.Error = $_
 			throw
 		}
 	}
@@ -435,11 +433,11 @@ function *Task {
 	}
 
 	${private:*n} = 0
-	${private:*a} = ${**}.Job
-	${private:*i} = [int]($null -ne ${**}.Inputs)
-	${**}.Started = [DateTime]::Now
+	${private:*a} = $Task.Job
+	${private:*i} = [int]($null -ne $Task.Inputs)
+	$Task.Started = [DateTime]::Now
 	try {
-		. *UC Enter-BuildTask ${**}
+		. *UC Enter-BuildTask $Task
 		foreach(${private:*j} in ${*a}) {
 			++${*n}
 			if (${*j} -is [string]) {
@@ -460,7 +458,7 @@ function *Task {
 				continue
 			}
 
-			if (1 -eq ${*i}) {${*i} = *IO ${**}}
+			if (1 -eq ${*i}) {${*i} = *IO}
 			if (${*i}) {
 				Write-Build 11 ${*i}
 				continue
@@ -468,15 +466,15 @@ function *Task {
 
 			try {
 				*SL
-				. Enter-BuildJob ${**} ${*n}
+				. Enter-BuildJob $Task ${*n}
 				*SL
 				if (0 -eq ${*i}) {
 					& ${*j}
 				}
 				else {
-					$Inputs = ${**}.Inputs
-					$Outputs = ${**}.Outputs
-					if (${**}.Partial) {
+					$Inputs = $Task.Inputs
+					$Outputs = $Task.Outputs
+					if ($Task.Partial) {
 						${*x} = 0
 						$Inputs | .{process{
 							$2 = $Outputs[${*x}++]
@@ -489,32 +487,32 @@ function *Task {
 				}
 			}
 			catch {
-				${**}.Error = $_
+				$Task.Error = $_
 				throw
 			}
 			finally {
 				*SL
-				. Exit-BuildJob ${**} ${*n}
+				. Exit-BuildJob $Task ${*n}
 			}
 			if (${*a}.Count -ge 2) {
 				Write-Build 11 "Done ${*m}"
 			}
 		}
-		${**}.Elapsed = $_ = [DateTime]::Now - ${**}.Started
+		$Task.Elapsed = $_ = [DateTime]::Now - $Task.Started
 		Write-Build 11 "Done ${*p} $_"
 		if (${*}.Checkpoint) {*CP}
 	}
 	catch {
-		Write-Build 14 (*II ${**})
-		${**}.Error = $_
-		${**}.Elapsed = [DateTime]::Now - ${**}.Started
+		Write-Build 14 (*II $Task)
+		$Task.Error = $_
+		$Task.Elapsed = [DateTime]::Now - $Task.Started
 		${*x} = "ERROR: Task ${*p}: $_"
 		$null = ${*}.Errors.Add($(if (*My) {${*x}} else {*EI ${*x} $_}))
 		throw
 	}
 	finally {
-		$null = ${*}.Tasks.Add(${**})
-		. *UC Exit-BuildTask ${**}
+		$null = ${*}.Tasks.Add($Task)
+		. *UC Exit-BuildTask $Task
 	}
 }
 

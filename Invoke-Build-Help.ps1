@@ -69,6 +69,19 @@
 		$BuildRoot - build script location
 		$BuildFile - build script path
 		$BuildTask - initial tasks
+		$Task      - current task
+
+	$Task is available for the task script blocks defined by parameters If,
+	Inputs, Outputs, Jobs and the event functions Enter|Exit-BuildTask and
+	Enter|Exit-BuildJob.
+
+		$Task properties available for reading:
+
+		- Name - task name, [string]
+		- Started - start time, [DateTime]
+		- In Exit-BuildTask only:
+		    - Error - an error stopped the task
+		    - Elapsed - task duration, [TimeSpan]
 
 	NOTE: The special variable $_ may be defined and visible. Scripts and tasks
 	can use it as their own, that is assign at first. Only in special cases it
@@ -97,19 +110,18 @@
 	a good place for heavy initialization, it does not have to care of WhatIf.
 
 	Enter-BuildTask and Exit-BuildTask are invoked in the same scope which is
-	the parent for a task invoked between them. An argument is the task. The
-	following task properties are available for reading:
+	the parent for a task invoked between them. An argument is the task.
 
-		Name - task name, [string]
-		Started - start time, [DateTime]
-
-	Exit-BuildTask may read two extra properties:
-
-		Error - an error stopped the task
-		Elapsed - task duration, [TimeSpan]
+		*** OBSOLETE ***
+		The argument will be removed soon.
+		Use the variable $Task instead.
 
 	Enter-BuildJob and Exit-BuildJob are invoked in the same scope as
 	*-BuildTask and take two arguments - the task and the job number.
+
+		*** OBSOLETE ***
+		Use the variable $Task instead of the first argument.
+		The second argument will become first (incoming incompatible change).
 
 	Export-Build and Import-Build are used with persistent builds. Export-Build
 	outputs data to be exported to clixml. Import-Build is called with a single

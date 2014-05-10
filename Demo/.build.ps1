@@ -260,6 +260,7 @@ task TestVariables {
 				'BuildFile' { 'BuildFile - build script path - ' + $BuildFile }
 				'BuildRoot' { 'BuildRoot - build script root - ' + $BuildRoot }
 				'BuildTask' { 'BuildTask - initial task list - ' + $BuildTask }
+				'Task' { 'Task - the current task' }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
 				default { Write-Warning "Unknown variable '$_'." }
 			}

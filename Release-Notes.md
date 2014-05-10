@@ -2,14 +2,42 @@
 Invoke-Build Release Notes
 ==========================
 
-## v2.7.4
+## v2.7.4 $Task
 
 **Default script resolution**
 
 The script specified by `$env:InvokeBuildGetFile` (gets a non standard default
 build file) is invoked with the full directory path as an argument. It may be
 invoked several times during the directory branch search with each path passed
-in. Old scripts should work fine but some of them may be simplified.
+in. Old scripts should work fine but some of them may be simplified now.
+
+**Automatic variable $Task. Step 1**
+
+A new automatic variable `$Task` represents the current task instance. It is
+available for the task script blocks defined by parameters `If`, `Inputs`,
+`Outputs`, `Jobs` and the event functions `Enter|Exit-BuildTask` and
+`Enter|Exit-BuildJob`.
+
+Why? Some advanced task scripts need this instance (e.g. shared between tasks).
+A common variable `$Task` seems to be simpler than use of a parameter in each
+of 8 above code pieces. Let's keep parameters available for something else.
+
+**Potentially incompatible**
+
+Build scripts with the parameter `$Task` or script variable `$Task` may fail.
+Rename this variable. The parameter `$Task` is not good anyway because it
+conflicts with Invoke-Build and cannot be used as the dynamic parameter.
+
+As far as `Enter|Exit-*` are invoked in the scope where `$Task` is defined,
+make sure they do not change it. Other task code may change it in its own
+scope. But such hiding of the system variable is not recommended.
+
+**Step 2. The next version**
+
+`Enter|Exit-BuildTask` and `Enter|Exit-BuildJob` will not be accepting the task
+as the first argument. The new variable `$Task` should be used instead. Most of
+scripts may be prepared now. Change of `Enter|Exit-BuildJob` may be breaking,
+the second parameter will become first.
 
 ## v2.7.2, v2.7.3
 
