@@ -157,9 +157,10 @@
 		are more files then ".build.ps1" is used.
 
 		If the build file is not found then a script defined by the environment
-		variable InvokeBuildGetFile is called. It may get a not standard build
-		file for the current location. If the file is still not defined then
-		Invoke-Build looks for it in all parent directories.
+		variable InvokeBuildGetFile is called with the path as an argument. It
+		may get a non standard build file. The full path is required.
+
+		If the file is still not defined then parent directories are searched.
 '@
 		Parameters = @'
 		A hashtable of parameters passed in the build script. It is needed only

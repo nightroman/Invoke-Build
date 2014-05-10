@@ -13,6 +13,7 @@
 	* Make and push the package to NuGet
 #>
 
+# Build script parameters are standard parameters
 param(
 	[switch]$SkipTestDiff
 )
@@ -74,21 +75,18 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	Remove-Item [z] -Force -Recurse
 	$null = mkdir z\tools
 
-	# copy project files
+	# copy files
 	Copy-Item -Destination z\tools `
 	Invoke-Build.ps1,
+	Invoke-Build-Help.xml,
 	Invoke-Builds.ps1,
 	Invoke-TaskFromISE.ps1,
 	LICENSE.txt,
+	README.htm,
+	Release-Notes.htm,
 	Show-BuildGraph.ps1,
 	Show-BuildTree.ps1,
 	TabExpansionProfile.Invoke-Build.ps1
-
-	# move generated files
-	Move-Item -Destination z\tools `
-	Invoke-Build-Help.xml,
-	README.htm,
-	Release-Notes.htm
 }
 
 # Set $script:Version.
@@ -181,5 +179,5 @@ task Test UpdateScript, {
 	Remove-Item $resultPath
 }
 
-# Test all and clean.
+# The default task: make and test all, then clean.
 task . Help, Test, Clean

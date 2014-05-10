@@ -33,8 +33,10 @@ dynamicparam {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildFile($Path) {
-	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Count -eq 1) {return $_}
-	$_ -like '*\.build.ps1'
+	do {
+		if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1 -or ($_ = $_ -like '*\.build.ps1')) {return $_}
+		if ([System.IO.File]::Exists(($_ = $env:InvokeBuildGetFile)) -and ($_ = & $_ $Path)) {return $_}
+	} while($Path = Split-Path $Path)
 }
 
 if ($MyInvocation.InvocationName -eq '.') {return}
@@ -76,12 +78,10 @@ try {
 	}
 
 	if ($BuildFile) {
-		if (!([System.IO.File]::Exists(($BuildFile = *FP $BuildFile)))) {throw "Missing script '$BuildFile'."}
+		if (![System.IO.File]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing script '$BuildFile'."}
 	}
 	elseif (!($BuildFile = Get-BuildFile ${*cd})) {
-		if ([System.IO.File]::Exists($env:InvokeBuildGetFile)) {$BuildFile = & $env:InvokeBuildGetFile}
-		if (!$BuildFile) {for($_ = ${*cd}; $_ = Split-Path $_) {if ($BuildFile = Get-BuildFile $_) {break}}}
-		if (!$BuildFile) {throw 'Missing default script.'}
+		throw 'Missing default script.'
 	}
 }
 catch {
@@ -223,11 +223,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.7.3'}
+function Get-BuildVersion {[Version]'2.7.4'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.7.3
+Invoke-Build 2.7.4
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)

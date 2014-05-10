@@ -2,6 +2,15 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.7.4
+
+**Default script resolution**
+
+The script specified by `$env:InvokeBuildGetFile` (gets a non standard default
+build file) is invoked with the full directory path as an argument. It may be
+invoked several times during the directory branch search with each path passed
+in. Old scripts should work fine but some of them may be simplified.
+
 ## v2.7.2, v2.7.3
 
 Added missing *Invoke-TaskFromISE.ps1*.
