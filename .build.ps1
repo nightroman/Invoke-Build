@@ -26,12 +26,12 @@ Set-StrictMode -Version Latest
 # <https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks>
 Markdown.tasks.ps1
 
-# Remove generated HTML and temp files.
+# Synopsis: Remove generated HTML and temp files.
 task Clean RemoveMarkdownHtml, {
 	Remove-Item z, Invoke-Build-Help.xml, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
-# Warn about not empty git status if .git exists.
+# Synopsis: Warn about not empty git status if .git exists.
 task GitStatus -If (Test-Path .git) {
 	$status = exec { git status -s }
 	if ($status) {
@@ -39,7 +39,7 @@ task GitStatus -If (Test-Path .git) {
 	}
 }
 
-# Copy scripts and help from working location to the project.
+# Synopsis: Copy scripts and help from working location to the project.
 # Fail if the project files are newer, to be resolved manually.
 task UpdateScript {
 	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
@@ -61,7 +61,7 @@ task UpdateScript {
 	}
 }
 
-# Build the PowerShell help file.
+# Synopsis: Build the PowerShell help file.
 # <https://github.com/nightroman/Helps>
 task Help {
 	$dir = Split-Path (Get-Command Invoke-Build.ps1).Definition
@@ -69,7 +69,7 @@ task Help {
 	Convert-Helps Invoke-Build-Help.ps1 $dir\Invoke-Build-Help.xml
 }
 
-# Make the package directory z\tools for NuGet.
+# Synopsis: Make the package directory z\tools for NuGet.
 task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	# temp package folder
 	Remove-Item [z] -Force -Recurse
@@ -89,7 +89,7 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	TabExpansionProfile.Invoke-Build.ps1
 }
 
-# Set $script:Version.
+# Synopsis: Set $script:Version.
 task Version {
 	# get and test version
 	($script:Version = (Get-BuildVersion).ToString())
@@ -97,13 +97,13 @@ task Version {
 	assert ($r) 'Missing or outdated line Invoke-Build <version>.'
 }
 
-# Make the zip package.
+# Synopsis: Make the zip package.
 task Zip Version, Package, {
 	Set-Location z\tools
 	exec { & 7z a ..\..\Invoke-Build.$(Get-BuildVersion).zip * }
 }
 
-# Make the NuGet package.
+# Synopsis: Make the NuGet package.
 task NuGet Version, Package, {
 	$text = @'
 Invoke-Build is a build automation tool which invokes tasks defined in a
@@ -131,7 +131,7 @@ Concepts are similar to psake and MSBuild.
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
 }
 
-# Push with a version tag.
+# Synopsis: Push with a version tag.
 task PushRelease Version, {
 	$changes = exec { git status --short }
 	assert (!$changes) "Please, commit changes."
@@ -141,13 +141,13 @@ task PushRelease Version, {
 	exec { git push origin "v$Version" }
 }
 
-# Push NuGet package.
+# Synopsis: Push NuGet package.
 task PushNuGet NuGet, {
 	exec { NuGet push "Invoke-Build.$Version.nupkg" }
 },
 Clean
 
-# Calls tests infinitely. NOTE: normal scripts do not use ${*}.
+# Synopsis: Calls tests infinitely. NOTE: normal scripts do not use ${*}.
 task Loop {
 	for() {
 		${*}.Tasks.Clear()
@@ -157,14 +157,14 @@ task Loop {
 	}
 }
 
-# UpdateScript, test Demo scripts, and compare the output file with the
-# sample. Requires Assert-SameFile from PowerShelf.
+# Synopsis: Test Demo scripts and expected output.
+# Requires Assert-SameFile from PowerShelf.
 task Test UpdateScript, {
 	# invoke tests, get output and result
-	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:9999
+	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:200
 	if ($SkipTestDiff) {return}
 
-	assert (195 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (194 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (39 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 
@@ -179,5 +179,5 @@ task Test UpdateScript, {
 	Remove-Item $resultPath
 }
 
-# The default task: make and test all, then clean.
+# Synopsis: The default task: make and test all, then clean.
 task . Help, Test, Clean

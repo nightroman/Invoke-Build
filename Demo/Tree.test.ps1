@@ -7,29 +7,35 @@
 	Invoke-Build * Tree.test.ps1
 #>
 
-# Tree.
+function Get-NormalText($_) {
+	$_.Trim() -replace '\s+', ' '
+}
+
+# Synopsis: Tree.
 task Tree {
+	$sample = Get-NormalText @'
+. - Call tree tests.
+    Tree (.) - Tree.
+        {}
+    CyclicReference (.) - Test cyclic reference.
+        {}
+    MissingReference (.) - Test missing reference.
+        {}
+    MissingTask (.) - Test missing task.
+        {}
+    {}
+'@
+
 	# no task is resolved to .
 	($log = Show-BuildTree -File Tree.test.ps1 | Out-String)
-	assert ($log -like '*.*    Tree (.)*    Comment (.)*')
-	assert (!$log.Contains('#'))
+	assert ($sample -eq (Get-NormalText $log))
 
 	# * is the same fo this example
-	($log2 = Show-BuildTree * Tree.test.ps1 | Out-String)
-	assert ($log2 -eq $log)
+	($log = Show-BuildTree * Tree.test.ps1 | Out-String)
+	assert ($sample -eq (Get-NormalText $log))
 }
 
-# Comment.
-task Comment {
-	($log = Show-BuildTree -File Tree.test.ps1 -Comment | Out-String)
-
-	# ensure comments are there
-	($log = $log -replace '\r\n', '=')
-	assert ($log -like '*=<#=Call tree tests.=#>=.=*')
-	assert ($log -like '*=    # Tree.=    Tree (.)=        {}=*')
-	assert ($log -like '*=    # Comment.=    Comment (.)=        {}=*')
-}
-
+# Synopsis: Test cyclic reference.
 task CyclicReference {
 	[System.IO.File]::WriteAllText("$BuildRoot\z.build.ps1", {
 		task task1 task2
@@ -39,6 +45,7 @@ task CyclicReference {
 	Show-BuildTree . z.build.ps1
 }
 
+# Synopsis: Test missing reference.
 task MissingReference {
 	[System.IO.File]::WriteAllText("$BuildRoot\z.build.ps1", {
 		task task1 missing, {}
@@ -47,16 +54,17 @@ task MissingReference {
 	Show-BuildTree . z.build.ps1
 }
 
+# Synopsis: Test missing task.
 task MissingTask {
 	Show-BuildTree missing
 }
 
 <#
-Call tree tests.
+	Synopsis : Call tree tests.
+	(also test getting synopsis)
 #>
 task . `
 Tree,
-Comment,
 (job CyclicReference -Safe),
 (job MissingReference -Safe),
 (job MissingTask -Safe),

@@ -7,10 +7,15 @@
 	The tasks and events of this script sets a noise location and check that on
 	calling the location is restored to $BuildRoot.
 
+	Check task and job event scopes, they must be the same for a task.
+
+	Events try to set the constant variable $Task and check expected failures.
+
 .Example
 	Invoke-Build * Events.test.ps1
 #>
 
+$err = '*Cannot overwrite variable Task because it is read-only or constant.*'
 Set-Location $HOME
 
 # Enter-Build is called before the first task in the script scope. Its local
@@ -31,43 +36,61 @@ function Exit-Build {
 # Enter-BuildTask is called before each task.
 # The scope is new, the parent for the task script jobs.
 function Enter-BuildTask {
-	'Enter task {0}' -f $Task.Name
+	$TaskName = $Task.Name # set just here, check later
+	'Enter task {0}' -f $TaskName
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
+	$$ = try {$Task = 1} catch {$_}
+	assert ($$ -like $err)
 }
 
 # Exit-BuildTask is called after each task.
 # The scope is the same as for Enter-BuildTask.
 function Exit-BuildTask {
-	'Exit task {0}' -f $Task.Name
+	assert ($TaskName -eq $Task.Name) # the same scope
+	'Exit task {0}' -f $TaskName
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
+	$$ = try {$Task = 1} catch {$_}
+	assert ($$ -like $err)
 }
 
-# Enter-BuildJob is called before each script job. It takes two arguments - the
-# task and the job number. The scope is the same as for Enter-BuildTask.
-function Enter-BuildJob($Task, $Number) {
-	'Enter job {1} of {0}' -f $Task.Name, $Number
+# Enter-BuildJob is called before each script job. Its argument is the job number.
+# The scope is the same as for Enter-BuildTask.
+function Enter-BuildJob($Number) {
+	assert ($TaskName -eq $Task.Name) # the same scope
+	'Enter job {1} of {0}' -f $TaskName, $Number
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
+	$$ = try {$Task = 1} catch {$_}
+	assert ($$ -like $err)
 }
 
-# Exit-BuildJob is called after each script job. Arguments and the scope are
-# the same as for Enter-BuildJob.
-function Exit-BuildJob($Task, $Number) {
-	'Exit job {1} of {0}' -f $Task.Name, $Number
+# Exit-BuildJob is called after each script job. Its argument is the job number.
+# The scope is the same as for Enter-BuildTask.
+function Exit-BuildJob($Number) {
+	assert ($TaskName -eq $Task.Name) # the same scope
+	'Exit job {1} of {0}' -f $TaskName, $Number
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
+	$$ = try {$Task = 1} catch {$_}
+	assert ($$ -like $err)
 }
 
 task Task1 {
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
+	assert ($Task.Name -ceq 'Task1') #! name has the original case
+	$Task = 'can set'
 }
 
-task Task2 Task1, {
+#! reference has lower case
+task Task2 task1, {
 	assert ($BuildRoot -eq (Get-Location).ProviderPath)
 	Set-Location $HOME
+	assert ($Task.Name -ceq 'Task2') #! name has the original case
+	$Task = 'can set'
 }
 
-task . Task2
+#! reference has lower case
+task . task2

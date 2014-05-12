@@ -110,18 +110,10 @@
 	a good place for heavy initialization, it does not have to care of WhatIf.
 
 	Enter-BuildTask and Exit-BuildTask are invoked in the same scope which is
-	the parent for a task invoked between them. An argument is the task.
-
-		*** OBSOLETE ***
-		The argument will be removed soon.
-		Use the variable $Task instead.
+	the parent for a task invoked between them.
 
 	Enter-BuildJob and Exit-BuildJob are invoked in the same scope as
-	*-BuildTask and take two arguments - the task and the job number.
-
-		*** OBSOLETE ***
-		Use the variable $Task instead of the first argument.
-		The second argument will become first (incoming incompatible change).
+	*-BuildTask and take one argument, the job number.
 
 	Export-Build and Import-Build are used with persistent builds. Export-Build
 	outputs data to be exported to clixml. Import-Build is called with a single
@@ -143,6 +135,7 @@
 
 		? - Tells to list the tasks with brief information without invoking. It
 		also checks tasks and throws errors on missing or cyclic references.
+		Task synopsis is defined in preceding comments as # Synopsis: ...
 
 		?? - Tells to collect and get all tasks as a ordered dictionary. It can
 		be used by external tools for task analysis, TabExpansion, and etc.
@@ -295,6 +288,11 @@
 
 	Invoke-Build ?
 	Invoke-Build ? Project.build.ps1
+
+	# Custom formatting is possible, too
+
+	Invoke-Build ? | Format-Table -AutoSize
+	Invoke-Build ? | Format-List Name, Synopsis
 		}}
 
 		@{code={
@@ -373,6 +371,9 @@
 
 	In fact, this feature is literally all that build scripts really need.
 	Other functions are mostly helpers, scripts do not have to use them.
+
+	Task synopsis is defined in preceding comments as # Synopsis: ...
+	It is used in task information returned by Invoke-Build ?
 '@
 
 	parameters = @{

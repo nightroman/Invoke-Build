@@ -2,6 +2,38 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.8.0
+
+**Documentation comments**
+
+Help task *?* returns objects describing tasks. Properties:
+
+- *Name* - task name
+- *Jobs* - comma separated task names and own actions shown as `{}`
+- *Synopsis* - task synopsis from the preceding comment `# Synopsis: ...`
+
+Returned objects are formatted as three column table by default. If default
+formatting is not good enough use custom formatting, e.g.:
+
+    Invoke-Build ? | Format-Table -AutoSize
+    Invoke-Build ? | Format-List Name, Synopsis
+
+***Show-BuildTree.ps1***
+
+- Always shows task synopsis, if any.
+- Removed not needed switch *Comment*.
+
+**$Task, step 2. Potentially incompatible**
+
+- `$Task` is now constant, `Enter|Exit-BuildTask` and `Enter|Exit-BuildJob`
+  cannot override it, say, accidentally.
+- Event functions `Enter|Exit-BuildTask` do not accept a task as an argument,
+  use the automatic variable `$Task` instead.
+- Event functions `Enter|Exit-BuildJob` do not accept a task as the first
+  argument, use `$Task` instead. The job number became the first argument.
+
+With this step integration of the automatic variable `$Task` is complete.
+
 ## v2.7.4 $Task
 
 **Default script resolution**

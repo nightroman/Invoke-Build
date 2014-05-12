@@ -56,19 +56,18 @@ task WhatIf {
 	assert ($Result.Tasks.Count -eq 1)
 }
 
-# "Invoke-Build ?" lists tasks:
-# 1) show tasks with brief information (just ?);
-# 2) get task list (use ? with the parameter Result).
-# The Wrapper.test.ps1 uses ? and Result in order to show detailed task trees.
+# "Invoke-Build ?[?]" lists tasks:
+# 1) show tasks with brief information
+# 2) get task as an ordered dictionary
 task ListTask {
-	# show tasks
+	# show tasks info
 	$r = Invoke-Build ? Assert.test.ps1
 	$r
 	assert ($r.Count -eq 3)
-	assert ($r[0] -match '^AssertDefault - {} - .*:\d+$')
-	assert ($r[2] -match '^\. - AssertDefault, AssertMessage, {} - .*:\d+$')
+	assert ($r[0].Name -eq 'AssertDefault' -and $r[0].Jobs -eq '{}' -and $r[0].Synopsis -eq 'Fail with the default message.')
+	assert ($r[2].Name -eq '.' -and $r[2].Jobs -eq 'AssertDefault, AssertMessage, {}' -and $r[2].Synopsis -eq 'Call tests and check errors.')
 
-	# get task list
+	# get task objects
 	$all = Invoke-Build ?? Assert.test.ps1
 	assert ($all.Count -eq 3)
 }

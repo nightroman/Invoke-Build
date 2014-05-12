@@ -1,14 +1,13 @@
 
 <#
 .Synopsis
-	Shows Invoke-Build task trees with optional comments.
+	Shows Invoke-Build task trees with brief information.
 	Invoke-Build - Build Automation in PowerShell
 	Copyright (c) 2011-2014 Roman Kuzmin
 
 .Description
 	This script analyses task references and shows parent tasks and child trees
-	for the specified tasks. Tasks are not invoked. Use the switch Comment in
-	order to show preceding task comments as well.
+	for the specified tasks. Tasks are not invoked.
 
 .Parameter Task
 		Task names.
@@ -20,8 +19,6 @@
 .Parameter Parameters
 		Build script parameters.
 		They are needed only if they alter build trees.
-.Parameter Comment
-		Tells to show task code comments in task trees.
 
 .Inputs
 	None.
@@ -35,28 +32,22 @@
 param(
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)][string]$File,
-	[Parameter(Position=2)][hashtable]$Parameters,
-	[switch]$Comment
+	[Parameter(Position=2)][hashtable]$Parameters
 )
 
 $private:_Task = $Task
 $private:_File = $File
 $private:_Parameters = $Parameters
-$private:_Comment = $Comment
-Remove-Variable Task, File, Parameters, Comment
+Remove-Variable Task, File, Parameters
 
 # Shows the task tree.
-function ShowTaskTree($Task, $Comment, $Step = 0) {
+function ShowTaskTree($Task, $Docs, $Step = 0) {
 	if ($Step -eq 0) {''}
 	$tab = '    ' * $Step
 	++$Step
 
-	# comment
-	if ($Comment) {
-		foreach($_ in GetTaskComment $Task) {
-			if ($_) {$tab + $_}
-		}
-	}
+	# synopsis
+	$synopsis = *TS $Task.InvocationInfo $docs
 
 	# name, parents
 	$info = $tab + $Task.Name
@@ -64,12 +55,12 @@ function ShowTaskTree($Task, $Comment, $Step = 0) {
 	if ($reference.Count) {
 		$info += ' (' + (($reference.Keys | Sort-Object) -join ', ') + ')'
 	}
-	$info
+	if ($synopsis) {"$info - $synopsis"} else {$info}
 
 	# task jobs
 	foreach($_ in $Task.Job) {
 		if ($_ -is [string]) {
-			ShowTaskTree $tasks[$_] $Comment $Step
+			ShowTaskTree $tasks[$_] $Docs $Step
 		}
 		else {
 			$tab + '    {}'
@@ -77,28 +68,24 @@ function ShowTaskTree($Task, $Comment, $Step = 0) {
 	}
 }
 
-# Gets comments.
-$file2docs = @{}
-function GetTaskComment($Task) {
-	$file = $Task.InvocationInfo.ScriptName
-	$docs = $file2docs[$file]
-	if (!$docs) {
-		$docs = New-Object System.Collections.Specialized.OrderedDictionary
-		$file2docs[$file] = $docs
-		foreach($token in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $file), [ref]$null)) {
-			if ($token.Type -eq 'Comment') {
-				$docs[[object]$token.EndLine] = $token.Content
+# Gets task synopsis.
+function *TS($I, $M) {
+	$f = $I.ScriptName
+	if (!($d = $M[$f])) {
+		$d = New-Object System.Collections.Specialized.OrderedDictionary
+		$M[$f] = $d
+		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
+			if ($_.Type -eq 'Comment') {
+				$d[[object]$_.EndLine] = $_.Content
 			}
 		}
 	}
-	$rem = ''
-	for($1 = $Task.InvocationInfo.ScriptLineNumber - 1; $1 -ge 1; --$1) {
-		$doc = $docs[[object]$1]
-		if (!$doc) {break}
-		$rem = $doc.Replace("`t", '    ') + "`n" + $rem
+	for($n = $I.ScriptLineNumber - 1; $n -ge 1; --$n) {
+		if (!($c = $d[[object]$n])) {break}
+		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
 	}
-	[regex]::Split($rem.TrimEnd(), '[\r\n]+')
 }
+
 
 # To amend errors
 try {
@@ -135,8 +122,9 @@ try {
 	}
 
 	# show trees
+	$docs = @{}
 	foreach($name in $_Task) {
-		ShowTaskTree $tasks[$name] $_Comment
+		ShowTaskTree $tasks[$name] $docs
 	}
 }
 catch {

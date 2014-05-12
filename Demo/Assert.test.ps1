@@ -20,7 +20,7 @@ assert (('?' -ne $BuildTask) -or $WhatIf)
 assert "Hi!"
 assert $Host
 
-# This task fails with the default message.
+# Synopsis: Fail with the default message.
 task AssertDefault {
 	# Check $ErrorActionPreference
 	assert ($ErrorActionPreference -eq 0)
@@ -42,7 +42,7 @@ task AssertMessage {
 	assert $false 'Custom assert message.'
 }
 
-# The default task calls the others and tests the result errors.
+# Synopsis: Call tests and check errors.
 # Note use of safe references to failing tasks.
 task . (job AssertDefault -Safe), (job AssertMessage -Safe), {
 	# Check $ErrorActionPreference and change it.

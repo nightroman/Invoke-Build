@@ -1,15 +1,17 @@
 
 <#
 .Synopsis
-	Tests features moved from Build.ps1.
+	Tests features moved from the obsolete wrapper.
 
 .Example
 	Invoke-Build * Wrapper.test.ps1
 #>
 
-# Skip all preparations on WhatIf calls (when Tree and Comment are tested).
-# Well written scripts should do this check and skip unwanted actions.
-if (!$WhatIf) {
+# For doing anything significant scripts should either `if (!$WhatIf) {...}` or
+# use the event function Enter-Build. Its pair Exit-Build is a good place for
+# cleaning, even on failures. We do not use it in order to keep data on errors.
+# Instead, the last task removes temp files.
+function Enter-Build {
 	# Make directories in here (many build files) and in the parent (one file).
 	Remove-Item [z] -Force -Recurse
 	$null = mkdir z\1\2
@@ -106,8 +108,8 @@ task Stars StarsMissingDirectory, {
 
 	# fast task info, test first and last to be sure that there is not a header or footer
 	$r = Invoke-Build **, ?
-	assert ($r[0] -match '^PreTask1 - {} - .*\\Alter\.test\.ps1:\d+$')
-	assert ($r[-1] -match '^\. - ParentHasManyCandidates, .*, Summary, {} - .*\\Wrapper\.test\.ps1:\d+$')
+	assert ($r[0].Name -eq 'PreTask1' -and $r[0].Jobs -eq '{}')
+	assert ($r[-1].Name -eq '.' -and $r[-1].Jobs -like 'ParentHasManyCandidates, *, Summary, {}' -and $r[-1].Synopsis -eq 'Call tests and clean.')
 
 	# full task info
 	$r = Invoke-Build **, ??
@@ -205,8 +207,7 @@ task DynamicMissingScript {
 	assert ($$.InvocationInfo.Line -like '*{Invoke-Build}*')
 }
 
-# Call tests and clean.
-# The comment is tested.
+# Synopsis: Call tests and clean.
 task . `
 ParentHasManyCandidates,
 GrandParentHasManyCandidates,

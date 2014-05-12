@@ -104,8 +104,7 @@ foreach($_ in $_.Values) {
 $p
 Remove-Variable -Name p, a
 
-}
-end {
+} end {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Add-BuildTask(
@@ -223,11 +222,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.7.4'}
+function Get-BuildVersion {[Version]'2.8.0'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.7.4
+Invoke-Build 2.8.0
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -403,11 +402,11 @@ function *CP {
 	$_ | Export-Clixml ${*}.Checkpoint
 }
 
-function *Task($Task) {
-	${private:*p} = $args
-
-	$Task = ${*}.All[$Task]
+function *Task {
+	$_, ${private:*p} = $args
+	New-Variable -Name Task -Value ${*}.All[$_] -Option Constant
 	${*p} = "${*p}/$($Task.Name)"
+
 	if ($Task.Error) {
 		Write-Build 8 "Task ${*p} failed."
 		return
@@ -437,7 +436,7 @@ function *Task($Task) {
 	${private:*i} = [int]($null -ne $Task.Inputs)
 	$Task.Started = [DateTime]::Now
 	try {
-		. *UC Enter-BuildTask $Task
+		. *UC Enter-BuildTask
 		foreach(${private:*j} in ${*a}) {
 			++${*n}
 			if (${*j} -is [string]) {
@@ -466,7 +465,7 @@ function *Task($Task) {
 
 			try {
 				*SL
-				. Enter-BuildJob $Task ${*n}
+				. Enter-BuildJob ${*n}
 				*SL
 				if (0 -eq ${*i}) {
 					& ${*j}
@@ -492,7 +491,7 @@ function *Task($Task) {
 			}
 			finally {
 				*SL
-				. Exit-BuildJob $Task ${*n}
+				. Exit-BuildJob ${*n}
 			}
 			if (${*a}.Count -ge 2) {
 				Write-Build 11 "Done ${*m}"
@@ -512,7 +511,32 @@ function *Task($Task) {
 	}
 	finally {
 		$null = ${*}.Tasks.Add($Task)
-		. *UC Exit-BuildTask $Task
+		. *UC Exit-BuildTask
+	}
+}
+
+function *TS($I, $M) {
+	$f = $I.ScriptName
+	if (!($d = $M[$f])) {
+		$d = New-Object System.Collections.Specialized.OrderedDictionary
+		$M[$f] = $d
+		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
+			if ($_.Type -eq 'Comment') {
+				$d[[object]$_.EndLine] = $_.Content
+			}
+		}
+	}
+	for($n = $I.ScriptLineNumber - 1; $n -ge 1; --$n) {
+		if (!($c = $d[[object]$n])) {break}
+		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
+	}
+}
+
+filter *TH($M) {
+	New-Object PSCustomObject -Property @{
+		Name = $_.Name
+		Jobs = $(foreach($j in $_.Job) {if ($j -is [string]) {$j} else {'{}'}}) -join ', '
+		Synopsis = *TS $_.InvocationInfo $M
 	}
 }
 
@@ -595,11 +619,7 @@ try {
 			${*a}
 		}
 		else {
-			foreach($_ in ${*a}.Values) {
-				$i = $_.InvocationInfo
-				$j = foreach($j in $_.Job) {if ($j -is [string]) {$j} else {'{}'}}
-				"$($_.Name) - $($j -join ', ') - $($i.ScriptName):$($i.ScriptLineNumber)"
-			}
+			${*a}.Values | *TH @{}
 		}
 		return
 	}
@@ -681,8 +701,6 @@ finally {
 		elseif ($w) {14, 'Build succeeded with warnings'}
 		else {10, 'Build succeeded'}
 		Write-Build $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings $_"
-
 	}
 }
-
 }
