@@ -2,6 +2,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.8.1
+
+**Task help comments**
+
+- Improved getting of task synopsis from comments.
+- Fixed unexpected help property order in PS v2.0.
+
 ## v2.8.0
 
 **Documentation comments**

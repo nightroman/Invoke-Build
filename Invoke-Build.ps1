@@ -222,11 +222,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.8.0'}
+function Get-BuildVersion {[Version]'2.8.1'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.8.0
+Invoke-Build 2.8.1
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -518,26 +518,22 @@ function *Task {
 function *TS($I, $M) {
 	$f = $I.ScriptName
 	if (!($d = $M[$f])) {
-		$d = New-Object System.Collections.Specialized.OrderedDictionary
-		$M[$f] = $d
+		$M[$f] = ($d = @{})
 		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
-			if ($_.Type -eq 'Comment') {
-				$d[[object]$_.EndLine] = $_.Content
-			}
+			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
 		}
 	}
-	for($n = $I.ScriptLineNumber - 1; $n -ge 1; --$n) {
-		if (!($c = $d[[object]$n])) {break}
+	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
 		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
 	}
 }
 
 filter *TH($M) {
-	New-Object PSCustomObject -Property @{
-		Name = $_.Name
-		Jobs = $(foreach($j in $_.Job) {if ($j -is [string]) {$j} else {'{}'}}) -join ', '
-		Synopsis = *TS $_.InvocationInfo $M
-	}
+	$r = 1 | Select-Object Name, Jobs, Synopsis
+	$r.Name = $_.Name
+	$r.Jobs = $(foreach($j in $_.Job) {if ($j -is [string]) {$j} else {'{}'}}) -join ', '
+	$r.Synopsis = *TS $_.InvocationInfo $M
+	$r
 }
 
 function Enter-Build {} function Enter-BuildTask {} function Enter-BuildJob {}

@@ -68,24 +68,19 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	}
 }
 
-# Gets task synopsis.
+# Task synopsis.
 function *TS($I, $M) {
 	$f = $I.ScriptName
 	if (!($d = $M[$f])) {
-		$d = New-Object System.Collections.Specialized.OrderedDictionary
-		$M[$f] = $d
+		$M[$f] = ($d = @{})
 		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
-			if ($_.Type -eq 'Comment') {
-				$d[[object]$_.EndLine] = $_.Content
-			}
+			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
 		}
 	}
-	for($n = $I.ScriptLineNumber - 1; $n -ge 1; --$n) {
-		if (!($c = $d[[object]$n])) {break}
+	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
 		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
 	}
 }
-
 
 # To amend errors
 try {
