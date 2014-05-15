@@ -2,6 +2,50 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.0 Custom tasks
+
+This release introduces new task programming techniques and sample tools.
+
+Added new `task` parameters `Data`, `Done`, and `Source`. They are designed for
+custom tasks, wrappers which add extra features and introduce new DSL commands.
+`Data` and `Done` may be useful in normal tasks. `Source` is for wrappers only.
+
+Sample custom tasks:
+
+- [`check`](https://github.com/nightroman/Invoke-Build/blob/master/Tasks/Check) -
+Build scripts with `check` tasks represent sort of check-lists. As soon as a
+`check` passes it is never invoked again, even in next builds. Scripts are
+invoked repeatedly until all checks are passed (desired state achieved).
+
+- [`repeat`](https://github.com/nightroman/Invoke-Build/blob/master/Tasks/Repeat) -
+Build scripts with `repeat` tasks represent sort of schedules. They are invoked
+periodically. Each `repeat` task is invoked or skipped according to its defined
+time span and stored last done time.
+
+DSL commands `check` and `repeat` are defined in scripts `*.tasks.ps1`. They
+are dot-sourced in build scripts before the first use of new custom tasks.
+Commands `check` and `repeat` are used almost in the same way as `task`.
+
+These tools are ready to use in scripts but not included to the package. They
+are extensions, not parts of the engine. The engine only makes them possible.
+Q: Should they be included to the package anyway?
+
+TODO: Think of a custom task `test` which is allowed to fail without breaking
+the build. Some minor support from the engine may be needed for proper error
+counting and reporting.
+
+P.S. Imagine, one may want to request a new feature, say, `-Retry...` for tasks.
+Perhaps this will not be accepted after investigation. Well, it is now up to an
+author to define such a task with another DSL name and any required parameters:
+
+    # Import task library for "retry".
+    . Retry.tasks.ps1
+
+    # Synopsis: Note that help comments are possible for custom tasks.
+    retry TaskName -RetryCount 5 -RetrySec 60 -ConfirmRetry {
+        ...
+    }
+
 ## v2.8.1
 
 **Task help comments**

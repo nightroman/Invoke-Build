@@ -115,6 +115,9 @@ function Add-BuildTask(
 	$If = 1,
 	$Inputs,
 	$Outputs,
+	$Data,
+	$Done,
+	$Source = $MyInvocation,
 	[switch]$Partial
 )
 {
@@ -130,8 +133,10 @@ function Add-BuildTask(
 		If = $If
 		Inputs = $Inputs
 		Outputs = $Outputs
+		Data = $Data
+		Done = $Done
 		Partial = $Partial
-		InvocationInfo = $MyInvocation
+		InvocationInfo = $Source
 	}
 	if (!$Jobs) {return}
 	try {
@@ -222,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.8.1'}
+function Get-BuildVersion {[Version]'2.9.0'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.8.1
+Invoke-Build 2.9.0
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -500,6 +505,7 @@ function *Task {
 		$Task.Elapsed = $_ = [DateTime]::Now - $Task.Started
 		Write-Build 11 "Done ${*p} $_"
 		if (${*}.Checkpoint) {*CP}
+		if ($_ = $Task.Done) {. *UC $_}
 	}
 	catch {
 		Write-Build 14 (*II $Task)

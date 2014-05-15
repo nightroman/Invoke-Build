@@ -453,6 +453,17 @@
 		Tells to process the incremental task as partial incremental. It is
 		used together with Inputs and Outputs. See Inputs for details.
 '@
+		Done = @'
+		Specifies the command or a script block invoked when the task is done.
+'@
+		Data = @'
+		Any data attached to the task. These data are not used by the engine.
+		When the task is invoked the data are available as $Task.Data.
+'@
+		Source = @'
+		Specifies the task source. It is used by task wrappers in order to
+		provide actual source needed for location messages and help synopsis.
+'@
 	}
 
 	links = @(
