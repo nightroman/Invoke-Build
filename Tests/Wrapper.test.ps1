@@ -95,7 +95,7 @@ task Summary {
 #! Fixed differences of PS v2/v3
 task StarsMissingDirectory {
 	$$ = try {Invoke-Build ** miss} catch {$_}
-	assert ($$ -like "Missing directory '*\Demo\miss'.")
+	assert ($$ -like "Missing directory '*\Tests\miss'.")
 }
 
 #! Test StarsMissingDirectory first

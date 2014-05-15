@@ -1,6 +1,7 @@
-z
-*.log
+*.clixml
 *.htm
-*-Help.xml
-*.zip
+*.log
 *.nupkg
+*.zip
+*-Help.xml
+z

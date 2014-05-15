@@ -14,7 +14,7 @@
 .Example
 	Invoke-Build
 	Assuming Invoke-Build.ps1 is in the system path and the current location is
-	the Demo directory this command invokes the . task from this build script.
+	the Tests directory this command invokes the . task from this build script.
 #>
 
 # Build scripts can use parameters passed in as

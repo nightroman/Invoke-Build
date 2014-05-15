@@ -1,7 +1,7 @@
 
 <#
 .Synopsis
-	Demo of event functions.
+	Tests of event functions.
 
 .Description
 	The tasks and events of this script sets a noise location and check that on

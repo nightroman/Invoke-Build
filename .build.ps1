@@ -153,15 +153,15 @@ task Loop {
 		${*}.Tasks.Clear()
 		${*}.Errors.Clear()
 		${*}.Warnings.Clear()
-		Invoke-Build . Demo\.build.ps1
+		Invoke-Build . Tests\.build.ps1
 	}
 }
 
-# Synopsis: Test Demo scripts and expected output.
+# Synopsis: Invoke Tests scripts and check expected output.
 # Requires Assert-SameFile from PowerShelf.
 task Test UpdateScript, {
 	# invoke tests, get output and result
-	$output = Invoke-Build . Demo\.build.ps1 -Result result | Out-String -Width:200
+	$output = Invoke-Build . Tests\.build.ps1 -Result result | Out-String -Width:200
 	if ($SkipTestDiff) {return}
 
 	assert (194 -eq $result.Tasks.Count) $result.Tasks.Count
