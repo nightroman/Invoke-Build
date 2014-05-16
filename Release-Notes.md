@@ -2,6 +2,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.1
+
+Fixed incorrect build time written with `Summary`.
+
 ## v2.9.0 Custom tasks
 
 This release introduces new task programming techniques and sample tools.

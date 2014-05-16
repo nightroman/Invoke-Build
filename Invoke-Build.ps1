@@ -227,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.0'}
+function Get-BuildVersion {[Version]'2.9.1'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.0
+Invoke-Build 2.9.1
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -677,7 +677,6 @@ catch {
 finally {
 	*SL ${*cd}
 	if (${*r} -and !${*?}) {
-		${*}.Elapsed = $_ = [DateTime]::Now - ${*}.Started
 		$t = ${*}.Tasks
 		$e = ${*}.Errors
 		if (${*Summary}) {
@@ -702,7 +701,7 @@ finally {
 		elseif ($e) {14, 'Build completed with errors'}
 		elseif ($w) {14, 'Build succeeded with warnings'}
 		else {10, 'Build succeeded'}
-		Write-Build $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings $_"
+		Write-Build $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings $((${*}.Elapsed = [DateTime]::Now - ${*}.Started))"
 	}
 }
 }

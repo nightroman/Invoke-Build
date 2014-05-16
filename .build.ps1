@@ -100,7 +100,7 @@ task Version {
 # Synopsis: Make the zip package.
 task Zip Version, Package, {
 	Set-Location z\tools
-	exec { & 7z a ..\..\Invoke-Build.$(Get-BuildVersion).zip * }
+	exec { & 7z.exe a ..\..\Invoke-Build.$Version.zip * }
 }
 
 # Synopsis: Make the NuGet package.
