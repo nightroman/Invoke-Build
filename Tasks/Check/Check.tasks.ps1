@@ -4,8 +4,7 @@
 	Defines the custom task "check".
 
 .Description
-	This script is a tool ready to use in any build script. It should be dot
-	sourced before the first use of the new DSL construct "check".
+	Build scripts dot-source this script in order to use the task "check".
 
 	The build file with checks represents a check-list and checks are normally
 	invoked together (*). But they can be invoked individually, too. Tasks can
@@ -27,7 +26,7 @@
 	# Dot-source "check" definitions
 	. [<path>]Check.tasks.ps1
 
-	# Add a "check" task
+	# Add "check" tasks
 	check CheckSomething {
 		...
 	}

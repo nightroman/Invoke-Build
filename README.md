@@ -27,6 +27,7 @@ Other files and tools are for built-in help, parallel builds, graphs, and etc.
 * *Show-BuildTree.ps1* shows task trees as text
 * *Show-BuildGraph.ps1* shows task trees by Graphviz
 * *TabExpansionProfile.Invoke-Build.ps1* - completers
+* *Tasks* - sample custom tasks and demo scripts.
 
 ## How it works
 
@@ -75,8 +76,6 @@ The above command shows function names and makes their help available:
 : Detailed tutorials, helpers, notes, and etc.
 - [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
 : Build scripts used in various projects.
-- [Tasks](https://github.com/nightroman/Invoke-Build/tree/master/Tasks)
-: Custom tasks.
 
 ## Credits
 

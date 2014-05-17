@@ -7,13 +7,6 @@
 	This script is a demo of the custom check-task.
 	See "Check.tasks.ps1" for the details of "check".
 
-	The build file with checks represents a check-list and checks are normally
-	invoked together (*). But they can be invoked individually, too. Tasks can
-	reference checks. Checks can reference tasks.
-
-	In other words, checks are normal tasks with an extra feature: as soon as a
-	check is passed, it is never checked again, even in builds invoked after.
-
 .Example
 	Invoke-Build * Check.build.ps1
 

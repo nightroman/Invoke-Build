@@ -227,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.1'}
+function Get-BuildVersion {[Version]'2.9.2'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.1
+Invoke-Build 2.9.2
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -450,13 +450,12 @@ function *Task {
 				}
 				catch {
 					if (*Bad ${*j} $BuildTask) {throw}
-					Write-Build 12 (*EI "ERROR: $_" $_)
+					Write-Build 12 (*EI "ERROR: Task ${*p}/${*j}: $_" $_)
 				}
 				continue
 			}
 
-			${private:*m} = "${*p} (${*n}/$(${*a}.Count))"
-			Write-Build 11 "Task ${*m}:"
+			Write-Build 11 "Task ${*p}"
 			if ($WhatIf) {
 				${*j}
 				continue
@@ -498,27 +497,34 @@ function *Task {
 				*SL
 				. Exit-BuildJob ${*n}
 			}
-			if (${*a}.Count -ge 2) {
-				Write-Build 11 "Done ${*m}"
-			}
 		}
-		$Task.Elapsed = $_ = [DateTime]::Now - $Task.Started
-		Write-Build 11 "Done ${*p} $_"
+		$Task.Elapsed = [DateTime]::Now - $Task.Started
+		if ($_ = $Task.Error) {
+			. *WE
+			Write-Build 12 (*EI ${*x} $_)
+		}
+		else {
+			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
+		}
 		if (${*}.Checkpoint) {*CP}
 		if ($_ = $Task.Done) {. *UC $_}
 	}
 	catch {
-		Write-Build 14 (*II $Task)
-		$Task.Error = $_
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
-		${*x} = "ERROR: Task ${*p}: $_"
-		$null = ${*}.Errors.Add($(if (*My) {${*x}} else {*EI ${*x} $_}))
+		$Task.Error = $_
+		. *WE
 		throw
 	}
 	finally {
 		$null = ${*}.Tasks.Add($Task)
 		. *UC Exit-BuildTask
 	}
+}
+
+function *WE {
+	Write-Build 14 (*II $Task)
+	${*x} = "ERROR: Task ${*p}: $_"
+	$null = ${*}.Errors.Add($(if (*My) {${*x}} else {*EI ${*x} $_}))
 }
 
 function *TS($I, $M) {
@@ -687,9 +693,6 @@ finally {
 					Write-Build 12 (*EI "ERROR: $_" $_)
 				}
 			}
-		}
-		else {
-			$e
 		}
 		($w = ${*}.Warnings)
 		if (${*0}) {

@@ -4,8 +4,7 @@
 	Defines the custom task "repeat".
 
 .Description
-	This script is a tool ready to use in any build script. It should be dot
-	sourced before the first use of the new DSL construct "repeat".
+	Build scripts dot-source this script in order to use the task "repeat".
 
 	The build file with repeats represents a schedule and repeats are normally
 	invoked together (*). But they can be invoked individually, too. Tasks can
@@ -28,7 +27,7 @@
 	# Dot-source "repeat" definitions
 	. [<path>]Repeat.tasks.ps1
 
-	# Add a "repeat" task
+	# Add "repeat" tasks
 	repeat RepeatSomething -Days 2 {
 		...
 	}

@@ -7,13 +7,6 @@
 	This script is a demo of the custom repeat-task.
 	See "Repeat.tasks.ps1" for the details of "repeat".
 
-	The build file with repeats represents a schedule and repeats are normally
-	invoked together (*). But they can be invoked individually, too. Tasks can
-	reference repeats. Repeats can reference tasks.
-
-	In other words, repeats are normal tasks with an extra feature: they are
-	invoked only if specified time intervals are passed since previous runs.
-
 .Example
 	Invoke-Build * Repeat.build.ps1
 

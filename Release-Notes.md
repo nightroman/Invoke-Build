@@ -2,6 +2,33 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.2
+
+**Revised build output**
+
+- Added task names to some error messages for consistency.
+- Omitted not so useful job details in action headers and task footers.
+- Error summary is not written by default. It was only useful in very complex
+builds and needed because the switch `Summary` was not originally introduced.
+
+**Explicitly set task errors**
+
+- If a task does not fail but sets its `$Task.Error` then it is still treated as
+failed. The build does not stop in this case. This can be used effectively is
+special cases, e.g. in tasks like `test`.
+
+**Sample custom task `test`**
+
+- [`test`](https://github.com/nightroman/Invoke-Build/blob/master/Tasks/Test) -
+  Test-tasks are allowed to fail without breaking the build. Errors are counted
+  and written as usual. `test`'s jobs are optional simple references followed
+  by a single action. If a reference fails an action is skipped.
+
+**Package**
+
+- The directory *Tasks* is included to the package. Ideally, use these tools
+as samples for your own, they are not parts of the engine, strictly speaking.
+
 ## v2.9.1
 
 Fixed incorrect build time written with `Summary`.

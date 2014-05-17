@@ -73,7 +73,7 @@ task Help {
 task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	# temp package folder
 	Remove-Item [z] -Force -Recurse
-	$null = mkdir z\tools
+	$null = mkdir z\tools\Tasks
 
 	# copy files
 	Copy-Item -Destination z\tools `
@@ -87,6 +87,9 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	Show-BuildGraph.ps1,
 	Show-BuildTree.ps1,
 	TabExpansionProfile.Invoke-Build.ps1
+
+	# copy tasks
+	exec { robocopy.exe Tasks z\tools\Tasks *.ps1 *.md /S } (0..3)
 }
 
 # Synopsis: Set $script:Version.
@@ -158,8 +161,8 @@ task Loop {
 }
 
 # Synopsis: Invoke Tests scripts and check expected output.
-# Requires Assert-SameFile from PowerShelf.
-task Test UpdateScript, {
+# Requires PowerShelf/Assert-SameFile.ps1
+task Test {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Tests\.build.ps1 -Result result | Out-String -Width:200
 	if ($SkipTestDiff) {return}
