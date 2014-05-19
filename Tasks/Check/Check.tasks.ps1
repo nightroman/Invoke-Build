@@ -16,13 +16,17 @@
 	Check-task parameters are Name, Jobs, Inputs, Outputs, and Partial.
 	If and Done are already used for the definition of "check".
 
+	Script scope names:
+		Alias: check
+		Variables: CheckClixml, CheckData
+		Functions: Add-CheckTask, Test-CheckTask, Set-CheckDone
+
 .Parameter CheckClixml
 		Specifies the file where passed checks are stored.
 		Default: "$BuildFile.Check.clixml"
 
 .Example
 	>
-
 	# Dot-source "check" definitions
 	. [<path>]Check.tasks.ps1
 

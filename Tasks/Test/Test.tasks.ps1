@@ -13,9 +13,12 @@
 	the build does not stop, so that other tests may work as well. If any of
 	referenced tasks fail then the test action is skipped.
 
+	Script scope names:
+		Alias: test
+		Functions: Add-TestTask, Invoke-TestAction
+
 .Example
 	>
-
 	# Dot-source "test" definitions
 	. [<path>]Test.tasks.ps1
 

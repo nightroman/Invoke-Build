@@ -2,6 +2,14 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.3
+
+Corrected internal processing order. Because `Done` still may fail a task it
+should be invoked before storing a checkpoint for a persistent build.
+
+New sample custom task `retry`, see *Tasks\Retry*. Special parameters are
+`RetryTimeout` and `RetryInterval`, similar to `Set-BitsTransfer`.
+
 ## v2.9.2
 
 **Revised build output**

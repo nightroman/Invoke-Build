@@ -19,7 +19,6 @@ param(
 )
 
 # Ensure Invoke-Build works in the most strict mode.
-# Version Latest checks indexes out of array bounds.
 Set-StrictMode -Version Latest
 
 # Import markdown tasks ConvertMarkdown and RemoveMarkdownHtml.
@@ -28,7 +27,7 @@ Markdown.tasks.ps1
 
 # Synopsis: Remove generated HTML and temp files.
 task Clean RemoveMarkdownHtml, {
-	Remove-Item z, Invoke-Build-Help.xml, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
+	Remove-Item z, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Synopsis: Warn about not empty git status if .git exists.
@@ -36,28 +35,6 @@ task GitStatus -If (Test-Path .git) {
 	$status = exec { git status -s }
 	if ($status) {
 		Write-Warning "Git status: $($status -join ', ')"
-	}
-}
-
-# Synopsis: Copy scripts and help from working location to the project.
-# Fail if the project files are newer, to be resolved manually.
-task UpdateScript {
-	$from = Split-Path (Get-Command Invoke-Build.ps1).Definition
-	$files = @(
-		'Invoke-Build.ps1'
-		'Invoke-Build-Help.xml'
-		'Invoke-Builds.ps1'
-		'Invoke-TaskFromISE.ps1'
-		'Show-BuildGraph.ps1'
-		'Show-BuildTree.ps1'
-		'TabExpansionProfile.Invoke-Build.ps1'
-	)
-	foreach($file in $files) {
-		$file
-		$s = Get-Item "$from\$file"
-		$t = Get-Item $file -ErrorAction 0
-		assert (!$t -or ($s.LastWriteTime -ge $t.LastWriteTime)) "$s -> $t"
-		Copy-Item $s.FullName $file
 	}
 }
 
@@ -70,7 +47,7 @@ task Help {
 }
 
 # Synopsis: Make the package directory z\tools for NuGet.
-task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
+task Package ConvertMarkdown, Help, GitStatus, {
 	# temp package folder
 	Remove-Item [z] -Force -Recurse
 	$null = mkdir z\tools\Tasks
@@ -89,7 +66,7 @@ task Package ConvertMarkdown, Help, UpdateScript, GitStatus, {
 	TabExpansionProfile.Invoke-Build.ps1
 
 	# copy tasks
-	exec { robocopy.exe Tasks z\tools\Tasks *.ps1 *.md /S } (0..3)
+	exec { robocopy.exe Tasks z\tools\Tasks *.ps1 *.txt /S } (0..3)
 }
 
 # Synopsis: Set $script:Version.

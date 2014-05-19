@@ -17,13 +17,17 @@
 	If and Done are already used for the definition of "repeat".
 	Additional parameters Days, Hours, Minutes define a span.
 
+	Script scope names:
+		Alias: repeat
+		Variables: RepeatClixml, RepeatData
+		Functions: Add-RepeatTask, Test-RepeatTask, Set-RepeatDone
+
 .Parameter RepeatClixml
 		Specifies the file where passed repeats are stored.
 		Default: "$BuildFile.Repeat.clixml"
 
 .Example
 	>
-
 	# Dot-source "repeat" definitions
 	. [<path>]Repeat.tasks.ps1
 

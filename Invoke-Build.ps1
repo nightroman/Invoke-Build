@@ -227,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.2'}
+function Get-BuildVersion {[Version]'2.9.3'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.2
+Invoke-Build 2.9.3
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -506,8 +506,8 @@ function *Task {
 		else {
 			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
 		}
+		if ($Task.Done) {*UC $Task.Done}
 		if (${*}.Checkpoint) {*CP}
-		if ($_ = $Task.Done) {. *UC $_}
 	}
 	catch {
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
