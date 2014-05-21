@@ -77,11 +77,12 @@
 
 		$Task properties available for reading:
 
-		- Name - task name, [string]
-		- Started - start time, [DateTime]
-		- In Exit-BuildTask only:
+		- Name - [string], task name
+		- Jobs - [object[]], names and script blocks
+		- Started - [DateTime], start time
+		- In Exit-BuildTask:
 		    - Error - an error stopped the task
-		    - Elapsed - task duration, [TimeSpan]
+		    - Elapsed - [TimeSpan], task duration
 
 	NOTE: The special variable $_ may be defined and visible. Scripts and tasks
 	can use it as their own, that is assign at first. Only in special cases it
@@ -227,6 +228,7 @@
 		Task object properties:
 
 			Name - task name
+			Jobs - task jobs
 			Error - task error
 			Started - start time
 			Elapsed - task duration
@@ -810,7 +812,7 @@ engine (version 2+).
 			Errors - error messages
 			Warnings - warning messages
 			Started - start time
-			Elapsed - elapsed time span
+			Elapsed - build duration
 '@
 		Timeout = @'
 		Maximum overall build time in milliseconds.

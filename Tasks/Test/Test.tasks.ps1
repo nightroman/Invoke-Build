@@ -6,12 +6,15 @@
 .Description
 	Build scripts dot-source this script in order to use the task "test".
 
-	Test-task parameters are Name, Jobs, If, Inputs, Outputs, and Partial.
-	Jobs are optional simple references followed by a single action.
+	A test-task has a single action, the test. If this action fails then the
+	task error is counted and processed as usual but the build does not stop,
+	so that other tests may work. A test-task may reference other tests, too.
+	References are checked for errors. If there is any the action is skipped
+	and the error is propagated.
 
-	If a test action fails then its error is counted and processed as usual but
-	the build does not stop, so that other tests may work as well. If any of
-	referenced tasks fail then the test action is skipped.
+	Test-task parameters:
+		Name, If, Inputs, Outputs - as usual
+		Jobs - as usual but with a single action
 
 	Script scope names:
 		Alias: test
@@ -38,35 +41,27 @@ function Add-TestTask(
 	[Parameter(Position=1)][object[]]$Jobs,
 	$If=1,
 	$Inputs,
-	$Outputs,
-	[switch]$Partial
+	$Outputs
 )
 {
 	try {
-		if (!$Jobs) {throw "Test-task must have an action job."}
-
-		$action = $Jobs[-1]
-		if ($action -isnot [scriptblock]) {throw "Test-task last job must be an action."}
-
-		$tasks = @()
-		$Jobs = @(
-			# convert references to safe
-			if ($Jobs.Length -ge 2) {
-				foreach($j in $Jobs[0 .. ($Jobs.Length - 2)]) {
-					if ($j -isnot [string]) {throw "Test-task jobs must be names followed by an action."}
-					job $j -Safe
-					$tasks += $j
-				}
+		# wrap an action
+		$action = $null
+		$Jobs = foreach($j in $Jobs) {
+			if ($j -isnot [scriptblock]) {
+				$j
 			}
-			# the last job is the action
-			{. Invoke-TestAction}
-		)
-
-		# wrapped task with data @{Task = referenced task names; Action = the original action}
-		task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Partial:$Partial -Source:$MyInvocation -Data:@{
-			Tasks = $tasks
-			Action = $action
+			elseif ($action) {
+				throw 'Test-task cannot have two action jobs.'
+			}
+			else {
+				$action = $j
+				{. Invoke-TestAction}
+			}
 		}
+
+		# wrapped task with data = the original action
+		task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Source:$MyInvocation -Data:$action
 	}
 	catch {
 		$PSCmdlet.ThrowTerminatingError($_)
@@ -76,16 +71,16 @@ function Add-TestTask(
 # Invokes the current test action.
 function Invoke-TestAction {
 	# Check referenced task errors
-	foreach($_ in $Task.Data.Tasks) {
-		if (error $_) {
-			Write-Build DarkGray 'Test skipped due to upstream errors.'
+	foreach($_ in $Task.Jobs) {
+		if ($_ -is [string] -and (error $_)) {
+			$Task.Error = error $_
 			return
 		}
 	}
 
 	# Invoke the action, catch and set an error
 	try {
-		. $Task.Data.Action
+		. $Task.Data
 	}
 	catch {
 		$Task.Error = $_

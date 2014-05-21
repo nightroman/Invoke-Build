@@ -86,14 +86,14 @@ $text = @(
 		'"{0}"' -f $name
 		$num = 0
 		$script = ''
-		foreach($job in $it.Job) {
+		foreach($job in $it.Jobs) {
 			++$num
 			if ($job -is [string]) {
 				$edge = ' '
 				if ($Number) {
 					$edge += "label=$num "
 				}
-				if ($it.Try -contains $job) {
+				if ($it.Safe -contains $job) {
 					$edge += "style=dotted "
 				}
 				'"{0}" -> "{1}" [{2}]' -f $name, $job, $edge

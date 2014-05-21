@@ -24,18 +24,18 @@ test SecondTestFails {
 	throw "Demo error in '$($Task.Name)'."
 }
 
-# Synopsis: This task is referenced by a test and fails.
-task RefTaskFails {
-	throw "Demo error in '$($Task.Name)'."
-}
-
 # Synopsis: This test is referenced by a test and fails.
 test RefTestFails {
 	throw "Demo error in '$($Task.Name)'."
 }
 
 # Synopsis: This test fails due to errors in references.
-test testFailsDueToReference RefTaskFails, RefTestFails, {
+test RefTestFails2 RefTestFails, {
+	assert 0 "This should not be invoked."
+}
+
+# Synopsis: This test fails due to errors in references.
+test RefTestFails3 RefTestFails2, {
 	assert 0 "This should not be invoked."
 }
 
@@ -50,7 +50,7 @@ test RefTestWorks {
 }
 
 # Synopsis: This test with references works.
-test testWithReferenceWorks RefTaskWorks, RefTestWorks, {
+test TestWithRefsWorks RefTaskWorks, RefTestWorks, {
 	"Test $($Task.Name) works."
 }
 

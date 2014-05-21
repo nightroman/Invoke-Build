@@ -58,7 +58,7 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	if ($synopsis) {"$info - $synopsis"} else {$info}
 
 	# task jobs
-	foreach($_ in $Task.Job) {
+	foreach($_ in $Task.Jobs) {
 		if ($_ -is [string]) {
 			ShowTaskTree $tasks[$_] $Docs $Step
 		}
@@ -92,7 +92,7 @@ try {
 	foreach($it in $tasks.Values) {
 		$references[$it] = @{}
 	}
-	foreach($it in $tasks.Values) {foreach($job in $it.Job) {if ($job -is [string]) {
+	foreach($it in $tasks.Values) {foreach($job in $it.Jobs) {if ($job -is [string]) {
 		$references[$tasks[$job]][$it.Name] = 0
 	}}}
 
@@ -100,7 +100,7 @@ try {
 	if ($_Task -eq '*') {
 		$_Task = :task foreach($_ in $tasks.Keys) {
 			foreach($task in $tasks.Values) {
-				if ($task.Job -contains $_) {
+				if ($task.Jobs -contains $_) {
 					continue task
 				}
 			}

@@ -126,8 +126,8 @@ function Add-BuildTask(
 		Error = $null
 		Started = $null
 		Elapsed = $null
-		Job = $1 = [System.Collections.ArrayList]@()
-		Try = $2 = [System.Collections.ArrayList]@()
+		Jobs = $1 = [System.Collections.ArrayList]@()
+		Safe = $2 = [System.Collections.ArrayList]@()
 		After = $After
 		Before = $Before
 		If = $If
@@ -227,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.3'}
+function Get-BuildVersion {[Version]'2.9.4'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.3
+Invoke-Build 2.9.4
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -299,7 +299,7 @@ function *RJ($_) {
 
 function *Bad($B, $J, $X) {
 	foreach($_ in $J) {
-		if (($t = ${*}.All[$_]) -and $t.If -and $(if ($_ -eq $B) {$X -notcontains $_} else {*Bad $B $t.Job $t.Try})) {
+		if (($t = ${*}.All[$_]) -and $t.If -and $(if ($_ -eq $B) {$X -notcontains $_} else {*Bad $B $t.Jobs $t.Safe})) {
 			return 1
 		}
 	}
@@ -308,7 +308,7 @@ function *Bad($B, $J, $X) {
 filter *AB($N, $B) {
 	$r, $d = *RJ $_
 	if (!($t = ${*}.All[$r])) {throw "Missing task '$r'."}
-	$j = $t.Job
+	$j = $t.Jobs
 	$i = $j.Count
 	if ($B) {
 		for($k = -1; ++$k -lt $i -and $j[$k] -is [string]) {}
@@ -316,7 +316,7 @@ filter *AB($N, $B) {
 	}
 	$j.Insert($i, $N)
 	if (1 -eq $d) {
-		$null = $t.Try.Add($N)
+		$null = $t.Safe.Add($N)
 	}
 }
 
@@ -328,7 +328,7 @@ filter *Try($T, $P = [System.Collections.Stack]@()) {
 	if ($P.Contains($r)) {
 		throw *EI "Task '$($T.Name)': Cyclic reference to '$_'." $T
 	}
-	if ($j = foreach($_ in $r.Job) {if ($_ -is [string]) {$_}}) {
+	if ($j = foreach($_ in $r.Jobs) {if ($_ -is [string]) {$_}}) {
 		$P.Push($r)
 		$j | *Try $r $P
 		$null = $P.Pop()
@@ -437,7 +437,7 @@ function *Task {
 	}
 
 	${private:*n} = 0
-	${private:*a} = $Task.Job
+	${private:*a} = $Task.Jobs
 	${private:*i} = [int]($null -ne $Task.Inputs)
 	$Task.Started = [DateTime]::Now
 	try {
@@ -543,7 +543,7 @@ function *TS($I, $M) {
 filter *TH($M) {
 	$r = 1 | Select-Object Name, Jobs, Synopsis
 	$r.Name = $_.Name
-	$r.Jobs = $(foreach($j in $_.Job) {if ($j -is [string]) {$j} else {'{}'}}) -join ', '
+	$r.Jobs = $(foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}) -join ', '
 	$r.Synopsis = *TS $_.InvocationInfo $M
 	$r
 }
@@ -635,7 +635,7 @@ try {
 	if ($BuildTask -eq '*') {
 		$BuildTask = :task foreach($_ in ${*a}.Keys) {
 			foreach(${**} in ${*a}.Values) {
-				if (${**}.Job -contains $_) {
+				if (${**}.Jobs -contains $_) {
 					$_ | *Try
 					continue task
 				}

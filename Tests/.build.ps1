@@ -140,7 +140,7 @@ task Dynamic {
 	assert ($all.Count -eq 5)
 	$last = $all.Item(4)
 	assert ($last.Name -eq '.')
-	assert ($last.Job.Count -eq 4)
+	assert ($last.Jobs.Count -eq 4)
 
 	# invoke with results and test: 5 tasks are done
 	Invoke-Build . Dynamic.build.ps1 -Result result

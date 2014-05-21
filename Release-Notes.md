@@ -2,6 +2,19 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.4
+
+Custom tasks `retry` and `test`
+
+- `Inputs` and `Outputs` are supported, `Partial` is not.
+- Slightly relaxed requirements for `Jobs`.
+- `test`: an upstream error is propagated.
+
+Property `Jobs`
+
+- The property `Jobs` of internal task objects is documented and can be used
+  for reading by custom tasks and by external tools for task analysis.
+
 ## v2.9.3
 
 Corrected internal processing order. Because `Done` still may fail a task it

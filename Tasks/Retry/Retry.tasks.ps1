@@ -6,14 +6,14 @@
 .Description
 	Build scripts dot-source this script in order to use the task "retry".
 
-	A retry-task should have a single action which is repeated until it
-	succeeds or timed out. Incremental task parameters are not supported.
+	A retry-task has a single action. This action is repeated for the specified
+	time until it succeeds. When the time is out the last error is re-thrown.
 
 	Retry-task parameters:
-		Name, If - as usual
+		Name, If, Inputs, Outputs - as usual
 		Jobs - as usual but with a single action
-		RetryTimeout - [int], total retry time in seconds
-		RetryInterval - [int], wait time after failures in seconds
+		RetryTimeout - [int], seconds, total time for retrying
+		RetryInterval - [int], seconds, time to wait before trying again
 
 	Script scope names:
 		Alias: retry
@@ -39,35 +39,33 @@ function Add-RetryTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
 	[Parameter(Position=1)][object[]]$Jobs,
 	$If=1,
-	[int]$RetryInterval,
-	[int]$RetryTimeout
+	$Inputs,
+	$Outputs,
+	[int]$RetryTimeout,
+	[int]$RetryInterval
 )
 {
 	try {
-		if (!$Jobs) {throw 'Retry-task must have an action.'}
-
+		# wrap an action
 		$action = $null
 		$Jobs = foreach($j in $Jobs) {
 			if ($j -isnot [scriptblock]) {
 				$j
 			}
 			elseif ($action) {
-				throw 'Retry-task cannot have two actions.'
+				throw 'Retry-task cannot have two action jobs.'
 			}
 			else {
 				$action = $j
 				{. Invoke-RetryAction}
 			}
 		}
-		if (!$action) {
-			throw 'Retry-task must have an action.'
-		}
 
-		# wrapped task with data @{Action = the original action; RetryCount}
-		task $Name $Jobs -If:$If -Source:$MyInvocation -Data:@{
-			RetryInterval = $RetryInterval
-			RetryTimeout = $RetryTimeout
+		# wrap a task with data @{Action = the original action; Retry* = extra parameters}
+		task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Source:$MyInvocation -Data:@{
 			Action = $action
+			RetryTimeout = $RetryTimeout
+			RetryInterval = $RetryInterval
 		}
 	}
 	catch {
@@ -88,6 +86,7 @@ function Invoke-RetryAction {
 			Write-Build Yellow "$($Task.Name) error: $_"
 			"Waiting for $($Task.Data.RetryInterval) seconds..."
 			Start-Sleep -Seconds $Task.Data.RetryInterval
+			"Retrying..."
 		}
 	}
 }
