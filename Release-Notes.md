@@ -2,6 +2,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.6
+
+Fixed text of error messages on explicitly set task errors.
+
 ## v2.9.5
 
 Revised errors
