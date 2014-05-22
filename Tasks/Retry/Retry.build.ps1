@@ -11,10 +11,10 @@
 	Invoke-Build * Retry.build.ps1
 #>
 
-# Import retry-task definitions.
+# Import retry-task tools.
 . .\Retry.tasks.ps1
 
-$RetryWorks = 0
+$RetryWorks = $false
 
 # Synopsis: A task referenced by a retry-task.
 task JustTask {
@@ -27,15 +27,36 @@ retry RetryWorks -RetryTimeout 10 -RetryInterval 2 JustTask, {
 		"It works."
 	}
 	else {
-		$script:RetryWorks = 1
+		$script:RetryWorks = $true
 		throw "It fails."
 	}
 }
 
-# Synopsis: Retry-task always fails. It is referenced by another task.
+# Synopsis: This retry-task always fails. It is referenced by another task.
 retry RetryFails -RetryTimeout 4 -RetryInterval 2 {
 	throw "It fails."
 }
 
 # Synopsis: A task with a safe reference to a retry-task.
 task CallRetryFails (job RetryFails -Safe)
+
+# Synopsis: A task uses Invoke-RetryAction directly.
+task InvokeRetryAction {
+	# before the action started
+	"Before the action"
+
+	# invoke the action
+	$script:RetryWorks = $false
+	Invoke-RetryAction 10 2 {
+		if ($RetryWorks) {
+			"It works."
+		}
+		else {
+			$script:RetryWorks = $true
+			throw "It fails."
+		}
+	}
+
+	# after the action succeeded
+	"After the action"
+}

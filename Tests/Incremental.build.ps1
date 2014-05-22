@@ -217,10 +217,10 @@ PartIncrementalTwoOutOfDate,
 	Test-Error PartialOutputsFails "Throw in output.*At *\Incremental.build.ps1:*task PartialOutputsFails*"
 
 	# thrown from the engine
-	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Empty output.*try { Invoke-Build *OperationStopped*"
-	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different input/output: 1/0.*try { Invoke-Build *OperationStopped*"
-	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Missing input file '*\missing'.*try { Invoke-Build *OperationStopped*"
-	Test-Issue PartialMissingInputs Incremental.build.ps1 "Missing input file '*\missing'.*try { Invoke-Build *OperationStopped*"
+	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Outputs must not be empty.*try { Invoke-Build *OperationStopped*"
+	Test-Issue InputsOutputsMismatch Incremental.build.ps1 "Different Inputs/Outputs counts: 1/0.*try { Invoke-Build *OperationStopped*"
+	Test-Issue IncrementalMissingInputs Incremental.build.ps1 "Missing Inputs item: '*\missing'.*try { Invoke-Build *OperationStopped*"
+	Test-Issue PartialMissingInputs Incremental.build.ps1 "Missing Inputs item: '*\missing'.*try { Invoke-Build *OperationStopped*"
 
 	#! LiteralPath does not work in [ ] test.
 	Remove-Item z.new1.tmp, z.new2.tmp, z.old1.tmp, z.old2.tmp

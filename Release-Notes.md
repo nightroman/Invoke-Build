@@ -2,6 +2,19 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.5
+
+Revised errors
+
+- Removed irrelevant data from error messages in build summary.
+- Amended error messages about issues in task Inputs and Outputs.
+- Build result property `Errors` contains error objects, not messages.
+
+Custom tasks
+
+- Redesigned the custom task `retry` so that the function `Invoke-RetryAction`
+  may be used on its own, see an example in *Retry.build.ps1*.
+
 ## v2.9.4
 
 Custom tasks `retry` and `test`

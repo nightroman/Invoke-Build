@@ -240,7 +240,7 @@ task TestVariables {
 	$MyKnown += @(
 		# exposed by the project script
 		'Result'
-		'SkipTestDiff'
+		'NoTestDiff'
 		# system variables
 		'_'
 		'foreach'

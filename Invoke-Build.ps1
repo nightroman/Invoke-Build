@@ -227,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.4'}
+function Get-BuildVersion {[Version]'2.9.5'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.4
+Invoke-Build 2.9.5
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -344,7 +344,7 @@ function *IO {
 	${private:*p} = [System.Collections.ArrayList]@()
 	${*i} = foreach($_ in ${*i}) {
 		if ($_ -isnot [System.IO.FileInfo]) {$_ = [System.IO.FileInfo](*FP $_)}
-		if (!$_.Exists) {throw "Missing input file '$_'."}
+		if (!$_.Exists) {throw "Missing Inputs item: '$_'."}
 		$_
 		$null = ${*p}.Add($_.FullName)
 	}
@@ -361,7 +361,7 @@ function *IO {
 				${*o}
 			}
 		)
-		if (${*p}.Count -ne ${*o}.Count) {throw "Different input/output: $(${*p}.Count)/$(${*o}.Count)."}
+		if (${*p}.Count -ne ${*o}.Count) {throw "Different Inputs/Outputs counts: $(${*p}.Count)/$(${*o}.Count)."}
 
 		$k = -1
 		$Task.Inputs = $i = [System.Collections.ArrayList]@()
@@ -378,7 +378,7 @@ function *IO {
 			$Task.Outputs = ${*o} = & ${*o}
 			*SL
 		}
-		if (!${*o}) {throw 'Empty output.'}
+		if (!${*o}) {throw 'Outputs must not be empty.'}
 
 		$Task.Inputs = ${*p}
 		$m = (${*i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
@@ -523,8 +523,7 @@ function *Task {
 
 function *WE {
 	Write-Build 14 (*II $Task)
-	${*x} = "ERROR: Task ${*p}: $_"
-	$null = ${*}.Errors.Add($(if (*My) {${*x}} else {*EI ${*x} $_}))
+	$null = ${*}.Errors.Add($_)
 }
 
 function *TS($I, $M) {
@@ -690,7 +689,7 @@ finally {
 			foreach($_ in ${*}.Tasks) {
 				'{0,-16} {1} - {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber
 				if ($_ = $_.Error) {
-					Write-Build 12 (*EI "ERROR: $_" $_)
+					Write-Build 12 $(if (*My) {"ERROR: $_"} else {*EI "ERROR: $_" $_})
 				}
 			}
 		}

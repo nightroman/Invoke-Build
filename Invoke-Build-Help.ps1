@@ -222,8 +222,12 @@
 			All - all defined tasks
 			Error - a terminating build error
 			Tasks - invoked tasks including nested
-			Errors - error messages including nested
+			Errors - error records including nested (*)
 			Warnings - warning messages including nested
+
+		(*) This list will continue to exist but objects may change in the
+		future. For better analysis iterate through Tasks and check their
+		Error.
 
 		Task object properties:
 
@@ -809,10 +813,14 @@ engine (version 2+).
 		Result properties:
 
 			Tasks - tasks (see: help Invoke-Build -Parameter Result)
-			Errors - error messages
+			Errors - error records (*)
 			Warnings - warning messages
 			Started - start time
 			Elapsed - build duration
+
+		(*) This list will continue to exist but objects may change in the
+		future. For better analysis iterate through Tasks and check their
+		Error.
 '@
 		Timeout = @'
 		Maximum overall build time in milliseconds.

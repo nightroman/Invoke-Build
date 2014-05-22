@@ -15,7 +15,7 @@
 
 # Build script parameters are standard parameters
 param(
-	[switch]$SkipTestDiff
+	[switch]$NoTestDiff
 )
 
 # Ensure Invoke-Build works in the most strict mode.
@@ -141,8 +141,8 @@ task Loop {
 # Requires PowerShelf/Assert-SameFile.ps1
 task Test {
 	# invoke tests, get output and result
-	$output = Invoke-Build . Tests\.build.ps1 -Result result | Out-String -Width:200
-	if ($SkipTestDiff) {return}
+	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
+	if ($NoTestDiff) {return}
 
 	assert (194 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (39 -eq $result.Errors.Count) $result.Errors.Count

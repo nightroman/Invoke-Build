@@ -1,10 +1,11 @@
 
 <#
 .Synopsis
-	Defines the custom task "retry".
+	Defines the custom task "retry" and the function "Invoke-RetryAction".
 
 .Description
-	Build scripts dot-source this script in order to use the task "retry".
+	Build scripts dot-source this script in order to use the task "retry" or
+	the function "Invoke-RetryAction".
 
 	A retry-task has a single action. This action is repeated for the specified
 	time until it succeeds. When the time is out the last error is re-thrown.
@@ -21,17 +22,66 @@
 
 .Example
 	>
-	# Dot-source "retry" definitions
-	. [<path>]Retry.tasks.ps1
+	# Dot-source "retry" tools
+	. <path>\Retry.tasks.ps1
 
-	# Add "retry" tasks
-	retry RetrySomething -RetryTimeout 10 -RetryInterval 2 {
+	# Use "retry" tasks
+	retry Task1 -RetryTimeout 10 -RetryInterval 2 {
+		...
+	}
+
+	# Or use Invoke-RetryAction directly
+	task Task2 {
+		...
+		Invoke-RetryAction 10 2 { ... }
 		...
 	}
 #>
 
 # New DSL word.
 Set-Alias retry Add-RetryTask
+
+<#
+.Synopsis
+	Invokes the action until it succeeds or the time is out.
+
+.Description
+	The action is repeated for the specified time until it succeeds.
+	When the time is out the last error is re-thrown.
+
+.Parameter RetryTimeout
+		Total time for retrying, in seconds.
+.Parameter RetryInterval
+		Time to wait before trying again, in seconds.
+.Parameter Action
+		Specifies the action, a script block or a command name.
+#>
+function Invoke-RetryAction(
+	[Parameter()][int]$RetryTimeout,
+	[int]$RetryInterval,
+	$Action
+)
+{
+	${private:*RetryTimeout} = $RetryTimeout
+	${private:*RetryInterval} = $RetryInterval
+	${private:*Action} = $Action
+	Remove-Variable RetryTimeout, RetryInterval, Action
+
+	${private:*time} = [System.Diagnostics.Stopwatch]::StartNew()
+	for() {
+		try {
+			. ${*Action}
+			return
+		}
+		catch {
+			if (${*time}.Elapsed.TotalSeconds -gt ${*RetryTimeout}) {throw}
+			Write-Build Yellow "$($Task.Name) error: $_"
+			"Waiting for ${*RetryInterval} seconds..."
+			Start-Sleep -Seconds ${*RetryInterval}
+			"Retrying..."
+		}
+	}
+}
 
 # Wrapper of "task" which adds a customized task used as "retry".
 # Mind setting "Source" for error messages and help comments.
@@ -57,7 +107,10 @@ function Add-RetryTask(
 			}
 			else {
 				$action = $j
-				{. Invoke-RetryAction}
+				{
+					$_ = $Task.Data
+					. Invoke-RetryAction @_
+				}
 			}
 		}
 
@@ -70,23 +123,5 @@ function Add-RetryTask(
 	}
 	catch {
 		$PSCmdlet.ThrowTerminatingError($_)
-	}
-}
-
-# Invokes the current retry action.
-function Invoke-RetryAction {
-	${private:**time} = [System.Diagnostics.Stopwatch]::StartNew()
-	for() {
-		try {
-			. $Task.Data.Action
-			break
-		}
-		catch {
-			if (${**time}.Elapsed.TotalSeconds -gt $Task.Data.RetryTimeout) {throw}
-			Write-Build Yellow "$($Task.Name) error: $_"
-			"Waiting for $($Task.Data.RetryInterval) seconds..."
-			Start-Sleep -Seconds $Task.Data.RetryInterval
-			"Retrying..."
-		}
 	}
 }
