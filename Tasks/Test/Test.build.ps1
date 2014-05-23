@@ -16,45 +16,40 @@
 
 # Synopsis: This test works.
 test FirstTestWorks {
-	"Test $($Task.Name) works."
+	'Test FirstTestWorks works.'
 }
 
 # Synopsis: This test fails.
 test SecondTestFails {
-	throw "Demo error in '$($Task.Name)'."
+	throw 'Demo error in SecondTestFails.'
 }
 
 # Synopsis: This test is referenced by a test and fails.
 test RefTestFails {
-	throw "Demo error in '$($Task.Name)'."
+	throw 'Demo error in RefTestFails.'
 }
 
 # Synopsis: This test fails due to errors in references.
 test RefTestFails2 RefTestFails, {
-	assert 0 "This should not be invoked."
+	assert 0 'This should not be invoked.'
 }
 
 # Synopsis: This test fails due to errors in references.
 test RefTestFails3 RefTestFails2, {
-	assert 0 "This should not be invoked."
+	assert 0 'This should not be invoked.'
 }
 
 # Synopsis: This task is referenced by a test and works.
 task RefTaskWorks {
-	"Test $($Task.Name) works."
+	'Test RefTaskWorks works.'
 }
 
 # Synopsis: This test is referenced by a test and works.
 test RefTestWorks {
-	"Test $($Task.Name) works."
+	'Test RefTestWorks works.'
 }
 
 # Synopsis: This test with references works.
 test TestWithRefsWorks RefTaskWorks, RefTestWorks, {
-	"Test $($Task.Name) works."
-}
-
-# Synopsis: This test works.
-test LastTestWorks {
-	"Test $($Task.Name) works."
+	'Test TestWithRefsWorks works.'
 }
