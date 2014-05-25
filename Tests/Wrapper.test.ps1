@@ -109,7 +109,11 @@ task Stars StarsMissingDirectory, {
 	# fast task info, test first and last to be sure that there is not a header or footer
 	$r = Invoke-Build **, ?
 	assert ($r[0].Name -eq 'PreTask1' -and $r[0].Jobs -eq '{}')
-	assert ($r[-1].Name -eq '.' -and $r[-1].Jobs -like 'ParentHasManyCandidates, *, Summary, {}' -and $r[-1].Synopsis -eq 'Call tests and clean.')
+	assert (
+		$r[-1].Name -eq '.' -and
+		($r[-1].Jobs -join ', ') -like 'ParentHasManyCandidates, *, Summary, {}' -and
+		$r[-1].Synopsis -eq 'Call tests and clean.'
+	)
 
 	# full task info
 	$r = Invoke-Build **, ??

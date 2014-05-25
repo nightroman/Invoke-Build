@@ -227,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.6'}
+function Get-BuildVersion {[Version]'2.9.7'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.6
+Invoke-Build 2.9.7
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -542,7 +542,7 @@ function *TS($I, $M) {
 filter *TH($M) {
 	$r = 1 | Select-Object Name, Jobs, Synopsis
 	$r.Name = $_.Name
-	$r.Jobs = $(foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}) -join ', '
+	$r.Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
 	$r.Synopsis = *TS $_.InvocationInfo $M
 	$r
 }

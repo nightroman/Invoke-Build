@@ -4,30 +4,39 @@ Build Automation in PowerShell
 
 ## Introduction
 
-Invoke-Build is a build automation tool which invokes tasks defined in a
-PowerShell script. Tasks are pieces of code with optional relations.
-Concepts are similar to psake and MSBuild.
+PowerShell build and test automation tool which invokes tasks defined in
+scripts. Tasks are pieces of code with optional relations. Concepts are
+similar to psake and MSBuild.
 
-The engine is carefully designed for multiple calls: sequential, nested, and
-even parallel. Each call maintains its data in its scope. It does not change
-itself anything global including the environment.
+Invoke-Build, in spite of the name, is not necessarily for building something.
+It introduces general-purpose task programming in PowerShell and scripts with
+tasks are often easier to compose and use than traditional scripts.
 
-Long running or interactive workflows with expected interruptions can be
-automated with persistent builds which allow resuming after interruptions.
+In addition to basic task processing the engine supports
+
+- Incremental tasks with effectively processed inputs and outputs.
+- Persistent builds which can be resumed after interruptions.
+- Parallel builds as a part of another with common stats.
+- Batch invocation of tests composed as tasks.
+- Ability to define new classes of tasks.
 
 ## The package
 
-The standalone script *Invoke-Build.ps1* is enough for invoking build scripts.
-Other files and tools are for built-in help, parallel builds, graphs, and etc.
+*Invoke-Build.ps1* is enough for invoking build scripts. Other files and tools
+are for built-in help, parallel builds, task visualization, and etc.
 
 * *Invoke-Build.ps1* invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* invokes parallel builds using the engine
 * *Invoke-Build-Help.xml* is external content for Get-Help
+
+Extras
+
+* *Convert-psake.ps1* converts psake build scripts
 * *Invoke-TaskFromISE.ps1* invokes a task from ISE
 * *Show-BuildTree.ps1* shows task trees as text
 * *Show-BuildGraph.ps1* shows task trees by Graphviz
 * *TabExpansionProfile.Invoke-Build.ps1* - completers
-* *Tasks* - sample custom tasks and demo scripts.
+* *Tasks* - sample custom tasks and demo scripts
 
 ## How it works
 
@@ -82,7 +91,5 @@ Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 
 ## Credits
 
-The project is inspired by
-[*psake*](https://github.com/psake/psake)
-and some concepts come from
-[*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
+The project was inspired by [*psake*](https://github.com/psake/psake).
+Some concepts come from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).

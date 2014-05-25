@@ -2,6 +2,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.7
+
+Task help (*experimentally*). The *Jobs* is an array, not a text. With
+many jobs this avoids dropped *Synopsis* on default formatting.
+
+New script *Convert-psake.ps1* converts psake build scripts to Invoke-Build.
+
 ## v2.9.6
 
 Fixed text of error messages on explicitly set task errors.

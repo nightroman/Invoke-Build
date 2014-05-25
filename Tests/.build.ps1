@@ -48,7 +48,7 @@ assert ((Split-Path $MyPath) -eq $BuildRoot)
 # Warning. Warnings are shown together with errors in the build summary.
 Write-Warning "Ignore this warning."
 
-# -WhatIf is used in order to show task scripts without invoking them.
+# Synopsis: -WhatIf is used in order to show task scripts without invoking them.
 # Note: -Result can be used in order to get some information as well.
 # But this information is not always the same as without -WhatIf.
 task WhatIf {
@@ -56,7 +56,7 @@ task WhatIf {
 	assert ($Result.Tasks.Count -eq 1)
 }
 
-# "Invoke-Build ?[?]" lists tasks:
+# Synopsis: "Invoke-Build ?[?]" lists tasks.
 # 1) show tasks with brief information
 # 2) get task as an ordered dictionary
 task ListTask {
@@ -65,24 +65,30 @@ task ListTask {
 	$r
 	assert ($r.Count -eq 3)
 	assert ($r[0].Name -eq 'AssertDefault' -and $r[0].Jobs -eq '{}' -and $r[0].Synopsis -eq 'Fail with the default message.')
-	assert ($r[2].Name -eq '.' -and $r[2].Jobs -eq 'AssertDefault, AssertMessage, {}' -and $r[2].Synopsis -eq 'Call tests and check errors.')
+	assert (
+		$r[2].Name -eq '.' -and
+		($r[2].Jobs -join ', ') -eq 'AssertDefault, AssertMessage, {}' -and
+		$r[2].Synopsis -eq 'Call tests and check errors.'
+	)
 
 	# get task objects
 	$all = Invoke-Build ?? Assert.test.ps1
 	assert ($all.Count -eq 3)
 }
 
-# ". Invoke-Build" is used in order to load exposed functions and use Get-Help.
+# Synopsis: ". Invoke-Build" is used in order to load exposed functions and use Get-Help.
 # This command itself shows the current version and function help summary.
 task ShowInfo {
 	. Invoke-Build
 }
 
-# Tasks with null or empty job lists are rare but possible.
+# Synopsis: Null Jobs, rare but possible.
 task Dummy1
+
+# Synopsis: Empty Jobs, rare but possible.
 task Dummy2 @()
 
-# Script parameters and values are standard variables in the script scope.
+# Synopsis: Script parameters and values are standard variables in the script scope.
 # Read them as $Variable. Write them as $script:Variable = ...
 task ParamsValues1 {
 	"In ParamsValues1"
@@ -98,16 +104,16 @@ task ParamsValues1 {
 	$script:MyNewValue1 = 42
 }
 
-# This task invokes (references) the task ParamsValues1 and then invokes its
-# own script. Referenced tasks and own scripts are specified by the parameter
-# Job. Any number and any order of jobs is allowed. Referenced tasks often go
-# before own scripts but tasks are allowed after and between scripts as well.
+# Synopsis: References the task ParamsValues1 and then invokes its own script.
+# Referenced tasks and actions are specified by the parameter Job. Any number
+# and any order of jobs is allowed. Referenced tasks often go before actions
+# but references are allowed after and between actions as well.
 task ParamsValues2 ParamsValues1, {
 	"In ParamsValues2"
 	"MyParam1='$MyParam1' MyValue1='$MyValue1' MyNewValue1='$MyNewValue1'"
 }
 
-# Invoke all tasks in all *.test.ps1 scripts using the special task **.
+# Synopsis: Invoke all tasks in all *.test.ps1 scripts using the special task **.
 # (Another special task * is used to invoke all tasks in one build file).
 task AllTestScripts {
 	# ** invokes all *.test.ps1
@@ -117,12 +123,12 @@ task AllTestScripts {
 	assert ($Result.Tasks.Count -gt 0)
 }
 
-# Test persistent builds.
+# Synopsis: Test persistent builds.
 task Checkpoint {
 	Invoke-Build test Checkpoint.build.ps1
 }
 
-# Test conditional tasks.
+# Synopsis: Test conditional tasks.
 # It also shows how to invoke build scripts with parameters.
 task Conditional {
 	# call with Debug, use the dynamic parameter
@@ -133,7 +139,7 @@ task Conditional {
 	Invoke-Build TestScriptCondition, ConditionalErrors Conditional.build.ps1
 }
 
-# Test dynamic tasks (and other issues).
+# Synopsis: Test dynamic tasks (and some issues).
 task Dynamic {
 	# first, just request the task list and test it
 	$all = Invoke-Build ?? Dynamic.build.ps1
@@ -147,17 +153,17 @@ task Dynamic {
 	assert ($result.Tasks.Count -eq 5)
 }
 
-# Test incremental and partial incremental tasks.
+# Synopsis: Test incremental and partial incremental tasks.
 task Incremental {
 	Invoke-Build . Incremental.build.ps1
 }
 
-# Test the default parameter.
+# Synopsis: Test the default parameter.
 task TestDefaultParameter {
 	Invoke-Build TestDefaultParameter Conditional.build.ps1
 }
 
-# Test exit codes on errors.
+# Synopsis: Test exit codes on errors.
 task TestExitCode {
 	# continue on errors and use -NoProfile to ensure this, too
 	$ErrorActionPreference = 'Continue'
@@ -174,8 +180,8 @@ task TestExitCode {
 	assert ($LastExitCode -eq 1)
 }
 
-# Test the internally defined alias Invoke-Build. It is strongly recommended
-# for nested calls instead of the script name Invoke-Build.ps1. In a new (!)
+# Synopsis: Test the internally defined alias Invoke-Build.
+# It is recommended for nested calls instead of the script name. In a new (!)
 # session set ${*}, build, check for the alias. It also covers work around
 # "Default Host" exception on setting colors.
 task TestSelfAlias {
@@ -186,7 +192,7 @@ task TestSelfAlias {
     Remove-Item z.build.ps1
 }
 
-# Test a build invoked from a background job just to be sure it works.
+# Synopsis: Test a build invoked from a background job just to be sure it works.
 task TestStartJob {
     $job = Start-Job { Invoke-Build . $args[0] } -ArgumentList "$BuildRoot\Dynamic.build.ps1"
     $log = Wait-Job $job | Receive-Job
@@ -195,8 +201,8 @@ task TestStartJob {
     assert ($log[-1].StartsWith('Build succeeded. 5 tasks'))
 }
 
-# Invoke-Build should expose only documented functions. The test warns about
-# unknowns. In a clean session there must be no warnings.
+# Synopsis: Invoke-Build should expose only documented functions.
+# The test warns about unknowns. In a clean session there must be no warnings.
 task TestFunctions {
 	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
 	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
@@ -233,8 +239,8 @@ task TestFunctions {
 	}}
 }
 
-# Invoke-Build should expose only documented variables. The test warns about
-# unknowns. In a clean session there must be no warnings.
+# Synopsis: Invoke-Build should expose only documented variables.
+# The test warns about unknowns. In a clean session there must be no warnings.
 task TestVariables {
 	$MyKnown = [PowerShell]::Create().AddScript({ Get-Variable | Select-Object -ExpandProperty Name }).Invoke()
 	$MyKnown += @(
@@ -267,7 +273,7 @@ task TestVariables {
 	}}
 }
 
-# Show full help.
+# Synopsis: Show full help.
 task ShowHelp {
 	@(
 		'Invoke-Build'
@@ -287,7 +293,14 @@ task ShowHelp {
 	Out-String -Width 80
 }
 
-# This task calls all test tasks.
+# Synopsis: Invoke Convert-psake.ps1. Output is to be compared.
+task ConvertPsake {
+	if ($PSVersionTable.PSVersion.Major -ge 3) {
+		Convert-psake psake-script.ps1 -Invoke -Synopsis
+	}
+}
+
+# Synopsis: This task calls all test tasks.
 task Tests `
 Dummy1,
 Dummy2,
@@ -303,7 +316,7 @@ TestStartJob,
 TestFunctions,
 TestVariables
 
-# This is the default task due to its name, by the convention.
+# Synopsis: This is the default task due to its name, by the convention.
 # This task calls all the samples and the main test task.
 task . ParamsValues2, ParamsValues1, SharedTask2, {
 	"In default, script 1"
@@ -318,4 +331,5 @@ Tests,
 WhatIf,
 ListTask,
 ShowHelp,
-ShowInfo
+ShowInfo,
+ConvertPsake

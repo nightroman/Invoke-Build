@@ -54,6 +54,7 @@ task Package ConvertMarkdown, Help, GitStatus, {
 
 	# copy files
 	Copy-Item -Destination z\tools `
+	Convert-psake.ps1,
 	Invoke-Build.ps1,
 	Invoke-Build-Help.xml,
 	Invoke-Builds.ps1,
@@ -86,9 +87,9 @@ task Zip Version, Package, {
 # Synopsis: Make the NuGet package.
 task NuGet Version, Package, {
 	$text = @'
-Invoke-Build is a build automation tool which invokes tasks defined in a
-PowerShell script. Tasks are pieces of code with optional relations.
-Concepts are similar to psake and MSBuild.
+PowerShell build and test automation tool which invokes tasks defined in
+scripts. Tasks are pieces of code with optional relations. Concepts are
+similar to psake and MSBuild.
 '@
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
@@ -103,7 +104,7 @@ Concepts are similar to psake and MSBuild.
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>
 		<description>$text</description>
-		<tags>PowerShell Build Automation</tags>
+		<tags>PowerShell Build Test Automation</tags>
 		<releaseNotes>https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md</releaseNotes>
 	</metadata>
 </package>
@@ -144,7 +145,7 @@ task Test {
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
 	if ($NoTestDiff) {return}
 
-	assert (220 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (221 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (45 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 
