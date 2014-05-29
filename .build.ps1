@@ -55,6 +55,7 @@ task Package ConvertMarkdown, Help, GitStatus, {
 	# copy files
 	Copy-Item -Destination z\tools `
 	Convert-psake.ps1,
+	ib.cmd,
 	Invoke-Build.ps1,
 	Invoke-Build-Help.xml,
 	Invoke-Builds.ps1,

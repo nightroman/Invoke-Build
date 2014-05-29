@@ -2,6 +2,23 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.8
+
+Users ask for a common cmd.exe helper. I was reluctant for some reasons but now
+is a good time, perhaps. Here is the proposal based on my own practice.
+
+- *ib.cmd* is the proposed Invoke-Build helper for cmd.exe.
+- For similar experience in interactive PowerShell use an alias `ib`.
+
+Note that scripts should continue to use the command `Invoke-Build`. The `ib`
+commands should be used with cmd.exe (*ib.cmd*) and in interactive PowerShell
+(alias of *Invoke-Build.ps1* defined in the profile).
+
+Custom tasks
+
+- Added the sample custom rake-like task `file`. It is not a big deal but it
+  still may be useful. Besides, it comes with examples of incremental tasks.
+
 ## v2.9.7
 
 Task help (*experimentally*). The *Jobs* is an array, not a text. With
