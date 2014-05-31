@@ -20,8 +20,8 @@
 # Import file-task.
 . .\File.tasks.ps1
 
-# Gets *.tmp files from the temp directory. Used in two tasks.
-$GetTmpFiles = { [System.IO.Directory]::GetFiles($env:TEMP, '*.tmp') }
+# Gets *.tmp files from the temp directory. The list is used by two tasks.
+$GetTmpFiles = [System.IO.Directory]::GetFiles($env:TEMP, '*.tmp')
 
 # Synopsis: Log temp files using "task".
 task Task1 -Inputs $GetTmpFiles -Outputs Task1.log {

@@ -1,16 +1,16 @@
 
+![](https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png)
+
 Build Automation in PowerShell
 ==============================
 
-## Introduction
+Invoke-Build is PowerShell build and test automation tool which invokes tasks
+defined in scripts. Tasks are pieces of code with optional relations. Concepts
+are similar to psake and MSBuild.
 
-PowerShell build and test automation tool which invokes tasks defined in
-scripts. Tasks are pieces of code with optional relations. Concepts are
-similar to psake and MSBuild.
-
-Invoke-Build, in spite of the name, is not necessarily for building something.
-It introduces general-purpose task programming in PowerShell and scripts with
-tasks are often easier to compose and use than traditional scripts.
+In spite of the name, Invoke-Build is not necessarily for building something.
+It introduces general-purpose dependency programming. Scripts with tasks are
+often easier to compose and use than traditional scripts.
 
 In addition to basic task processing the engine supports
 
@@ -62,7 +62,7 @@ subdirectory *"tools"*.
 Copy *Invoke-Build.ps1*, *Invoke-Build-Help.xml*, and optionally other scripts
 to a directory in the path. As a result, the engine is called from PowerShell
 as `Invoke-Build` and help for `Get-Help` is available. Note that this is not
-mandatory, any location is fine but in this case invocation requires a path,
+mandatory, any location is fine but in this case invocations require a path,
 absolute or relative.
 
 With cmd.exe use the helper *ib.cmd*. For similar experience in interactive
@@ -70,7 +70,7 @@ PowerShell use an alias `ib` defined in the PowerShell profile (`$Profile`)
 
     Set-Alias ib <path>\Invoke-Build.ps1
 
-`<path>\` may be omitted in the script is in the system path.
+`<path>\` may be omitted if the script is in the system path.
 
 ## Getting help
 

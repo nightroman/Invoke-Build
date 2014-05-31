@@ -2,6 +2,12 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.9
+
+- *ib.cmd* shows help on `/?`
+- Custom task `file` - fixed propagation of the source
+- DynamicParam - replaced `Get-Variable` with `$PSBoundParameters`
+
 ## v2.9.8
 
 Users ask for a common cmd.exe helper. I was reluctant for some reasons but now

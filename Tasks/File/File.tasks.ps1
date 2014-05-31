@@ -10,8 +10,8 @@
 	and Outputs are mandatory positional parameters, the names may be omitted.
 
 	File-task parameters:
-		Name, Jobs, If, Partial, Data, Done, Source - as usual
-		Inputs, Outputs - as usual but mandatory positional
+		Name, Jobs, If, Partial, Data, Done - as usual
+		Inputs, Outputs - mandatory and positional
 
 	Script scope names:
 		Alias: file
@@ -41,9 +41,9 @@ function Add-FileTask(
 	$If=1,
 	$Data,
 	$Done,
-	$Source = $MyInvocation,
 	[switch]$Partial
 )
 {
+	$PSBoundParameters.Source = $MyInvocation
 	task @PSBoundParameters
 }

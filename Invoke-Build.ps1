@@ -49,11 +49,11 @@ function *TE($M, $C = 0) {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
 }
 
-$BuildTask = Get-Variable -Name [T]ask -Scope 0 -ValueOnly
-$BuildFile = Get-Variable -Name [F]ile -Scope 0 -ValueOnly
-${private:*Parameters} = Get-Variable -Name [P]arameters -Scope 0 -ValueOnly
-${private:*Checkpoint} = Get-Variable -Name [C]heckpoint -Scope 0 -ValueOnly
-${private:*Resume} = Get-Variable -Name [R]esume -Scope 0 -ValueOnly
+$BuildTask = $PSBoundParameters['Task']
+$BuildFile = $PSBoundParameters['File']
+${private:*Parameters} = $PSBoundParameters['Parameters']
+${private:*Checkpoint} = $PSBoundParameters['Checkpoint']
+${private:*Resume} = $PSBoundParameters['Resume']
 ${private:*cd} = *FP
 ${private:*cp} = $null
 ${private:*names} =
@@ -227,11 +227,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.8'}
+function Get-BuildVersion {[Version]'2.9.9'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.8
+Invoke-Build 2.9.9
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
