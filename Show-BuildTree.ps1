@@ -19,6 +19,8 @@
 .Parameter Parameters
 		Build script parameters.
 		They are needed only if they alter build trees.
+.Parameter Upstream
+		Tells to show upstream tasks for each task.
 
 .Inputs
 	None.
@@ -32,13 +34,15 @@
 param(
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)][string]$File,
-	[Parameter(Position=2)][hashtable]$Parameters
+	[Parameter(Position=2)][hashtable]$Parameters,
+	[switch]$Upstream
 )
 
 $private:_Task = $Task
 $private:_File = $File
 $private:_Parameters = $Parameters
-Remove-Variable Task, File, Parameters
+$private:_Upstream = $Upstream
+Remove-Variable Task, File, Parameters, Upstream
 
 # Shows the task tree.
 function ShowTaskTree($Task, $Docs, $Step = 0) {
@@ -49,13 +53,19 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	# synopsis
 	$synopsis = *TS $Task.InvocationInfo $docs
 
-	# name, parents
+	# name
 	$info = $tab + $Task.Name
-	$reference = $references[$Task]
-	if ($reference.Count) {
-		$info += ' (' + (($reference.Keys | Sort-Object) -join ', ') + ')'
+
+	# upstream
+	if ($references.Count) {
+		$reference = $references[$Task]
+		if ($reference.Count) {
+			$info += ' (' + (($reference.Keys | Sort-Object) -join ', ') + ')'
+		}
 	}
-	if ($synopsis) {"$info - $synopsis"} else {$info}
+
+	# synopsis, output
+	if ($synopsis) {"$info # $synopsis"} else {$info}
 
 	# task jobs
 	foreach($_ in $Task.Jobs) {
@@ -69,10 +79,10 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 }
 
 # Task synopsis.
-function *TS($I, $M) {
+function *TS($I, $H) {
 	$f = $I.ScriptName
-	if (!($d = $M[$f])) {
-		$M[$f] = ($d = @{})
+	if (!($d = $H[$f])) {
+		$H[$f] = $d = @{}
 		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
 			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
 		}
@@ -85,16 +95,19 @@ function *TS($I, $M) {
 # To amend errors
 try {
 	# get tasks
-	$tasks = Invoke-Build ?? -File:$_File -Parameters:$_Parameters
+	$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
+	$tasks = & $ib ?? -File:$_File -Parameters:$_Parameters
 
 	# references
 	$references = @{}
-	foreach($it in $tasks.Values) {
-		$references[$it] = @{}
+	if ($_Upstream) {
+		foreach($it in $tasks.Values) {
+			$references[$it] = @{}
+		}
+		foreach($it in $tasks.Values) {foreach($job in $it.Jobs) {if ($job -is [string]) {
+			$references[$tasks[$job]][$it.Name] = 0
+		}}}
 	}
-	foreach($it in $tasks.Values) {foreach($job in $it.Jobs) {if ($job -is [string]) {
-		$references[$tasks[$job]][$it.Name] = 0
-	}}}
 
 	# resolve task
 	if ($_Task -eq '*') {

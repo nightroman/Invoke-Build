@@ -147,7 +147,7 @@ task Test {
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
 	if ($NoTestDiff) {return}
 
-	assert (221 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (222 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (45 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 

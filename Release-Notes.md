@@ -2,6 +2,20 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.10
+
+*Invoke-TaskFromISE.ps1*, *Show-BuildGraph.ps1*, *Show-BuildTree.ps1*
+
+- They expect *Invoke-Build.ps1* to be in the same directory. Pros: 1) to be in
+  the path is optional; 2) this approach avoids potential version conflicts.
+
+*Show-BuildTree.ps1*
+
+- It does not show upstream tasks by default, they may look confusing.
+- New switch `Upstream` tells to show upstream tasks for each task.
+
+Minor inner changes.
+
 ## v2.9.9
 
 - *ib.cmd* shows help on `/?`

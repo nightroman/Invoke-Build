@@ -25,17 +25,17 @@ In addition to basic task processing the engine supports
 *Invoke-Build.ps1* is enough for invoking build scripts. Other files and tools
 are for built-in help, parallel builds, task visualization, and etc.
 
-* *Invoke-Build.ps1* invokes build scripts, this is the build engine
-* *Invoke-Builds.ps1* invokes parallel builds using the engine
-* *Invoke-Build-Help.xml* is external content for Get-Help
+* *Invoke-Build.ps1* - invokes build scripts, this is the build engine
+* *Invoke-Builds.ps1* - invokes parallel builds using the engine
+* *Invoke-Build-Help.xml* - external content for Get-Help
 
 Extras
 
-* *ib.cmd* is Invoke-Build helper for cmd.exe
-* *Convert-psake.ps1* converts psake build scripts
-* *Invoke-TaskFromISE.ps1* invokes a task from ISE
-* *Show-BuildTree.ps1* shows task trees as text
-* *Show-BuildGraph.ps1* shows task trees by Graphviz
+* *ib.cmd* - Invoke-Build helper for cmd.exe
+* *Convert-psake.ps1* - converts psake build scripts
+* *Invoke-TaskFromISE.ps1* - invokes a task from ISE
+* *Show-BuildTree.ps1* - shows task trees as text
+* *Show-BuildGraph.ps1* - shows task trees by Graphviz
 * *TabExpansionProfile.Invoke-Build.ps1* - completers
 * *Tasks* - sample custom tasks and demo scripts
 
@@ -55,18 +55,15 @@ Download it to the current location as the directory *"Invoke-Build"* by this Po
 
     iex (New-Object Net.WebClient).DownloadString('https://raw.github.com/nightroman/Invoke-Build/master/Download.ps1')
 
-Alternatively, download it by NuGet tools or [directly](http://nuget.org/api/v2/package/Invoke-Build).
+Alternatively, get it by NuGet tools or [download](http://nuget.org/api/v2/package/Invoke-Build).
 In the latter case rename the package to *".zip"* and unzip. Use the package
 subdirectory *"tools"*.
 
-Copy *Invoke-Build.ps1*, *Invoke-Build-Help.xml*, and optionally other scripts
-to a directory in the path. As a result, the engine is called from PowerShell
-as `Invoke-Build` and help for `Get-Help` is available. Note that this is not
-mandatory, any location is fine but in this case invocations require a path,
-absolute or relative.
+This is it, scripts are ready to use. Consider to include the directory with
+scripts to the system path so that script paths may be omitted in commands.
 
-With cmd.exe use the helper *ib.cmd*. For similar experience in interactive
-PowerShell use an alias `ib` defined in the PowerShell profile (`$Profile`)
+With *cmd.exe* use the helper *ib.cmd*. For similar experience in interactive
+PowerShell use an alias `ib` defined in the PowerShell profile
 
     Set-Alias ib <path>\Invoke-Build.ps1
 

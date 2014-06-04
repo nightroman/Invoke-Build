@@ -112,14 +112,15 @@ finally {
 	$editor.SetCaretPosition($y1, $x1)
 }
 
+$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 if ($_Console) {
-	$a = "-NoExit Invoke-Build.ps1 '$($task.Replace("'", "''").Replace('"', '\"'))' '$($path.Replace("'", "''"))'"
+	$a = "-NoExit & '$($ib.Replace("'", "''"))' '$($task.Replace("'", "''").Replace('"', '\"'))' '$($path.Replace("'", "''"))'"
 	Start-Process PowerShell.exe $a
 	return
 }
 
 try {
-	Invoke-Build.ps1 $task $path
+	& $ib $task $path
 }
 catch {
 	$ii = $_.InvocationInfo

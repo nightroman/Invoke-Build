@@ -53,8 +53,7 @@
 	https://github.com/nightroman/Invoke-Build
 #>
 
-param
-(
+param(
 	[Parameter(Position=1)][string]$File,
 	[Parameter(Position=2)][string]$Output = "$env:TEMP\Graphviz.pdf",
 	[string]$Code = 'graph [rankdir=LR]',
@@ -65,7 +64,7 @@ param
 
 try { # To amend errors
 
-# get dot.exe
+# resolve dot.exe
 $dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {@(Get-Command dot.exe -ErrorAction Stop)[0].Path}
 if (!(Test-Path -LiteralPath $dot)) {throw "Cannot find 'dot.exe'."}
 
@@ -75,7 +74,8 @@ if (!$type) {throw "Output file name should have an extension."}
 $type = $type.Substring(1).ToLower()
 
 # get tasks
-$all = Invoke-Build ?? -File:$File -Parameters:$Parameters
+$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
+$all = & $ib ?? -File:$File -Parameters:$Parameters
 
 # DOT code
 $text = @(

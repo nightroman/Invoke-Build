@@ -11,17 +11,19 @@ function Get-NormalText($_) {
 	$_.Trim() -replace '\s+', ' '
 }
 
-# Synopsis: Tree.
-task Tree {
+# Synopsis: Simple tree.
+task SimpleTree {
 	$sample = Get-NormalText @'
-. - Call tree tests.
-    Tree (.) - Tree.
+. # Call tree tests.
+    SimpleTree # Simple tree.
         {}
-    CyclicReference (.) - Test cyclic reference.
+    UpstreamTree # Tree with upstream tasks.
         {}
-    MissingReference (.) - Test missing reference.
+    CyclicReference # Test cyclic reference.
         {}
-    MissingTask (.) - Test missing task.
+    MissingReference # Test missing reference.
+        {}
+    MissingTask # Test missing task.
         {}
     {}
 '@
@@ -29,9 +31,27 @@ task Tree {
 	# no task is resolved to .
 	($log = Show-BuildTree -File Tree.test.ps1 | Out-String)
 	assert ($sample -eq (Get-NormalText $log))
+}
 
-	# * is the same fo this example
-	($log = Show-BuildTree * Tree.test.ps1 | Out-String)
+# Synopsis: Tree with upstream tasks.
+task UpstreamTree {
+	$sample = Get-NormalText @'
+. # Call tree tests.
+    SimpleTree (.) # Simple tree.
+        {}
+    UpstreamTree (.) # Tree with upstream tasks.
+        {}
+    CyclicReference (.) # Test cyclic reference.
+        {}
+    MissingReference (.) # Test missing reference.
+        {}
+    MissingTask (.) # Test missing task.
+        {}
+    {}
+'@
+
+	# * is resolved to .
+	($log = Show-BuildTree * Tree.test.ps1 -Upstream | Out-String)
 	assert ($sample -eq (Get-NormalText $log))
 }
 
@@ -64,7 +84,8 @@ task MissingTask {
 	(also test getting synopsis)
 #>
 task . `
-Tree,
+SimpleTree,
+UpstreamTree,
 (job CyclicReference -Safe),
 (job MissingReference -Safe),
 (job MissingTask -Safe),

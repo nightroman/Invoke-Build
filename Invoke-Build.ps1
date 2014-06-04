@@ -93,16 +93,15 @@ if (${*Parameters}) {return}
 $_ = Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1
 if (!($_ = $_.Parameters) -or !$_.Count) {return}
 
-$p = New-Object Management.Automation.RuntimeDefinedParameterDictionary
-$a = New-Object Collections.ObjectModel.Collection[Attribute]
-$a.Add((New-Object Management.Automation.ParameterAttribute))
+${private:*r} = New-Object Management.Automation.RuntimeDefinedParameterDictionary
+${private:*a} = New-Object Collections.ObjectModel.Collection[Attribute]
+${*a}.Add((New-Object Management.Automation.ParameterAttribute))
 foreach($_ in $_.Values) {
 	if (${*names} -notcontains $_.Name) {
-		$p.Add($_.Name, (New-Object Management.Automation.RuntimeDefinedParameter $_.Name, $_.ParameterType, $a))
+		${*r}.Add($_.Name, (New-Object Management.Automation.RuntimeDefinedParameter $_.Name, $_.ParameterType, ${*a}))
 	}
 }
-$p
-Remove-Variable -Name p, a
+${*r}
 
 } end {
 
@@ -176,12 +175,10 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
-	if ($null -ne ($_ = $PSCmdlet.GetVariableValue($Name)) -or $null -ne ($_ = [Environment]::GetEnvironmentVariable($Name)) -or $null -ne ($_ = $Value)) {
-		$_
-	}
-	else {
+	if ($null -eq ($_ = $PSCmdlet.GetVariableValue($Name)) -and $null -eq ($_ = [Environment]::GetEnvironmentVariable($Name)) -and $null -eq ($_ = $Value)) {
 		*TE "Missing variable '$Name'." 13
 	}
+	$_
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -227,11 +224,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.9'}
+function Get-BuildVersion {[Version]'2.9.10'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.9
+Invoke-Build 2.9.10
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -335,6 +332,50 @@ filter *Try($T, $P = [System.Collections.Stack]@()) {
 	}
 }
 
+function *CP {
+	$_ = @{
+		User = *UC Export-Build
+		Task = $BuildTask
+		File = $BuildFile
+		Prm1 = ${*}.Parameters
+		Prm2 = @{}
+		Done = foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}}
+	}
+	$p = (Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1).Parameters
+	if ($p.Count) {
+		foreach($k in $p.Keys) {
+			$_.Prm2[$k] = Get-Variable -Name $k -Scope Script -ValueOnly
+		}
+	}
+	$_ | Export-Clixml ${*}.Checkpoint
+}
+
+function *WE {
+	Write-Build 14 (*II $Task)
+	$null = ${*}.Errors.Add($_)
+}
+
+function *TS($I, $H) {
+	$f = $I.ScriptName
+	if (!($d = $H[$f])) {
+		$H[$f] = $d = @{}
+		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
+			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
+		}
+	}
+	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
+		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
+	}
+}
+
+filter *TH($H) {
+	$r = 1 | Select-Object Name, Jobs, Synopsis
+	$r.Name = $_.Name
+	$r.Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
+	$r.Synopsis = *TS $_.InvocationInfo $H
+	$r
+}
+
 function *IO {
 	if ((${private:*i} = $Task.Inputs) -is [scriptblock]) {
 		*SL
@@ -387,24 +428,6 @@ function *IO {
 		}
 	}
 	'Skipping up-to-date output.'
-}
-
-function *CP {
-	$_ = @{
-		User = *UC Export-Build
-		Task = $BuildTask
-		File = $BuildFile
-		Prm1 = ${*}.Parameters
-		Prm2 = @{}
-		Done = foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}}
-	}
-	$p = (Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1).Parameters
-	if ($p.Count) {
-		foreach($k in $p.Keys) {
-			$_.Prm2[$k] = Get-Variable -Name $k -Scope Script -ValueOnly
-		}
-	}
-	$_ | Export-Clixml ${*}.Checkpoint
 }
 
 function *Task {
@@ -519,32 +542,6 @@ function *Task {
 		$null = ${*}.Tasks.Add($Task)
 		. *UC Exit-BuildTask
 	}
-}
-
-function *WE {
-	Write-Build 14 (*II $Task)
-	$null = ${*}.Errors.Add($_)
-}
-
-function *TS($I, $M) {
-	$f = $I.ScriptName
-	if (!($d = $M[$f])) {
-		$M[$f] = ($d = @{})
-		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
-			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
-		}
-	}
-	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
-		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
-	}
-}
-
-filter *TH($M) {
-	$r = 1 | Select-Object Name, Jobs, Synopsis
-	$r.Name = $_.Name
-	$r.Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
-	$r.Synopsis = *TS $_.InvocationInfo $M
-	$r
 }
 
 function Enter-Build {} function Enter-BuildTask {} function Enter-BuildJob {}
