@@ -41,9 +41,8 @@ task GitStatus -If (Test-Path .git) {
 # Synopsis: Build the PowerShell help file.
 # <https://github.com/nightroman/Helps>
 task Help {
-	$dir = Split-Path (Get-Command Invoke-Build.ps1).Definition
 	. Helps.ps1
-	Convert-Helps Invoke-Build-Help.ps1 $dir\Invoke-Build-Help.xml
+	Convert-Helps Invoke-Build-Help.ps1 Invoke-Build-Help.xml
 }
 
 # Synopsis: Make the package directory z\tools for NuGet.

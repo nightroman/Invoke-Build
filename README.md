@@ -1,8 +1,5 @@
 
-![](https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png)
-
-Build Automation in PowerShell
-==============================
+## ![](https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png) Build Automation in PowerShell
 
 Invoke-Build is PowerShell build and test automation tool which invokes tasks
 defined in scripts. Tasks are pieces of code with optional relations. Concepts
