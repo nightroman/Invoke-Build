@@ -90,7 +90,9 @@ The above command shows function names and makes their help available:
 - [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
 : Build scripts used in various projects.
 
-Suggestions, questions, and issues are welcome [here](https://github.com/nightroman/Invoke-Build/issues).
+Questions, suggestions, and issues are welcome at
+[Google Discussion Group](https://groups.google.com/forum/#!forum/invoke-build) and
+[Project Issues](https://github.com/nightroman/Invoke-Build/issues).
 Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 
 ## Credits
