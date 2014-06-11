@@ -87,9 +87,9 @@ task Zip Version, Package, {
 # Synopsis: Make the NuGet package.
 task NuGet Version, Package, {
 	$text = @'
-PowerShell build and test automation tool which invokes tasks defined in
-scripts. Tasks are pieces of code with optional relations. Concepts are
-similar to psake and MSBuild.
+Invoke-Build is a build and test automation tool which invokes tasks
+defined in PowerShell scripts. It is similar to psake but arguably
+easier to use and more powerful.
 '@
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
