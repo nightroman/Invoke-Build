@@ -413,16 +413,16 @@
 
 		See the parameter After for details.
 '@
-		If = @'
-		Tells whether to invoke the task or skip it. The default is $true. The
-		value is a script block evaluated on task invocation or any other that
+		If = @{default = '$true'; description = @'
+		Tells to skip the task if it is specified and evaluated to false. The
+		value is a script block evaluated on task invocation or an object that
 		is treated as Boolean on definition. In WhatIf mode a scriptblock is
-		treated as $true without invocation.
+		treated as true without invocation.
 
 		If it is a script block and the task is called several times then it is
 		possible that the task is skipped at first but invoked later when this
 		block gets true.
-'@
+'@}
 		Inputs = @'
 		Tells to process the task as incremental and requires the parameter
 		Outputs with the optional switch Partial.
@@ -650,9 +650,9 @@ engine (version 2+).
 		(.cmd, .bat, etc.), otherwise $LastExitCode is not set or contains an
 		exit code of another command.
 '@
-		ExitCode = @'
-		Valid exit codes (e.g. 0..3 for robocopy). The default is 0.
-'@
+		ExitCode = @{default = '@(0)'; description = @'
+		Valid exit codes (e.g. 0..3 for robocopy).
+'@}
 	}
 
 	outputs = @(
@@ -771,8 +771,7 @@ engine (version 2+).
 
 	parameters = @{
 		Path = @'
-		A full directory path used to get the default build file. A file does
-		not have to be located in this directory.
+		A full directory path used to get the default build file.
 '@
 	}
 
@@ -825,9 +824,9 @@ engine (version 2+).
 		Timeout = @'
 		Maximum overall build time in milliseconds.
 '@
-		MaximumBuilds = @'
+		MaximumBuilds = @{default = 'Number of processors.'; description = @'
 		Maximum number of builds invoked at the same time.
-'@
+'@}
 	}
 
 	outputs = @{

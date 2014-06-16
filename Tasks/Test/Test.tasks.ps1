@@ -39,7 +39,7 @@ Set-Alias test Add-TestTask
 function Add-TestTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
 	[Parameter(Position=1)][object[]]$Jobs,
-	$If=1,
+	$If=$true,
 	$Inputs,
 	$Outputs
 )

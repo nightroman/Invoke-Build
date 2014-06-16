@@ -2,6 +2,11 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.11
+
+- *ib.cmd*: corrected #2.
+- Help shows default parameter values in a standard way.
+
 ## v2.9.10
 
 *Invoke-TaskFromISE.ps1*, *Show-BuildGraph.ps1*, *Show-BuildTree.ps1*

@@ -38,7 +38,7 @@ function Add-FileTask(
 	[Parameter(Position=1, Mandatory=1)]$Inputs,
 	[Parameter(Position=2, Mandatory=1)]$Outputs,
 	[Parameter(Position=3)][object[]]$Jobs,
-	$If=1,
+	$If,
 	$Data,
 	$Done,
 	[switch]$Partial
