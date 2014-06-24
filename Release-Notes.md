@@ -2,6 +2,10 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.12
+
+- Resolved #3 (colored output from remote hosts).
+
 ## v2.9.11
 
 - *ib.cmd*: corrected #2.

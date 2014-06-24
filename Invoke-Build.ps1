@@ -224,11 +224,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.11'}
+function Get-BuildVersion {[Version]'2.9.12'}
 
 if ($MyInvocation.InvocationName -eq '.') {
 	return @'
-Invoke-Build 2.9.11
+Invoke-Build 2.9.12
 Copyright (c) 2011-2014 Roman Kuzmin
 
 Add-BuildTask (task)
@@ -251,7 +251,7 @@ Set-Alias property Get-BuildProperty
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 
-if (!$Host.UI -or !$Host.UI.RawUI -or 'Default Host', 'ServerRemoteHost' -contains $Host.Name) {
+if (!$Host.UI -or !$Host.UI.RawUI -or $Host.Name -eq 'Default Host') {
 	function Write-Build($Color, [string]$Text) {$Text}
 }
 
