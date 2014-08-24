@@ -54,8 +54,8 @@
 #>
 
 param(
-	[Parameter(Position=1)][string]$File,
-	[Parameter(Position=2)][string]$Output = "$env:TEMP\Graphviz.pdf",
+	[Parameter(Position=0)][string]$File,
+	[Parameter(Position=1)][string]$Output = "$env:TEMP\Graphviz.pdf",
 	[string]$Code = 'graph [rankdir=LR]',
 	[hashtable]$Parameters,
 	[switch]$NoShow,

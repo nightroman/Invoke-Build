@@ -183,6 +183,10 @@
 
 		Build script parameters are automatically exported and imported by the
 		engine on persistent builds, see Checkpoint.
+
+		NOTE: Dynamic switches must be specified after positional arguments of
+		Task and File if they are used with parameter names omitted. Otherwise
+		switches swallow these arguments and make a command incorrect.
 '@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is

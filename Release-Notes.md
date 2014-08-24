@@ -2,6 +2,13 @@
 Invoke-Build Release Notes
 ==========================
 
+## v2.9.13
+
+- Documented the issue #4 in help. Namely, dynamic switches must be specified
+  after positional parameters `Task` and `File`.
+- Corrected parameter positions in *Show-BuildGraph.ps1*, even though it worked
+  fine, interestingly.
+
 ## v2.9.12
 
 - Resolved #3 (colored output from remote hosts).
