@@ -3,7 +3,7 @@
 .Synopsis
 	Invokes the current task from PowerShell ISE by Invoke-Build.ps1
 	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2014 Roman Kuzmin
+	Copyright (c) 2011-2015 Roman Kuzmin
 
 .Description
 	This script invokes the current task from the build script being edited in
