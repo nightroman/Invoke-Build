@@ -32,7 +32,6 @@ Extras
 * *Show-BuildTree.ps1* - shows task trees as text
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
 * *TabExpansionProfile.Invoke-Build.ps1* - completers
-* *Tasks* - sample custom tasks and demo scripts
 
 ## How it works
 
