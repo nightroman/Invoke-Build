@@ -10,25 +10,21 @@
 	synopsis = 'Invoke-Build - Build Automation in PowerShell'
 
 	description = @'
-	Install: copy Invoke-Build.ps1 and Invoke-Build.ps1-Help.xml to the path.
-
-	This script invokes specified tasks defined in a PowerShell script. This
-	process is called build and its concepts are similar to psake and MSBuild.
+	The command invokes specified and referenced tasks defined in a PowerShell
+	script. The process is called build and the script is called build script.
 
 	A build script defines parameters, variables, tasks, and events. Any code
 	is invoked with the current location set to $BuildRoot, the build script
 	directory. $ErrorActionPreference is set to 'Stop'.
 
-	In order to get help for special functions dot-source
-	Invoke-Build.ps1 by the operator . and then use Get-Help:
+	In order to get help for functions dot-source Invoke-Build.ps1:
 
-		PS> . Invoke-Build.ps1  # shows special function names
-		PS> Get-Help <function> # get help for a function
+		PS> . Invoke-Build.ps1  # shows available functions
+		PS> Get-Help <function> # gets help for a <function>
 
 	RESERVED FUNCTION AND VARIABLE NAMES
 
-	Function and variable names starting with "*" are reserved for the engine.
-	For technical reasons they cannot be completely hidden from scripts.
+	Function and variable names starting with '*' are reserved for the engine.
 	Scripts should not use functions and variables with such names.
 
 	EXPOSED FUNCTIONS AND ALIASES
@@ -72,32 +68,35 @@
 		$Task      - current task
 
 	$Task is available for the task script blocks defined by parameters If,
-	Inputs, Outputs, Jobs and the event functions Enter|Exit-BuildTask and
+	Inputs, Outputs, Jobs, and the event functions Enter|Exit-BuildTask and
 	Enter|Exit-BuildJob.
 
 		$Task properties available for reading:
 
 		- Name - [string], task name
-		- Jobs - [object[]], names and script blocks
-		- Started - [DateTime], start time
-		- In Exit-BuildTask:
-		    - Error - an error stopped the task
-		    - Elapsed - [TimeSpan], task duration
+		- Jobs - [object[]], task jobs
+		- Started - [DateTime], task start time
 
-	NOTE: The special variable $_ may be defined and visible. Scripts and tasks
-	can use it as their own, that is assign at first. Only in special cases it
-	is used as an input.
+		In Exit-BuildTask
+	    - Error - error which stopped the task
+	    - Elapsed - [TimeSpan], task duration
+
+	The variable $_ may be exposed. In special cases it is used as an input.
+	In other cases build scripts should not assume anything about its value.
 
 	EVENT FUNCTIONS
 
 	The build engine defines and calls the following empty functions:
 
 		Enter-Build     - before all tasks
-		Enter-BuildTask - before each task
-		Enter-BuildJob  - before each job
 		Exit-Build      - after all tasks
+
+		Enter-BuildTask - before each task
 		Exit-BuildTask  - after each task
-		Exit-BuildJob   - after each job
+
+		Enter-BuildJob  - before each task script job
+		Exit-BuildJob   - after each task script job
+
 		Export-Build    - after each task of a persistent build
 		Import-Build    - once on resuming of a persistent build
 
@@ -105,16 +104,15 @@
 	the engine always defines new empty functions before invoking a new script.
 
 	Events are not called on WhatIf. If Enter-* is called then its pair Exit-*
-	is called, too. Events are suitable for initializing and cleaning things.
+	is called, too. Events are suitable for initializing, cleaning, logging.
 
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
 	a good place for heavy initialization, it does not have to care of WhatIf.
+	Also, unlike the top level script code, Enter-Build can output/log data.
 
-	Enter-BuildTask and Exit-BuildTask are invoked in the same scope which is
-	the parent for a task invoked between them.
-
-	Enter-BuildJob and Exit-BuildJob are invoked in the same scope as
-	*-BuildTask and take one argument, the job number.
+	Enter-BuildTask, Exit-BuildTask, Enter-BuildJob, and Exit-BuildJob are
+	invoked in the same scope, the parent of a task. *Job functions take a
+	single argument, the job number.
 
 	Export-Build and Import-Build are used with persistent builds. Export-Build
 	outputs data to be exported to clixml. Import-Build is called with a single
@@ -138,10 +136,10 @@
 		also checks tasks and throws errors on missing or cyclic references.
 		Task synopsis is defined in preceding comments as # Synopsis: ...
 
-		?? - Tells to collect and get all tasks as a ordered dictionary. It can
-		be used by external tools for task analysis, TabExpansion, and etc.
+		?? - Tells to collect and get all tasks as an ordered dictionary. It
+		can be used by external tools for analysis, TabExpansion, and etc.
 
-		Tasks ? and ?? sets $WhatIf to true. Properly designed build scripts
+		Tasks ? and ?? set $WhatIf to true. Properly designed build scripts
 		should not perform anything significant if $WhatIf is set to true.
 
 		* - Tells to invoke all tasks. This is useful when all tasks are tests
@@ -149,22 +147,22 @@
 
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
-		Other parameters except Result are not used.
+		Other parameters except Result are ignored.
 
 		Tasks ? and ?? can be combined with **
-		?, ** - Tells to show all test tasks without invoking.
-		??, ** - Tells to get task dictionaries for all test files.
+		?, ** - To show all test tasks without invoking.
+		??, ** - To get task dictionaries for all test files.
 '@
 		File = @'
-		A build script which defines tasks by the alias "task" (Add-BuildTask).
+		A build script which defines tasks by the alias 'task' (Add-BuildTask).
 
-		If it is not specified then Invoke-Build looks for "*.build.ps1" files
-		in the current location. A single file is used as the script. If there
-		are more files then ".build.ps1" is used.
+		If it is not specified then Invoke-Build looks for *.build.ps1 files in
+		the current location. A single file is used as the script. If there are
+		more files then .build.ps1 is used.
 
 		If the build file is not found then a script defined by the environment
 		variable InvokeBuildGetFile is called with the path as an argument. It
-		may get a non standard build file. The full path is required.
+		may get a non standard build file. The full path should be returned.
 
 		If the file is still not defined then parent directories are searched.
 '@
@@ -173,9 +171,9 @@
 		in special cases. Normally build script parameters may be specified for
 		Invoke-Build itself, thanks to PowerShell dynamic parameters.
 
-		Dynamic parameters and the table Parameters are not used together. If
-		build script parameters conflict with Invoke-Build parameters then the
-		table Parameters is the only way to pass them in the script.
+		Dynamic parameters and the hashtable Parameters are not used together.
+		If build script parameters conflict with Invoke-Build parameters then
+		the hashtable Parameters is the only way to pass them in the script.
 
 		Build scripts define parameters using standard syntax. Parameters are
 		shared between tasks: for reading as $ParameterName, for writing as
@@ -185,18 +183,18 @@
 		engine on persistent builds, see Checkpoint.
 
 		NOTE: Dynamic switches must be specified after positional arguments of
-		Task and File if they are used with parameter names omitted. Otherwise
+		Task and File if they are used with omitted parameter names. Otherwise
 		switches swallow these arguments and make a command incorrect.
 '@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is
-		possible to resume an interrupted build starting at an interrupted
+		possible to resume an interrupted build starting at the interrupted
 		task. The checkpoint file is written after each completed task and
 		deleted when the build completes.
 
 		In order to resume an interrupted persistent build specify the same
-		checkpoint file and the switch Resume. The tasks, build file and
-		parameters are ignored on resuming, their values are restored.
+		checkpoint file and the switch Resume. Task, File, Parameters are
+		ignored, their values are restored from the file.
 
 		Persistent builds must be designed properly. Data shared by tasks are
 		exported and imported by the functions Export-Build and Import-Build.
@@ -213,8 +211,8 @@
 '@
 		Resume = @'
 		Tells to resume an interrupted persistent build from a checkpoint file
-		specified by Checkpoint. Initial tasks, build files and parameters are
-		ignored on resuming, values are restored from the file.
+		specified by Checkpoint. Task, File, and Parameters are ignored, their
+		values are restored from the file.
 '@
 		Result = @'
 		Tells to output build information using a variable. It is either a name
@@ -230,8 +228,7 @@
 			Warnings - warning messages including nested
 
 		(*) This list will continue to exist but objects may change in the
-		future. For better analysis iterate through Tasks and check their
-		Error.
+		future. For better analysis iterate through Tasks and check Error.
 
 		Task object properties:
 
@@ -240,18 +237,16 @@
 			Error - task error
 			Started - start time
 			Elapsed - task duration
-			InvocationInfo{.ScriptName|.ScriptLineNumber} - task location.
+			InvocationInfo - task location (.ScriptName and .ScriptLineNumber)
 
-		Other result and task data should not be used. These data should not be
-		changed, especially if they are requested for a nested build, parent
-		builds use these data.
+		These data should be used for reading only.
+		Other result and task data should not be used.
 '@
 		Safe = @'
 		Tells to catch a build failure, store an error as the property Error of
-		Result and return quietly. A caller should use Result and check its
-		Error in order to analyse build failures.
+		Result and return quietly. A caller should use Result and check Error.
 
-		Some exceptions are possible even in safe mode. They show serious
+		Some exceptions are possible even in the safe mode. They show serious
 		errors, not build failures. For example, a build script is missing.
 '@
 		Summary = @'
@@ -272,15 +267,16 @@
 		Build process log which includes task starts, ends with durations,
 		warnings, errors, and output of tasks and commands that they invoke.
 
-		Build scripts should not output anything. Unexpected output is shown as
-		a warning. Output is expected from tasks and special event functions.
+		Output is expected from tasks and event functions. But build scripts
+		should not output anything. Unexpected output is shown as a warning,
+		in the future it may be treated as an error.
 '@
 		}
 	)
 
 	examples = @(
 		@{code={
-	# Invoke the default task ("." or the first added) in the default script
+	# Invoke the default task ('.' or the first added) in the default script
 	# (a single file like *.build.ps1 or .build.ps1 if there are two or more)
 
 	Invoke-Build
@@ -376,14 +372,21 @@
 	synopsis = 'Defines a build task and adds it to the internal task list.'
 
 	description = @'
-	Scripts use its alias 'task'. This is the main feature of build scripts.
-	At least one task must be added. It is used in the build script scope only.
+	Scripts use its alias 'task'. This is the main feature of build scripts. At
+	least one task must be added. Normally it is used in the build script scope
+	but it can be called anywhere, e.g. imported, created dynamically, and etc.
 
-	In fact, this feature is literally all that build scripts really need.
-	Other functions are mostly helpers, scripts do not have to use them.
+	In fact, this function is literally all that build scripts really need.
+	Other build functions are just helpers, scripts do not have to use them.
 
-	Task synopsis is defined in preceding comments as # Synopsis: ...
-	It is used in task information returned by Invoke-Build ?
+	Task help-comments are special comments preceding task definitions
+
+		# Synopsis: ...
+		task ...
+
+	Synopsis lines are used in task information returned by the command
+
+		Invoke-Build ?
 '@
 
 	parameters = @{
@@ -398,9 +401,9 @@
 
 		Valid job types are:
 
-			[string] - simple reference, name of an existing task;
-			[object] - advanced reference created by 'job' (New-BuildJob);
-			[scriptblock] - action, a script block invoked for this task.
+			[string] - simple reference, an existing task name
+			[object] - advanced reference created by 'job' (New-BuildJob)
+			[scriptblock] - action, a script block invoked for this task
 '@
 		After = @'
 		Tells to add this task to the end of the specified task job lists.
@@ -414,27 +417,27 @@
 		Before = @'
 		Tells to add this task to job lists of the specified tasks. It is
 		inserted before the first script job, if any, or added to the end.
-
-		See the parameter After for details.
+		See After for details.
 '@
 		If = @{default = '$true'; description = @'
-		Tells to skip the task if it is specified and evaluated to false. The
-		value is a script block evaluated on task invocation or an object that
-		is treated as Boolean on definition. In WhatIf mode a scriptblock is
-		treated as true without invocation.
+		Specifies the optional condition to be evaluated. If the condition
+		evaluates to false then the task is not invoked.
 
-		If it is a script block and the task is called several times then it is
-		possible that the task is skipped at first but invoked later when this
-		block gets true.
+		The value is a script block evaluated on task invocation or an object
+		treated as Boolean on definition. On WhatIf a script block is treated
+		as true without invocation.
+
+		If the task is called several times then it is possible that the task
+		is skipped at first but invoked later when the script block gets true.
 '@}
 		Inputs = @'
-		Tells to process the task as incremental and requires the parameter
-		Outputs with the optional switch Partial.
+		Specifies the input items, tells to process the task as incremental,
+		and requires the parameter Outputs with the optional switch Partial.
 
 		Inputs are file items or paths or a script block which gets them.
 		Outputs are file paths or a script block which gets them.
 
-		Automatic variables for task script jobs:
+		Automatic variables for incremental task script jobs:
 
 			$Inputs - full input paths, array of strings
 			$Outputs - result of the evaluated parameter Outputs
@@ -451,9 +454,8 @@
 			$_ - current full input path
 			$2 - current output path
 
-		Wiki about incremental and partial incremental tasks:
-		https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks
-		https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks
+		See also wiki topics about incremental tasks:
+		https://github.com/nightroman/Invoke-Build/wiki
 '@
 		Outputs = @'
 		Specifies the output paths of the incremental task. It is used together
@@ -463,25 +465,24 @@
 		Tells to process the incremental task as partial incremental. It is
 		used together with Inputs and Outputs. See Inputs for details.
 '@
+		Data = @'
+		Any object attached to the task. It is not used by the engine.
+		When the task is invoked the object is available as $Task.Data.
+'@
 		Done = @'
 		Specifies the command or a script block invoked when the task is done.
-'@
-		Data = @'
-		Any data attached to the task. These data are not used by the engine.
-		When the task is invoked the data are available as $Task.Data.
+		It is mostly designed for wrapper functions creating special tasks.
 '@
 		Source = @'
-		Specifies the task source. It is used by task wrappers in order to
-		provide actual source needed for location messages and help synopsis.
+		Specifies the task source. It is used by wrapper functions in order to
+		provide the actual source for location messages and task help synopsis.
 '@
 	}
 
 	links = @(
 		@{ text = 'New-BuildJob' }
 		@{ text = 'Get-BuildError' }
-		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial' }
-		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Incremental-Tasks' }
-		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks' }
+		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 	)
 }
 
@@ -524,7 +525,7 @@
 
 	description = @'
 	Scripts use its alias 'error'. It is used when some tasks are referenced
-	safe as (job Task -Safe) in order to analyse their potential errors.
+	safe (job Task -Safe) in order to get and analyse their potential errors.
 '@
 
 	parameters = @{
@@ -554,8 +555,8 @@
 	synopsis = 'Checks for a condition.'
 
 	description = @'
-	Scripts use its alias 'assert'. It checks for a condition and if it is not
-	true throws an error with an optional message text.
+	Scripts use its alias 'assert'. This command checks for a condition and if
+	it is not true throws an error with the default or a specified message.
 '@
 
 	parameters = @{
@@ -563,7 +564,7 @@
 		The condition.
 '@
 		Message = @'
-		A user friendly message describing the assertion condition.
+		An optional message describing the assertion condition.
 '@
 	}
 }
@@ -571,11 +572,11 @@
 ### Get-BuildProperty
 @{
 	command = 'Get-BuildProperty'
-	synopsis = 'Gets PowerShell or environment variable or the default.'
+	synopsis = 'Gets the session or environment variable or the default value.'
 
 	description = @'
 	Scripts use its alias 'property'. It gets the first not null value of these
-	three: PowerShell variable, environment variable, specified default value.
+	three: session variable, environment variable, optional default value.
 	Otherwise an error is thrown.
 
 	CAUTION: Properties should be used sparingly with carefully chosen names
@@ -584,12 +585,12 @@
 
 	parameters = @{
 		Name = @'
-		PowerShell or environment variable name.
+		Session or environment variable name.
 '@
 		Value = @'
-		Default value to be returned if the property is not found. Omitted or
-		null value requires the specified property to be defined. If it is not
-		then an error is thrown.
+		Specifies the default value to be used if the variable is not found.
+		Omitted or null values require the variable to exist and be not null.
+		Otherwise an error is thrown.
 '@
 	}
 
@@ -604,7 +605,7 @@
 
 	examples = @(
 		@{code={
-	# Inherit the existing value or throw an error
+	# Inherit an existing value or throw an error
 
 	$OutputPath = property OutputPath
 		}}
@@ -627,9 +628,9 @@
 	examples = @{
 		code = {assert ((Get-BuildVersion).Major -ge 2)}
 		remarks = @'
-This command works like `require version`. It can be used as the first command
-in a build script in order to ensure that the script is being built by a proper
-engine (version 2+).
+	This command works like `require version`. Use it as the first command in a
+	build script in order to ensure that the script is being built by a proper
+	engine (version 2+ in this example).
 '@
 	}
 }
@@ -637,22 +638,21 @@ engine (version 2+).
 ### Invoke-BuildExec
 @{
 	command = 'Invoke-BuildExec'
-	synopsis = 'Invokes the command and checks for the $LastExitCode.'
+	synopsis = 'Invokes an application and checks $LastExitCode.'
 
 	description = @'
 	Scripts use its alias 'exec'. It invokes the specified script block which
-	is supposed to call an executable. Then the $LastExitCode is checked. By
-	default if the code is not 0 then the function throws an error.
+	is supposed to call an executable. Then $LastExitCode is checked. If it
+	does not fit to the specified values (0 by default) an error is thrown.
 
-	It is common to call .NET tools, e.g. MSBuild. See Use-BuildAlias.
+	It is often used with .NET tools, e.g. MSBuild. See Use-BuildAlias.
 '@
 
 	parameters = @{
 		Command = @'
-		A command that invokes an executable which exit code is checked. It is
-		mandatory to invoke an external application, directly (.exe) or not
-		(.cmd, .bat, etc.), otherwise $LastExitCode is not set or contains an
-		exit code of another command.
+		Command that invokes an executable which exit code is checked. It must
+		invoke an application directly (.exe) or not (.cmd, .bat), otherwise
+		$LastExitCode is not set or contains an exit code of another command.
 '@
 		ExitCode = @{default = '@(0)'; description = @'
 		Valid exit codes (e.g. 0..3 for robocopy).
@@ -663,7 +663,7 @@ engine (version 2+).
 		@{
 			type = 'Objects'
 			description = @'
-		Outputs of the command and the tool that it invokes.
+		Output of the specified command.
 '@
 		}
 	)
@@ -684,7 +684,7 @@ engine (version 2+).
 ### Use-BuildAlias
 @{
 	command = 'Use-BuildAlias'
-	synopsis = '(use) Sets framework/directory tool aliases.'
+	synopsis = 'Sets framework/directory tool aliases.'
 
 	description = @'
 	Scripts use its alias 'use'. Invoke-Build does not change the system path
@@ -695,7 +695,7 @@ engine (version 2+).
 
 	This function is often called from a build script and all tasks use script
 	scope aliases. But it can be called from tasks in order to use more tools
-	including other frameworks or tool directories.
+	including other framework or tool directories.
 
 	MSBuild is one of frequently used tools. Examples:
 
@@ -800,13 +800,9 @@ engine (version 2+).
 			Task, File, Parameters - Invoke-Build.ps1 parameters
 			Log - Tells to write build output to the specified file
 
-		Any number of builds is allowed, including 0 and 1. Maximum number of
-		parallel builds is limited by number of processors by default. It can
-		be changed by the parameter MaximumBuilds.
-
-		If exactly a [hashtable[]] (not [object[]]) is passed in then after the
-		call it contains modified copies of input hashtables used as parameters
-		passed in Invoke-Build. Their Result.Value contain build result info.
+		Any number of builds is allowed, including 0 and 1. The maximum number
+		of parallel builds is the number of processors by default. It can be
+		changed by the parameter MaximumBuilds.
 '@
 		Result = @'
 		Tells to output build results using a variable. It is either a name of
@@ -822,8 +818,7 @@ engine (version 2+).
 			Elapsed - build duration
 
 		(*) This list will continue to exist but objects may change in the
-		future. For better analysis iterate through Tasks and check their
-		Error.
+		future. For better analysis iterate through Tasks and check Error.
 '@
 		Timeout = @'
 		Maximum overall build time in milliseconds.
@@ -834,7 +829,7 @@ engine (version 2+).
 	}
 
 	outputs = @{
-		type = 'text'
+		type = 'Text'
 		description = 'Output of invoked builds and other log messages.'
 	}
 

@@ -15,16 +15,18 @@ In addition to basic task processing the engine supports
 
 ## The package
 
-*Invoke-Build.ps1* is enough for invoking build scripts. Other files and tools
-are for built-in help, parallel builds, task visualization, and etc.
+*Invoke-Build.ps1* alone is enough for invoking build scripts. Other files and
+tools are for built-in help, parallel builds, task visualization, and etc.
+
+Core
 
 * *Invoke-Build.ps1* - invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* - invokes parallel builds using the engine
 * *Invoke-Build-Help.xml* - external content for Get-Help
+* *ib.cmd* - Invoke-Build helper for cmd.exe
 
 Extras
 
-* *ib.cmd* - Invoke-Build helper for cmd.exe
 * *Convert-psake.ps1* - converts psake build scripts
 * *Invoke-TaskFromISE.ps1* - invokes a task from ISE
 * *Show-BuildTree.ps1* - shows task trees as text
@@ -85,6 +87,8 @@ The above command shows function names and makes their help available:
 : Detailed tutorials, helpers, notes, and etc.
 - [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
 : Build scripts used in various projects.
+- [Tasks](https://github.com/nightroman/Taks)
+: How to define and use custom tasks.
 
 Questions, suggestions, and issues are welcome at
 [Google Discussion Group](https://groups.google.com/forum/#!forum/invoke-build) and

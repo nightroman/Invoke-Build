@@ -65,9 +65,6 @@ task Package ConvertMarkdown, Help, GitStatus, {
 	Show-BuildGraph.ps1,
 	Show-BuildTree.ps1,
 	TabExpansionProfile.Invoke-Build.ps1
-
-	# copy tasks
-	exec { robocopy.exe Tasks z\tools\Tasks *.ps1 *.txt /S } (0..3)
 }
 
 # Synopsis: Set $script:Version.
