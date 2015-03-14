@@ -86,7 +86,7 @@ The above command shows function names and makes their help available:
 : Detailed tutorials, helpers, notes, and etc.
 - [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
 : Build scripts used in various projects.
-- [Tasks](https://github.com/nightroman/Taks)
+- [Tasks](https://github.com/nightroman/Invoke-Build/tree/master/Tasks)
 : How to define and use custom tasks.
 
 Questions, suggestions, and issues are welcome at
