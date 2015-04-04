@@ -78,7 +78,7 @@ task Version {
 # Synopsis: Make the zip package.
 task Zip Version, Package, {
 	Set-Location z\tools
-	exec { & 7z.exe a ..\..\Invoke-Build.$Version.zip * }
+	exec { & 7za a ..\..\Invoke-Build.$Version.zip * }
 }
 
 # Synopsis: Make the NuGet package.
@@ -143,7 +143,7 @@ task Test {
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
 	if ($NoTestDiff) {return}
 
-	assert (222 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (223 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (45 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 

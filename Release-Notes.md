@@ -469,10 +469,10 @@ Note that TabExpansion works with dynamic parameters.
 
 This new script is `TabExpansion2` profile with custom completers for
 *Invoke-Build.ps1* and *Build.ps1*. It can be used either directly with
-[TabExpansion2.ps1](https://farnet.googlecode.com/svn/trunk/PowerShellFar/TabExpansion2.ps1)
-or slightly adapted for other replacements of build-in `TabExpansion2`.
-It completes arguments of parameters *Task* (task names from a build file) and
-*File* (normally suggests available *.build.ps1* and *.test.ps1* files).
+*TabExpansion2.ps1* or slightly adapted for other replacements of build-in
+`TabExpansion2`. It completes arguments of parameters *Task* (task names from a
+build file) and *File* (normally suggests available *.build.ps1* and
+*.test.ps1* files).
 
 **Warning on script output**
 

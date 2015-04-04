@@ -66,6 +66,14 @@ task Framework.4.0.30319 -If (Test-Path 'v4.0.30319') {
 	assert ($version -like '4.0.*')
 }
 
+# VS 2013 ~ v12
+task Version.12.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\12.0') {
+	use 12.0 MSBuild
+	$version = exec { MSBuild /version /nologo }
+	$version
+	assert ($version -like '12.0.*') $version
+}
+
 # This task simply uses the alias set at the scope level.
 task CurrentFramework {
 	$version = exec { MSBuild /version /nologo }
