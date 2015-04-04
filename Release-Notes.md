@@ -1,6 +1,11 @@
 
 # Invoke-Build Release Notes
 
+## v2.10.0
+
+Invoke-Build features can be imported to normal scripts by dot-sourcing.
+See `help Invoke-Build` or [wiki](https://github.com/nightroman/Invoke-Build/wiki/Dot-Sourcing-Build-Features).
+
 ## v2.9.14
 
 Minor tweaks in the code and revised help.

@@ -17,10 +17,10 @@
 	is invoked with the current location set to $BuildRoot, the build script
 	directory. $ErrorActionPreference is set to 'Stop'.
 
-	In order to get help for functions dot-source Invoke-Build.ps1:
+	To get help for commands dot-source Invoke-Build:
 
-		PS> . Invoke-Build.ps1  # shows available functions
-		PS> Get-Help <function> # gets help for a <function>
+		PS> . Invoke-Build
+		PS> help task -full
 
 	RESERVED FUNCTION AND VARIABLE NAMES
 
@@ -120,6 +120,28 @@
 	the script scope and normally restores script scope variables. Note that
 	this is not needed for script parameters, the engine takes care of them.
 	Variables may be declared as parameters just in order to be persistent.
+
+	DOT-SOURCING Invoke-Build
+
+	Build-like environment can be imported to normal scripts:
+
+		. Invoke-Build
+
+	When this command is invoked from a script it
+
+	- sets $ErrorActionPreference to Stop
+	- sets $BuildFile to the calling script path
+	- sets $BuildRoot to the calling script directory
+	- sets the current PowerShell location to $BuildRoot
+	- imports utility commands
+	    - assert
+	    - exec
+	    - property
+	    - use
+	    - Write-Build
+
+	Some other build commands are also imported. They are available for getting
+	help and not designed for use in normal scripts.
 '@
 
 	parameters = @{

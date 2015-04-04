@@ -76,12 +76,6 @@ task ListTask {
 	assert ($all.Count -eq 3)
 }
 
-# Synopsis: ". Invoke-Build" is used in order to load exposed functions and use Get-Help.
-# This command itself shows the current version and function help summary.
-task ShowInfo {
-	. Invoke-Build
-}
-
 # Synopsis: Null Jobs, rare but possible.
 task Dummy1
 
@@ -331,5 +325,4 @@ Tests,
 WhatIf,
 ListTask,
 ShowHelp,
-ShowInfo,
 ConvertPsake

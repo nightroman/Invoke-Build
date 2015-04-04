@@ -71,8 +71,8 @@ task Package ConvertMarkdown, Help, GitStatus, {
 task Version {
 	# get and test version
 	($script:Version = (Get-BuildVersion).ToString())
-	$r = Select-String -SimpleMatch "Invoke-Build $Version" -Path Invoke-Build.ps1
-	assert ($r) 'Missing or outdated line Invoke-Build <version>.'
+	$r = .{ switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {return $Matches[1]}} }
+	assert ($r -eq $Version) 'Invoke-Build and Release-Notes versions mismatch.'
 }
 
 # Synopsis: Make the zip package.

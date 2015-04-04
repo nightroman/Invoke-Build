@@ -39,8 +39,6 @@ function Get-BuildFile($Path) {
 	} while($Path = Split-Path $Path)
 }
 
-if ($MyInvocation.InvocationName -eq '.') {return}
-
 function *FP($_) {
 	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)
 }
@@ -48,6 +46,8 @@ function *FP($_) {
 function *TE($M, $C=0) {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
 }
+
+if ($MyInvocation.InvocationName -eq '.') {return}
 
 $BuildTask = $PSBoundParameters['Task']
 $BuildFile = $PSBoundParameters['File']
@@ -221,24 +221,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.9.14'}
-
-if ($MyInvocation.InvocationName -eq '.') {
-	return @'
-Invoke-Build 2.9.14
-Copyright (c) 2011-2015 Roman Kuzmin
-
-Add-BuildTask (task)
-Assert-Build (assert)
-Get-BuildError (error)
-Get-BuildProperty (property)
-Get-BuildVersion
-Invoke-BuildExec (exec)
-New-BuildJob (job)
-Use-BuildAlias (use)
-Write-Build
-'@
-}
+function Get-BuildVersion {[Version]'2.10.0'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -250,11 +233,6 @@ Set-Alias use Use-BuildAlias
 
 if (!$Host.UI -or !$Host.UI.RawUI -or $Host.Name -eq 'Default Host') {
 	function Write-Build($Color, [string]$Text) {$Text}
-}
-
-function Write-Warning($Message) {
-	$PSCmdlet.WriteWarning($Message)
-	$null = ${*}.Warnings.Add("WARNING: $Message")
 }
 
 function *My {
@@ -539,14 +517,28 @@ function *Task {
 	}
 }
 
+Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
+Set-Alias Invoke-Builds (Join-Path (Split-Path $_) Invoke-Builds.ps1)
+
+if ($MyInvocation.InvocationName -eq '.') {
+	Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe, Summary, Resume, WhatIf
+	if ($BuildFile = $MyInvocation.ScriptName) {
+		$ErrorActionPreference = 'Stop'
+		*SL ($BuildRoot = Split-Path $BuildFile)
+	}
+	return
+}
+
+function Write-Warning($Message) {
+	$PSCmdlet.WriteWarning($Message)
+	$null = ${*}.Warnings.Add("WARNING: $Message")
+}
+
 function Enter-Build {} function Enter-BuildTask {} function Enter-BuildJob {}
 function Exit-Build {} function Exit-BuildTask {} function Exit-BuildJob {}
 function Export-Build {} function Import-Build {}
 
 $ErrorActionPreference = 'Stop'
-Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
-Set-Alias Invoke-Builds (Join-Path (Split-Path $_) Invoke-Builds.ps1)
-
 if (!${*Parameters}) {
 	foreach($_ in $PSBoundParameters.Keys) {
 		if (${*pn} -notcontains $_) {

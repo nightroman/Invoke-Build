@@ -70,13 +70,13 @@ same directory and invoke this command:
 
     help Invoke-Build -full
 
-In order to get help for functions, at first dot-source Invoke-Build:
+In order to get help for commands, at first dot-source Invoke-Build:
 
     . Invoke-Build
 
-The above command shows function names and makes their help available:
+The above command imports commands and makes their help available:
 
-    help Add-BuildTask -full
+    help task -full
 
 ## Online resources
 
