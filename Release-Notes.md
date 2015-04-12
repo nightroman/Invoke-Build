@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.10.1
+
+Fixed incomplete error information when `-Safe` is used.
+
 ## v2.10.0
 
 Invoke-Build features can be imported to normal scripts by dot-sourcing.

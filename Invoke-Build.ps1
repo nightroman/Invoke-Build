@@ -221,7 +221,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.10.0'}
+function Get-BuildVersion {[Version]'2.10.1'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -658,7 +658,10 @@ try {
 catch {
 	${*r} = 2
 	${*}.Error = $_
-	if (!${*Safe}) {
+	if (${*Safe}) {
+		Write-Build 12 ($_ | Out-String)
+	}
+	else {
 		if (*My) {$PSCmdlet.ThrowTerminatingError($_)}
 		throw
 	}
