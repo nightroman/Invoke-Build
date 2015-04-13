@@ -126,13 +126,15 @@ assert ($e -like 'property : Missing variable *try {property *')
 
 ### use
 
+#! Mind \\Framework(64)?\\
+
 use 4.0 MSBuild
 ($r = Get-Alias MSBuild)
-assert ($r.Definition -like '?:\*\Microsoft.NET\Framework\v4.0.*\MSBuild')
+assert ($r.Definition -like '?:\*\Microsoft.NET\Framework*\v4.0.*\MSBuild')
 
 use Framework\v4.0.30319 MSBuild
 ($r = Get-Alias MSBuild)
-assert ($r.Definition -like '?:\*\Microsoft.NET\Framework\v4.0.30319\MSBuild')
+assert ($r.Definition -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
 
 use $BuildRoot Dot-test.ps1
 ($r = Get-Alias Dot-test.ps1)

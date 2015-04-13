@@ -3,6 +3,6 @@
 task IncompleteErrorOnSafe {
 	'task test { throw 42 }' > z.build.ps1
 	($r = Invoke-Build * z.build.ps1 -Safe | Out-String)
-	assert ($r -clike 'Build test*42*At*\z.build.ps1:1*FullyQualifiedErrorId : 42*Build FAILED. 1 tasks, 1 errors, 0 warnings*')
+	assert ($r -clike 'Build test*Task /test*At *\z.build.ps1:1*ERROR: 42*At *\z.build.ps1:1*')
 	Remove-Item z.build.ps1
 }

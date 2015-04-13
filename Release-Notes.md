@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.10.2
+
+Resolved #6. `Out-String` should not be used by the engine.
+
 ## v2.10.1
 
 Fixed incomplete error information when `-Safe` is used.
