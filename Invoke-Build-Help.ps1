@@ -169,7 +169,7 @@
 
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
-		Other parameters except Result are ignored.
+		Other parameters except Result and Safe are ignored.
 
 		Tasks ? and ?? can be combined with **
 		?, ** - To show all test tasks without invoking.
@@ -270,6 +270,9 @@
 
 		Some exceptions are possible even in the safe mode. They show serious
 		errors, not build failures. For example, a build script is missing.
+
+		When Safe is used together with the special task ** (invoke *.test.ps1)
+		then task failures stop current test scripts, not the whole testing.
 '@
 		Summary = @'
 		Tells to show summary information after the build. It includes task

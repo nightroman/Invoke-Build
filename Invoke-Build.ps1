@@ -221,7 +221,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.10.2'}
+function Get-BuildVersion {[Version]'2.10.3'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -582,7 +582,7 @@ try {
 	if ($BuildTask -eq '**') {
 		$BuildTask = @('*'; $BuildTask -ne '**')
 		foreach($_ in $BuildFile) {
-			Invoke-Build $BuildTask $_.FullName
+			Invoke-Build $BuildTask $_.FullName -Safe:${*Safe}
 		}
 		${*r} = 1
 		return
@@ -676,7 +676,7 @@ finally {
 			foreach($_ in $t) {
 				'{0,-16} {1} - {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber
 				if ($_ = $_.Error) {
-					Write-Build 12 $(if (*My) {"ERROR: $_"} else {*EI "ERROR: $_" $_})
+					Write-Build 12 "ERROR: $(if (*My) {$_} else {*EI $_ $_})"
 				}
 			}
 		}

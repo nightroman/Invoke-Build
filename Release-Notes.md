@@ -1,6 +1,13 @@
 
 # Invoke-Build Release Notes
 
+## v2.10.3
+
+Resolved #5. When `Safe` is used together with the special task `**` (invoke
+`*.test.ps1`) then task failures stop current test scripts, not the whole
+testing. This change is potentially incompatible, it may alter results of
+`Invoke-Build ** -Safe`.
+
 ## v2.10.2
 
 Resolved #6. `Out-String` should not be used by the engine.

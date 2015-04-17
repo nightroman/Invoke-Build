@@ -143,8 +143,8 @@ task Test {
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
 	if ($NoTestDiff) {return}
 
-	assert (225 -eq $result.Tasks.Count) $result.Tasks.Count
-	assert (46 -eq $result.Errors.Count) $result.Errors.Count
+	assert (230 -eq $result.Tasks.Count) $result.Tasks.Count
+	assert (48 -eq $result.Errors.Count) $result.Errors.Count
 	assert ($result.Warnings.Count -ge 1)
 
 	# process and save the output
@@ -158,5 +158,10 @@ task Test {
 	Remove-Item $resultPath
 }
 
+# Synopsis: Invoke Test with PowerShell 2.0.
+task TestV2 {
+	exec { PowerShell -Version 2 -NoProfile Invoke-Build Test }
+}
+
 # Synopsis: The default task: make and test all, then clean.
-task . Help, Test, Clean
+task . Help, Test, TestV2, Clean
