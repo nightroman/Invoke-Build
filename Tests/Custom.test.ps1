@@ -45,7 +45,7 @@ task Check2 {
 	Invoke-Build * ..\Tasks\Check\Check.build.ps1 -Result r -Safe
 	assert ($r.Error)
 	assert ($r.Tasks.Count -eq 6)
-	assert ($r.Errors.Count -eq 2)
+	assert ($r.Errors.Count -eq 1)
 	assert (Test-Path $file)
 
 	# fake to pass all

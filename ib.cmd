@@ -1,7 +1,8 @@
 
+:: ib.cmd - Invoke-Build helper for cmd.exe
+:: It must be in the same directory as Invoke-Build.ps1
+
 @echo off
-rem ib.cmd - Invoke-Build helper for cmd.exe
-rem ib.cmd must be in the same directory as Invoke-Build.ps1
 
 if "%1"=="?" goto list
 if "%1"=="/?" goto help

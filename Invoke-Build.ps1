@@ -221,7 +221,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.10.3'}
+function Get-BuildVersion {[Version]'2.10.4'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -324,8 +324,7 @@ function *CP {
 	$_ | Export-Clixml ${*}.Checkpoint
 }
 
-function *WE {
-	Write-Build 14 (*II $Task)
+function *AE {
 	$null = ${*}.Errors.Add($_)
 }
 
@@ -446,6 +445,7 @@ function *Task {
 				}
 				catch {
 					if (*Bad ${*j} $BuildTask) {throw}
+					*AE
 					Write-Build 12 (*EI "ERROR: Task ${*p}/${*j}: $_" $_)
 				}
 				continue
@@ -496,7 +496,8 @@ function *Task {
 		}
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
 		if ($_ = $Task.Error) {
-			. *WE
+			*AE
+			Write-Build 14 (*II $Task)
 			Write-Build 12 (*EI "ERROR: Task ${*p}: $_" $_)
 		}
 		else {
@@ -508,7 +509,7 @@ function *Task {
 	catch {
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
 		$Task.Error = $_
-		. *WE
+		Write-Build 14 (*II $Task)
 		throw
 	}
 	finally {
@@ -656,6 +657,7 @@ try {
 	${*r} = 1
 }
 catch {
+	*AE
 	${*r} = 2
 	${*}.Error = $_
 	if (${*Safe}) {

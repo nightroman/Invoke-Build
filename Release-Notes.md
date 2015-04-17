@@ -1,6 +1,13 @@
 
 # Invoke-Build Release Notes
 
+## v2.10.4
+
+Resolved #8. Improved footer messages and result list `Errors`:
+
+- Avoided duplicated errors.
+- Non-task errors are included.
+
 ## v2.10.3
 
 Resolved #5. When `Safe` is used together with the special task `**` (invoke

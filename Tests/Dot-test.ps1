@@ -81,7 +81,7 @@ OK: [$OK]
 KO: [$KO]"
 
 # expected internal functions
-$OK = '*AB,*Bad,*CP,*EI,*FP,*II,*IO,*My,*RJ,*SL,*Task,*TE,*TH,*Try,*TS,*UC,*WE'
+$OK = '*AB,*AE,*Bad,*CP,*EI,*FP,*II,*IO,*My,*RJ,*SL,*Task,*TE,*TH,*Try,*TS,*UC'
 $KO = (Get-ChildItem [*]* -Name | Sort-Object) -join ','
 assert ($OK -ceq $KO) "Unexpected functions:
 OK: [$OK]

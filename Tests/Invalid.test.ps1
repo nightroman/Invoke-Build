@@ -29,9 +29,19 @@ function Test($ExpectedPattern, $Script, $Task = '.') {
 
 # Build scripts should have at least one task.
 task NoTasks {
-	Test "No tasks in '*\z.build.ps1'.*OperationStopped*" {
-		# Script with no tasks
-	}
+	# build
+	'' > z.build.ps1
+	$e = 0
+	($r = try {Invoke-Build . z.build.ps1 -Result result} catch {$e = $_})
+
+	# caught error
+	assert ($e.FullyQualifiedErrorId -clike 'No tasks in *')
+
+	# 2.10.4, was 0 errors
+	assert ($r -clike 'Build FAILED. 0 tasks, 1 errors, 0 warnings *')
+	assert ($result.Errors.Count -eq 1)
+
+	Remove-Item z.build.ps1
 }
 
 # The task has three valid jobs and one invalid (42 ~ invalid type).
