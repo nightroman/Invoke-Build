@@ -3,9 +3,15 @@
 
 ## v2.11.0
 
-This version improves Invoke-Build as a testing engine. It provides more data
-for analysis. **Potentially incompatible changes**. If scripts perform result
-analysis of `Errors` and `Warnings` then they should be revised.
+This version improves Invoke-Build as a testing engine and slightly improves
+information shown for normal builds. **Potentially incompatible changes**: if
+scripts analyse result `Errors` and `Warnings` then they should be revised.
+
+#### Aborted builds (Issue #9)
+
+When an error happens before a build starts (missing task, cyclic reference,
+script throws, and etc.) then the build footer shows this as `Build ABORTED`
+(i.e. not even started) instead of `Build FAILED` (i.e. started and failed).
 
 #### Improved result errors (Issue #10)
 
@@ -15,13 +21,13 @@ The result `Errors` list contains objects:
 - `File` - current `$BuildFile`
 - `Task` - current `$Task` or null for non-task errors
 
-This new error information is especially useful in this scenario
+This new information is especially useful in testing:
 
     Invoke-Build ** -Safe -Result Result
     $Result.Errors [ | Format-List ]
 
-`$Result.Errors` is easy to use in order to just list all failures (above) or
-produce more complex reports. Error objects now contain enough details.
+Use `$Result.Errors` in order to just list all failures (as above) or produce
+detailed reports. Error objects now contain enough details.
 
 #### Improved result warnings (Issue #11)
 
@@ -31,7 +37,7 @@ The result `Warnings` list contains objects:
 - `File` - current `$BuildFile`
 - `Task` - current `$Task` or null for non-task warnings
 
-Build footers as usual show warnings, now with task and file included.
+Build footers as usual show warnings, with task and file now included.
 
 ## v2.10.4
 

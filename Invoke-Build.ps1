@@ -588,10 +588,12 @@ ${private:*Safe} = $Safe
 ${private:*Summary} = $Summary
 Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe, Summary, Resume
 
+${private:*b} = 1
 ${private:*r} = 0
 try {
 	if ($BuildTask -eq '**') {
 		$BuildTask = @('*'; $BuildTask -ne '**')
+		${*b} = 0
 		foreach($_ in $BuildFile) {
 			Invoke-Build $BuildTask $_.FullName -Safe:${*Safe}
 		}
@@ -640,9 +642,10 @@ try {
 	elseif (!$BuildTask -or '.' -eq $BuildTask) {
 		$BuildTask = if (${*a}['.']) {'.'} else {${*a}.Item(0).Name}
 	}
-	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	$BuildTask | *Try
 
+	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
+	${*b} = 0
 	try {
 		. *UC Enter-Build
 		if (${*cp}) {
@@ -703,7 +706,8 @@ finally {
 			${*0}.Errors.AddRange($e)
 			${*0}.Warnings.AddRange($w)
 		}
-		$c, $m = if (${*r} -eq 2) {12, 'Build FAILED'}
+		$c, $m = if (${*b}) {12, "Build ABORTED $BuildFile"}
+		elseif (${*r} -eq 2) {12, 'Build FAILED'}
 		elseif ($e) {14, 'Build completed with errors'}
 		elseif ($w) {14, 'Build succeeded with warnings'}
 		else {10, 'Build succeeded'}

@@ -145,7 +145,7 @@ task Test {
 
 	assert (242 -eq $result.Tasks.Count) $result.Tasks.Count
 	assert (60 -eq $result.Errors.Count) $result.Errors.Count
-	assert ($result.Warnings.Count -ge 2)
+	assert ($result.Warnings.Count -ge 3)
 
 	# process and save the output
 	$resultPath = "$BuildRoot\Invoke-Build-Test.log"
