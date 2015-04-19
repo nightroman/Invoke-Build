@@ -221,7 +221,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.10.4'}
+function Get-BuildVersion {[Version]'2.11.0'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -324,8 +324,12 @@ function *CP {
 	$_ | Export-Clixml ${*}.Checkpoint
 }
 
-function *AE {
-	$null = ${*}.Errors.Add($_)
+function *AE($T) {
+	$null = ${*}.Errors.Add([PSCustomObject]@{
+		Error = $_
+		File = $BuildFile
+		Task = $T
+	})
 }
 
 function *TS($I, $H) {
@@ -406,6 +410,7 @@ function *IO {
 function *Task {
 	New-Variable -Name Task -Value ${*}.All[$args[0]] -Option Constant
 	${private:*p} = $args[1] + '/' + $Task.Name
+	${*}.Task = $Task
 
 	if ($Task.Error) {
 		Write-Build 8 "Task ${*p} failed."
@@ -445,7 +450,7 @@ function *Task {
 				}
 				catch {
 					if (*Bad ${*j} $BuildTask) {throw}
-					*AE
+					*AE ${*}.All[${*j}]
 					Write-Build 12 (*EI "ERROR: Task ${*p}/${*j}: $_" $_)
 				}
 				continue
@@ -496,7 +501,7 @@ function *Task {
 		}
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
 		if ($_ = $Task.Error) {
-			*AE
+			*AE $Task
 			Write-Build 14 (*II $Task)
 			Write-Build 12 (*EI "ERROR: Task ${*p}: $_" $_)
 		}
@@ -562,6 +567,7 @@ New-Variable * -Description Invoke-Build ([PSCustomObject]@{
 	Started = [DateTime]::Now
 	Elapsed = $null
 	Error = $null
+	Task = $null
 })
 if (${private:*?} = $BuildTask -eq '??' -or $BuildTask -eq '?') {
 	$WhatIf = $true
@@ -652,13 +658,14 @@ try {
 		}
 	}
 	finally {
+		${*}.Task = $null
 		. *UC Exit-Build
 	}
 	${*r} = 1
 }
 catch {
-	*AE
 	${*r} = 2
+	*AE ${*}.Task
 	${*}.Error = $_
 	if (${*Safe}) {
 		Write-Build 12 (*EI "ERROR: $_" $_)

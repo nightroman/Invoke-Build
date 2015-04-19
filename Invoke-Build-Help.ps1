@@ -246,13 +246,10 @@
 			All - all defined tasks
 			Error - a terminating build error
 			Tasks - invoked tasks including nested
-			Errors - error records including nested (*)
+			Errors - error objects including nested
 			Warnings - warning messages including nested
 
-		(*) This list will continue to exist but objects may change in the
-		future. For better analysis iterate through Tasks and check Error.
-
-		Task object properties:
+		Tasks is a list of objects:
 
 			Name - task name
 			Jobs - task jobs
@@ -260,6 +257,12 @@
 			Started - start time
 			Elapsed - task duration
 			InvocationInfo - task location (.ScriptName and .ScriptLineNumber)
+
+		Errors is a list of objects:
+
+			Error - original error record
+			File - current $BuildFile
+			Task - current $Task or null for non-task errors
 
 		These data should be used for reading only.
 		Other result and task data should not be used.
@@ -837,13 +840,10 @@
 		Result properties:
 
 			Tasks - tasks (see: help Invoke-Build -Parameter Result)
-			Errors - error records (*)
+			Errors - errors (see: help Invoke-Build -Parameter Result)
 			Warnings - warning messages
 			Started - start time
 			Elapsed - build duration
-
-		(*) This list will continue to exist but objects may change in the
-		future. For better analysis iterate through Tasks and check Error.
 '@
 		Timeout = @'
 		Maximum overall build time in milliseconds.
