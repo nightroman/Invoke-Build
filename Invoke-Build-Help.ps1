@@ -264,6 +264,12 @@
 			File - current $BuildFile
 			Task - current $Task or null for non-task errors
 
+		Warnings is a list of objects:
+
+			Message - warning message
+			File`- current $BuildFile
+			Task - current $Task or null for non-task warnings
+
 		These data should be used for reading only.
 		Other result and task data should not be used.
 '@
@@ -839,11 +845,13 @@
 
 		Result properties:
 
-			Tasks - tasks (see: help Invoke-Build -Parameter Result)
-			Errors - errors (see: help Invoke-Build -Parameter Result)
-			Warnings - warning messages
+			Tasks - tasks (*)
+			Errors - errors (*)
+			Warnings - warnings (*)
 			Started - start time
 			Elapsed - build duration
+
+		(*) see: help Invoke-Build -Parameter Result
 '@
 		Timeout = @'
 		Maximum overall build time in milliseconds.

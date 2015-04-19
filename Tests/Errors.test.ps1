@@ -61,3 +61,29 @@ task 'Custom child errors added for parent tasks' {
 
 	Remove-Item z.build.ps1
 }
+
+task Warnings {
+	{
+		Write-Warning demo-file-warning
+		; task t1 {Write-Warning demo-task-warning}
+	} > z.build.ps1
+
+	($r = Invoke-Build t1 z.build.ps1 -Result Result)
+
+	# output
+	assert ($r[-3] -clike 'WARNING: demo-file-warning File: *\z.build.ps1.')
+	assert ($r[-2] -clike 'WARNING: demo-task-warning Task: t1. File: *\z.build.ps1.')
+	assert ($r[-1] -clike 'Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *')
+
+	# result
+	assert ($Result.Warnings.Count -eq 2)
+	$1, $2 = $Result.Warnings
+	assert ($1.Message -eq 'demo-file-warning')
+	assert ($1.File -like '*\z.build.ps1')
+	assert ($null -eq $1.Task)
+	assert ($2.Message -eq 'demo-task-warning')
+	assert ($2.File -like '*\z.build.ps1')
+	assert ($2.Task.Name -eq 't1')
+
+	Remove-Item z.build.ps1
+}

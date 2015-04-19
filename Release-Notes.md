@@ -3,12 +3,13 @@
 
 ## v2.11.0
 
-**Potentially incompatible changes**. If scripts perform post-build result
+This version improves Invoke-Build as a testing engine. It provides more data
+for analysis. **Potentially incompatible changes**. If scripts perform result
 analysis of `Errors` and `Warnings` then they should be revised.
 
 #### Improved result errors (Issue #10)
 
-The result `Errors` list contains objects with properties:
+The result `Errors` list contains objects:
 
 - `Error` - original error record
 - `File` - current `$BuildFile`
@@ -21,6 +22,16 @@ This new error information is especially useful in this scenario
 
 `$Result.Errors` is easy to use in order to just list all failures (above) or
 produce more complex reports. Error objects now contain enough details.
+
+#### Improved result warnings (Issue #11)
+
+The result `Warnings` list contains objects:
+
+- `Message` - warning message
+- `File` - current `$BuildFile`
+- `Task` - current `$Task` or null for non-task warnings
+
+Build footers as usual show warnings, now with task and file included.
 
 ## v2.10.4
 

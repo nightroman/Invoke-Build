@@ -537,7 +537,11 @@ if ($MyInvocation.InvocationName -eq '.') {
 
 function Write-Warning($Message) {
 	$PSCmdlet.WriteWarning($Message)
-	$null = ${*}.Warnings.Add("WARNING: $Message")
+	$null = ${*}.Warnings.Add([PSCustomObject]@{
+		Message = $Message
+		File = $BuildFile
+		Task = ${*}.Task
+	})
 }
 
 function Enter-Build {} function Enter-BuildTask {} function Enter-BuildJob {}
@@ -689,7 +693,11 @@ finally {
 				}
 			}
 		}
-		($w = ${*}.Warnings)
+		if ($w = ${*}.Warnings) {
+			foreach($_ in $w) {
+				"WARNING: $($_.Message)$(if ($_.Task) {" Task: $($_.Task.Name)."}) File: $($_.File)."
+			}
+		}
 		if (${*0}) {
 			${*0}.Tasks.AddRange($t)
 			${*0}.Errors.AddRange($e)
