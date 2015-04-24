@@ -76,3 +76,13 @@ task NestedErrorInResult {
 
 	Remove-Item z.build.ps1
 }
+
+# Synopsis: Fixed #12 Write-Warning fails in a trap.
+# Write-Warning must be an advanced function.
+task Write-Warning-in-trap {
+	trap {
+		Write-Warning demo-trap-warning
+		continue
+	}
+	1/$null
+}

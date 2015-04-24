@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.11.1
+
+Fixed #12 `Write-Warning` fails in a `trap`.
+
 ## v2.11.0
 
 This version improves Invoke-Build as a testing engine and slightly improves

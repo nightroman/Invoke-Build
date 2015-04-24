@@ -221,7 +221,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.11.0'}
+function Get-BuildVersion {[Version]'2.11.1'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -535,7 +535,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 	return
 }
 
-function Write-Warning($Message) {
+function Write-Warning([Parameter()]$Message) {
 	$PSCmdlet.WriteWarning($Message)
 	$null = ${*}.Warnings.Add([PSCustomObject]@{
 		Message = $Message
