@@ -8,7 +8,7 @@
 .Description
 	This script invokes the current task from the build script being edited in
 	PowerShell ISE. It is invoked either in ISE or in PowerShell console.
-	Invoke-Build.ps1 should be in the path.
+	Invoke-Build.ps1 should be in the script directory or in the path.
 
 	The current task is the task at the caret line or above. If none is found
 	then the default task is invoked. The script is saved if it is modified.
@@ -63,6 +63,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$private:ib = Get-Command "$(Split-Path $MyInvocation.MyCommand.Path)/Invoke-Build.ps1" -CommandType ExternalScript -ErrorAction 0
+if (!$ib) {
+	$ib = Get-Command Invoke-Build.ps1 -CommandType ExternalScript -ErrorAction 0
+	if (!$ib) {throw 'Cannot find Invoke-Build.ps1'}
+}
+
 $private:_Console = $Console
 Remove-Variable Console
 
@@ -112,10 +118,12 @@ finally {
 	$editor.SetCaretPosition($y1, $x1)
 }
 
-$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 if ($_Console) {
-	$a = "-NoExit & '$($ib.Replace("'", "''"))' '$($task.Replace("'", "''").Replace('"', '\"'))' '$($path.Replace("'", "''"))'"
-	Start-Process PowerShell.exe $a
+	Start-Process PowerShell.exe ("-NoExit & '{0}' '{1}' '{2}'" -f @(
+		$ib.Definition.Replace("'", "''")
+		$task.Replace("'", "''").Replace('"', '\"')
+		$path.Replace("'", "''")
+	))
 	return
 }
 

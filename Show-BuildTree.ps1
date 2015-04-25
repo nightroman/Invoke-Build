@@ -9,6 +9,8 @@
 	This script analyses task references and shows parent tasks and child trees
 	for the specified tasks. Tasks are not invoked.
 
+	Invoke-Build.ps1 should be in the script directory or in the path.
+
 .Parameter Task
 		Task names.
 		If it is "*" then all root tasks are used.
@@ -94,8 +96,14 @@ function *TS($I, $H) {
 
 # To amend errors
 try {
+	# resolve Invoke-Build.ps1
+	$ib = Get-Command "$(Split-Path $MyInvocation.MyCommand.Path)/Invoke-Build.ps1" -CommandType ExternalScript -ErrorAction 0
+	if (!$ib) {
+		$ib = Get-Command Invoke-Build.ps1 -CommandType ExternalScript -ErrorAction 0
+		if (!$ib) {throw 'Cannot find Invoke-Build.ps1'}
+	}
+
 	# get tasks
-	$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 	$tasks = & $ib ?? -File:$_File -Parameters:$_Parameters
 
 	# references

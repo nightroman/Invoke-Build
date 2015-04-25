@@ -9,6 +9,7 @@
 	Requires:
 	- Graphviz: http://graphviz.org/
 	- Graphviz\bin in the environment variable Graphviz or in the path.
+	- Invoke-Build.ps1 should be in the script directory or in the path.
 
 	The script calls Invoke-Build.ps1 in order to get the tasks (WhatIf mode),
 	builds the DOT file and calls Graphviz's dot.exe in order to visualize it
@@ -65,8 +66,16 @@ param(
 try { # To amend errors
 
 # resolve dot.exe
-$dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {@(Get-Command dot.exe -ErrorAction Stop)[0].Path}
-if (!(Test-Path -LiteralPath $dot)) {throw "Cannot find 'dot.exe'."}
+$dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {'dot.exe'}
+$dot = Get-Command $dot -CommandType Application -ErrorAction 0
+if (!$dot) {throw 'Cannot find dot.exe'}
+
+# resolve Invoke-Build.ps1
+$ib = Get-Command "$(Split-Path $MyInvocation.MyCommand.Path)/Invoke-Build.ps1" -CommandType ExternalScript -ErrorAction 0
+if (!$ib) {
+	$ib = Get-Command Invoke-Build.ps1 -CommandType ExternalScript -ErrorAction 0
+	if (!$ib) {throw 'Cannot find Invoke-Build.ps1'}
+}
 
 # output type
 $type = [System.IO.Path]::GetExtension($Output)
@@ -74,7 +83,6 @@ if (!$type) {throw "Output file name should have an extension."}
 $type = $type.Substring(1).ToLower()
 
 # get tasks
-$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 $all = & $ib ?? -File:$File -Parameters:$Parameters
 
 # DOT code

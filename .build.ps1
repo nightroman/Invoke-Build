@@ -49,22 +49,17 @@ task Help {
 task Package ConvertMarkdown, Help, GitStatus, {
 	# temp package folder
 	Remove-Item [z] -Force -Recurse
-	$null = mkdir z\tools\Tasks
+	$null = mkdir z\tools
 
 	# copy files
 	Copy-Item -Destination z\tools `
-	Convert-psake.ps1,
 	ib.cmd,
 	Invoke-Build.ps1,
-	Invoke-Build-Help.xml,
 	Invoke-Builds.ps1,
-	Invoke-TaskFromISE.ps1,
-	LICENSE.txt,
+	Invoke-Build-Help.xml,
 	README.htm,
-	Release-Notes.htm,
-	Show-BuildGraph.ps1,
-	Show-BuildTree.ps1,
-	TabExpansionProfile.Invoke-Build.ps1
+	LICENSE.txt,
+	Release-Notes.htm
 }
 
 # Synopsis: Set $script:Version.

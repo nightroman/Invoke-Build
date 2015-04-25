@@ -15,39 +15,29 @@ In addition to basic task processing the engine supports
 
 ## The package
 
-*Invoke-Build.ps1* alone is enough for invoking build scripts. Other files and
-tools are for built-in help, parallel builds, task visualization, and etc.
-
-Core
+The standalone script *Invoke-Build.ps1* is enough for invoking build scripts.
+It can be downloaded directly from the repository and used right away. The
+package also includes helper scripts and the help file:
 
 * *Invoke-Build.ps1* - invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* - invokes parallel builds using the engine
 * *Invoke-Build-Help.xml* - external content for Get-Help
 * *ib.cmd* - Invoke-Build helper for cmd.exe
 
-Extras
+Extra tools are available at the project repository:
 
 * *Convert-psake.ps1* - converts psake build scripts
 * *Invoke-TaskFromISE.ps1* - invokes a task from ISE
 * *Show-BuildTree.ps1* - shows task trees as text
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
-* *TabExpansionProfile.Invoke-Build.ps1* - completers
-
-## How it works
-
-The engine builds a sequence of tasks defined in a build script by `task`
-statements which provide task names, script blocks, references, conditions,
-inputs and outputs. The tasks are checked for issues like missing or cyclic
-references. Then the specified tasks are invoked together with other tasks
-referenced by them recursively. Why is this needed at all? See
-[Concepts](https://github.com/nightroman/Invoke-Build/wiki/Concepts).
+* *TabExpansionProfile.Invoke-Build.ps1* - code completers
 
 ## Installation
 
 Invoke-Build is distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
 Download it to the current location as the directory *"Invoke-Build"* by this PowerShell command:
 
-    iex (New-Object Net.WebClient).DownloadString('https://raw.github.com/nightroman/Invoke-Build/master/Download.ps1')
+    iex (New-Object Net.WebClient).DownloadString('https://github.com/nightroman/Invoke-Build/raw/master/Download.ps1')
 
 Alternatively, get it by NuGet tools or [download](http://nuget.org/api/v2/package/Invoke-Build).
 In the latter case rename the package to *".zip"* and unzip. Use the package
@@ -57,16 +47,16 @@ This is it, scripts are ready to use. Consider to include the directory with
 scripts to the system path so that script paths may be omitted in commands.
 
 With *cmd.exe* use the helper *ib.cmd*. For similar experience in interactive
-PowerShell use an alias `ib` defined in the PowerShell profile
+PowerShell use an alias `ib` defined in a PowerShell profile
 
     Set-Alias ib <path>\Invoke-Build.ps1
 
-`<path>\` may be omitted if the script is in the system path.
+`<path>\` may be omitted if the script is in the path.
 
 ## Getting help
 
-To get help for *Invoke-Build.ps1* make sure *Invoke-Build-Help.xml* is in the
-same directory and invoke this command:
+Make sure *Invoke-Build-Help.xml* from the package is in the same directory as
+*Invoke-Build.ps1* and invoke
 
     help Invoke-Build -full
 
@@ -74,20 +64,22 @@ In order to get help for commands, at first dot-source Invoke-Build:
 
     . Invoke-Build
 
-The above command imports commands and makes their help available:
+This imports commands and makes their help available:
 
     help task -full
 
 ## Online resources
 
+- [Basic Concepts](https://github.com/nightroman/Invoke-Build/wiki/Concepts)
+: Why build scripts may have advantages over normal scripts.
 - [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial)
-: Take a look in order to get familiar with scripts.
+: Take a look in order to get familiar with build scripts.
 - [Project Wiki](https://github.com/nightroman/Invoke-Build/wiki)
 : Detailed tutorials, helpers, notes, and etc.
 - [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
 : Build scripts used in various projects.
 - [Tasks](https://github.com/nightroman/Invoke-Build/tree/master/Tasks)
-: How to define and use custom tasks.
+: Samples, patterns, and various techniques.
 
 Questions, suggestions, and issues are welcome at
 [Google Discussion Group](https://groups.google.com/forum/#!forum/invoke-build) and
