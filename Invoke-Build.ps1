@@ -221,7 +221,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.12.0'}
+function Get-BuildVersion {[Version]'2.12.1'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -527,11 +527,11 @@ Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
 Set-Alias Invoke-Builds (Join-Path (Split-Path $_) Invoke-Builds.ps1)
 
 if ($MyInvocation.InvocationName -eq '.') {
-	Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe, Summary, Resume, WhatIf
 	if ($BuildFile = $MyInvocation.ScriptName) {
 		$ErrorActionPreference = 'Stop'
-		*SL ($BuildRoot = Split-Path $BuildFile)
+		*SL ($BuildRoot = if ($Task) {*FP $Task} else {Split-Path $BuildFile})
 	}
+	Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe, Summary, Resume, WhatIf
 	return
 }
 

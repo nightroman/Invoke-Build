@@ -1,7 +1,12 @@
 
 [Portable Build Scripts]: https://github.com/nightroman/Invoke-Build/wiki/Portable-Build-Scripts
+[Dot Sourcing Build Features]: https://github.com/nightroman/Invoke-Build/wiki/Dot-Sourcing-Build-Features
 
 # Invoke-Build Release Notes
+
+## v2.12.1
+
+[Dot Sourcing Build Features] allows to specify the build root location.
 
 ## v2.12.0
 
@@ -85,7 +90,7 @@ Fixed incomplete error information when `-Safe` is used.
 ## v2.10.0
 
 Invoke-Build features can be imported to normal scripts by dot-sourcing.
-See `help Invoke-Build` or [wiki](https://github.com/nightroman/Invoke-Build/wiki/Dot-Sourcing-Build-Features).
+See `help Invoke-Build` or [Dot Sourcing Build Features].
 
 ## v2.9.14
 

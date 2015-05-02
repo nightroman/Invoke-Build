@@ -13,11 +13,15 @@
 #>
 
 # Synopsis: Invokes Dot-test.ps1
-task Dot-test.ps1 {
-	if ($PSVersionTable.PSVersion.Major -eq 2) {
-		exec {PowerShell -Version 2 -NoProfile .\Dot-test.ps1}
-	}
-	else {
-		exec {PowerShell -NoProfile .\Dot-test.ps1}
-	}
+task Dot-test {
+	exec {PowerShell -Version $PSVersionTable.PSVersion -NoProfile .\Dot-test.ps1}
+}
+
+# Synopsis: Dot-sourcing with a specified root.
+# Also, dot-sourcing in a build, unusual but possible.
+task Dot-with-root {
+	($r = . Invoke-Build $PSHOME)
+	assert ($null -eq $r)
+	assert ($PWD.Path -eq $PSHOME)
+	assert ($BuildRoot -eq $PSHOME)
 }

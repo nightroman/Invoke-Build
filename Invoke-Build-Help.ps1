@@ -125,13 +125,13 @@
 
 	Build-like environment can be imported to normal scripts:
 
-		. Invoke-Build
+		. Invoke-Build [<root>]
 
 	When this command is invoked from a script it
 
 	- sets $ErrorActionPreference to Stop
 	- sets $BuildFile to the calling script path
-	- sets $BuildRoot to the calling script directory
+	- sets $BuildRoot to the script directory or <root>
 	- sets the current PowerShell location to $BuildRoot
 	- imports utility commands
 	    - assert
