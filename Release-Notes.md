@@ -4,6 +4,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.12.2
+
+Added `InformationAction` and `InformationVariable` for v5.
+
 ## v2.12.1
 
 [Dot Sourcing Build Features] allows to specify the build root location.

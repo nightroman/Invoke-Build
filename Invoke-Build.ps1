@@ -57,7 +57,8 @@ ${private:*Resume} = $PSBoundParameters['Resume']
 ${private:*cd} = *FP
 ${private:*cp} = $null
 ${private:*pn} = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf',
-'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable'
+'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
+'PipelineVariable', 'InformationAction', 'InformationVariable'
 
 try {
 	if ($BuildTask -eq '**') {
@@ -221,7 +222,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.12.1'}
+function Get-BuildVersion {[Version]'2.12.2'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError

@@ -16,8 +16,8 @@ In addition to basic task processing the engine supports
 ## The package
 
 The standalone script *Invoke-Build.ps1* is enough for invoking build scripts.
-It can be downloaded directly from the repository and used right away. The
-package also includes helper scripts and the help file:
+It can be downloaded directly from the repository and used alone right away.
+The package also includes helper scripts and the generated help file:
 
 * *Invoke-Build.ps1* - invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* - invokes parallel builds using the engine
@@ -89,4 +89,4 @@ Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 ## Credits
 
 The project was inspired by [*psake*](https://github.com/psake/psake).
-Some concepts come from [*MSBuild*](http://en.wikipedia.org/wiki/Msbuild).
+Some concepts come from [*MSBuild*](https://github.com/Microsoft/msbuild).
