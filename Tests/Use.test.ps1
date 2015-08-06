@@ -56,14 +56,16 @@ task Version.4.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\
 	use 4.0 MSBuild
 	$version = exec { MSBuild /version /nologo }
 	$version
-	assert ($version -like '4.0.*')
+	#! 4.6.81.0 after installing VS2015
+	assert ($version -like '4.*')
 }
 
 task Framework.4.0.30319 -If (Test-Path 'v4.0.30319') {
 	use Framework\v4.0.30319 MSBuild
 	$version = exec { MSBuild /version /nologo }
 	$version
-	assert ($version -like '4.0.*')
+	#! 4.6.81.0 after installing VS2015
+	assert ($version -like '4.*')
 }
 
 # VS 2013 ~ v12
@@ -72,6 +74,14 @@ task Version.12.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions
 	$version = exec { MSBuild /version /nologo }
 	$version
 	assert ($version -like '12.0.*') $version
+}
+
+# VS 2015 ~ v14
+task Version.14.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0') {
+	use 14.0 MSBuild
+	$version = exec { MSBuild /version /nologo }
+	$version
+	assert ($version -like '14.0.*') $version
 }
 
 # This task simply uses the alias set at the scope level.
