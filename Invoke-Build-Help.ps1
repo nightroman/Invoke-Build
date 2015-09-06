@@ -267,7 +267,7 @@
 		Warnings is a list of objects:
 
 			Message - warning message
-			File`- current $BuildFile
+			File - current $BuildFile
 			Task - current $Task or null for non-task warnings
 
 		These data should be used for reading only.

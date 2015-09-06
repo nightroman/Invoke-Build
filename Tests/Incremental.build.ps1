@@ -211,10 +211,11 @@ PartIncrementalTwoOutOfDate,
 	assert ($PartIncrementalTwoOutOfDate -eq 1)
 
 	# thrown from task code
-	Test-Error IncrementalInputsFails "Throw in input.*At *\Incremental.build.ps1:*task IncrementalInputsFails*"
-	Test-Error PartialInputsFails "Throw in input.*At *\Incremental.build.ps1:*task PartialInputsFails*"
-	Test-Error IncrementalOutputsFails "Throw in output.*At *\Incremental.build.ps1:*task IncrementalOutputsFails*"
-	Test-Error PartialOutputsFails "Throw in output.*At *\Incremental.build.ps1:*task PartialOutputsFails*"
+	#! v5 truncates source differently
+	Test-Error IncrementalInputsFails "Throw in input.*At *\Incremental.build.ps1:*"
+	Test-Error PartialInputsFails "Throw in input.*At *\Incremental.build.ps1:*"
+	Test-Error IncrementalOutputsFails "Throw in output.*At *\Incremental.build.ps1:*"
+	Test-Error PartialOutputsFails "Throw in output.*At *\Incremental.build.ps1:*"
 
 	# thrown from the engine
 	Test-Issue IncrementalOutputsIsEmpty Incremental.build.ps1 "Outputs must not be empty.*try { Invoke-Build *OperationStopped*"
