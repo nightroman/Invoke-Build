@@ -99,6 +99,7 @@ easier to use and more powerful.
 		<description>$text</description>
 		<tags>PowerShell Build Test Automation</tags>
 		<releaseNotes>https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md</releaseNotes>
+		<developmentDependency>true</developmentDependency>
 	</metadata>
 </package>
 "@

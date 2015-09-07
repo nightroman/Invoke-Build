@@ -222,7 +222,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.12.2'}
+function Get-BuildVersion {[Version]'2.12.3'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError

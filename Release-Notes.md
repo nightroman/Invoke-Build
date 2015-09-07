@@ -4,6 +4,11 @@
 
 # Invoke-Build Release Notes
 
+## v2.12.3
+
+- Fixed #16, the package is marked as `developmentDependency`.
+- Fixed typo in help.
+
 ## v2.12.2
 
 Added `InformationAction` and `InformationVariable` for v5.
