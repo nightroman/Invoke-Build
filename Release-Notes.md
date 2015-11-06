@@ -4,6 +4,24 @@
 
 # Invoke-Build Release Notes
 
+## v2.12.4
+
+Fixed #17: *After* tasks should be added after *Before* tasks.
+
+This fix changes the order of added tasks in the following case:
+
+    task Task1                 # task with no own actions
+    task After -After Task1    # at first After is added
+    task Before -Before Task1  # then Before is added
+
+After preprocessing the result task had unexpected reference order:
+
+    task Task1 After, Before
+
+After the fix the order of referenced tasks is changed to expected:
+
+    task Task1 Before, After
+
 ## v2.12.3
 
 - Fixed #16, the package is marked as `developmentDependency`.

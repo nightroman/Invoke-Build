@@ -222,7 +222,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.12.3'}
+function Get-BuildVersion {[Version]'2.12.4'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError
@@ -611,6 +611,8 @@ try {
 	try {
 		foreach(${private:**} in ${*a}.Values) {
 			if (${**}.Before) {${**}.Before | *AB ${**}.Name 1}
+		}
+		foreach(${**} in ${*a}.Values) {
 			if (${**}.After) {${**}.After | *AB ${**}.Name}
 		}
 	}

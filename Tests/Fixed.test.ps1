@@ -86,3 +86,34 @@ task Write-Warning-in-trap {
 	}
 	1/$null
 }
+
+<#
+Synopsis: #17 Process all Before tasks and then process all After tasks
+
+	Compare: Task1, Before, Task2, After:
+		MSBuild test.proj /verbosity:detailed
+
+	test.proj:
+		<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+			<Target Name="Task2" DependsOnTargets="Task1"/>
+			<Target Name="Task1"/>
+			<Target Name="After" AfterTargets="Task2"/>
+			<Target Name="Before" BeforeTargets="Task2"/>
+		</Project>
+#>
+task AfterTaskMustBeAfterBeforeTask {
+	{
+		; task Task1
+		; task After -After Task1
+		; task Before -Before Task1
+	} > z.build.ps1
+
+	Invoke-Build . z.build.ps1 -Result r
+
+	assert (3 -eq $r.Tasks.Count)
+	assert $r.Tasks[0].Name.Equals('Before')
+	assert $r.Tasks[1].Name.Equals('After')
+	assert $r.Tasks[2].Name.Equals('Task1')
+
+	Remove-Item z.build.ps1
+}

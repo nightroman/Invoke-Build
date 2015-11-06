@@ -445,12 +445,14 @@
 		Altered tasks are defined as by their names or by the command 'job'.
 		In the latter case options are applied to the added task reference.
 
-		Parameters After and Before are used in order to alter build task jobs
-		in special cases when direct changes in task jobs are not suitable.
+		Parameters After and Before are used in order to alter task jobs in
+		special cases when direct changes in task source code are not suitable.
 '@
 		Before = @'
 		Tells to add this task to job lists of the specified tasks. It is
 		inserted before the first script job, if any, or added to the end.
+		In the latter case they are added before After tasks, if any.
+
 		See After for details.
 '@
 		If = @{default = '$true'; description = @'

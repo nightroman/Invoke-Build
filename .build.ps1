@@ -21,13 +21,16 @@ param(
 # Ensure Invoke-Build works in the most strict mode.
 Set-StrictMode -Version Latest
 
-# Import markdown tasks ConvertMarkdown and RemoveMarkdownHtml.
-# <https://github.com/nightroman/Invoke-Build/wiki/Partial-Incremental-Tasks>
-Markdown.tasks.ps1
+# Synopsis: Convert markdown files to HTML.
+# <http://johnmacfarlane.net/pandoc/>
+task Markdown {
+	exec { pandoc.exe --standalone --from=markdown_strict --output=README.htm README.md }
+	exec { pandoc.exe --standalone --from=markdown_strict --output=Release-Notes.htm Release-Notes.md }
+}
 
-# Synopsis: Remove generated HTML and temp files.
-task Clean RemoveMarkdownHtml, {
-	Remove-Item z, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
+# Synopsis: Remove generated and temp files.
+task Clean {
+	Remove-Item z, README.htm, Release-Notes.htm, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Synopsis: Warn about not empty git status if .git exists.
@@ -46,7 +49,7 @@ task Help {
 }
 
 # Synopsis: Make the package directory z\tools for NuGet.
-task Package ConvertMarkdown, Help, GitStatus, {
+task Package Markdown, Help, GitStatus, {
 	# temp package folder
 	Remove-Item [z] -Force -Recurse
 	$null = mkdir z\tools
