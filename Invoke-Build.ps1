@@ -194,9 +194,10 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
 	try {
 		$d = switch -regex ($Path) {
-			'^\d+\.' {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$Path", 'MSBuildToolsPath', '')}
-			'^Framework' {"$env:windir\Microsoft.NET\$Path"}
-			default {*FP $Path}
+			'^\*$' {@(Get-ChildItem HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions | Sort-Object {[Version]$_.PSChildName})[-1].GetValue('MSBuildToolsPath')}
+			'^\d+\.' {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$_", 'MSBuildToolsPath', '')}
+			'^Framework' {"$env:windir\Microsoft.NET\$_"}
+			default {*FP $_}
 		}
 		if (![System.IO.Directory]::Exists($d)) {throw "Cannot resolve '$Path'."}
 	}
@@ -222,7 +223,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.12.4'}
+function Get-BuildVersion {[Version]'2.13.0'}
 
 Set-Alias assert Assert-Build
 Set-Alias error Get-BuildError

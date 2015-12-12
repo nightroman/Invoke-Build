@@ -130,7 +130,7 @@
 	When this command is invoked from a script it
 
 	- sets $ErrorActionPreference to Stop
-	- sets $BuildFile to the calling script path
+	- sets $BuildFile to the invoked script path
 	- sets $BuildRoot to the script directory or <root>
 	- sets the current PowerShell location to $BuildRoot
 	- imports utility commands
@@ -451,7 +451,7 @@
 		Before = @'
 		Tells to add this task to job lists of the specified tasks. It is
 		inserted before the first script job, if any, or added to the end.
-		In the latter case they are added before After tasks, if any.
+		Note that Before tasks are added before After tasks.
 
 		See After for details.
 '@
@@ -735,6 +735,7 @@
 
 	MSBuild is one of frequently used tools. Examples:
 
+		use * MSBuild
 		use 4.0 MSBuild
 		use Framework\v2.0.50727 MSBuild
 '@
@@ -743,15 +744,16 @@
 		Path = @'
 		Specifies the tools directory.
 
-		If it starts with digits followed by a dot then it is assumed to be a
-		MSBuild version and the path is taken from the registry.
+		If it is * or it starts with digits followed by a dot then the MSBuild
+		version and the path is taken from the registry. The * is used for the
+		latest available version.
 
 		If it is like Framework* then it is assumed to be a path relative to
 		Microsoft.NET in the Windows directory.
 
 		Otherwise it is a full or relative literal path of any directory.
 
-		Examples: 4.0, Framework\v4.0.30319, Framework\v2.0.50727, .\Tools
+		Examples: *, 4.0, Framework\v4.0.30319, .\Tools
 '@
 		Name = @'
 		Tool names to set aliases for. These names also become aliases and they

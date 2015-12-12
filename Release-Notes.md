@@ -4,6 +4,12 @@
 
 # Invoke-Build Release Notes
 
+## v2.13.0
+
+`Use-BuildAlias`: `*` is for auto detection of the latest build tools. Example:
+
+    use * MSBuild
+
 ## v2.12.4
 
 Fixed #17: *After* tasks should be added after *Before* tasks.
