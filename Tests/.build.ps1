@@ -36,8 +36,8 @@ $MyValue1 = "value 1"
 # Invoke-Build exposes $BuildFile and $BuildRoot. Test them.
 # Note: assert is the predefined alias of Assert-Build.
 $MyPath = $MyInvocation.MyCommand.Path
-assert ($MyPath -eq $BuildFile)
-assert ((Split-Path $MyPath) -eq $BuildRoot)
+equals $MyPath $BuildFile
+equals (Split-Path $MyPath) $BuildRoot
 
 # In order to import more tasks invoke the script containing them. *.tasks.ps1
 # files play the same role as MSBuild *.targets files. NOTE: It is not typical
@@ -53,7 +53,7 @@ Write-Warning "Ignore this warning."
 # But this information is not always the same as without -WhatIf.
 task WhatIf {
 	Invoke-Build . Conditional.build.ps1 -WhatIf -Result Result -Configuration Debug
-	assert ($Result.Tasks.Count -eq 1)
+	equals $Result.Tasks.Count 1
 }
 
 # Synopsis: "Invoke-Build ?[?]" lists tasks.
@@ -61,19 +61,18 @@ task WhatIf {
 # 2) get task as an ordered dictionary
 task ListTask {
 	# show tasks info
-	$r = Invoke-Build ? Assert.test.ps1
-	$r
-	assert ($r.Count -eq 3)
-	assert ($r[0].Name -eq 'AssertDefault' -and $r[0].Jobs -eq '{}' -and $r[0].Synopsis -eq 'Fail with the default message.')
-	assert (
-		$r[2].Name -eq '.' -and
-		($r[2].Jobs -join ', ') -eq 'AssertDefault, AssertMessage, {}' -and
-		$r[2].Synopsis -eq 'Call tests and check errors.'
-	)
+	($r = Invoke-Build ? Assert.test.ps1)
+	equals $r.Count 3
+	equals $r[0].Name AssertDefault
+	equals $r[0].Jobs '{}'
+	equals $r[0].Synopsis 'Fail with the default message.'
+	equals $r[2].Name .
+	equals ($r[2].Jobs -join ', ') 'AssertDefault, AssertMessage, {}'
+	equals $r[2].Synopsis 'Call tests and check errors.'
 
 	# get task objects
 	$all = Invoke-Build ?? Assert.test.ps1
-	assert ($all.Count -eq 3)
+	equals $all.Count 3
 }
 
 # Synopsis: Null Jobs, rare but possible.
@@ -137,14 +136,14 @@ task Conditional {
 task Dynamic {
 	# first, just request the task list and test it
 	$all = Invoke-Build ?? Dynamic.build.ps1
-	assert ($all.Count -eq 5)
+	equals $all.Count 5
 	$last = $all.Item(4)
-	assert ($last.Name -eq '.')
-	assert ($last.Jobs.Count -eq 4)
+	equals $last.Name '.'
+	equals $last.Jobs.Count 4
 
 	# invoke with results and test: 5 tasks are done
 	Invoke-Build . Dynamic.build.ps1 -Result result
-	assert ($result.Tasks.Count -eq 5)
+	equals $result.Tasks.Count 5
 }
 
 # Synopsis: Test incremental and partial incremental tasks.
@@ -164,14 +163,14 @@ task TestExitCode {
 
 	# missing file
 	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 Foo MissingFile
-	assert ($LastExitCode -eq 1)
+	equals $LastExitCode 1
 
 	# missing task
 	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Dynamic.build.ps1
-	assert ($LastExitCode -eq 1)
+	equals $LastExitCode 1
 
 	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 AssertDefault Assert.test.ps1
-	assert ($LastExitCode -eq 1)
+	equals $LastExitCode 1
 }
 
 # Synopsis: Test the internally defined alias Invoke-Build.
@@ -203,6 +202,7 @@ task TestFunctions {
 	$exposed = @(
 		'Add-BuildTask'
 		'Assert-Build'
+		'Assert-BuildEquals'
 		'Enter-Build'
 		'Enter-BuildJob'
 		'Enter-BuildTask'
@@ -274,6 +274,7 @@ task ShowHelp {
 		'Invoke-Builds'
 		'Add-BuildTask'
 		'Assert-Build'
+		'Assert-BuildEquals'
 		'Get-BuildError'
 		'Get-BuildProperty'
 		'Get-BuildVersion'

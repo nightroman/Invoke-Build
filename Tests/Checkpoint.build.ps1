@@ -28,7 +28,7 @@ $shared2 = 'shared2'
 function Export-Build {
 	$shared1
 	$shared2
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 }
 
 # It restores data. The first argument is the output of Export-Build exported to
@@ -55,10 +55,10 @@ task task1 {
 
 task task2 task1, {
 	# check: shared data are restored
-	assert ($Param1 -eq $null)
-	assert ($Param2 -eq 'param2new')
-	assert ($shared1 -eq 'shared1new')
-	assert ($shared2 -eq 'shared2new')
+	equals $Param1 $null
+	equals $Param2 'param2new'
+	equals $shared1 'shared1new'
+	equals $shared2 'shared2new'
 
 	if (!$Test) {
 		# interactive break or continue
@@ -104,11 +104,15 @@ task TestSerialization {
 	}
 	&{
 		$task, $file, $parameters, $load, $data = Import-Clixml z.clixml
-		assert ($task -is [System.Collections.ArrayList] -and $task.Count -eq 1 -and $task[0] -eq 't1')
-		assert ($file -is [string] -and $file -eq 'f1')
-		assert ($null -eq $parameters)
-		assert ($load -is [System.Collections.ArrayList] -and $load.Count -eq 1 -and $load[0] -eq 't1')
-		assert ($null -eq $data)
+		assert ($task -is [System.Collections.ArrayList])
+		equals $task.Count 1
+		equals $task[0] t1
+		equals $file f1
+		equals $parameters
+		assert ($load -is [System.Collections.ArrayList])
+		equals $load.Count 1
+		equals $load[0] t1
+		equals $data
 	}
 	&{
 		$task = [string[]]('t1', 't2')
@@ -120,11 +124,15 @@ task TestSerialization {
 	}
 	&{
 		$task, $file, $parameters, $load, $data = Import-Clixml z.clixml
-		assert ($task -is [System.Collections.ArrayList] -and $task.Count -eq 2)
-		assert ($file -is [string] -and $file -eq 'f1')
-		assert ($parameters -is [hashtable] -and $parameters.Count -eq 1)
-		assert ($load -is [System.Collections.ArrayList] -and $load.Count -eq 2)
-		assert ($data -is [object[]] -and $data.Count -eq 3)
+		assert ($task -is [System.Collections.ArrayList])
+		equals $task.Count 2
+		equals $file f1
+		assert ($parameters -is [hashtable])
+		equals $parameters.Count 1
+		assert ($load -is [System.Collections.ArrayList])
+		equals $load.Count 2
+		assert ($data -is [object[]])
+		equals $data.Count 3
 	}
 	Remove-Item z.clixml
 }

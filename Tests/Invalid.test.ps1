@@ -39,7 +39,7 @@ task NoTasks {
 
 	# 2.10.4, was 0 errors
 	assert ($r -clike 'Build ABORTED *\z.build.ps1. 0 tasks, 1 errors, 0 warnings *')
-	assert ($result.Errors.Count -eq 1)
+	equals $result.Errors.Count 1
 
 	Remove-Item z.build.ps1
 }

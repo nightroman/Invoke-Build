@@ -22,14 +22,14 @@ Set-Location $HOME
 # variables become available for all tasks and other event functions.
 function Enter-Build {
 	"Enter build"
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 }
 
 # Exit-Build is called after the last task or on build failures.
 function Exit-Build {
 	"Exit build"
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 }
 
@@ -38,7 +38,7 @@ function Exit-Build {
 function Enter-BuildTask {
 	$TaskName = $Task.Name # set just here, check later
 	'Enter task {0}' -f $TaskName
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 	$$ = try {$Task = 1} catch {$_}
 	assert ($$ -like $err)
@@ -47,9 +47,9 @@ function Enter-BuildTask {
 # Exit-BuildTask is called after each task.
 # The scope is the same as for Enter-BuildTask.
 function Exit-BuildTask {
-	assert ($TaskName -eq $Task.Name) # the same scope
+	equals $TaskName $Task.Name # the same scope
 	'Exit task {0}' -f $TaskName
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 	$$ = try {$Task = 1} catch {$_}
 	assert ($$ -like $err)
@@ -58,9 +58,9 @@ function Exit-BuildTask {
 # Enter-BuildJob is called before each script job. Its argument is the job number.
 # The scope is the same as for Enter-BuildTask.
 function Enter-BuildJob($Number) {
-	assert ($TaskName -eq $Task.Name) # the same scope
+	equals $TaskName $Task.Name # the same scope
 	'Enter job {1} of {0}' -f $TaskName, $Number
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 	$$ = try {$Task = 1} catch {$_}
 	assert ($$ -like $err)
@@ -69,26 +69,26 @@ function Enter-BuildJob($Number) {
 # Exit-BuildJob is called after each script job. Its argument is the job number.
 # The scope is the same as for Enter-BuildTask.
 function Exit-BuildJob($Number) {
-	assert ($TaskName -eq $Task.Name) # the same scope
+	equals $TaskName $Task.Name # the same scope
 	'Exit job {1} of {0}' -f $TaskName, $Number
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 	$$ = try {$Task = 1} catch {$_}
 	assert ($$ -like $err)
 }
 
 task Task1 {
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	assert ($Task.Name -ceq 'Task1') #! name has the original case
+	equals $Task.Name 'Task1' #! name has the original case
 	$Task = 'can set'
 }
 
 #! reference has lower case
 task Task2 task1, {
-	assert ($BuildRoot -eq (Get-Location).ProviderPath)
+	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	assert ($Task.Name -ceq 'Task2') #! name has the original case
+	equals $Task.Name 'Task2' #! name has the original case
 	$Task = 'can set'
 }
 

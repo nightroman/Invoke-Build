@@ -30,7 +30,7 @@ task SimpleTree {
 
 	# no task is resolved to .
 	($log = Show-BuildTree -File Tree.test.ps1 | Out-String)
-	assert ($sample -eq (Get-NormalText $log))
+	equals $sample (Get-NormalText $log)
 }
 
 # Synopsis: Tree with upstream tasks.
@@ -52,7 +52,7 @@ task UpstreamTree {
 
 	# * is resolved to .
 	($log = Show-BuildTree * Tree.test.ps1 -Upstream | Out-String)
-	assert ($sample -eq (Get-NormalText $log))
+	equals $sample (Get-NormalText $log)
 }
 
 # Synopsis: Test cyclic reference.

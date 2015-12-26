@@ -84,7 +84,7 @@ task Version.14.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions
 task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, {
 	use * MSBuild
 	($version = exec { MSBuild /version /nologo })
-	assert $version.Equals($script:LatestVersion)
+	equals $version $script:LatestVersion
 }
 
 # This task simply uses the alias set at the scope level.

@@ -142,8 +142,8 @@ task How-To-Get-Invoke-Build-Directory {
 	$IBRoot3
 
 	# test 3 values are the same
-	assert ($IBRoot1 -ceq $IBRoot2)
-	assert ($IBRoot2 -ceq $IBRoot3)
+	equals $IBRoot1 $IBRoot2
+	equals $IBRoot2 $IBRoot3
 }
 
 ### Invoke-Build overhead

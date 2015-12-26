@@ -108,12 +108,11 @@ task Stars StarsMissingDirectory, {
 
 	# fast task info, test first and last to be sure that there is not a header or footer
 	$r = Invoke-Build **, ?
-	assert ($r[0].Name -eq 'PreTask1' -and $r[0].Jobs -eq '{}')
-	assert (
-		$r[-1].Name -eq '.' -and
-		($r[-1].Jobs -join ', ') -like 'ParentHasManyCandidates, *, Summary, {}' -and
-		$r[-1].Synopsis -eq 'Call tests and clean.'
-	)
+	equals $r[0].Name PreTask1
+	equals $r[0].Jobs '{}'
+	equals $r[-1].Name .
+	assert (($r[-1].Jobs -join ', ') -like 'ParentHasManyCandidates, *, Summary, {}')
+	equals $r[-1].Synopsis 'Call tests and clean.'
 
 	# full task info
 	$r = Invoke-Build **, ??
@@ -139,15 +138,18 @@ param(
 
 	$d = @{}
 	Invoke-Build
-	assert ($d.Platform -ceq 'Win32' -and $d.Configuration -ceq 'Release')
+	equals $d.Platform Win32
+	equals $d.Configuration Release
 
 	$d = @{}
 	Invoke-Build -Platform x64 -Configuration Debug
-	assert ($d.Platform -ceq 'x64' -and $d.Configuration -ceq 'Debug')
+	equals $d.Platform x64
+	equals $d.Configuration Debug
 
 	$d = @{}
 	Invoke-Build -Parameters @{Platform = 'x64'; Configuration = 'Debug'}
-	assert ($d.Platform -ceq 'x64' -and $d.Configuration -ceq 'Debug')
+	equals $d.Platform x64
+	equals $d.Configuration Debug
 
 	Remove-Item z.build.ps1
 }
@@ -167,11 +169,13 @@ param(
 
 	$d = @{}
 	Invoke-Build
-	assert ($d.Own1 -ceq 'default1' -and $d.File -ceq 'default2')
+	equals $d.Own1 default1
+	equals $d.File default2
 
 	$d = @{}
 	Invoke-Build -Parameter @{Own1 = 'custom1'; File = 'custom2'}
-	assert ($d.Own1 -ceq 'custom1' -and $d.File -ceq 'custom2')
+	equals $d.Own1 custom1
+	equals $d.File custom2
 
 	$$ = try { Invoke-Build -Own1 '' -Parameter @{File = ''} } catch {$_}
 	assert ($$ -like "*A parameter cannot be found that matches parameter name 'Own1'.")

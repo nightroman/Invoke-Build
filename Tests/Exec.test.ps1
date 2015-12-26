@@ -15,7 +15,7 @@ task ExecWorksCode0 {
 
 task ExecWorksCode42 {
 	$script:ExecWorksCode42 = exec { cmd /c 'echo Code42&& exit 42' } (40..50)
-	assert ($LastExitCode -eq 42)
+	equals $LastExitCode 42
 }
 
 task ExecFailsCode13 {
@@ -34,8 +34,8 @@ ExecWorksCode42,
 (job ExecFailsCode13 -Safe),
 (job ExecFailsBadCommand -Safe),
 {
-	assert ($script:ExecWorksCode0 -eq 'Code0')
-	assert ($script:ExecWorksCode42 -eq 'Code42')
+	equals $script:ExecWorksCode0 'Code0'
+	equals $script:ExecWorksCode42 'Code42'
 	Test-Error ExecFailsCode13 'Command { cmd /c exit 13 } exited with code 13.*At *\Exec.test.ps1:*{ cmd /c exit 13 }*'
 	Test-Error ExecFailsBadCommand "throw in ExecFailsBadCommand*At *\Exec.test.ps1:*'throw in ExecFailsBadCommand'*"
 }

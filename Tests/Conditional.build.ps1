@@ -36,7 +36,7 @@ $Conditional = 'To do.'
 
 # Test of the default parameter value (called from .build.ps1)
 task TestDefaultParameter {
-	assert ($Configuration -eq 'Release')
+	equals $Configuration Release
 }
 
 # These tasks are referenced by the Conditional
@@ -50,15 +50,15 @@ task Conditional -If ($Configuration -eq 'Release') BeforeConditional, { $script
 task . Conditional, {
 	switch($Configuration) {
 		'Debug' {
-			assert ($BeforeConditional -eq 'To do.')
-			assert ($AfterConditional -eq 'To do.')
-			assert ($Conditional -eq 'To do.')
+			equals $BeforeConditional 'To do.'
+			equals $AfterConditional 'To do.'
+			equals $Conditional 'To do.'
 			'Tested Debug.'
 		}
 		'Release' {
-			assert ($BeforeConditional -eq 'Done.')
-			assert ($AfterConditional -eq 'Done.')
-			assert ($Conditional -eq 'Done.')
+			equals $BeforeConditional 'Done.'
+			equals $AfterConditional 'Done.'
+			equals $Conditional 'Done.'
 			'Tested Release.'
 		}
 		default {

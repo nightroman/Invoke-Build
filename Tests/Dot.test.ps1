@@ -21,7 +21,7 @@ task Dot-test {
 # Also, dot-sourcing in a build, unusual but possible.
 task Dot-with-root {
 	($r = . Invoke-Build $PSHOME)
-	assert ($null -eq $r)
-	assert ($PWD.Path -eq $PSHOME)
-	assert ($BuildRoot -eq $PSHOME)
+	equals $r
+	equals $PWD.Path $PSHOME
+	equals $BuildRoot $PSHOME
 }

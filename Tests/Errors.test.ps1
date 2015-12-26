@@ -24,8 +24,8 @@ task 'Exit-Build error should have no task' {
 
 	Invoke-Build . z.build.ps1 -Safe -Result Result
 
-	assert ($Result.Errors.Count -eq 1)
-	assert ($null -eq $Result.Errors[0].Task)
+	equals $Result.Errors.Count 1
+	equals $Result.Errors[0].Task
 
 	Remove-Item z.build.ps1
 }
@@ -54,10 +54,10 @@ task 'Custom child errors added for parent tasks' {
 
 	Invoke-Build Test3 z.build.ps1 -Result Result
 
-	assert ($Result.Errors.Count -eq 3)
-	assert ($Result.Errors[0].Task.Name -eq 'Test1')
-	assert ($Result.Errors[1].Task.Name -eq 'Test2')
-	assert ($Result.Errors[2].Task.Name -eq 'Test3')
+	equals $Result.Errors.Count 3
+	equals $Result.Errors[0].Task.Name 'Test1'
+	equals $Result.Errors[1].Task.Name 'Test2'
+	equals $Result.Errors[2].Task.Name 'Test3'
 
 	Remove-Item z.build.ps1
 }
@@ -76,14 +76,14 @@ task Warnings {
 	assert ($r[-1] -clike 'Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *')
 
 	# result
-	assert ($Result.Warnings.Count -eq 2)
+	equals $Result.Warnings.Count 2
 	$1, $2 = $Result.Warnings
-	assert ($1.Message -eq 'demo-file-warning')
+	equals $1.Message 'demo-file-warning'
 	assert ($1.File -like '*\z.build.ps1')
-	assert ($null -eq $1.Task)
-	assert ($2.Message -eq 'demo-task-warning')
+	equals $1.Task
+	equals $2.Message 'demo-task-warning'
 	assert ($2.File -like '*\z.build.ps1')
-	assert ($2.Task.Name -eq 't1')
+	equals $2.Task.Name 't1'
 
 	Remove-Item z.build.ps1
 }

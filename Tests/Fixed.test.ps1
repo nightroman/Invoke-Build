@@ -38,9 +38,9 @@ task SafeTests {
 
 	Invoke-Build ** z -Safe -Result r
 
-	assert ($null -eq $r.Error)
-	assert ($r.Errors.Count -eq 2)
-	assert ($r.Tasks.Count -eq 4)
+	equals $r.Error
+	equals $r.Errors.Count 2
+	equals $r.Tasks.Count 4
 	assert ('oops-12' -eq $r.Tasks[1].Error)
 	assert ('oops-22' -eq $r.Tasks[3].Error)
 
@@ -64,15 +64,15 @@ task NestedErrorInResult {
 	Invoke-Build . z.build.ps1 -Safe -Result r
 
 	# build failed
-	assert ($r.Error.FullyQualifiedErrorId -eq 42)
+	equals $r.Error.FullyQualifiedErrorId '42'
 
 	#! used to be two same errors
-	assert ($r.Errors.Count -eq 1)
+	equals $r.Errors.Count 1
 
 	# but we still store an error in each task
-	assert ($r.Tasks.Count -eq 2)
-	assert ($r.Tasks[0].Error)
-	assert ($r.Tasks[1].Error)
+	equals $r.Tasks.Count 2
+	assert $r.Tasks[0].Error
+	assert $r.Tasks[1].Error
 
 	Remove-Item z.build.ps1
 }
@@ -110,10 +110,10 @@ task AfterTaskMustBeAfterBeforeTask {
 
 	Invoke-Build . z.build.ps1 -Result r
 
-	assert (3 -eq $r.Tasks.Count)
-	assert $r.Tasks[0].Name.Equals('Before')
-	assert $r.Tasks[1].Name.Equals('After')
-	assert $r.Tasks[2].Name.Equals('Task1')
+	equals $r.Tasks.Count 3
+	equals $r.Tasks[0].Name Before
+	equals $r.Tasks[1].Name After
+	equals $r.Tasks[2].Name Task1
 
 	Remove-Item z.build.ps1
 }

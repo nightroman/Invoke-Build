@@ -593,6 +593,10 @@
 	description = @'
 	Scripts use its alias 'assert'. This command checks for a condition and if
 	it is not true throws an error with the default or a specified message.
+
+	NOTE: Consider to use 'equals X Y' instead of 'assert (X -eq Y)'. It is
+	easier to type, it avoids subtle PowerShell conversions, and its error
+	message is more informative.
 '@
 
 	parameters = @{
@@ -603,6 +607,34 @@
 		An optional message describing the assertion condition.
 '@
 	}
+
+	links = @(
+		@{ text = 'Assert-BuildEquals' }
+	)
+}
+
+### Assert-BuildEquals
+@{
+	command = 'Assert-BuildEquals'
+	synopsis = 'Verifies that two specified objects are equal.'
+
+	description = @'
+	Scripts use its alias 'equals'. This command verifies that two specified
+	objects are equal using [Object]::Equals(). If objects are not equal the
+	command fails with a message showing object values and types.
+
+	NOTE: Comparison of strings is case sensitive. For case insensitive
+	comparison use 'assert (X -eq Y)'.
+'@
+
+	parameters = @{
+		A = 'The first object.'
+		B = 'The second object.'
+	}
+
+	links = @(
+		@{ text = 'Assert-Build' }
+	)
 }
 
 ### Get-BuildProperty

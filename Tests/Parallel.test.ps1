@@ -14,7 +14,7 @@ task Alias {
 	#! also covers 1.2.0, see notes
 	$alias1 = Get-Alias Invoke-Build
 	$alias2 = Get-Alias Invoke-Builds
-	assert ($alias2.Definition -eq (Join-Path (Split-Path $alias1.Definition) Invoke-Builds.ps1))
+	equals $alias2.Definition (Join-Path (Split-Path $alias1.Definition) Invoke-Builds.ps1)
 }
 
 # 1. Invoke-Builds with 0 builds is allowed (but this is not normal).
@@ -22,7 +22,7 @@ task Alias {
 task NoBuilds {
 	$Result = @{}
 	Invoke-Builds -Result $Result
-	assert ($Result.Value.Tasks.Count -eq 0)
+	equals $Result.Value.Tasks.Count 0
 }
 
 # 1. Invoke-Builds with 1 build is allowed (but this is not normal).
@@ -36,7 +36,7 @@ task OneBuild {
 		$Result = [ref]$null
 	}
 	Invoke-Builds @{File='Dynamic.build.ps1'} -Result $Result
-	assert ($Result.Value.Tasks.Count -eq 5)
+	equals $Result.Value.Tasks.Count 5
 }
 
 <#
@@ -83,11 +83,11 @@ task Many {
 	}
 
 	# Joined results
-	assert (8 -eq $Result.Tasks.Count)
-	assert (1 -eq $Result.Errors.Count)
+	equals $Result.Tasks.Count 8
+	equals $Result.Errors.Count 1
 
 	# Input hashes was not changed.
-	assert ($build0.File -eq 'Dynamic.build.ps1')
+	equals $build0.File 'Dynamic.build.ps1'
 
 	# But their copies have amended and new data, for example, File were
 	# resolved to full paths and Result entries were added.
@@ -99,16 +99,16 @@ task Many {
 
 	# Check each build error; note that three builds succeeded because the
 	# parallel build engine lets all builds to work, even if some fail.
-	assert ($null -eq $build[0].Result.Value.Error) # No error
-	assert ($null -ne $build[1].Result.Value.Error) # ERROR
-	assert ($null -eq $build[2].Result.Value.Error) # No error
-	assert ($null -eq $build[3].Result.Value.Error) # No error
+	equals $build[0].Result.Value.Error # No error
+	assert $build[1].Result.Value.Error # ERROR
+	equals $build[2].Result.Value.Error # No error
+	equals $build[3].Result.Value.Error # No error
 
 	# Check for task count in the results.
-	assert (5 -eq $build[0].Result.Value.Tasks.Count)
-	assert (1 -eq $build[1].Result.Value.Tasks.Count)
-	assert (1 -eq $build[2].Result.Value.Tasks.Count)
-	assert (1 -eq $build[3].Result.Value.Tasks.Count)
+	equals $build[0].Result.Value.Tasks.Count 5
+	equals $build[1].Result.Value.Tasks.Count 1
+	equals $build[2].Result.Value.Tasks.Count 1
+	equals $build[3].Result.Value.Tasks.Count 1
 }
 
 <#

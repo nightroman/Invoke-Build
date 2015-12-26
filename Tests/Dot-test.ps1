@@ -34,37 +34,37 @@ assert ($ErrorActionPreference -eq 'Stop')
 assert ($BuildFile -eq $MyInvocation.MyCommand.Definition) "$BuildFile -eq $($MyInvocation.MyCommand.Definition)"
 
 # $BuildRoot is set
-assert ($BuildRoot -eq (Split-Path $BuildFile))
+equals $BuildRoot (Split-Path $BuildFile)
 
 # location is set
-assert ($BuildRoot -eq (Get-Location).Path)
+equals $BuildRoot (Get-Location).Path
 
 ### Test special aliases and targets
 
 # aliases for using
 
 ($r = Get-Alias assert)
-assert ($r.Definition -ceq 'Assert-Build')
+equals $r.Definition 'Assert-Build'
 
 ($r = Get-Alias exec)
-assert ($r.Definition -ceq 'Invoke-BuildExec')
+equals $r.Definition 'Invoke-BuildExec'
 
 ($r = Get-Alias property)
-assert ($r.Definition -ceq 'Get-BuildProperty')
+equals $r.Definition 'Get-BuildProperty'
 
 ($r = Get-Alias use)
-assert ($r.Definition -ceq 'Use-BuildAlias')
+equals $r.Definition 'Use-BuildAlias'
 
 # aliases for Get-Help
 
 ($r = Get-Alias error)
-assert ($r.Definition -ceq 'Get-BuildError')
+equals $r.Definition 'Get-BuildError'
 
 ($r = Get-Alias task)
-assert ($r.Definition -ceq 'Add-BuildTask')
+equals $r.Definition 'Add-BuildTask'
 
 ($r = Get-Alias job)
-assert ($r.Definition -ceq 'New-BuildJob')
+equals $r.Definition 'New-BuildJob'
 
 ### Test special functions
 
@@ -74,7 +74,7 @@ Push-Location function:
 assert (!(Test-Path Write-Warning))
 
 # expected public functions
-$OK = 'Add-BuildTask,Assert-Build,Get-BuildError,Get-BuildFile,Get-BuildProperty,Get-BuildVersion,Invoke-BuildExec,New-BuildJob,Use-BuildAlias,Write-Build'
+$OK = 'Add-BuildTask,Assert-Build,Assert-BuildEquals,Get-BuildError,Get-BuildFile,Get-BuildProperty,Get-BuildVersion,Invoke-BuildExec,New-BuildJob,Use-BuildAlias,Write-Build'
 $KO = (Get-ChildItem *-Build* -Name | Sort-Object) -join ','
 assert ($OK -ceq $KO) "Unexpected functions:
 OK: [$OK]
@@ -97,29 +97,29 @@ Pop-Location
 
 # exec 0
 ($r = exec { cmd /c echo Code0 })
-assert ($LASTEXITCODE -eq 0)
-assert ($r -eq 'Code0')
+equals $LASTEXITCODE 0
+equals $r 'Code0'
 
 # exec 42 works
 ($r = exec { cmd /c 'echo Code42&& exit 42' } (40..50))
-assert ($LASTEXITCODE -eq 42)
-assert ($r -eq 'Code42')
+equals $LASTEXITCODE 42
+equals $r 'Code42'
 
 # exec 13 fails
 ($e = try {exec { cmd /c exit 13 }} catch {$_ | Out-String})
-assert ($LASTEXITCODE -eq 13)
+equals $LASTEXITCODE 13
 assert ($e -like 'exec : Command { cmd /c exit 13 } exited with code 13.*try {exec *')
 
 ### property
 
 ($r = property BuildFile)
-assert ($r -eq $BuildFile)
+equals $r $BuildFile
 
 ($r = property ComputerName)
-assert ($r -eq $env:COMPUTERNAME)
+equals $r $env:COMPUTERNAME
 
 ($r = property MissingVariable DefaultValue)
-assert ($r -eq 'DefaultValue')
+equals $r 'DefaultValue'
 
 ($e = try {property MissingVariable} catch {$_ | Out-String})
 assert ($e -like 'property : Missing variable *try {property *')
@@ -138,7 +138,7 @@ assert ($r.Definition -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
 
 use $BuildRoot Dot-test.ps1
 ($r = Get-Alias Dot-test.ps1)
-assert ($r.Definition -eq $BuildFile)
+equals $r.Definition $BuildFile
 
 ($e = try {use Missing MSBuild} catch {$_ | Out-String})
 assert ($e -like 'use : Cannot resolve *try {use *')

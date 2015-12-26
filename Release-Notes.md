@@ -4,6 +4,12 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.0
+
+Added new command `equals` (alias of `Assert-BuildEquals`), mostly for tests.
+Consider to use `equals X Y` instead of `assert (X -eq Y)`. It is simpler, it
+avoids subtle PowerShell conversions, and its error message is more useful.
+
 ## v2.13.0
 
 `Use-BuildAlias`: `*` is for auto detection of the latest build tools. Example:

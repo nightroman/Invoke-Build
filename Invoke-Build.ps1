@@ -164,6 +164,17 @@ function Assert-Build([Parameter()]$Condition, [string]$Message) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
+function Assert-BuildEquals([Parameter()]$A, $B) {
+	if (![Object]::Equals($A, $B)) {
+		*TE @"
+Objects are not equal:
+A:$(if ($null -ne $A) {" $A [$($A.GetType())]"})
+B:$(if ($null -ne $B) {" $B [$($B.GetType())]"})
+"@ 7
+	}
+}
+
+#.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 	if (!($_ = ${*}.All[$Task])) {
 		*TE "Missing task '$Task'." 13
@@ -223,9 +234,10 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.13.0'}
+function Get-BuildVersion {[Version]'2.14.0'}
 
 Set-Alias assert Assert-Build
+Set-Alias equals Assert-BuildEquals
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
 Set-Alias job New-BuildJob

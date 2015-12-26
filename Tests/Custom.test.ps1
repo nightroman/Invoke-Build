@@ -10,8 +10,8 @@
 # Synopsis: Test the custom task "test".
 task Test {
 	Invoke-Build * ..\Tasks\Test\Test.build.ps1 -Result r
-	assert ($r.Tasks.Count -eq 8)
-	assert ($r.Errors.Count -eq 4)
+	equals $r.Tasks.Count 8
+	equals $r.Errors.Count 4
 }
 
 # Synopsis: Test "check", pass all, then run again.
@@ -23,11 +23,11 @@ task Check1 {
 	function Read-Host {}
 
 	Invoke-Build * ..\Tasks\Check\Check.build.ps1 -Result r
-	assert ($r.Tasks.Count -eq 6)
+	equals $r.Tasks.Count 6
 	assert (Test-Path $file)
 
 	Invoke-Build * ..\Tasks\Check\Check.build.ps1 -Result r
-	assert ($r.Tasks.Count -eq 1)
+	equals $r.Tasks.Count 1
 
 	Remove-Item $file
 }
@@ -44,15 +44,15 @@ task Check2 {
 
 	Invoke-Build * ..\Tasks\Check\Check.build.ps1 -Result r -Safe
 	assert ($r.Error)
-	assert ($r.Tasks.Count -eq 6)
-	assert ($r.Errors.Count -eq 1)
+	equals $r.Tasks.Count 6
+	equals $r.Errors.Count 1
 	assert (Test-Path $file)
 
 	# fake to pass all
 	function Read-Host {}
 
 	Invoke-Build * ..\Tasks\Check\Check.build.ps1 -Result r
-	assert ($r.Tasks.Count -eq 2)
+	equals $r.Tasks.Count 2
 
 	Remove-Item $file
 }

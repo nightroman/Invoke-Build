@@ -31,12 +31,12 @@ task Survives1 @(
 		"After Error1"
 
 		$error1 = error Error1
-		assert ($MyCountError1 -eq 1)
-		assert ("$error1" -eq "Error1")
+		equals $MyCountError1 1
+		equals "$error1" Error1
 
 		$error2 = error Error2
-		assert ($MyCountError2 -eq 0)
-		assert ($null -eq $error2)
+		equals $MyCountError2 0
+		equals $error2
 	}
 	# Tells to call the task Error2 and ignore its errors
 	(job Error2 -Safe)
@@ -45,8 +45,8 @@ task Survives1 @(
 		"After Error2"
 
 		$error2 = error Error2
-		assert ($MyCountError2 -eq 1)
-		assert ("$error2" -eq "Error2")
+		equals $MyCountError2 1
+		equals "$error2" Error2
 	}
 )
 
@@ -59,8 +59,8 @@ task Survives2 @(
 		"After Error1"
 
 		$error1 = error Error1
-		assert ($MyCountError1 -eq 1)
-		assert ("$error1" -eq "Error1")
+		equals $MyCountError1 1
+		equals "$error1" Error1
 	}
 	# tells to call the task Error2 and ignore its failure
 	(job Error2 -Safe)
@@ -69,8 +69,8 @@ task Survives2 @(
 		"After Error2"
 
 		$error2 = error Error2
-		assert ($MyCountError2 -eq 1)
-		assert ("$error2" -eq "Error2")
+		equals $MyCountError2 1
+		equals "$error2" Error2
 	}
 )
 
@@ -141,13 +141,13 @@ task DependsOnFailedDirectlyAndIndirectly (job FailedUsedByMany -Safe), (job Dep
 }
 task TestDependsOnFailedDirectlyAndIndirectly (job DependsOnFailedDirectlyAndIndirectly -Safe), {
 	# error of initial failure
-	assert ("$(error FailedUsedByMany)" -eq 'Oops in FailedUsedByMany')
+	equals "$(error FailedUsedByMany)" 'Oops in FailedUsedByMany'
 
 	# no error because it is not called, even if it is called safe itself it
 	# also calls the failed task unsafe
-	assert !(error DependsOnFailed)
+	equals (error DependsOnFailed)
 
 	# error, even if it calls the failed task safe it also calls another task
 	# which leads to unsafe calls of the failed task
-	assert ("$(error DependsOnFailedDirectlyAndIndirectly)" -eq 'Oops in FailedUsedByMany')
+	equals "$(error DependsOnFailedDirectlyAndIndirectly)" 'Oops in FailedUsedByMany'
 }
