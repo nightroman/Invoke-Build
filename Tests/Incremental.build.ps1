@@ -3,10 +3,6 @@
 .Synopsis
 	Tests of full incremental and partial incremental tasks.
 
-.Description
-	These examples are just tests. For a real example of partial incremental
-	build with dynamic input and output see .build.ps1, task ConvertMarkdown.
-
 .Example
 	Invoke-Build . Incremental.build.ps1
 #>

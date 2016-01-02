@@ -1,9 +1,9 @@
 
 ## ![](https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png) Build Automation in PowerShell
 
-Invoke-Build is a build and test automation tool which invokes tasks
-defined in PowerShell scripts. It is similar to psake but arguably
-easier to use and more powerful.
+Invoke-Build is a build and test automation tool which invokes tasks defined in
+PowerShell v2.0+ scripts. It is similar to psake but arguably easier to use and
+more powerful.
 
 In addition to basic task processing the engine supports
 
@@ -37,11 +37,10 @@ Extra tools are available at the project repository:
 Invoke-Build is distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
 Download it to the current location as the directory *"Invoke-Build"* by this PowerShell command:
 
-    iex (New-Object Net.WebClient).DownloadString('https://github.com/nightroman/Invoke-Build/raw/master/Download.ps1')
+    Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} Invoke-Build"
 
 Alternatively, get it by NuGet tools or [download](http://nuget.org/api/v2/package/Invoke-Build).
-In the latter case rename the package to *".zip"* and unzip. Use the package
-subdirectory *"tools"*.
+In the latter case save it as *".zip"* and unzip. Use the package subdirectory *"tools"*.
 
 This is it, scripts are ready to use. Consider to include the directory with
 scripts to the system path so that script paths may be omitted in commands.
