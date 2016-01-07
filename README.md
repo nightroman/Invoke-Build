@@ -35,15 +35,21 @@ Extra tools are available at the project repository:
 ## Installation
 
 Invoke-Build is distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
-Download it to the current location as the directory *"Invoke-Build"* by this PowerShell command:
+
+If you use [scoop](https://github.com/lukesampson/scoop) then invoke
+
+    scoop install invoke-build
+
+and you are done, scripts are downloaded and their directory is added to the
+path. You may need to start a new PowerShell session with the updated path.
+
+Otherwise download the directory *"Invoke-Build"* to the current location by
+this PowerShell command:
 
     Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} Invoke-Build"
 
-Alternatively, get it by NuGet tools or [download](http://nuget.org/api/v2/package/Invoke-Build).
-In the latter case save it as *".zip"* and unzip. Use the package subdirectory *"tools"*.
-
-This is it, scripts are ready to use. Consider to include the directory with
-scripts to the system path so that script paths may be omitted in commands.
+Consider to include the directory with scripts to the path so that script paths
+may be omitted in commands.
 
 With *cmd.exe* use the helper *ib.cmd*. For similar experience in interactive
 PowerShell use an alias `ib` defined in a PowerShell profile
