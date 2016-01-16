@@ -7,14 +7,12 @@
 	Points of interest:
 
 	* If a build script changes the location it does not have to restore it.
-	* Tasks v2.0.50727 and v4.0.30319 are conditional (see the If parameter).
+	* Conditional tasks, see the parameters -If (...).
 	* Use of several frameworks simultaneously.
 
 .Example
 	Invoke-Build * Use.test.ps1
 #>
-
-. .\Shared.ps1
 
 # Use the current framework at the script level (used by CurrentFramework).
 use ([System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) MSBuild
@@ -101,41 +99,30 @@ task ResolvedPath {
 
 # Error: missing version.
 task MissingVersion {
-	use 3.14 MSBuild
+	($r = try {<##> use 3.14 MSBuild} catch {$_})
+	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''3.14''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
 }
 
 # Error: invalid framework.
 task InvalidFramework {
-	use 'Framework\<>' MSBuild
+	($r = try {<##> use 'Framework\<>' MSBuild} catch {$_})
+	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''Framework\\<>''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
 }
 
 # Error: missing framework.
 task MissingFramework {
-	use Framework\MissingFramework MSBuild
+	($r = try {<##> use Framework\MissingFramework MSBuild} catch {$_})
+	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''Framework\\MissingFramework''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
 }
 
 # Error: invalid directory.
 task InvalidDirectory {
-	use '\<>' MyScript
+	($r = try {<##> use '\<>' MyScript} catch {$_})
+	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''\\<>''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
 }
 
 # Error: missing directory.
 task MissingDirectory {
-	use MissingDirectory MyScript
-}
-
-# The default task calls the others and checks that InvalidFramework and
-# DoNotDotSource have failed. Failing tasks are referenced as safe.
-task . `
-(job MissingVersion -Safe),
-(job MissingFramework -Safe),
-(job InvalidFramework -Safe),
-(job MissingDirectory -Safe),
-(job InvalidDirectory -Safe),
-{
-	Test-Error MissingVersion   "Cannot resolve '3.14'.*"
-	Test-Error InvalidFramework "Cannot resolve 'Framework\<>'.*"
-	Test-Error MissingFramework "Cannot resolve 'Framework\MissingFramework'.*"
-	Test-Error InvalidDirectory "Cannot resolve '\<>'.*"
-	Test-Error MissingDirectory "Cannot resolve 'MissingDirectory'.*"
+	($r = try {<##> use MissingDirectory MyScript} catch {$_})
+	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''MissingDirectory''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
 }
