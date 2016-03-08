@@ -1,7 +1,7 @@
 
 <#
 Invoke-Build - Build Automation in PowerShell
-Copyright (c) 2011-2015 Roman Kuzmin
+Copyright (c) 2011-2016 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -60,32 +60,29 @@ ${private:*pn} = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', '
 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
 'PipelineVariable', 'InformationAction', 'InformationVariable'
 
-try {
-	if ($BuildTask -eq '**') {
-		if (![System.IO.Directory]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing directory '$BuildFile'."}
-		$BuildFile = @(Get-ChildItem -LiteralPath $BuildFile -Recurse *.test.ps1)
-		return
-	}
+trap {*TE $_ 13}
 
-	if (${*Checkpoint}) {${*Checkpoint} = *FP ${*Checkpoint}}
-	if (${*Resume}) {
-		if (!${*Checkpoint}) {throw 'Checkpoint must be defined for Resume.'}
-		${*cp} = Import-Clixml ${*Checkpoint}
-		$BuildTask = ${*cp}.Task
-		$BuildFile = ${*cp}.File
-		${*Parameters} = ${*cp}.Prm1
-		return
-	}
-
-	if ($BuildFile) {
-		if (![System.IO.File]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing script '$BuildFile'."}
-	}
-	elseif (!($BuildFile = Get-BuildFile ${*cd})) {
-		throw 'Missing default script.'
-	}
+if ($BuildTask -eq '**') {
+	if (![System.IO.Directory]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing directory '$BuildFile'."}
+	$BuildFile = @(Get-ChildItem -LiteralPath $BuildFile -Recurse *.test.ps1)
+	return
 }
-catch {
-	*TE $_ 13
+
+if (${*Checkpoint}) {${*Checkpoint} = *FP ${*Checkpoint}}
+if (${*Resume}) {
+	if (!${*Checkpoint}) {throw 'Checkpoint must be defined for Resume.'}
+	${*cp} = Import-Clixml ${*Checkpoint}
+	$BuildTask = ${*cp}.Task
+	$BuildFile = ${*cp}.File
+	${*Parameters} = ${*cp}.Prm1
+	return
+}
+
+if ($BuildFile) {
+	if (![System.IO.File]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing script '$BuildFile'."}
+}
+elseif (!($BuildFile = Get-BuildFile ${*cd})) {
+	throw 'Missing default script.'
 }
 
 if (${*Parameters}) {return}
@@ -137,17 +134,13 @@ function Add-BuildTask(
 		InvocationInfo = $Source
 	}
 	if (!$Jobs) {return}
-	try {
-		foreach($_ in $Jobs) {
-			$r, $d = *RJ $_
-			$null = $1.Add($r)
-			if (1 -eq $d) {
-				$null = $2.Add($r)
-			}
+	trap {*TE "Task '$Name': $_" 5}
+	foreach($_ in $Jobs) {
+		$r, $d = *RJ $_
+		$null = $1.Add($r)
+		if (1 -eq $d) {
+			$null = $2.Add($r)
 		}
-	}
-	catch {
-		*TE "Task '$Name': $_" 5
 	}
 }
 
@@ -203,18 +196,14 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
-	try {
-		$d = switch -regex ($Path) {
-			'^\*$' {@(Get-ChildItem HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions | Sort-Object {[Version]$_.PSChildName})[-1].GetValue('MSBuildToolsPath')}
-			'^\d+\.' {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$_", 'MSBuildToolsPath', '')}
-			'^Framework' {"$env:windir\Microsoft.NET\$_"}
-			default {*FP $_}
-		}
-		if (![System.IO.Directory]::Exists($d)) {throw "Cannot resolve '$Path'."}
+	trap {*TE $_ 5}
+	$d = switch -regex ($Path) {
+		'^\*$' {@(Get-ChildItem HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions | Sort-Object {[Version]$_.PSChildName})[-1].GetValue('MSBuildToolsPath')}
+		'^\d+\.' {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$_", 'MSBuildToolsPath', '')}
+		'^Framework' {"$env:windir\Microsoft.NET\$_"}
+		default {*FP $_}
 	}
-	catch {
-		*TE $_ 5
-	}
+	if (![System.IO.Directory]::Exists($d)) {throw "Cannot resolve '$Path'."}
 	foreach($_ in $Name) {
 		Set-Alias $_ (Join-Path $d $_) -Scope 1
 	}
@@ -234,7 +223,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.14.0'}
+function Get-BuildVersion {[Version]'2.14.1'}
 
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals

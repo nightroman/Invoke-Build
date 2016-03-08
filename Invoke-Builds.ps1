@@ -1,7 +1,7 @@
 
 <#
 Invoke-Build - Build Automation in PowerShell
-Copyright (c) 2011-2015 Roman Kuzmin
+Copyright (c) 2011-2016 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -171,7 +171,9 @@ try {
 				while($null -ne ($_ = $read.ReadLine())) {$_}
 				$read.Close()
 			}
-			catch {}
+			catch {
+				Write-Warning $_
+			}
 			[System.IO.File]::Delete($log)
 		}
 		else {

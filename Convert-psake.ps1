@@ -5,7 +5,7 @@
 .Synopsis
 	Converts psake build scripts to Invoke-Build.
 	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2015 Roman Kuzmin
+	Copyright (c) 2011-2016 Roman Kuzmin
 
 .Description
 	The script converts the specified psake script to Invoke-Build script code.
@@ -176,14 +176,14 @@ if (${*Invoke}) {
 
 ### Redefine tools
 
-Set-Alias properties Write-Properties
+Set-Alias properties Write-Property
 Set-Alias framework Write-Framework
 Set-Alias include Write-Include
 Set-Alias TaskSetup Write-TaskSetup
 Set-Alias TaskTearDown Write-TaskTearDown
 Set-Alias task Write-Task
 
-function Write-Properties([scriptblock]$properties) {
+function Write-Property([scriptblock]$properties) {
 	'# TODO: Move some properties to script param() in order to use as parameters.'
 	$properties
 	''
@@ -327,7 +327,7 @@ foreach($s in $ast.EndBlock.Statements) {
 	if ($s -is [System.Management.Automation.Language.PipelineAst]) {
 		if ($text -match '^(properties|framework|include|TaskSetup|TaskTearDown|task)\b') {
 			try {
-				Invoke-Expression $text
+				& ([scriptblock]::Create($text))
 			}
 			catch {
 				++$warnings

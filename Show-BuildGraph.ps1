@@ -3,7 +3,7 @@
 .Synopsis
 	Shows Invoke-Build task graph using Graphviz.
 	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2015 Roman Kuzmin
+	Copyright (c) 2011-2016 Roman Kuzmin
 
 .Description
 	Requires:
@@ -55,8 +55,10 @@
 #>
 
 param(
-	[Parameter(Position=0)][string]$File,
-	[Parameter(Position=1)][string]$Output = "$env:TEMP\Graphviz.pdf",
+	[Parameter(Position=0)]
+	[string]$File,
+	[Parameter(Position=1)]
+	[string]$Output = "$env:TEMP\Graphviz.pdf",
 	[string]$Code = 'graph [rankdir=LR]',
 	[hashtable]$Parameters,
 	[switch]$NoShow,
@@ -77,10 +79,11 @@ if (!$ib) {
 	if (!$ib) {throw 'Cannot find Invoke-Build.ps1'}
 }
 
-# output type
+# output
 $type = [System.IO.Path]::GetExtension($Output)
 if (!$type) {throw "Output file name should have an extension."}
 $type = $type.Substring(1).ToLower()
+$Output = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Output)
 
 # get tasks
 $all = & $ib ?? -File:$File -Parameters:$Parameters

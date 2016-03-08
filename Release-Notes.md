@@ -4,6 +4,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.1
+
+Tweaks in error processing and satellite tools.
+
 ## v2.14.0
 
 Added new command `equals` (alias of `Assert-BuildEquals`), mostly for tests.

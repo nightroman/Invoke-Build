@@ -3,7 +3,7 @@
 .Synopsis
 	TabExpansion2 profile for Invoke-Build completers.
 	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2015 Roman Kuzmin
+	Copyright (c) 2011-2016 Roman Kuzmin
 
 .Description
 	Requirements:
