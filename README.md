@@ -32,9 +32,24 @@ Extra tools are available at the project repository:
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
 * *TabExpansionProfile.Invoke-Build.ps1* - code completers
 
-## Installation
+## Install as module
 
-Invoke-Build is distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
+Invoke-Build is distributed as the module [InvokeBuild](https://www.powershellgallery.com/packages/InvokeBuild).
+In PowerShell 5.0 or with PowerShellGet you can install it by this command
+
+    Install-Module InvokeBuild
+
+The module provides commands `Invoke-Build` and `Invoke-Builds`.
+Import the module in order to make them available:
+
+    Import-Module InvokeBuild
+
+You can also call the module scripts directly. Consider to include the module
+directory to the path. In this scenario you do not have to import the module.
+
+## Install as scripts
+
+Invoke-Build is also distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
 
 If you use [scoop](https://github.com/lukesampson/scoop) then invoke
 
@@ -60,12 +75,13 @@ PowerShell use an alias `ib` defined in a PowerShell profile
 
 ## Getting help
 
-Make sure *Invoke-Build-Help.xml* from the package is in the same directory as
-*Invoke-Build.ps1* and invoke
+If you are using the module then import it at first. If you are using scripts
+then make sure *Invoke-Build-Help.xml* from the package is in the same
+directory as *Invoke-Build.ps1*. Then invoke
 
     help Invoke-Build -full
 
-In order to get help for commands, at first dot-source Invoke-Build:
+In order to get help for commands, dot-source `Invoke-Build`:
 
     . Invoke-Build
 
@@ -94,4 +110,4 @@ Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 ## Credits
 
 The project was inspired by [*psake*](https://github.com/psake/psake).
-Some concepts come from [*MSBuild*](https://github.com/Microsoft/msbuild).
+Some concepts came from [*MSBuild*](https://github.com/Microsoft/msbuild).

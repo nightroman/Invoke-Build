@@ -48,14 +48,8 @@ task Help {
 	Convert-Helps Invoke-Build-Help.ps1 Invoke-Build-Help.xml
 }
 
-# Synopsis: Make the package directory z\tools for NuGet.
-task Package Markdown, Help, GitStatus, {
-	# temp package folder
-	Remove-Item [z] -Force -Recurse
-	$null = mkdir z\tools
-
-	# copy files
-	Copy-Item -Destination z\tools `
+function Copy-File($Destination) {
+	Copy-Item -Destination $Destination `
 	ib.cmd,
 	Invoke-Build.ps1,
 	Invoke-Builds.ps1,
@@ -64,6 +58,28 @@ task Package Markdown, Help, GitStatus, {
 	LICENSE.txt,
 	Release-Notes.htm
 }
+
+# Synopsis: Make the package directory z\tools for NuGet.
+task Package Markdown, Help, GitStatus, {
+	# temp package folder
+	Remove-Item [z] -Force -Recurse
+	$null = mkdir z\tools
+
+	# copy files
+	Copy-File z\tools
+}
+
+# Synopsis: Makes the module directory InvokeBuild.
+task Module Markdown, Help, {
+	# module folder
+	$dir = "$env:ProgramFiles\WindowsPowerShell\Modules\InvokeBuild"
+	if (Test-Path $dir) {Remove-Item $dir -Force -Recurse}
+	exec {robocopy.exe InvokeBuild $dir} 1
+
+	# copy files
+	Copy-File $dir
+},
+Clean
 
 # Synopsis: Set $script:Version.
 task Version {
