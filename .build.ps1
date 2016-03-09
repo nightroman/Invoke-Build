@@ -71,10 +71,14 @@ task Package Markdown, Help, GitStatus, {
 
 # Synopsis: Makes the module directory InvokeBuild.
 task Module Markdown, Help, {
+	# check version
+	($versionModule = (Get-Module -ListAvailable -Name .\InvokeBuild\InvokeBuild.psd1).Version.ToString())
+	($versionScript = (Get-BuildVersion).ToString())
+	assert ($versionModule -like "$versionScript.*")
+
 	# module folder
 	$dir = "$env:ProgramFiles\WindowsPowerShell\Modules\InvokeBuild"
-	if (Test-Path $dir) {Remove-Item $dir -Force -Recurse}
-	exec {robocopy.exe InvokeBuild $dir} 1
+	exec {$null = robocopy.exe InvokeBuild $dir /mir} (0..2)
 
 	# copy files
 	Copy-File $dir
