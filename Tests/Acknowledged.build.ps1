@@ -20,8 +20,8 @@ task Dynamic-Switch-Issue {
 	# temp build script
 	{
 		param($Param = 'data1', [switch]$Switch)
-		; task task1 {"1 $Param $Switch"}
-		; task task2 {"2 $Param $Switch"}
+		task task1 {"1 $Param $Switch"}
+		task task2 {"2 $Param $Switch"}
 	} > z.build.ps1
 
 	# Works fine when a dynamic switch is after positional arguments.

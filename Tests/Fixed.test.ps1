@@ -12,7 +12,7 @@ Set-StrictMode -Version Latest
 # Synopsis: 2.10.1 Fixed incomplete error on Safe.
 task IncompleteErrorOnSafe {
 	{
-		; task test { throw 42 }
+		task test { throw 42 }
 	} > z.build.ps1
 	($r = Invoke-Build * z.build.ps1 -Safe | Out-String)
 	assert ($r -clike 'Build test*Task /test*At *\z.build.ps1:2*ERROR: 42*At *\z.build.ps1:2*')
@@ -25,15 +25,15 @@ task SafeTests {
 	$null = mkdir z
 
 	{
-		; task task11 { 'works-11' }
-		; task task12 { throw 'oops-12' }
-		; task task23 { throw 'unexpected' }
+		task task11 { 'works-11' }
+		task task12 { throw 'oops-12' }
+		task task23 { throw 'unexpected' }
 	} > z\1.test.ps1
 
 	{
-		; task task21 { 'works-21' }
-		; task task22 { throw 'oops-22' }
-		; task task23 { throw 'unexpected' }
+		task task21 { 'works-21' }
+		task task22 { throw 'oops-22' }
+		task task23 { throw 'unexpected' }
 	} > z\2.test.ps1
 
 	Invoke-Build ** z -Safe -Result r
@@ -57,8 +57,8 @@ On analysis of tasks Result.Tasks.Error should contain this error.
 #>
 task NestedErrorInResult {
 	{
-		; task t1 t2
-		; task t2 {throw 42}
+		task t1 t2
+		task t2 {throw 42}
 	} > z.build.ps1
 
 	Invoke-Build . z.build.ps1 -Safe -Result r
@@ -103,9 +103,9 @@ Synopsis: #17 Process all Before tasks and then process all After tasks
 #>
 task AfterTaskMustBeAfterBeforeTask {
 	{
-		; task Task1
-		; task After -After Task1
-		; task Before -Before Task1
+		task Task1
+		task After -After Task1
+		task Before -Before Task1
 	} > z.build.ps1
 
 	Invoke-Build . z.build.ps1 -Result r

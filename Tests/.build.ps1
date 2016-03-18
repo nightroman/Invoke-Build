@@ -200,6 +200,9 @@ task TestFunctions {
 	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
 	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
 	$exposed = @(
+		# build script
+		'Copy-File'
+		# engine tools
 		'Add-BuildTask'
 		'Assert-Build'
 		'Assert-BuildEquals'

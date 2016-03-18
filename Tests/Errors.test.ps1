@@ -18,7 +18,7 @@
 # The last task ${*}.Task should be reset before Exit-Build.
 task 'Exit-Build error should have no task' {
 	{
-		; task Test {42}
+		task Test {42}
 		function Exit-Build {throw 13}
 	} > z.build.ps1
 
@@ -47,9 +47,9 @@ to add 3 identical errors for the task Test1.
 task 'Custom child errors added for parent tasks' {
 	{
 		. ..\Tasks\Test\Test.tasks.ps1
-		; test Test1 {throw 'Oops Test1'}
-		; test Test2 Test1, {assert 0}
-		; test Test3 Test2, {assert 0}
+		test Test1 {throw 'Oops Test1'}
+		test Test2 Test1, {assert 0}
+		test Test3 Test2, {assert 0}
 	} > z.build.ps1
 
 	Invoke-Build Test3 z.build.ps1 -Result Result
@@ -65,7 +65,7 @@ task 'Custom child errors added for parent tasks' {
 task Warnings {
 	{
 		Write-Warning demo-file-warning
-		; task t1 {Write-Warning demo-task-warning}
+		task t1 {Write-Warning demo-task-warning}
 	} > z.build.ps1
 
 	($r = Invoke-Build t1 z.build.ps1 -Result Result)
