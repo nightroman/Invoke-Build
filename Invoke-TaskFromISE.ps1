@@ -8,7 +8,7 @@
 .Description
 	This script invokes the current task from the build script being edited in
 	PowerShell ISE. It is invoked either in ISE or in PowerShell console.
-	Invoke-Build.ps1 should be in the script directory or in the path.
+	Invoke-Build.ps1 should be in this script directory or in the path.
 
 	The current task is the task at the caret line or above. If none is found
 	then the default task is invoked. The script is saved if it is modified.
@@ -36,21 +36,9 @@
 		PS> $profile
 		C:\Users\...\Documents\WindowsPowerShell\Microsoft.PowerShellISE_profile.ps1
 
-	NOTES
-
-	The script recognizes the following tasks. The command 'task' should be the
-	first token in a line. A task name should be a string or number in the same
-	line, either 'task <Name>' or 'task [...] -Name <Name>'. Other forms cannot
-	be invoked from ISE by this script.
-
 .Parameter Console
 		Tells to invoke the current task in an external PowerShell console.
 		By default the task is invoked in ISE.
-
-.Inputs
-	None
-.Outputs
-	None
 
 .Link
 	https://github.com/nightroman/Invoke-Build
@@ -63,10 +51,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$private:ib = Get-Command "$(Split-Path $MyInvocation.MyCommand.Path)/Invoke-Build.ps1" -CommandType ExternalScript -ErrorAction 0
-if (!$ib) {
-	$ib = Get-Command Invoke-Build.ps1 -CommandType ExternalScript -ErrorAction 0
-	if (!$ib) {throw 'Cannot find Invoke-Build.ps1'}
+$private:ib = "$(Split-Path $MyInvocation.MyCommand.Path)\Invoke-Build.ps1"
+if (!(Test-Path -LiteralPath $ib)) {
+	$ib = 'Invoke-Build.ps1'
 }
 
 $private:_Console = $Console
@@ -85,42 +72,16 @@ if (!$file.IsSaved) {
 
 $private:task = '.'
 $private:editor = $file.Editor
-$private:y1 = $editor.CaretLine
-$private:x1 = $editor.CaretColumn
-try {
-	for($private:y = $y1; $y -ge 1; --$y) {
-		$editor.SetCaretPosition($y, 1)
-		if (($private:text = $editor.CaretLineText) -match '^\s*task\b') {
-			$private:tokens = [System.Management.Automation.PSParser]::Tokenize($text, [ref]$null)
-			$private:index = 0
-			for($private:i = $tokens.Count - 2; $i -ge 1; --$i) {
-				$private:t = $tokens[$i]
-				if ($t.Type -eq 'CommandParameter' -and '-Name' -like ($t.Content + '*')) {
-					$index = $i
-					break
-				}
-			}
-			if (++$index -ge $tokens.Count) {
-				$x1 = 1; $y1 = $y
-				Write-Error "Incomplete task at line $y."
-			}
-			$t = $tokens[$index]
-			if ($t.Type -ne 'CommandArgument' -and $t.Type -ne 'String' -and $t.Type -ne 'Number') {
-				$x1 = 1; $y1 = $y
-				Write-Error "Cannot get the task name at line $y."
-			}
-			$task = $t.Content
-			break
-		}
-	}
-}
-finally {
-	$editor.SetCaretPosition($y1, $x1)
+$private:line = $editor.CaretLine
+foreach($private:t in (& $ib ?? $path).Values) {
+	if ($t.InvocationInfo.ScriptName -ne $path) {continue}
+	if ($t.InvocationInfo.ScriptLineNumber -gt $line) {break}
+	$task = $t.Name
 }
 
 if ($_Console) {
 	Start-Process PowerShell.exe ("-NoExit & '{0}' '{1}' '{2}'" -f @(
-		$ib.Definition.Replace("'", "''")
+		$ib.Replace("'", "''")
 		$task.Replace("'", "''").Replace('"', '\"')
 		$path.Replace("'", "''")
 	))
