@@ -223,7 +223,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.14.1'}
+function Get-BuildVersion {[Version]'2.14.2'}
 
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
@@ -319,8 +319,11 @@ function *CP {
 		Prm2 = @{}
 		Done = foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}}
 	}
-	if (($p = (Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1).Parameters).Count) {
-		foreach($k in $p.Keys) {
+	$p = (Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1).Parameters
+	$n = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
+	'PipelineVariable', 'InformationAction', 'InformationVariable'
+	foreach($k in $p.Keys) {
+		if ($n -notcontains $k) {
 			$_.Prm2[$k] = Get-Variable -Name $k -Scope Script -ValueOnly
 		}
 	}

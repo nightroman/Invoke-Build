@@ -2,7 +2,7 @@
 @{
 	Author = 'Roman Kuzmin'
 	ModuleToProcess = 'InvokeBuild.psm1'
-	ModuleVersion = '2.14.1.0'
+	ModuleVersion = '2.14.2.0'
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
 	CompanyName = 'Roman Kuzmin'
 	Copyright = '(c) 2011-2016 Roman Kuzmin'

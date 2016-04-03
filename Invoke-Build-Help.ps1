@@ -33,6 +33,7 @@
 
 		Add-BuildTask (task)
 		Assert-Build (assert)
+		Assert-BuildEquals (equals)
 		Get-BuildError (error)
 		Get-BuildProperty (property)
 		Get-BuildVersion
@@ -135,6 +136,7 @@
 	- sets the current PowerShell location to $BuildRoot
 	- imports utility commands
 	    - assert
+	    - equals
 	    - exec
 	    - property
 	    - use
@@ -239,7 +241,7 @@
 		Result = @'
 		Tells to output build information using a variable. It is either a name
 		of variable to be created or any object with the property Value to be
-		assigned (e.g. a [ref] or [hashtable]).
+		assigned (e.g. [ref] or [hashtable]).
 
 		Result object properties:
 
@@ -389,13 +391,14 @@
 	links = @(
 		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
-		@{ text = 'Add-BuildTask' }
-		@{ text = 'Assert-Build' }
-		@{ text = 'Get-BuildError' }
-		@{ text = 'Get-BuildProperty' }
-		@{ text = 'Invoke-BuildExec' }
-		@{ text = 'New-BuildJob' }
-		@{ text = 'Use-BuildAlias' }
+		@{ text = 'Add-BuildTask (task)' }
+		@{ text = 'Assert-Build (assert)' }
+		@{ text = 'Assert-BuildEquals (equals)' }
+		@{ text = 'Get-BuildError (error)' }
+		@{ text = 'Get-BuildProperty (property)' }
+		@{ text = 'Invoke-BuildExec (exec)' }
+		@{ text = 'New-BuildJob (job)' }
+		@{ text = 'Use-BuildAlias (use)' }
 		@{ text = 'Write-Build' }
 	)
 }

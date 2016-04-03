@@ -4,6 +4,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.2
+
+Fixed #20, persistent builds with cmdlet binding parameters.
+
 ## v2.14.1
 
 Tweaks in error processing and satellite tools.

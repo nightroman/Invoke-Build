@@ -117,3 +117,22 @@ task AfterTaskMustBeAfterBeforeTask {
 
 	Remove-Item z.build.ps1
 }
+
+# Synopsis: #20, persistent builds with cmdlet binding parameters.
+task Fix20 {
+	Set-Content z.build.ps1 @'
+[CmdletBinding()]
+param($Task)
+task good
+task bad {throw 'oops'}
+'@
+	$r = ''
+	try {Invoke-Build * z.build.ps1 -Checkpoint z.clixml -Parameters @{Task = 'Fix20'}} catch {$r = $_}
+	equals $r.FullyQualifiedErrorId oops
+
+	$r = Import-Clixml z.clixml
+	equals $r.Prm2.Count 1
+	equals $r.Prm2.Task Fix20
+
+	Remove-Item z.build.ps1, z.clixml
+}
