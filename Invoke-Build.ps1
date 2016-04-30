@@ -209,21 +209,32 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 	}
 }
 
+Add-Type @'
+using System;
+using System.Management.Automation.Host;
+public class InvokeBuild {
+	[ThreadStatic] static ConsoleColor _c;
+	[ThreadStatic] static PSHostRawUserInterface _u;
+	static public void Init(PSHost h) {if (h.UI != null) _u = h.UI.RawUI;}
+	static public void RC() {if (_u != null) {try {_u.ForegroundColor = _c;} catch {}}}
+	static public void SC(ConsoleColor c) {if (_u != null) {try {_c = _u.ForegroundColor; _u.ForegroundColor = c;} catch {_u = null;}}}
+}
+'@
+[InvokeBuild]::Init($Host)
+
 #.ExternalHelp Invoke-Build-Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
-	$i = $Host.UI.RawUI
-	$_ = $i.ForegroundColor
 	try {
-		$i.ForegroundColor = $Color
+		[InvokeBuild]::SC($Color)
 		$Text
 	}
 	finally {
-		$i.ForegroundColor = $_
+		[InvokeBuild]::RC()
 	}
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.14.2'}
+function Get-BuildVersion {[Version]'2.14.3'}
 
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
@@ -233,10 +244,6 @@ Set-Alias job New-BuildJob
 Set-Alias property Get-BuildProperty
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
-
-if (!$Host.UI -or !$Host.UI.RawUI -or $Host.Name -eq 'Default Host') {
-	function Write-Build($Color, [string]$Text) {$Text}
-}
 
 function *My {
 	$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'

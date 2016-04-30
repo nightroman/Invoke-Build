@@ -813,11 +813,12 @@
 ### Write-Build
 @{
 	command = 'Write-Build'
-	synopsis = 'Writes colored text (if this makes sense for the output).'
+	synopsis = 'Writes text using colors if they are supported.'
 
 	description = @'
-	This function is used in order to output colored text (e.g. to a console).
+	This function is used in order to output colored text, e.g. to a console.
 	Unlike Write-Host it is suitable for redirected output, e.g. to a file.
+	If the current host does not support colors then just text is written.
 '@
 
 	parameters = @{
@@ -825,7 +826,7 @@
 		[System.ConsoleColor] value or its string representation.
 '@
 		Text = @'
-		Text to be printed using colors or just sent to the output.
+		Text to be printed using colors if they are supported.
 '@
 	}
 

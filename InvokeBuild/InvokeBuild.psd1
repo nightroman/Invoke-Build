@@ -1,9 +1,9 @@
 
 @{
-	Author = 'Roman Kuzmin'
+	ModuleVersion = '2.14.3.0'
 	ModuleToProcess = 'InvokeBuild.psm1'
-	ModuleVersion = '2.14.2.0'
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
+	Author = 'Roman Kuzmin'
 	CompanyName = 'Roman Kuzmin'
 	Copyright = '(c) 2011-2016 Roman Kuzmin'
 	Description = 'Build and test automation in PowerShell'
