@@ -141,7 +141,7 @@ task PushRelease Version, {
 
 # Synopsis: Push NuGet package.
 task PushNuGet NuGet, {
-	exec { NuGet push "Invoke-Build.$Version.nupkg" }
+	exec { NuGet push "Invoke-Build.$Version.nupkg" -Source nuget.org }
 },
 Clean
 

@@ -6,7 +6,7 @@
 
 ## v2.14.3
 
-Universal Write-Build.
+Improved detection of color support.
 
 ## v2.14.2
 
