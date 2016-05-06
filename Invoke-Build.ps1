@@ -234,7 +234,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.14.3'}
+function Get-BuildVersion {[Version]'2.14.4'}
 
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
@@ -324,7 +324,7 @@ function *CP {
 		File = $BuildFile
 		Prm1 = ${*}.Parameters
 		Prm2 = @{}
-		Done = foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}}
+		Done = @(foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}})
 	}
 	$p = (Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1).Parameters
 	$n = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
@@ -425,10 +425,6 @@ function *Task {
 	${private:*p} = $args[1] + '/' + $Task.Name
 	${*}.Task = $Task
 
-	if ($Task.Error) {
-		Write-Build 8 "Task ${*p} failed."
-		return
-	}
 	if ($Task.Elapsed) {
 		Write-Build 8 "Done ${*p}"
 		return
@@ -448,6 +444,8 @@ function *Task {
 		Write-Build 8 "Task ${*p} skipped."
 		return
 	}
+
+	if (${*}.Checkpoint) {*CP}
 
 	${private:*n} = 0
 	${private:*a} = $Task.Jobs
@@ -522,7 +520,6 @@ function *Task {
 			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
 		}
 		if ($Task.Done) {*UC $Task.Done}
-		if (${*}.Checkpoint) {*CP}
 	}
 	catch {
 		$Task.Elapsed = [DateTime]::Now - $Task.Started

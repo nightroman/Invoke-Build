@@ -98,7 +98,7 @@
 		Enter-BuildJob  - before each task script job
 		Exit-BuildJob   - after each task script job
 
-		Export-Build    - after each task of a persistent build
+		Export-Build    - on saving persistent build checkpoints
 		Import-Build    - once on resuming of a persistent build
 
 	A script can redefine them. Note that nested builds do not inherit events,
@@ -213,8 +213,8 @@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is
 		possible to resume an interrupted build starting at the interrupted
-		task. The checkpoint file is written after each completed task and
-		deleted when the build completes.
+		task. The checkpoint file is written before processing of each task
+		and deleted if the build succeeds.
 
 		In order to resume an interrupted persistent build specify the same
 		checkpoint file and the switch Resume. Task, File, Parameters are

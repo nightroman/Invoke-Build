@@ -4,9 +4,13 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.4
+
+Resolved #22, checkpoints are stored before tasks.
+
 ## v2.14.3
 
-Improved detection of color support.
+Improved detection of color support, #21.
 
 ## v2.14.2
 

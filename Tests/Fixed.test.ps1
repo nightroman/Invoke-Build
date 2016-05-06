@@ -136,3 +136,27 @@ task bad {throw 'oops'}
 
 	Remove-Item z.build.ps1, z.clixml
 }
+
+# Synopsis: #22, checkpoint before tasks
+#! also covers Done = @(...)
+task Fix22 {
+	Set-Content z.build.ps1 {
+		task test {
+			if ($env:TestFix22) {
+				throw 'TestFix22'
+			}
+			'TestFix22'
+		}
+	}
+
+	# fail in the first task
+	$env:TestFix22 = 1
+	Invoke-Build . z.build.ps1 -Checkpoint z.clixml -Safe -Result r
+	assert $r.Error
+	assert (Test-Path z.clixml)
+
+	# resume
+	$env:TestFix22 = ''
+	Invoke-Build -Checkpoint z.clixml -Resume
+	assert (!(Test-Path z.clixml))
+}
