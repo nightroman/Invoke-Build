@@ -24,42 +24,6 @@ param(
 	[int]$MaximumBuilds=[Environment]::ProcessorCount
 )
 
-if (!$Host.UI -or !$Host.UI.RawUI -or $Host.Name -eq 'Default Host') {
-	function Write-Build($Color, [string]$Text) {$Text}
-}
-else {
-	function Write-Build([ConsoleColor]$Color, [string]$Text) {
-		$i = $Host.UI.RawUI
-		$_ = $i.ForegroundColor
-		try {
-			$i.ForegroundColor = $Color
-			$Text
-		}
-		finally {
-			$i.ForegroundColor = $_
-		}
-	}
-}
-
-function *FP($_) {
-	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($_)
-}
-
-function *EI($_) {
-	"$_`r`n$($_.InvocationInfo.PositionMessage.Trim())"
-}
-
-function *TE($M, $C=0) {
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
-}
-
-function Get-BuildFile($Path) {
-	if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $_}
-	$_ -like '*\.build.ps1'
-}
-
-### main
-
 # info, result
 $info = [PSCustomObject]@{
 	Tasks = [System.Collections.ArrayList]@()
@@ -80,9 +44,10 @@ if ($Result) {
 # no builds
 if (!$Build) {return}
 
-### engine
+# engine
 $ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 if (![System.IO.File]::Exists($ib)) {*TE "Missing script '$ib'." 13}
+. $ib .
 
 ### works
 $works = @()
@@ -195,7 +160,7 @@ try {
 		}
 		if ($_) {
 			Write-Build Cyan "Build $($work.Title) FAILED."
-			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {*EI $_} else {"$_"}
+			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {*EI $_ $_} else {"$_"}
 			Write-Build Red "ERROR: $_"
 			$failures += @{
 				File = $work.Title

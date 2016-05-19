@@ -4,6 +4,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.5
+
+`Invoke-Builds` uses engine functions to avoid dupes and #21.
+
 ## v2.14.4
 
 Resolved #22, checkpoints are stored before tasks.

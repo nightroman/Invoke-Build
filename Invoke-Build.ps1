@@ -1,19 +1,15 @@
 
 <#
-Invoke-Build - Build Automation in PowerShell
-Copyright (c) 2011-2016 Roman Kuzmin
+Copyright 2011-2016 Roman Kuzmin
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
 
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
 #>
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -48,6 +44,7 @@ function *TE($M, $C=0) {
 }
 
 if ($MyInvocation.InvocationName -eq '.') {return}
+trap {*TE $_ 13}
 
 $BuildTask = $PSBoundParameters['Task']
 $BuildFile = $PSBoundParameters['File']
@@ -60,11 +57,9 @@ ${private:*pn} = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', '
 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
 'PipelineVariable', 'InformationAction', 'InformationVariable'
 
-trap {*TE $_ 13}
-
 if ($BuildTask -eq '**') {
-	if (![System.IO.Directory]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing directory '$BuildFile'."}
-	$BuildFile = @(Get-ChildItem -LiteralPath $BuildFile -Recurse *.test.ps1)
+	if (![System.IO.Directory]::Exists(($_ = *FP $BuildFile))) {throw "Missing directory '$_'."}
+	$BuildFile = @(Get-ChildItem -LiteralPath $_ -Filter *.test.ps1 -Recurse)
 	return
 }
 
@@ -235,15 +230,6 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildVersion {[Version]'2.14.4'}
-
-Set-Alias assert Assert-Build
-Set-Alias equals Assert-BuildEquals
-Set-Alias error Get-BuildError
-Set-Alias exec Invoke-BuildExec
-Set-Alias job New-BuildJob
-Set-Alias property Get-BuildProperty
-Set-Alias task Add-BuildTask
-Set-Alias use Use-BuildAlias
 
 function *My {
 	$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'
@@ -446,7 +432,6 @@ function *Task {
 	}
 
 	if (${*}.Checkpoint) {*CP}
-
 	${private:*n} = 0
 	${private:*a} = $Task.Jobs
 	${private:*i} = [int]($null -ne $Task.Inputs)
@@ -533,8 +518,16 @@ function *Task {
 	}
 }
 
+Set-Alias assert Assert-Build
+Set-Alias equals Assert-BuildEquals
+Set-Alias error Get-BuildError
+Set-Alias exec Invoke-BuildExec
+Set-Alias job New-BuildJob
+Set-Alias property Get-BuildProperty
+Set-Alias task Add-BuildTask
+Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
-Set-Alias Invoke-Builds (Join-Path (Split-Path $_) Invoke-Builds.ps1)
+Set-Alias Invoke-Builds "$(Split-Path $_)\Invoke-Builds.ps1"
 
 if ($MyInvocation.InvocationName -eq '.') {
 	if ($BuildFile = $MyInvocation.ScriptName) {
@@ -560,9 +553,9 @@ function Export-Build {} function Import-Build {}
 
 $ErrorActionPreference = 'Stop'
 if (!${*Parameters}) {
+	${*Parameters} = @{}
 	foreach($_ in $PSBoundParameters.Keys) {
 		if (${*pn} -notcontains $_) {
-			if (!${*Parameters}) {${*Parameters} = @{}}
 			${*Parameters}[$_] = $PSBoundParameters[$_]
 		}
 	}
@@ -602,18 +595,17 @@ ${private:*b} = 1
 ${private:*r} = 0
 try {
 	if ($BuildTask -eq '**') {
-		$BuildTask = @('*'; $BuildTask -ne '**')
 		${*b} = 0
 		foreach($_ in $BuildFile) {
-			Invoke-Build $BuildTask $_.FullName -Safe:${*Safe}
+			Invoke-Build @('*'; $BuildTask -ne '**') $_.FullName -Safe:${*Safe}
 		}
 		${*r} = 1
 		return
 	}
 
 	*SL ($BuildRoot = Split-Path $BuildFile)
-	if ($_ = if ($_) {. $BuildFile @_} else {. $BuildFile}) {
-		Write-Warning "$BuildFile output:`r`n$_"
+	if ($_ = . $BuildFile @_) {
+		Write-Warning "$BuildFile output: $_"
 	}
 	if (!${*a}.Count) {throw "No tasks in '$BuildFile'."}
 
