@@ -116,8 +116,8 @@ function Add-BuildTask(
 		Error = $null
 		Started = $null
 		Elapsed = $null
-		Jobs = $1 = [System.Collections.ArrayList]@()
-		Safe = $2 = [System.Collections.ArrayList]@()
+		Jobs = $1 = [IB]::List()
+		Safe = $2 = [IB]::List()
 		After = $After
 		Before = $Before
 		If = $If
@@ -132,9 +132,9 @@ function Add-BuildTask(
 	trap {*TE "Task '$Name': $_" 5}
 	foreach($_ in $Jobs) {
 		$r, $d = *RJ $_
-		$null = $1.Add($r)
+		$1.Add($r)
 		if (1 -eq $d) {
-			$null = $2.Add($r)
+			$2.Add($r)
 		}
 	}
 }
@@ -206,30 +206,32 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 
 Add-Type @'
 using System;
+using System.Collections.Generic;
 using System.Management.Automation.Host;
-public class InvokeBuild {
+public class IB {
 	[ThreadStatic] static ConsoleColor _c;
 	[ThreadStatic] static PSHostRawUserInterface _u;
 	static public void Init(PSHost h) {if (h.UI != null) _u = h.UI.RawUI;}
 	static public void RC() {if (_u != null) {try {_u.ForegroundColor = _c;} catch {}}}
 	static public void SC(ConsoleColor c) {if (_u != null) {try {_c = _u.ForegroundColor; _u.ForegroundColor = c;} catch {_u = null;}}}
+	static public object List() {return new List<object>();}
 }
 '@
-[InvokeBuild]::Init($Host)
+[IB]::Init($Host)
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	try {
-		[InvokeBuild]::SC($Color)
+		[IB]::SC($Color)
 		$Text
 	}
 	finally {
-		[InvokeBuild]::RC()
+		[IB]::RC()
 	}
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.14.4'}
+function Get-BuildVersion {[Version]'2.14.5'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'
@@ -284,23 +286,21 @@ filter *AB($N, $B) {
 	}
 	$j.Insert($i, $N)
 	if (1 -eq $d) {
-		$null = $t.Safe.Add($N)
+		$t.Safe.Add($N)
 	}
 }
 
-filter *Try($T, $P=[System.Collections.Stack]@()) {
-	if (!($r = ${*}.All[$_])) {
-		$_ = "Missing task '$_'."
-		throw $(if ($T) {*EI "Task '$($T.Name)': $_" $T} else {$_})
-	}
-	if ($P.Contains($r)) {
-		throw *EI "Task '$($T.Name)': Cyclic reference to '$_'." $T
-	}
-	if ($j = foreach($_ in $r.Jobs) {if ($_ -is [string]) {$_}}) {
-		$P.Push($r)
-		$j | *Try $r $P
-		$null = $P.Pop()
-	}
+function *Try($J, $T, $P=@()) {
+	foreach($_ in $J) { if ($_ -is [string]) {
+		if (!($r = ${*}.All[$_])) {
+			$_ = "Missing task '$_'."
+			throw $(if ($T) {*EI "Task '$($T.Name)': $_" $T} else {$_})
+		}
+		if ($P -contains $r) {
+			throw *EI "Task '$($T.Name)': Cyclic reference to '$_'." $T
+		}
+		*Try $r.Jobs $r ($P + $r)
+	}}
 }
 
 function *CP {
@@ -324,7 +324,7 @@ function *CP {
 }
 
 function *AE($T) {
-	$null = ${*}.Errors.Add([PSCustomObject]@{
+	${*}.Errors.Add([PSCustomObject]@{
 		Error = $_
 		File = $BuildFile
 		Task = $T
@@ -358,12 +358,12 @@ function *IO {
 		${*i} = @(& ${*i})
 	}
 	*SL
-	${private:*p} = [System.Collections.ArrayList]@()
+	${private:*p} = [IB]::List()
 	${*i} = foreach($_ in ${*i}) {
 		if ($_ -isnot [System.IO.FileInfo]) {$_ = [System.IO.FileInfo](*FP $_)}
 		if (!$_.Exists) {throw "Missing Inputs item: '$_'."}
 		$_
-		$null = ${*p}.Add($_.FullName)
+		${*p}.Add($_.FullName)
 	}
 	if (!${*p}) {return 'Skipping empty input.'}
 
@@ -381,11 +381,12 @@ function *IO {
 		if (${*p}.Count -ne ${*o}.Count) {throw "Different Inputs/Outputs counts: $(${*p}.Count)/$(${*o}.Count)."}
 
 		$k = -1
-		$Task.Inputs = $i = [System.Collections.ArrayList]@()
-		$Task.Outputs = $o = [System.Collections.ArrayList]@()
+		$Task.Inputs = $i = [IB]::List()
+		$Task.Outputs = $o = [IB]::List()
 		foreach($_ in ${*i}) {
 			if ($_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime((*FP ($p = ${*o}[++$k])))) {
-				$null = $i.Add(${*p}[$k]), $o.Add($p)
+				$i.Add(${*p}[$k])
+				$o.Add($p)
 			}
 		}
 		if ($i) {return}
@@ -513,7 +514,7 @@ function *Task {
 		throw
 	}
 	finally {
-		$null = ${*}.Tasks.Add($Task)
+		${*}.Tasks.Add($Task)
 		. *UC Exit-BuildTask
 	}
 }
@@ -540,7 +541,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 
 function Write-Warning([Parameter()]$Message) {
 	$PSCmdlet.WriteWarning($Message)
-	$null = ${*}.Warnings.Add([PSCustomObject]@{
+	${*}.Warnings.Add([PSCustomObject]@{
 		Message = $Message
 		File = $BuildFile
 		Task = ${*}.Task
@@ -562,12 +563,12 @@ if (!${*Parameters}) {
 }
 
 if (${private:*0} = $PSCmdlet.SessionState.PSVariable.Get('*')) {
-	${*0} = if (${*0}.Description -eq 'Invoke-Build') {${*0}.Value}
+	${*0} = if (${*0}.Description -eq 'IB') {${*0}.Value}
 }
-New-Variable * -Description Invoke-Build ([PSCustomObject]@{
-	Tasks = [System.Collections.ArrayList]@()
-	Errors = [System.Collections.ArrayList]@()
-	Warnings = [System.Collections.ArrayList]@()
+New-Variable * -Description IB ([PSCustomObject]@{
+	Tasks = [IB]::List()
+	Errors = [IB]::List()
+	Warnings = [IB]::List()
 	All = ${private:*a} = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Parameters = $_ = ${*Parameters}
 	Checkpoint = ${*Checkpoint}
@@ -622,7 +623,7 @@ try {
 	}
 
 	if (${*?}) {
-		${*a}.Keys | *Try
+		*Try ${*a}.Keys
 		if ($BuildTask -eq '??') {
 			${*a}
 		}
@@ -636,7 +637,7 @@ try {
 		$BuildTask = :_ foreach($_ in ${*a}.Keys) {
 			foreach(${**} in ${*a}.Values) {
 				if (${**}.Jobs -contains $_) {
-					$_ | *Try
+					*Try $_
 					continue _
 				}
 			}
@@ -646,7 +647,7 @@ try {
 	elseif (!$BuildTask -or '.' -eq $BuildTask) {
 		$BuildTask = if (${*a}['.']) {'.'} else {${*a}.Item(0).Name}
 	}
-	$BuildTask | *Try
+	*Try $BuildTask
 
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	${*b} = 0

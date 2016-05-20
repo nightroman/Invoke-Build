@@ -6,7 +6,8 @@
 
 ## v2.14.5
 
-`Invoke-Builds` uses engine functions to avoid dupes and #21.
+- Revised collections and checks for missing and cyclic tasks.
+- `Invoke-Builds` uses engine functions to avoid dupes and #21.
 
 ## v2.14.4
 

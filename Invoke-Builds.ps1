@@ -1,19 +1,15 @@
 
 <#
-Invoke-Build - Build Automation in PowerShell
-Copyright (c) 2011-2016 Roman Kuzmin
+Copyright 2011-2016 Roman Kuzmin
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
 
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
 #>
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -26,9 +22,9 @@ param(
 
 # info, result
 $info = [PSCustomObject]@{
-	Tasks = [System.Collections.ArrayList]@()
-	Errors = [System.Collections.ArrayList]@()
-	Warnings = [System.Collections.ArrayList]@()
+	Tasks = [IB]::List()
+	Errors = [IB]::List()
+	Warnings = [IB]::List()
 	Started = [DateTime]::Now
 	Elapsed = $null
 }
@@ -189,7 +185,7 @@ finally {
 	$warnings = $info.Warnings.Count
 	$info.Elapsed = [DateTime]::Now - $info.Started
 
-	if (($up = $PSCmdlet.SessionState.PSVariable.Get('*')) -and ($up = if ($up.Description -eq 'Invoke-Build') {$up.Value})) {
+	if (($up = $PSCmdlet.SessionState.PSVariable.Get('*')) -and ($up = if ($up.Description -eq 'IB') {$up.Value})) {
 		$up.Tasks.AddRange($info.Tasks)
 		$up.Errors.AddRange($info.Errors)
 		$up.Warnings.AddRange($info.Warnings)
