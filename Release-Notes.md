@@ -4,6 +4,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.6
+
+Faster preprocessing of special tasks `*`.
+
 ## v2.14.5
 
 - Revised collections and checks for missing and cyclic tasks.

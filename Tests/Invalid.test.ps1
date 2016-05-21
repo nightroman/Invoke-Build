@@ -128,6 +128,15 @@ task CyclicReferenceStar {
 	}
 }
 
+# On * missing references should be reported with location.
+# On developing v2.14.6 some code used to fail this.
+task MissingReferenceStar {
+	Test -Task * "Task 'bad': Missing task 'missing'.*At *\z.build.ps1:3 *OperationStopped*" {
+		task good {}
+		task bad missing
+	}
+}
+
 task ResumeWithoutCheckpoint {
 	$$ = try { Invoke-Build -Resume } catch {$_}
 	assert ($$ -like 'Checkpoint must be defined for Resume.')

@@ -634,20 +634,23 @@ try {
 	}
 
 	if ($BuildTask -eq '*') {
-		$BuildTask = :_ foreach($_ in ${*a}.Keys) {
-			foreach(${**} in ${*a}.Values) {
-				if (${**}.Jobs -contains $_) {
-					*Try $_
-					continue _
+		*Try ${*a}.Keys
+		${**} = @{}
+		foreach($_ in ${*a}.Values) {
+			foreach($_ in $_.Jobs) {
+				if ($_ -is [string]) {
+					${**}[$_] = 1
 				}
 			}
-			$_
 		}
+		$BuildTask = foreach($_ in ${*a}.Keys) {if (!${**}[$_]) {$_}}
 	}
-	elseif (!$BuildTask -or '.' -eq $BuildTask) {
-		$BuildTask = if (${*a}['.']) {'.'} else {${*a}.Item(0).Name}
+	else {
+		if (!$BuildTask -or '.' -eq $BuildTask) {
+			$BuildTask = if (${*a}['.']) {'.'} else {${*a}.Item(0).Name}
+		}
+		*Try $BuildTask
 	}
-	*Try $BuildTask
 
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	${*b} = 0
