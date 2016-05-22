@@ -13,12 +13,10 @@
 
 		Convert-psake default.ps1 | Set-Content .build.ps1 [-Encoding ...]
 
-	The source comments are not converted, they should be copied manually. In
-	any case the converted script should be reviewed before using it. Actions
-	are copied as they are without conversion. $psake, "assert", "exec", and
-	other features may have to be adjusted manually. See also all "TODO"
-	comments added to the result script.
-
+	The converted script should be reviewed before using it. Task actions are
+	copied as they are without conversion. $psake, "assert", "exec", and other
+	features may have to be adjusted manually. See also "TODO" comments added
+	to the result script.
 
 	SCRIPT CONVERTION SCHEME AND GUIDELINES
 
@@ -149,6 +147,7 @@ param(
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
 
 ### Source
 
@@ -184,7 +183,6 @@ Set-Alias task Write-Task
 function Write-Property([scriptblock]$properties) {
 	'# TODO: Move some properties to script param() in order to use as parameters.'
 	$properties
-	''
 }
 
 function Write-Framework([string]$framework) {
@@ -196,23 +194,19 @@ function Write-Framework([string]$framework) {
 		'# . Invoke-Build; help -full Use-BuildAlias'
 	}
 	"use $framework MSBuild"
-	''
 }
 
 function Write-Include([string]$fileNamePathToInclude) {
 	'# TODO: Decide whether it is dot-sourced (.) or just invoked (&).'
 	". '$($fileNamePathToInclude.Replace("'", "''"))'"
-	''
 }
 
 function Write-TaskSetup([scriptblock]$setup) {
 	"function Enter-BuildTask {$setup}"
-	''
 }
 
 function Write-TaskTearDown([scriptblock]$teardown) {
 	"function Exit-BuildTask {$teardown}"
-	''
 }
 
 function Write-Task
@@ -288,15 +282,16 @@ function Write-Task
 	}
 
 	$$
-	''
 }
 
 ### Main
 
-Set-StrictMode -Version Latest
+$warnings = @()
+$out = New-Object System.Text.StringBuilder
+function Add-Text($Text) {$null = $out.Append($Text)}
+function Add-Line($Text) {$null = $out.AppendLine($Text)}
 
-@'
-
+Add-Line @'
 <#
 .Synopsis
 	Build script invoked by Invoke-Build.
@@ -311,36 +306,55 @@ Set-StrictMode -Version Latest
 [CmdletBinding()]
 param(
 )
-
 '@
 
-$warnings = 0
-$ast = [scriptblock]::Create((Get-Content -LiteralPath ${*Source} | Out-String)).Ast
-foreach($s in $ast.EndBlock.Statements) {
-	$text = $s.Extent.Text
-	if ($s -is [System.Management.Automation.Language.PipelineAst]) {
+$content = Get-Content -LiteralPath ${*Source}
+$tokens = @([System.Management.Automation.PSParser]::Tokenize($content, [ref]$null))
+$statements = @([scriptblock]::Create(($content | Out-String -Width 1mb)).Ast.EndBlock.Statements)
+
+$iToken = 0
+foreach($statement in $statements) {
+	$extent = $statement.Extent
+
+	# out previous tokens
+	while($iToken -lt $tokens.Count) {
+		$token = $tokens[$iToken]
+		if ($token.Start -ge $extent.StartOffset) {
+			break
+		}
+		if ($token.Type -eq 'NewLine' -or $token.Type -eq 'Comment') {
+			Add-Text $token.Content
+		}
+		++$iToken
+	}
+
+	# skip statement tokens
+	while($iToken -lt $tokens.Count -and $tokens[$iToken].Start -lt $extent.EndOffset) {
+		++$iToken
+	}
+
+	# out statement
+	$text = $extent.Text
+	if ($statement -is [System.Management.Automation.Language.PipelineAst]) {
 		if ($text -match '^(properties|framework|include|TaskSetup|TaskTearDown|task)\b') {
 			try {
-				& ([scriptblock]::Create($text))
+				$text = (& ([scriptblock]::Create($text)) | Out-String -Width 1mb).Trim()
 			}
 			catch {
-				++$warnings
-				Write-Warning ('Conversion error at line {0}: {1}' -f $s.Extent.StartLineNumber, $_)
-				@"
+				$warnings += ('Conversion error at line {0}: {1}' -f $statement.Extent.StartLineNumber, $_)
+				$text = @"
 <# TODO: This statement was copied not converted due to the error:
 $_
 #>
 $text
-
 "@
 			}
-			continue
 		}
 	}
-	$text
-	''
+	Add-Text $text
 }
+$out.ToString()
 
-if ($warnings) {
-	Write-Warning "Converted with $warnings error(s)."
+foreach($warning in $warnings) {
+	Write-Warning $warning
 }
