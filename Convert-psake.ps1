@@ -42,12 +42,12 @@
 				Use an extra action with assert in Jobs: ..., {assert ...}
 			ContinueOnError ->
 				Use (job TaskName -Safe) in parent tasks.
-			Description ->
-				Use help comments: # Synopsis: ...
 			RequiredVariables ->
 				Use "$VarName = property VarName" in the action.
-			Alias, MaxRetries, RetryTriggerErrorPattern ->
-				Not supported.
+			Description ->
+				Use help comments: # Synopsis: ...
+			Alias ->
+				Use another task: task Alias TaskName
 
 	properties ->
 		Simply copy the code from "properties" to the script scope.
@@ -125,8 +125,6 @@
 .Parameter Synopsis
 		Tells to add "# Synopsis:" even for tasks with no Description.
 
-.Inputs
-	None.
 .Outputs
 	Converted code. Save it to a file by redirecting to Set-Content. Use of ">"
 	or "Out-File" is not recommended due to potentially breaking line wrapping.
@@ -149,8 +147,8 @@ param(
 	[switch]$Synopsis
 )
 
+trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
-try { # amend errors
 
 ### Source
 
@@ -230,9 +228,7 @@ function Write-Task
 		[string[]]$depends,
 		[string[]]$requiredVariables,
 		[string]$description,
-		[string]$alias,
-		[string]$maxRetries,
-		[string]$retryTriggerErrorPattern
+		[string]$alias
 	)
 
 	if ($description -or ${*Synopsis}) {
@@ -243,8 +239,6 @@ function Write-Task
 	if ($alias) {"# TODO: Alias '$alias' is not supported. Do not use it or define another task: task $alias $($name)"}
 	if ($continueOnError) {"# TODO: ContinueOnError is not supported. Instead, in parent tasks use references: (job $name -Safe)"}
 	if ($requiredVariables) {'# TODO: RequiredVariables is not supported. Instead, in the action use: $VarName = property VarName'}
-	if ($maxRetries) {'# TODO: MaxRetries is not supported.'}
-	if ($retryTriggerErrorPattern) {'# TODO: RetryTriggerErrorPattern is not supported.'}
 
 	### task Name
 	$$ = 'task '
@@ -348,7 +342,5 @@ $text
 }
 
 if ($warnings) {
-	Write-Warning "The script has been converted with $warnings error(s)."
+	Write-Warning "Converted with $warnings error(s)."
 }
-
-} catch { $PSCmdlet.ThrowTerminatingError($_) }
