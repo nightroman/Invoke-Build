@@ -11,8 +11,11 @@
 #>
 
 properties {
+	$build_dir = Split-Path $psake.build_script_file
 	$var1 = 'Value1'
-	$rootDir  = Resolve-Path .
+	$rootDir = Resolve-Path .
+	assert $true -failureMessage zzz # KO
+	exec {} zzz # KO
 }
 
 properties {
@@ -29,7 +32,18 @@ framework "4.0x86"
 include ".\psake 'ext'.ps1"
 
 function f1($p1, $p2) {
-	#...
+	$psake.build_script_file.FullName
+	$psake.build_script_file
+	$psake.build_script_dir
+	$psake.version
+	$psake.VERSION.Length.ToString()
+	$psake.zzz
+	$psake.zzz.Length
+	$psake
+
+	assert -Condition $true zzz # OK
+	assert $true zzz # OK
+	exec {} # OK
 }
 
 task default -depends Clean, Task1

@@ -15,8 +15,7 @@
 
 	The converted script should be reviewed before using it. Task actions are
 	copied as they are without conversion. $psake, "assert", "exec", and other
-	features may have to be adjusted manually. See also "TODO" comments added
-	to the result script.
+	features should be checked. See "TODO" comments added to the result script.
 
 	SCRIPT CONVERTION SCHEME AND GUIDELINES
 
@@ -69,10 +68,10 @@
 
 	assert -> assert
 		Parameters
-	        ConditionToCheck -> Condition
-	        	"-Condition" is normally omitted.
-	        FailureMessage -> Message (optional)
-	        	"-Message" may be omitted.
+		ConditionToCheck -> Condition
+			"-Condition" is normally omitted.
+		FailureMessage -> Message (optional)
+			"-Message" may be omitted.
 
 	exec -> exec
 		Parameters
@@ -94,7 +93,6 @@
 		Not supported. This feature can be added on a request.
 		Use functions Enter|Exit-BuildTask for extra task headers and footers.
 
-
 	VARIABLES (should be done manually)
 
 	Make sure scripts do not use variables $BuildRoot, $BuildFile, $BuildTask.
@@ -108,7 +106,7 @@
 		-> (Get-Item -LiteralPath $BuildFile), if the item is needed
 
 	$psake.version
-		-> Get-BuildVersion
+		-> Get-BuildVersion or (Get-BuildVersion).ToString()
 
 	$psake.<other>
 		-> Not supported.
@@ -312,6 +310,48 @@ $content = Get-Content -LiteralPath ${*Source}
 $tokens = @([System.Management.Automation.PSParser]::Tokenize($content, [ref]$null))
 $statements = @([scriptblock]::Create(($content | Out-String -Width 1mb)).Ast.EndBlock.Statements)
 
+$rePsakeFilePath = [regex]'(?i)^\$psake\.build_script_file\.FullName\b'
+$rePsakeFileItem = [regex]'(?i)^\$psake\.build_script_file\b'
+$rePsakeFileRoot = [regex]'(?i)^\$psake\.build_script_dir\b'
+$rePsakeVersion = [regex]'(?i)^\$psake\.version\b'
+$rePsakeOther = [regex]'(?i)^\$psake(\.\w+)?\b'
+$rePsake = [regex]'(?i)^\$psake\b'
+$findPsake = {
+	param($ast)
+	$text = $ast.Extent.Text
+	if ($ast -is [System.Management.Automation.Language.CommandAst]) {
+		if ('assert' -eq $ast.CommandElements[0].Extent) {
+			foreach($_ in $ast.CommandElements) {
+				if ($_ -is [System.Management.Automation.Language.CommandParameterAst] -and '-Condition' -ne $_.Extent) {
+					++$todo['assert: change parameters to Condition, Message']
+				}
+			}
+		}
+		elseif ('exec' -eq $ast.CommandElements[0].Extent) {
+			if ($ast.CommandElements.Count -ne 2) {
+				++$todo['exec: use a single parameter Command']
+			}
+		}
+	}
+	elseif ($ast -is [System.Management.Automation.Language.ExpressionAst] -and $rePsake.IsMatch($text)) {
+		if ($rePsakeFilePath.IsMatch($text)) {
+			++$todo['$psake.build_script_file.FullName -> $BuildFile']
+		}
+		elseif ($rePsakeFileItem.IsMatch($text)) {
+			++$todo['$psake.build_script_file -> (Get-Item $BuildFile)']
+		}
+		elseif ($rePsakeFileRoot.IsMatch($text)) {
+			++$todo['$psake.build_script_dir -> $BuildRoot']
+		}
+		elseif ($rePsakeVersion.IsMatch($text)) {
+			++$todo['$psake.version -> (Get-BuildVersion).ToString()']
+		}
+		elseif (($m = $rePsakeOther.Match($text)).Success) {
+			++$todo["$($m.Groups[0]) is not supported"]
+		}
+	}
+}
+
 $iToken = 0
 foreach($statement in $statements) {
 	$extent = $statement.Extent
@@ -331,6 +371,13 @@ foreach($statement in $statements) {
 	# skip statement tokens
 	while($iToken -lt $tokens.Count -and $tokens[$iToken].Start -lt $extent.EndOffset) {
 		++$iToken
+	}
+
+	# find $psake, exec
+	$todo = @{}
+	$statement.FindAll($findPsake, $true)
+	foreach($_ in $todo.Keys | Sort-Object) {
+		Add-Line "# TODO: $_"
 	}
 
 	# out statement
