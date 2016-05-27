@@ -4,6 +4,19 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.6
+
+Faster preprocessing of special tasks `*`.
+
+A new tool *New-VSCodeTask.ps1* is created. It generates VSCode tasks bound to
+a specified or default build script tasks and Invoke-Build as a task runner.
+
+*Convert-psake.ps1*
+
+- Preserves original comments and empty lines.
+- Adds comments about not supported `$psake` properties.
+- Adds comments about incompatible cases of `exec`, `assert`.
+
 ## v2.14.5
 
 - Revised collections and checks for missing and cyclic tasks.

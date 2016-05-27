@@ -231,7 +231,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.14.5'}
+function Get-BuildVersion {[Version]'2.14.6'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'

@@ -45,8 +45,11 @@ equals (Split-Path $MyPath) $BuildRoot
 # scripts should be dot-sourced.
 .\Shared.tasks.ps1
 
-# Warning. Warnings are shown together with errors in the build summary.
-Write-Warning "Ignore this warning."
+# $WhatIf is used in order to skip some code in cases like getting tasks.
+if (!$WhatIf) {
+	# Warnings are shown together with errors in the build summary.
+	Write-Warning 'Ignore this warning.'
+}
 
 # Synopsis: -WhatIf is used in order to show task scripts without invoking them.
 # Note: -Result can be used in order to get some information as well.
