@@ -38,6 +38,9 @@ task FullPaths {
 	equals $r.args[4] '-File'
 	equals $r.args[5] $BuildFile
 
+	# (*) task included
+	equals $r.tasks[-2].taskName ._w2-
+
 	$r = $r.tasks | Select-Object taskName, isBuildCommand | .{process{ if ($_.isBuildCommand) {$_} }}
 	equals $r.taskName OmittedPaths
 
@@ -57,3 +60,9 @@ task RelativePaths {
 
 	Remove-Item .vscode -Force -Recurse
 }
+
+# This task is included, see (*)
+task ._w2- -if 0
+
+# This task is excluded, see (*)
+task '-name' -if 0

@@ -20,6 +20,9 @@
 	In order to invoke another task from VSCode use Ctrl-P and type "task".
 	Then type a task name or select it from the opened list of all tasks.
 
+	Only tasks with certain names are included. They contain alphanumeric
+	characters, "_", ".", and "-", with the first character other than "-".
+
 .Parameter BuildFile
 		Specifies the build script path, absolute or relative. By default it is
 		the standard default script in the current location.
@@ -65,7 +68,7 @@ Add-Line '{'
 Add-Line '  "version": "0.1.0",'
 Add-Line '  "command": "PowerShell.exe",'
 Add-Line '  "isShellCommand": true,'
-Add-Line '  "suppressTaskName": true,'
+Add-Line '  "suppressTaskName": false,'
 Add-Line '  "showOutput": "always",'
 Add-Line '  "args": ['
 Add-Text ('    "-NoProfile", "-ExecutionPolicy", "Bypass", "{0}"' -f ($InvokeBuild.Replace('\', '\\')))
@@ -78,18 +81,19 @@ Add-Line '  "tasks": ['
 
 foreach($task in $all.Values) {
 	$name = $task.Name
+	if ($name -match '[^\w\.\-]|^-') {
+		continue
+	}
 	Add-Line '    {'
 	if ($name -eq $dot) {
 		Add-Line '      "isBuildCommand": true,'
 	}
-	Add-Line ('      "taskName": "{0}",' -f $name)
-	Add-Line ('      "args": ["{0}"]' -f $name)
+	Add-Line ('      "taskName": "{0}"' -f $name)
 	Add-Line '    },'
 }
 
 Add-Line '    {'
-Add-Line '      "taskName": "?",'
-Add-Line '      "args": ["?"]'
+Add-Line '      "taskName": "?"'
 Add-Line '    }'
 Add-Line '  ]'
 Add-Text '}'
