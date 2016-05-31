@@ -156,7 +156,7 @@ task Loop {
 }
 
 # Synopsis: Invoke Tests scripts and check expected output.
-# Requires PowerShelf/Assert-SameFile.ps1
+# Requires PowerShelf/Assert-SameFile.ps1, #ConsoleHost
 task Test {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
@@ -174,9 +174,10 @@ task Test {
 }
 
 # Synopsis: Invoke Test with PowerShell 2.0.
-task TestV2 {
+# #ConsoleHost
+task Test2 {
 	exec { PowerShell -Version 2 -NoProfile Invoke-Build Test }
 }
 
 # Synopsis: The default task: make and test all, then clean.
-task . Help, Test, TestV2, Clean
+task . Help, Test, Test2, Clean

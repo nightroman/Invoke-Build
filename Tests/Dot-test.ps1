@@ -43,28 +43,28 @@ equals $BuildRoot (Get-Location).Path
 
 # aliases for using
 
-($r = Get-Alias assert)
-equals $r.Definition 'Assert-Build'
+($r = (Get-Alias assert).Definition)
+equals $r 'Assert-Build'
 
-($r = Get-Alias exec)
-equals $r.Definition 'Invoke-BuildExec'
+($r = (Get-Alias exec).Definition)
+equals $r 'Invoke-BuildExec'
 
-($r = Get-Alias property)
-equals $r.Definition 'Get-BuildProperty'
+($r = (Get-Alias property).Definition)
+equals $r 'Get-BuildProperty'
 
-($r = Get-Alias use)
-equals $r.Definition 'Use-BuildAlias'
+($r = (Get-Alias use).Definition)
+equals $r 'Use-BuildAlias'
 
 # aliases for Get-Help
 
-($r = Get-Alias error)
-equals $r.Definition 'Get-BuildError'
+($r = (Get-Alias error).Definition)
+equals $r 'Get-BuildError'
 
-($r = Get-Alias task)
-equals $r.Definition 'Add-BuildTask'
+($r = (Get-Alias task).Definition)
+equals $r 'Add-BuildTask'
 
-($r = Get-Alias job)
-equals $r.Definition 'New-BuildJob'
+($r = (Get-Alias job).Definition)
+equals $r 'New-BuildJob'
 
 ### Test special functions
 
@@ -126,19 +126,19 @@ assert ($e -like 'property : Missing variable *try {property *')
 
 ### use
 
-#! Mind \\Framework(64)?\\
+#! Mind \\Framework(64)?\\ and do not log, avoid diff.
 
 use 4.0 MSBuild
-($r = Get-Alias MSBuild)
-assert ($r.Definition -like '?:\*\Microsoft.NET\Framework*\v4.0.*\MSBuild')
+$r = (Get-Alias MSBuild).Definition
+assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.*\MSBuild')
 
 use Framework\v4.0.30319 MSBuild
-($r = Get-Alias MSBuild)
-assert ($r.Definition -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
+$r = (Get-Alias MSBuild).Definition
+assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
 
 use $BuildRoot Dot-test.ps1
-($r = Get-Alias Dot-test.ps1)
-equals $r.Definition $BuildFile
+($r = (Get-Alias Dot-test.ps1).Definition)
+equals $r $BuildFile
 
 ($e = try {use Missing MSBuild} catch {$_ | Out-String})
 assert ($e -like 'use : Cannot resolve *try {use *')
