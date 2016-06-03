@@ -30,8 +30,10 @@
 		Specifies the build script path, absolute or relative. By default it is
 		the standard default script in the current location.
 .Parameter InvokeBuild
-		Specifies the Invoke-Build.ps1 path, absolute or relative. By default
-		it is 'Invoke-Build.ps1', i.e. the script is expected in the path.
+		Specifies the Invoke-Build.ps1 path, absolute or relative. If it is not
+		specified then the script tries to find it in the workspace directory
+		recursively. If it is not found then 'Invoke-Build.ps1' is used, i.e.
+		the script is expected to be in the path.
 
 .Example
 	New-VSCodeTask
@@ -39,7 +41,9 @@
 
 .Example
 	New-VSCodeTask .\Scripts\Build.ps1 .\Tools\Invoke-Build\Invoke-Build.ps1
-	This command binds to the relative build and engine script paths.
+	This command binds to the relative build and engine script paths. The
+	second argument may be omitted, Invoke-Build.ps1 will be discovered
+	(it is needed if there are several versions of it for some reason).
 
 .Link
 	https://github.com/nightroman/Invoke-Build
@@ -48,7 +52,7 @@
 [CmdletBinding()]
 param(
 	[string]$BuildFile,
-	[string]$InvokeBuild = 'Invoke-Build.ps1'
+	[string]$InvokeBuild
 )
 
 function Add-Text($Text) {$null = $out.Append($Text)}
@@ -81,9 +85,17 @@ function Test-ConsoleHost($Task) {
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
 
+# resolve missing Invoke-Build.ps1
+if (!$InvokeBuild) {
+	$InvokeBuild2 = @(Get-ChildItem . -Name -Recurse -Include Invoke-Build.ps1)
+	$InvokeBuild = if ($InvokeBuild2) {".\$($InvokeBuild2[0])"} else {'Invoke-Build.ps1'}
+}
+
+# get all tasks and the default task
 $all = & $InvokeBuild ?? -File $BuildFile
 $dot = if ($all['.']) {'.'} else {$all.Item(0).Name}
 
+# ensure .vscode
 if (!(Test-Path .vscode)) {
 	$null = mkdir .vscode
 }

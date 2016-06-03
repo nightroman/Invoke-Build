@@ -88,6 +88,22 @@ start PowerShell.exe -NoExit -NoProfile -ExecutionPolicy Bypass "& '..\Invoke-Bu
 	Remove-Item .vscode -Force -Recurse
 }
 
+task DiscoverEngine {
+	Set-Location ..
+	New-VSCodeTask.ps1
+
+	$r = (Get-Content .vscode\tasks.cmd) -match 'PowerShell\.exe'
+	equals $r.Count 2
+	equals $r[0] @'
+PowerShell.exe -NoProfile -ExecutionPolicy Bypass "& '.\Invoke-Build.ps1' %1"
+'@
+	equals $r[1] @'
+start PowerShell.exe -NoExit -NoProfile -ExecutionPolicy Bypass "& '.\Invoke-Build.ps1' %1"
+'@
+
+	Remove-Item .vscode -Force -Recurse
+}
+
 # Other tasks are not real tests
 if (!$WhatIf) {return}
 
