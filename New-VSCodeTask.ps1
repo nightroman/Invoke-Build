@@ -11,16 +11,17 @@
 	invoking the script.
 
 	Do not edit tasks.json directly. Edit the build script instead. When you
-	add, remove, rename, or reorder build tasks then regenerate VSCode tasks.
+	add, remove, rename, reorder tasks, change tags or Invoke-Build location
+	then regenerate VSCode tasks.
 
 	The default task becomes a so called VSCode build task (Ctrl-Shift-B).
-	The default task is "." if it exists, otherwise it is the first task.
+	The default task is '.' if it exists, otherwise it is the first task.
 
-	In order to invoke another task from VSCode use Ctrl-P and type "task".
+	In order to invoke another task from VSCode use Ctrl-P and type 'task'.
 	Then type a task name or select it from the opened list of all tasks.
 
 	Only tasks with certain names are included. They contain alphanumeric
-	characters, "_", ".", and "-", with the first character other than "-".
+	characters, '_', '.', and '-', with the first character other than '-'.
 
 	In order to invoke some tasks in a console host outside VSCode specify the
 	tag #ConsoleHost in a comment preceding the task definition. Note that all
@@ -28,7 +29,8 @@
 
 .Parameter BuildFile
 		Specifies the build script path, absolute or relative. By default it is
-		the standard default script in the current location.
+		the standard default script in the current location, i.e. the workspace
+		root.
 .Parameter InvokeBuild
 		Specifies the Invoke-Build.ps1 path, absolute or relative. If it is not
 		specified then the script tries to find it in the workspace directory
@@ -37,7 +39,9 @@
 
 .Example
 	New-VSCodeTask
-	This command binds to the default build script and engine in the path.
+	This command binds to the default build script in the workspace root and
+	Invoke-Build.ps1 either in the workspace root or subdirectory or in the
+	path.
 
 .Example
 	New-VSCodeTask .\Scripts\Build.ps1 .\Tools\Invoke-Build\Invoke-Build.ps1
