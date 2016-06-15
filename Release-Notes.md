@@ -1,7 +1,4 @@
 
-[Portable Build Scripts]: https://github.com/nightroman/Invoke-Build/wiki/Portable-Build-Scripts
-[Dot Sourcing Build Features]: https://github.com/nightroman/Invoke-Build/wiki/Dot-Sourcing-Build-Features
-
 # Invoke-Build Release Notes
 
 ## v2.14.6
@@ -79,7 +76,7 @@ Added `InformationAction` and `InformationVariable` for v5.
 
 ## v2.12.1
 
-[Dot Sourcing Build Features] allows to specify the build root location.
+Dot-sourcing lets specify the build root.
 
 ## v2.12.0
 
@@ -163,7 +160,7 @@ Fixed incomplete error information when `-Safe` is used.
 ## v2.10.0
 
 Invoke-Build features can be imported to normal scripts by dot-sourcing.
-See `help Invoke-Build` or [Dot Sourcing Build Features].
+See `help Invoke-Build` or wiki *Dot Sourcing Build Features*.
 
 ## v2.9.14
 
@@ -730,7 +727,7 @@ Changed color of messages *Build < tasks > < file >* to dark green.
 This version introduces major but mostly cosmetic changes in advanced features.
 Scripts using these features should be upgraded. If some scripts are not going
 to be upgraded then an old copy of tools can be used for building them. See
-[Portable Build Scripts].
+wiki *Portable Build Scripts*.
 
 Renamed `Write-BuildText` to `Write-Build`.
 

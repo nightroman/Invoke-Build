@@ -303,24 +303,28 @@ function *Try($J, $T, $P=@()) {
 	}}
 }
 
-function *CP {
-	$_ = @{
-		User = *UC Export-Build
-		Task = $BuildTask
-		File = $BuildFile
-		Prm1 = ${*}.Parameters
-		Prm2 = @{}
-		Done = @(foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}})
-	}
+function *GP {
+	$r = @{}
 	$p = (Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1).Parameters
 	$n = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
 	'PipelineVariable', 'InformationAction', 'InformationVariable'
 	foreach($k in $p.Keys) {
 		if ($n -notcontains $k) {
-			$_.Prm2[$k] = Get-Variable -Name $k -Scope Script -ValueOnly
+			$r[$k] = Get-Variable -Name $k -Scope Script -ValueOnly
 		}
 	}
-	$_ | Export-Clixml ${*}.Checkpoint
+	$r
+}
+
+function *CP {
+	Export-Clixml ${*}.Checkpoint -InputObject @{
+		User = *UC Export-Build
+		Task = $BuildTask
+		File = $BuildFile
+		Prm1 = ${*}.Parameters
+		Prm2 = *GP
+		Done = @(foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}})
+	}
 }
 
 function *AE($T) {
