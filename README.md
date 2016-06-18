@@ -13,11 +13,11 @@ In addition to basic task processing the engine supports
 - Batch invocation of tests composed as tasks.
 - Ability to define new classes of tasks.
 
-Invoke-Build can be used as a task runner in VSCode with tasks maintained in a
-PowerShell build script instead of *tasks.json*, see *New-VSCodeTask.ps1*.
-
 Invoke-Build can invoke the current task from a build script being composed in
-ISE, see *Invoke-TaskFromISE.ps1*.
+ISE and VSCode, see *Invoke-TaskFromISE.ps1* and *Invoke-TaskFromVSCode.ps1*.
+
+Invoke-Build can be used as the task runner in VSCode with tasks maintained in
+a PowerShell build script instead of *tasks.json*, see *New-VSCodeTask.ps1*.
 
 ## The package
 
@@ -34,6 +34,7 @@ Extra tools are available at the project repository:
 
 * *Convert-psake.ps1* - converts psake build scripts
 * *Invoke-TaskFromISE.ps1* - invokes a task from ISE
+* *Invoke-TaskFromVSCode.ps1* - invokes a task from VSCode
 * *New-VSCodeTask.ps1* - generates VSCode tasks
 * *Show-BuildTree.ps1* - shows task trees as text
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz

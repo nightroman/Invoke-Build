@@ -1,14 +1,24 @@
 
+<#PSScriptInfo
+.VERSION 1.0
+.AUTHOR Roman Kuzmin
+.COPYRIGHT (c) 2011-2016 Roman Kuzmin
+.TAGS Invoke, Task, Invoke-Build, ISE
+.GUID 713b2e68-8b62-40f5-99cb-07c6952abca6
+.LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
+.PROJECTURI https://github.com/nightroman/Invoke-Build
+#>
+
 <#
 .Synopsis
 	Invokes the current task from PowerShell ISE by Invoke-Build.ps1
-	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2016 Roman Kuzmin
 
 .Description
 	This script invokes the current task from the build script being edited in
 	PowerShell ISE. It is invoked either in ISE or in PowerShell console.
-	Invoke-Build.ps1 should be in this script directory or in the path.
+
+	Invoke-Build.ps1 is searched in the directory of Invoke-TaskFromISE.ps1
+	and then in the path.
 
 	The current task is the task at the caret line or above. If none is found
 	then the default task is invoked. The script is saved if it is modified.
@@ -18,7 +28,11 @@
 
 	This script may be called directly from the console pane. But it is easier
 	to associate it with key shortcuts. For example, in order to invoke it by
-	Ctrl+Shift+T and Ctrl+Shift+B add the following lines to the ISE profile:
+	Ctrl+Shift+T and Ctrl+Shift+B open the ISE profile:
+
+		C:\Users\...\Documents\WindowsPowerShell\Microsoft.PowerShellISE_profile.ps1
+
+	and add menu commands and shortcuts:
 
 		# Invoke task in ISE by Invoke-Build.ps1
 		$null = $psISE.CurrentPowerShellTab.AddOnsMenu.Submenus.Add(
@@ -31,17 +45,8 @@
 	These commands assume that Invoke-TaskFromISE.ps1 is in the path.
 	If this is not the case then specify the full script path there.
 
-	To get the ISE profile path, type $profile in the console pane:
-
-		PS> $profile
-		C:\Users\...\Documents\WindowsPowerShell\Microsoft.PowerShellISE_profile.ps1
-
 .Parameter Console
-		Tells to invoke the current task in an external PowerShell console.
-		By default the task is invoked in ISE.
-
-.Link
-	https://github.com/nightroman/Invoke-Build
+		Tells to invoke the current task in a new PowerShell console.
 #>
 
 param(
