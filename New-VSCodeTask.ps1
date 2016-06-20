@@ -1,14 +1,22 @@
 
+<#PSScriptInfo
+.VERSION 1.0.0
+.AUTHOR Roman Kuzmin
+.COPYRIGHT (c) 2011-2016 Roman Kuzmin
+.TAGS Invoke, Task, Invoke-Build, VSCode
+.GUID b8b2b532-28f6-443a-b0b1-079a66dd4ce3
+.LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
+.PROJECTURI https://github.com/nightroman/Invoke-Build
+#>
+
 <#
 .Synopsis
-	Creates VSCode task files based on a build script
-	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2016 Roman Kuzmin
+	Makes VSCode tasks from Invoke-Build tasks
 
 .Description
-	The script creates .vscode\tasks.cmd and .vscode\tasks.json. The existing
-	files are overridden. Change to the VSCode workspace directory before
-	invoking the script.
+	The script makes VSCode tasks from Invoke-Build tasks. It creates tasks.cmd
+	and tasks.json in .\.vscode. The existing files are overridden. Change to
+	the VSCode workspace directory before invoking the script.
 
 	Do not edit tasks.json directly. Edit the build script instead. When you
 	add, remove, rename, reorder tasks, change tags or Invoke-Build location
@@ -48,9 +56,6 @@
 	This command binds to the relative build and engine script paths. The
 	second argument may be omitted, Invoke-Build.ps1 will be discovered
 	(it is needed if there are several versions of it for some reason).
-
-.Link
-	https://github.com/nightroman/Invoke-Build
 #>
 
 [CmdletBinding()]

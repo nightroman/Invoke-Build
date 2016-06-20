@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) 2011-2016 Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, ISE
@@ -85,7 +85,7 @@ foreach($private:t in (& $ib ?? $path).Values) {
 }
 
 if ($_Console) {
-	Start-Process PowerShell.exe ("-NoExit & '{0}' '{1}' '{2}'" -f @(
+	Start-Process PowerShell.exe ("-NoExit -NoProfile -ExecutionPolicy Bypass & '{0}' '{1}' '{2}'" -f @(
 		$ib.Replace("'", "''")
 		$task.Replace("'", "''").Replace('"', '\"')
 		$path.Replace("'", "''")
