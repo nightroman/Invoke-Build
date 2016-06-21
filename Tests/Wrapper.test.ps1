@@ -110,9 +110,7 @@ task Stars StarsMissingDirectory, {
 	$r = Invoke-Build **, ?
 	equals $r[0].Name PreTask1
 	equals $r[0].Jobs '{}'
-	equals $r[-1].Name .
-	assert (($r[-1].Jobs -join ', ') -like 'ParentHasManyCandidates, *, Summary, {}')
-	equals $r[-1].Synopsis 'Call tests and clean.'
+	equals $r[-1].Name test-fail
 
 	# full task info
 	$r = Invoke-Build **, ??
