@@ -294,13 +294,6 @@ task ShowHelp {
 	Out-String -Width 80
 }
 
-# Synopsis: Invoke Convert-psake.ps1. Output is to be compared.
-task ConvertPsake {
-	if ($PSVersionTable.PSVersion.Major -ge 3) {
-		Convert-psake psake-script.ps1 -Invoke -Synopsis
-	}
-}
-
 # Synopsis: This task calls all test tasks.
 task Tests `
 Dummy1,
@@ -331,5 +324,4 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 Tests,
 WhatIf,
 ListTask,
-ShowHelp,
-ConvertPsake
+ShowHelp
