@@ -30,15 +30,18 @@ The package also includes helper scripts and the generated help file:
 * *Invoke-Build-Help.xml* - external content for Get-Help
 * *ib.cmd* - Invoke-Build helper for cmd.exe
 
-Extra tools are available at the project repository:
+Extra tools, see PSGallery and the repository:
+
+* *Invoke-Build.ArgumentCompleters.ps1* - completers for v5 native, TabExpansionPlusPlus, TabExpansion2.ps1
+* *Invoke-TaskFromISE.ps1* - invokes a task from a build script opened in ISE
+* *Invoke-TaskFromVSCode.ps1* - invokes a task from a build script opened in VSCode
+* *New-VSCodeTask.ps1* - generates VSCode tasks bound to build script tasks
+
+And some more tools, see the repository:
 
 * *Convert-psake.ps1* - converts psake build scripts
-* *Invoke-TaskFromISE.ps1* - invokes a task from ISE
-* *Invoke-TaskFromVSCode.ps1* - invokes a task from VSCode
-* *New-VSCodeTask.ps1* - generates VSCode tasks
 * *Show-BuildTree.ps1* - shows task trees as text
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
-* *TabExpansionProfile.Invoke-Build.ps1* - code completers
 
 ## Install as module
 
