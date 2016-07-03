@@ -1,5 +1,8 @@
 
-## ![](https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png) Build Automation in PowerShell
+<img src="https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png" align="right"/>
+[![NuGet](https://buildstats.info/nuget/Invoke-Build)](https://www.nuget.org/packages/Invoke-Build)
+
+## Build Automation in PowerShell
 
 Invoke-Build is a build and test automation tool which invokes tasks defined in
 PowerShell v2.0+ scripts. It is similar to psake but arguably easier to use and
