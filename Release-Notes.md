@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v2.14.7
+
+Fixed #27, `Invoke-Builds` regression.
+
 ## v2.14.6
 
 Faster preprocessing of special tasks `*`.

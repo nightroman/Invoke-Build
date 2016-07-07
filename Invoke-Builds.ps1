@@ -22,9 +22,9 @@ param(
 
 # info, result
 $info = [PSCustomObject]@{
-	Tasks = [IB]::List()
-	Errors = [IB]::List()
-	Warnings = [IB]::List()
+	Tasks = [System.Collections.Generic.List[object]]@()
+	Errors = [System.Collections.Generic.List[object]]@()
+	Warnings = [System.Collections.Generic.List[object]]@()
 	Started = [DateTime]::Now
 	Elapsed = $null
 }
@@ -42,8 +42,7 @@ if (!$Build) {return}
 
 # engine
 $ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
-if (![System.IO.File]::Exists($ib)) {*TE "Missing script '$ib'." 13}
-. $ib .
+try {. $ib .} catch {$PSCmdlet.ThrowTerminatingError($_)}
 
 ### works
 $works = @()

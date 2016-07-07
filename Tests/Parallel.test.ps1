@@ -154,14 +154,16 @@ task ParallelBadMaximumBuilds {
 }
 
 # Error: Invoke-Build.ps1 is not in the same directory.
+# Covers #27, *TE was not found before loading IB.
 task ParallelMissingEngine {
-	try {
-		Copy-Item -LiteralPath (Get-Alias Invoke-Builds).Definition $env:TEMP
-		& "$env:TEMP\Invoke-Builds.ps1" @{File='Sleep.build.ps1'}
-	}
-	finally {
-		[System.IO.File]::Delete("$env:TEMP\Invoke-Builds.ps1")
-	}
+	$script = "$env:TEMP\Invoke-Builds.ps1"
+	Copy-Item ..\Invoke-Builds.ps1 $script -Force
+
+	$version = $PSVersionTable.PSVersion.Major
+	($r = PowerShell.exe -Version $version -NoProfile "& '$script' @{bar=1}" | Out-String)
+
+	[System.IO.File]::Delete($script)
+	assert ($r -like "*'$env:TEMP\Invoke-Build.ps1'*@{bar=1}*CommandNotFoundException*")
 }
 
 # Error: missing script
@@ -176,12 +178,10 @@ task ParallelBadParameters {
 
 # Test error cases.
 task ParallelErrorCases `
-(job ParallelMissingEngine -Safe),
 (job ParallelMissingFile -Safe),
 (job ParallelBadMaximumBuilds -Safe),
 (job ParallelBadParameters -Safe),
 {
-	Test-Error ParallelMissingEngine "Missing script '*\Invoke-Build.ps1'.*At *\Parallel.test.ps1:*ObjectNotFound*"
 	Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 	Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
 	Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*"
@@ -230,4 +230,11 @@ Build succeeded. 3 tasks, 0 errors, 0 warnings 00:00:*
 
 	Pop-Location
 	Remove-Item z -Recurse
+}
+
+# Covers #27, [IB] was not found before loading IB.
+task ParallelEmptyRun {
+	$version = $PSVersionTable.PSVersion.Major
+	($r = PowerShell.exe -Version $version -NoProfile 'Invoke-Builds.ps1 -Result r; $r.GetType().Name')
+	equals $r $(if ($version -eq 2) {'Hashtable'} else {'PSCustomObject'})
 }
