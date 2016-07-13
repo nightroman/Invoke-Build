@@ -117,11 +117,11 @@ This imports commands and makes their help available:
 : Samples, patterns, and various techniques.
 
 Questions, suggestions, and issues are welcome at
-[Google Discussion Group](https://groups.google.com/forum/#!forum/invoke-build) and
+[Google Group](https://groups.google.com/forum/#!forum/invoke-build) and
 [Project Issues](https://github.com/nightroman/Invoke-Build/issues).
 Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 
 ## Credits
 
-The project was inspired by [*psake*](https://github.com/psake/psake).
-Some concepts came from [*MSBuild*](https://github.com/Microsoft/msbuild).
+- The project was inspired by [*psake*](https://github.com/psake/psake), see [Comparison with psake](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-psake).
+- Some concepts came from [*MSBuild*](https://github.com/Microsoft/msbuild), see [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild).

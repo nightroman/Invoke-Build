@@ -460,14 +460,29 @@
 '@
 		If = @{default = '$true'; description = @'
 		Specifies the optional condition to be evaluated. If the condition
-		evaluates to false then the task is not invoked.
+		evaluates to false then the task is not invoked. The condition is
+		defined in one of two ways depending on the requirements.
 
-		The value is a script block evaluated on task invocation or an object
-		treated as Boolean on definition. On WhatIf a script block is treated
-		as true without invocation.
+		Using standard Boolean notation (parenthesis) the condition will only
+		be evaluated when the task is loaded into the build engine. A use case
+		for this notation might be evaluating parameters that are passed into
+		the build.
 
-		If the task is called several times then it is possible that the task
-		is skipped at first but invoked later when the script block gets true.
+			Example:
+				task SomeTask -If ($SomeCondition) {...}
+
+		Using script block notation (curly braces) the condition will be
+		evaluated dynamically on task invocation. If a task is referenced by
+		several tasks then the condition is evaluated each time until it gets
+		true and the task is invoked. The script block notation is normally
+		used for a condition that may be defined or changed during the build.
+
+			Example:
+				task SomeTask -If {$SomeCondition} {...}
+
+		On WhatIf:
+		- Boolean conditions are evaluated and treated accordingly.
+		- Script block conditions are treated as true without invocation.
 '@}
 		Inputs = @'
 		Specifies the input items, tells to process the task as incremental,

@@ -82,7 +82,7 @@ elseif (!($BuildFile = Get-BuildFile ${*cd})) {
 
 if (${*Parameters}) {return}
 
-$_ = Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1
+$_ = Get-Command $BuildFile -ErrorAction 1
 if (!($_ = $_.Parameters) -or !$_.Count) {return}
 
 ${private:*r} = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
@@ -305,7 +305,7 @@ function *Try($J, $T, $P=@()) {
 
 function *GP {
 	$r = @{}
-	$p = (Get-Command -Name $BuildFile -CommandType ExternalScript -ErrorAction 1).Parameters
+	$p = (Get-Command $BuildFile -ErrorAction 1).Parameters
 	$n = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
 	'PipelineVariable', 'InformationAction', 'InformationVariable'
 	foreach($k in $p.Keys) {
