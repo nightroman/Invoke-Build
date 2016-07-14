@@ -72,9 +72,9 @@ task Package Markdown, Help, GitStatus, {
 # Synopsis: Makes the module directory InvokeBuild.
 task Module Markdown, Help, {
 	# check version
-	($versionModule = (Get-Module -ListAvailable -Name .\InvokeBuild\InvokeBuild.psd1).Version.ToString())
-	($versionScript = (Get-BuildVersion).ToString())
-	assert ($versionModule -like "$versionScript.*")
+	$versionModule = (Get-Module -ListAvailable -Name .\InvokeBuild\InvokeBuild.psd1).Version.ToString()
+	$versionScript = (Get-BuildVersion).ToString()
+	equals $versionModule $versionScript
 
 	# module folder
 	$dir = "$env:ProgramFiles\WindowsPowerShell\Modules\InvokeBuild"
@@ -104,7 +104,7 @@ task NuGet Version, Package, {
 	$text = @'
 Invoke-Build is a build and test automation tool which invokes tasks defined in
 PowerShell v2.0+ scripts. It is similar to psake but arguably easier to use and
-more powerful.
+more powerful. It is complete, bug free, well covered by tests.
 '@
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>

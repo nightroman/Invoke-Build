@@ -22,6 +22,20 @@
 		PS> . Invoke-Build
 		PS> help task -full
 
+	USING BUILD SCRIPT PARAMETERS
+
+	Build scripts define parameters using param(). They are used in tasks as
+	$ParameterName for reading and as $script:ParameterName for writing.
+
+	The following parameter names are reserved for the engine:
+	Task, File, Result, Safe, Summary, WhatIf, Checkpoint, Resume, Log
+
+	Script parameters are specified for Invoke-Build as if they are its own.
+	Known issue #4. Script switches should be specified after Task and File.
+
+	Build script parameters are automatically exported and imported by the
+	engine on persistent builds, see Checkpoint.
+
 	RESERVED FUNCTION AND VARIABLE NAMES
 
 	Function and variable names starting with '*' are reserved for the engine.
@@ -190,26 +204,6 @@
 
 		If the file is still not defined then parent directories are searched.
 '@
-		Parameters = @'
-		A hashtable of parameters passed in the build script. It is needed only
-		in special cases. Normally build script parameters may be specified for
-		Invoke-Build itself, thanks to PowerShell dynamic parameters.
-
-		Dynamic parameters and the hashtable Parameters are not used together.
-		If build script parameters conflict with Invoke-Build parameters then
-		the hashtable Parameters is the only way to pass them in the script.
-
-		Build scripts define parameters using standard syntax. Parameters are
-		shared between tasks: for reading as $ParameterName, for writing as
-		$script:ParameterName.
-
-		Build script parameters are automatically exported and imported by the
-		engine on persistent builds, see Checkpoint.
-
-		NOTE: Dynamic switches must be specified after positional arguments of
-		Task and File if they are used with omitted parameter names. Otherwise
-		switches swallow these arguments and make a command incorrect.
-'@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is
 		possible to resume an interrupted build starting at the interrupted
@@ -217,8 +211,8 @@
 		and deleted if the build succeeds.
 
 		In order to resume an interrupted persistent build specify the same
-		checkpoint file and the switch Resume. Task, File, Parameters are
-		ignored, their values are restored from the file.
+		checkpoint file and the switch Resume. Task, File, and build script
+		parameters should not be used, they are restored from the file.
 
 		Persistent builds must be designed properly. Data shared by tasks are
 		exported and imported by the functions Export-Build and Import-Build.
@@ -235,8 +229,8 @@
 '@
 		Resume = @'
 		Tells to resume an interrupted persistent build from a checkpoint file
-		specified by Checkpoint. Task, File, and Parameters are ignored, their
-		values are restored from the file.
+		specified by Checkpoint. Task, File, and build script parameters should
+		not be used, they are restored from the file.
 '@
 		Result = @'
 		Tells to output build information using a variable. It is either a name
@@ -320,9 +314,9 @@
 
 		@{code={
 	# Invoke tasks Build and Test from the default script with parameters.
-	# The script defines parameters Log and WarningLevel by 'param' as usual.
+	# The script defines parameters Output and WarningLevel by param().
 
-	Invoke-Build Build, Test -Log log.txt -WarningLevel 4
+	Invoke-Build Build, Test -Output log.txt -WarningLevel 4
 		}}
 
 		@{code={
@@ -886,7 +880,7 @@
 		Build = @'
 		Build parameters defined as hashtables with these keys/data:
 
-			Task, File, Parameters - Invoke-Build.ps1 parameters
+			Task, File, ... - Invoke-Build.ps1 and script parameters
 			Log - Tells to write build output to the specified file
 
 		Any number of builds is allowed, including 0 and 1. The maximum number
@@ -929,7 +923,7 @@
 		@{File='Project2.build.ps1'; Task='MakeHelp'}
 		@{File='Project2.build.ps1'; Task='Build', 'Test'}
 		@{File='Project3.build.ps1'; Log='C:\TEMP\Project3.log'}
-		@{File='Project4.build.ps1'; Parameters=@{Configuration='Release'}}
+		@{File='Project4.build.ps1'; Configuration='Release'}
 	)
 			}
 			remarks = @'

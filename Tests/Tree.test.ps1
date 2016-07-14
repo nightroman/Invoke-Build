@@ -11,93 +11,120 @@ function Get-NormalText($_) {
 	$_.Trim() -replace '\s+', ' '
 }
 
+function Assert-Same($A, $B) {
+	$1 = Get-NormalText ($A -join ' ')
+	$2 = Get-NormalText ($B -join ' ')
+	try {equals $1 $2} catch {Write-Error $_}
+}
+
 # Synopsis: Simple tree.
 task SimpleTree {
-	$sample = Get-NormalText @'
-. # Call tree tests.
-    SimpleTree # Simple tree.
+	Set-Content z.ps1 {
+		<#
+			Synopsis: t1
+			blah blah
+		#>
+		task t1 {}
+		# Synopsis: t2
+		task t2 {}
+		# Synopsis: dot
+		task . t1, t2, {}
+		task root {}
+	}
+
+	# with omitted -Task resolved to .
+	($r = Show-BuildTree -File z.ps1)
+	Assert-Same $r @'
+. # dot
+    t1 # t1
         {}
-    UpstreamTree # Tree with upstream tasks.
-        {}
-    CyclicReference # Test cyclic reference.
-        {}
-    MissingReference # Test missing reference.
-        {}
-    MissingTask # Test missing task.
+    t2 # t2
         {}
     {}
 '@
 
-	# no task is resolved to .
-	($log = Show-BuildTree -File Tree.test.ps1 | Out-String)
-	equals $sample (Get-NormalText $log)
+	Remove-Item z.ps1
 }
 
 # Synopsis: Tree with upstream tasks.
 task UpstreamTree {
-	$sample = Get-NormalText @'
-. # Call tree tests.
-    SimpleTree (.) # Simple tree.
+	Set-Content z.ps1 {
+		# Synopsis: t1
+		task t1 {}
+		# Synopsis: t2
+		task t2 {}
+		# Synopsis: dot
+		task . t1, t2, {}
+		task root {}
+	}
+
+	# with -Task * resolved gets two trees
+	($r = Show-BuildTree * z.ps1 -Upstream)
+	Assert-Same $r @'
+. # dot
+    t1 (.) # t1
         {}
-    UpstreamTree (.) # Tree with upstream tasks.
+    t2 (.) # t2
         {}
-    CyclicReference (.) # Test cyclic reference.
-        {}
-    MissingReference (.) # Test missing reference.
-        {}
-    MissingTask (.) # Test missing task.
-        {}
+    {}
+
+root
     {}
 '@
 
-	# * is resolved to .
-	($log = Show-BuildTree * Tree.test.ps1 -Upstream | Out-String)
-	equals $sample (Get-NormalText $log)
+	Remove-Item z.ps1
 }
 
 # Synopsis: Test cyclic reference.
 task CyclicReference {
-	[System.IO.File]::WriteAllText("$BuildRoot\z.build.ps1", {
+	Set-Content z.ps1 {
 		task task1 task2
 		task task2 task1
 		task . task1
-	})
-	Show-BuildTree . z.build.ps1
+	}
+
+	($r = try {Show-BuildTree . z.ps1} catch {$_})
+	assert ("$r" -like "Task 'task2': Cyclic reference to 'task1'.*At *z.ps1:3 *")
+
+	Remove-Item z.ps1
 }
 
 # Synopsis: Test missing reference.
 task MissingReference {
-	[System.IO.File]::WriteAllText("$BuildRoot\z.build.ps1", {
+	Set-Content z.ps1 {
 		task task1 missing, {}
 		task . task1, {}
-	})
-	Show-BuildTree . z.build.ps1
+	}
+
+	($r = try {Show-BuildTree . z.ps1} catch {$_})
+	assert ("$r" -like "Task 'task1': Missing task 'missing'.*At *z.ps1:2 *")
+
+	Remove-Item z.ps1
 }
 
 # Synopsis: Test missing task.
 task MissingTask {
-	Show-BuildTree missing
+	($r = try {Show-BuildTree missing} catch {$_})
+	equals "$r" "Missing task 'missing'."
 }
 
-<#
-	Synopsis : Call tree tests.
-	(also test getting synopsis)
-#>
-task . `
-SimpleTree,
-UpstreamTree,
-(job CyclicReference -Safe),
-(job MissingReference -Safe),
-(job MissingTask -Safe),
-{
-	$e = error CyclicReference
-	assert ("$e" -like "Task 'task2': Cyclic reference to 'task1'.*At *z.build.ps1:3 *")
+# Synopsis: Test -Parameters.
+task TreeParameters {
+	Set-Content z.ps1 {
+		param($p1)
+		if ($p1) {
+			task p1
+		}
+		else {
+			task default
+		}
+	}
 
-	$e = error MissingReference
-	assert ("$e" -like "Task 'task1': Missing task 'missing'.*At *z.build.ps1:2 *")
+	($r = Show-BuildTree -File z.ps1)
+	equals $r[1] default
 
-	$e = error MissingTask
-	assert ("$e" -like "*Missing task 'missing'.*")
+	($r = Show-BuildTree -File z.ps1 -Parameters @{p1=1})
+	equals $r[1] p1
 
-	Remove-Item z.*
+	Remove-Item z.ps1
 }

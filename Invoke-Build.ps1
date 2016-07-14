@@ -16,7 +16,6 @@ specific language governing permissions and limitations under the License.
 param(
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)][string]$File,
-	[Parameter(Position=2)][hashtable]$Parameters,
 	[string]$Checkpoint,
 	$Result,
 	[switch]$Safe,
@@ -48,13 +47,14 @@ trap {*TE $_ 13}
 
 $BuildTask = $PSBoundParameters['Task']
 $BuildFile = $PSBoundParameters['File']
-${private:*Parameters} = $PSBoundParameters['Parameters']
 ${private:*Checkpoint} = $PSBoundParameters['Checkpoint']
 ${private:*Resume} = $PSBoundParameters['Resume']
 ${private:*cd} = *FP
 ${private:*cp} = $null
-${private:*pn} = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf',
-'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
+${private:*p1} = $null
+${private:*r} = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
+${private:*pp} = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
+${private:*pn} = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
 'PipelineVariable', 'InformationAction', 'InformationVariable'
 
 if ($BuildTask -eq '**') {
@@ -66,30 +66,27 @@ if ($BuildTask -eq '**') {
 if (${*Checkpoint}) {${*Checkpoint} = *FP ${*Checkpoint}}
 if (${*Resume}) {
 	if (!${*Checkpoint}) {throw 'Checkpoint must be defined for Resume.'}
-	${*cp} = Import-Clixml ${*Checkpoint}
+	${*cp} = try {Import-Clixml ${*Checkpoint}} catch {throw 'Invalid checkpoint file?'}
 	$BuildTask = ${*cp}.Task
 	$BuildFile = ${*cp}.File
-	${*Parameters} = ${*cp}.Prm1
-	return
+	${*p1} = ${*cp}.Prm1
 }
-
-if ($BuildFile) {
+elseif ($BuildFile) {
 	if (![System.IO.File]::Exists(($BuildFile = *FP $BuildFile))) {throw "Missing script '$BuildFile'."}
 }
 elseif (!($BuildFile = Get-BuildFile ${*cd})) {
 	throw 'Missing default script.'
 }
 
-if (${*Parameters}) {return}
+$_ = (Get-Command $BuildFile -ErrorAction 1).Parameters
+if (!$_) {throw 'Invalid script syntax?'}
+if (!$_.Count) {return}
 
-$_ = Get-Command $BuildFile -ErrorAction 1
-if (!($_ = $_.Parameters) -or !$_.Count) {return}
-
-${private:*r} = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
 (${private:*a} = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
 foreach($_ in $_.Values) {
-	if (${*pn} -notcontains $_.Name) {
-		${*r}.Add($_.Name, (New-Object System.Management.Automation.RuntimeDefinedParameter $_.Name, $_.ParameterType, ${*a}))
+	if (${*pn} -notcontains (${private:*b} = $_.Name)) {
+		if (${*pp} -contains ${*b}) {throw "Script uses reserved parameter '${*b}'."}
+		${*r}.Add(${*b}, (New-Object System.Management.Automation.RuntimeDefinedParameter ${*b}, $_.ParameterType, ${*a}))
 	}
 }
 ${*r}
@@ -231,7 +228,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'2.14.7'}
+function Get-BuildVersion {[Version]'3.0.0'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'
@@ -303,26 +300,19 @@ function *Try($J, $T, $P=@()) {
 	}}
 }
 
-function *GP {
-	$r = @{}
-	$p = (Get-Command $BuildFile -ErrorAction 1).Parameters
-	$n = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer',
-	'PipelineVariable', 'InformationAction', 'InformationVariable'
-	foreach($k in $p.Keys) {
-		if ($n -notcontains $k) {
-			$r[$k] = Get-Variable -Name $k -Scope Script -ValueOnly
-		}
-	}
-	$r
-}
-
 function *CP {
 	Export-Clixml ${*}.Checkpoint -InputObject @{
 		User = *UC Export-Build
 		Task = $BuildTask
 		File = $BuildFile
-		Prm1 = ${*}.Parameters
-		Prm2 = *GP
+		Prm1 = ${*}.Prm1
+		Prm2 = $(
+			$r = @{}
+			foreach($_ in ${*}.Prm2.Keys) {
+				$r[$_] = Get-Variable -Name $_ -Scope Script -ValueOnly
+			}
+			$r
+		)
 		Done = @(foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}})
 	}
 }
@@ -539,7 +529,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 		$ErrorActionPreference = 'Stop'
 		*SL ($BuildRoot = if ($Task) {*FP $Task} else {Split-Path $BuildFile})
 	}
-	Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe, Summary, Resume, WhatIf
+	Remove-Variable Task, File, Checkpoint, Result, Safe, Summary, Resume, WhatIf
 	return
 }
 
@@ -557,11 +547,11 @@ function Exit-Build {} function Exit-BuildTask {} function Exit-BuildJob {}
 function Export-Build {} function Import-Build {}
 
 $ErrorActionPreference = 'Stop'
-if (!${*Parameters}) {
-	${*Parameters} = @{}
+if (!${*p1}) {
+	${*p1} = @{}
 	foreach($_ in $PSBoundParameters.Keys) {
-		if (${*pn} -notcontains $_) {
-			${*Parameters}[$_] = $PSBoundParameters[$_]
+		if (${*r}.ContainsKey($_)) {
+			${*p1}[$_] = $PSBoundParameters[$_]
 		}
 	}
 }
@@ -574,7 +564,8 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Errors = [IB]::List()
 	Warnings = [IB]::List()
 	All = ${private:*a} = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
-	Parameters = $_ = ${*Parameters}
+	Prm1 = $_ = ${*p1}
+	Prm2 = ${*r}
 	Checkpoint = ${*Checkpoint}
 	Started = [DateTime]::Now
 	Elapsed = $null
@@ -594,10 +585,10 @@ if ($Result) {
 }
 ${private:*Safe} = $Safe
 ${private:*Summary} = $Summary
-Remove-Variable Task, File, Parameters, Checkpoint, Result, Safe, Summary, Resume
+Remove-Variable Task, File, Checkpoint, Result, Safe, Summary, Resume
 
 ${private:*b} = 1
-${private:*r} = 0
+${*r} = 0
 try {
 	if ($BuildTask -eq '**') {
 		${*b} = 0

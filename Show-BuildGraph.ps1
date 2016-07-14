@@ -37,8 +37,7 @@
 		Custom DOT code added to the graph definition, see Graphviz manuals.
 		The default 'graph [rankdir=LR]' tells edges to go from left to right.
 .Parameter Parameters
-		See: help Invoke-Build -Parameter Parameters. Parameters are needed in
-		special cases when they alter build task sets or task dependencies.
+		Build script parameters needed in special cases when they alter tasks.
 .Parameter NoShow
 		Tells to not show the graph after creation.
 .Parameter Number
@@ -86,7 +85,8 @@ $type = $type.Substring(1).ToLower()
 $Output = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Output)
 
 # get tasks
-$all = & $ib ?? -File:$File -Parameters:$Parameters
+if (!$Parameters) {$Parameters = @{}}
+$all = & $ib ?? $File @Parameters
 
 # DOT code
 $text = @(

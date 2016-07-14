@@ -63,7 +63,7 @@ task Many {
 	$build0 = @{File='Dynamic.build.ps1'}
 	$build1 = @{File='Safe.test.ps1'; Task='Error1'}
 	$build2 = @{File='Dynamic.build.ps1'; Task='Task0'}
-	$build3 = @{File='Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
+	$build3 = @{File='Conditional.build.ps1'; Configuration='Debug'}
 
 	# But this array items will be replaced with copied and amended hashes:
 	# File is resolved to its full path, added Result contains build results.
@@ -123,9 +123,9 @@ task Timeout -If ($BuildRoot -notmatch '[\[\]]') {
 	$message = ''
 	try {
 		Invoke-Builds -Timeout 500 @(
-			@{File='Sleep.build.ps1'; Parameters=@{Milliseconds=10}; Log='z.1'}
-			@{File='Sleep.build.ps1'; Parameters=@{Milliseconds=2000}; Log='z.2'}
-			@{File='Sleep.build.ps1'; Parameters=@{Milliseconds=3000}; Log='z.3'}
+			@{File='Sleep.build.ps1'; Milliseconds=10; Log='z.1'}
+			@{File='Sleep.build.ps1'; Milliseconds=2000; Log='z.2'}
+			@{File='Sleep.build.ps1'; Milliseconds=3000; Log='z.3'}
 		)
 	}
 	catch {
@@ -177,15 +177,16 @@ task ParallelBadParameters {
 }
 
 # Test error cases.
-task ParallelErrorCases `
-(job ParallelMissingFile -Safe),
-(job ParallelBadMaximumBuilds -Safe),
-(job ParallelBadParameters -Safe),
-{
-	Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
-	Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
-	Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' invocation failed:*"
-}
+task ParallelErrorCases @(
+	(job ParallelMissingFile -Safe)
+	(job ParallelBadMaximumBuilds -Safe)
+	(job ParallelBadParameters -Safe)
+	{
+		Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
+		Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
+		Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' *parameter name 'Parameters'*"
+	}
+)
 
 # v2.0.1 - It is fine to omit the key File in build parameters.
 task OmittedBuildParameterFile {

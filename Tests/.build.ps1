@@ -17,9 +17,8 @@
 	the Tests directory this command invokes the . task from this build script.
 #>
 
-# Build scripts can use parameters passed in as
+# Build scripts can use parameters
 # PS> Invoke-Build ... -MyParam1 ...
-# PS> Invoke-Build ... -Parameters @{ MyParam1 = ...}
 param(
 	# This value is available for all tasks ($MyParam1).
 	# Build script parameters often have default values.
@@ -127,10 +126,11 @@ task Checkpoint {
 # Synopsis: Test conditional tasks.
 # It also shows how to invoke build scripts with parameters.
 task Conditional {
-	# call with Debug, use the dynamic parameter
+	# call with Debug, using the dynamic parameter
 	Invoke-Build . Conditional.build.ps1 -Configuration Debug
-	# call with Release, use the parameter Parameters
-	Invoke-Build . Conditional.build.ps1 @{ Configuration = 'Release' }
+	# call with Release, using splatting
+	$param = @{Configuration = 'Release'}
+	Invoke-Build . Conditional.build.ps1 @param
 	# call default (! there was an issue !) and also test errors
 	Invoke-Build TestScriptCondition, ConditionalErrors Conditional.build.ps1
 }

@@ -122,17 +122,17 @@ task AfterTaskMustBeAfterBeforeTask {
 task Fix20 {
 	Set-Content z.build.ps1 @'
 [CmdletBinding()]
-param($Task)
+param($Param1)
 task good
 task bad {throw 'oops'}
 '@
 	$r = ''
-	try {Invoke-Build * z.build.ps1 -Checkpoint z.clixml -Parameters @{Task = 'Fix20'}} catch {$r = $_}
+	try {Invoke-Build * z.build.ps1 -Checkpoint z.clixml -Param1 Fix20} catch {$r = $_}
 	equals $r.FullyQualifiedErrorId oops
 
 	$r = Import-Clixml z.clixml
 	equals $r.Prm2.Count 1
-	equals $r.Prm2.Task Fix20
+	equals $r.Prm2.Param1 Fix20
 
 	Remove-Item z.build.ps1, z.clixml
 }
@@ -159,4 +159,37 @@ task Fix22 {
 	$env:TestFix22 = ''
 	Invoke-Build -Checkpoint z.clixml -Resume
 	assert (!(Test-Path z.clixml))
+}
+
+# Synopsis: #29, restore parameters on resume.
+# Other tests did not cover this scenario.
+task Fix29Resume {
+	Set-Content z.ps1 {
+		param($p1='default-p1')
+		$Log.Add("script-$p1")
+		task t1 {
+			$Log.Add("task-$p1")
+			throw 42
+		}
+	}
+
+	$Log = [System.Collections.Generic.List[object]]@()
+	Invoke-Build -File z.ps1 -p1 new-p1 -Checkpoint z.clixml -Safe
+	equals $Log.Count 2
+	equals $Log[0] script-new-p1
+	equals $Log[1] task-new-p1
+
+	$Log = [System.Collections.Generic.List[object]]@()
+	Invoke-Build -Resume -Checkpoint z.clixml -Safe
+	equals $Log.Count 2
+	equals $Log[0] script-new-p1 #! not script-default-p1
+	equals $Log[1] task-new-p1
+
+	Remove-Item z.ps1, z.clixml
+}
+
+# v3.0.0
+task InvalidCheckpointOnResume {
+	($r = try {Invoke-Build -Checkpoint $BuildFile -Resume} catch {$_})
+	equals "$r" 'Invalid checkpoint file?'
 }

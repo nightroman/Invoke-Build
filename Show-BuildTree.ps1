@@ -19,8 +19,7 @@
 		The build script.
 		If it is omitted then the default script is used.
 .Parameter Parameters
-		Build script parameters.
-		They are needed only if they alter build trees.
+		Build script parameters needed in special cases when they alter tasks.
 .Parameter Upstream
 		Tells to show upstream tasks for each task.
 
@@ -42,7 +41,7 @@ param(
 
 $private:_Task = $Task
 $private:_File = $File
-$private:_Parameters = $Parameters
+$private:_Parameters = if ($Parameters) {$Parameters} else {@{}}
 $private:_Upstream = $Upstream
 Remove-Variable Task, File, Parameters, Upstream
 
@@ -104,7 +103,7 @@ try {
 	}
 
 	# get tasks
-	$tasks = & $ib ?? -File:$_File -Parameters:$_Parameters
+	$tasks = & $ib ?? $_File @_Parameters
 
 	# references
 	$references = @{}

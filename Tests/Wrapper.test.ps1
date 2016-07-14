@@ -144,11 +144,6 @@ param(
 	equals $d.Platform x64
 	equals $d.Configuration Debug
 
-	$d = @{}
-	Invoke-Build -Parameters @{Platform = 'x64'; Configuration = 'Debug'}
-	equals $d.Platform x64
-	equals $d.Configuration Debug
-
 	Remove-Item z.build.ps1
 }
 
@@ -156,47 +151,32 @@ task DynamicConflictParam {
 	Set-Location z
 	@'
 param(
-	$Own1 = 'default1',
-	$File = 'default2'
+	$Own1,
+	$File
 )
-<##> task . {
-	$d.Own1 = $Own1
-	$d.File = $File
-}
 '@ > z.build.ps1
 
-	$d = @{}
-	Invoke-Build
-	equals $d.Own1 default1
-	equals $d.File default2
-
-	$d = @{}
-	Invoke-Build -Parameter @{Own1 = 'custom1'; File = 'custom2'}
-	equals $d.Own1 custom1
-	equals $d.File custom2
-
-	$$ = try { Invoke-Build -Own1 '' -Parameter @{File = ''} } catch {$_}
-	assert ($$ -like "*A parameter cannot be found that matches parameter name 'Own1'.")
+	($r = try {Invoke-Build} catch {$_})
+	equals "$r" "Script uses reserved parameter 'File'."
 
 	Remove-Item z.build.ps1
 }
 
-#! keep it as it is, weird
+#! <3.0.0 Without error on null command.Parameters the error was weird "*Missing ')' in function parameter list.*"
 task DynamicSyntaxError {
-	@'
+	Set-Content z\.build.ps1 @'
 param(
 	$a1
 	$a2
 )
-<##> task .
-'@ > z\.build.ps1
+task .
+'@
 
 	Set-Location z
-	$$ = try { Invoke-Build ? } catch {$_}
-	assert ($$ -like "*Missing ')' in function parameter list.*")
+	($r = try { Invoke-Build ? } catch {$_})
+	assert ($r -match 'Invalid script syntax')
 
-	Set-Location $BuildRoot
-	Remove-Item z\.build.ps1
+	Remove-Item .build.ps1
 }
 
 task DynamicMissingScript {

@@ -151,3 +151,12 @@ task TestDependsOnFailedDirectlyAndIndirectly (job DependsOnFailedDirectlyAndInd
 	# which leads to unsafe calls of the failed task
 	equals "$(error DependsOnFailedDirectlyAndIndirectly)" 'Oops in FailedUsedByMany'
 }
+
+### Misc
+
+# Test missing task
+task ErrorMissingTask {
+	($r = try {<##> error missing} catch {$_})
+	equals "$r" "Missing task 'missing'."
+	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
+}
