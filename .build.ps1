@@ -72,9 +72,9 @@ task Package Markdown, Help, GitStatus, {
 # Synopsis: Makes the module directory InvokeBuild.
 task Module Markdown, Help, {
 	# check version
-	$versionModule = (Get-Module -ListAvailable -Name .\InvokeBuild\InvokeBuild.psd1).Version.ToString()
-	$versionScript = (Get-BuildVersion).ToString()
-	equals $versionModule $versionScript
+	($versionModule = (Get-Module -ListAvailable -Name .\InvokeBuild\InvokeBuild.psd1).Version.ToString())
+	($versionScript = (Get-BuildVersion).ToString())
+	equals $versionModule.Substring(0, $versionScript.Length) $versionScript
 
 	# module folder
 	$dir = "$env:ProgramFiles\WindowsPowerShell\Modules\InvokeBuild"

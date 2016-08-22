@@ -29,7 +29,7 @@ dynamicparam {
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildFile($Path) {
 	do {
-		if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1 -or ($_ = $_ -like '*\.build.ps1')) {return $_}
+		if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1 -or ($_ = $_ -match '[\\/]\.build\.ps1$')) {return $_}
 		if ([System.IO.File]::Exists(($_ = $env:InvokeBuildGetFile)) -and ($_ = & $_ $Path)) {return $_}
 	} while($Path = Split-Path $Path)
 }
@@ -113,8 +113,8 @@ function Add-BuildTask(
 		Error = $null
 		Started = $null
 		Elapsed = $null
-		Jobs = $1 = [IB]::List()
-		Safe = $2 = [IB]::List()
+		Jobs = $1 = [System.Collections.Generic.List[object]]@()
+		Safe = $2 = [System.Collections.Generic.List[object]]@()
 		After = $After
 		Before = $Before
 		If = $If
@@ -201,37 +201,30 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 	}
 }
 
-Add-Type @'
-using System;
-using System.Collections.Generic;
-using System.Management.Automation.Host;
-public class IB {
-	[ThreadStatic] static ConsoleColor _c;
-	[ThreadStatic] static PSHostRawUserInterface _u;
-	static public void Init(PSHost h) {if (h.UI != null) _u = h.UI.RawUI;}
-	static public void RC() {if (_u != null) {try {_u.ForegroundColor = _c;} catch {}}}
-	static public void SC(ConsoleColor c) {if (_u != null) {try {_c = _u.ForegroundColor; _u.ForegroundColor = c;} catch {_u = null;}}}
-	static public object List() {return new List<object>();}
-}
-'@
-[IB]::Init($Host)
-
 #.ExternalHelp Invoke-Build-Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
+	$i = $Host.UI.RawUI
+	$_ = $i.ForegroundColor
 	try {
-		[IB]::SC($Color)
+		$i.ForegroundColor = $Color
 		$Text
 	}
 	finally {
-		[IB]::RC()
+		$i.ForegroundColor = $_
 	}
+}
+try {
+	$null = Write-Build 0
+}
+catch {
+	function Write-Build($Color, [string]$Text) {$Text}
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.0.0'}
+function Get-BuildVersion {[Version]'3.0.1'}
 
 function *My {
-	$_.InvocationInfo.ScriptName -like '*\Invoke-Build.ps1'
+	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
 }
 
 function *SL($_=$BuildRoot) {
@@ -352,7 +345,7 @@ function *IO {
 		${*i} = @(& ${*i})
 	}
 	*SL
-	${private:*p} = [IB]::List()
+	${private:*p} = [System.Collections.Generic.List[object]]@()
 	${*i} = foreach($_ in ${*i}) {
 		if ($_ -isnot [System.IO.FileInfo]) {$_ = [System.IO.FileInfo](*FP $_)}
 		if (!$_.Exists) {throw "Missing Inputs item: '$_'."}
@@ -375,8 +368,8 @@ function *IO {
 		if (${*p}.Count -ne ${*o}.Count) {throw "Different Inputs/Outputs counts: $(${*p}.Count)/$(${*o}.Count)."}
 
 		$k = -1
-		$Task.Inputs = $i = [IB]::List()
-		$Task.Outputs = $o = [IB]::List()
+		$Task.Inputs = $i = [System.Collections.Generic.List[object]]@()
+		$Task.Outputs = $o = [System.Collections.Generic.List[object]]@()
 		foreach($_ in ${*i}) {
 			if ($_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime((*FP ($p = ${*o}[++$k])))) {
 				$i.Add(${*p}[$k])
@@ -522,7 +515,7 @@ Set-Alias property Get-BuildProperty
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
-Set-Alias Invoke-Builds "$(Split-Path $_)\Invoke-Builds.ps1"
+Set-Alias Invoke-Builds (Join-Path (Split-Path $_) Invoke-Builds.ps1)
 
 if ($MyInvocation.InvocationName -eq '.') {
 	if ($BuildFile = $MyInvocation.ScriptName) {
@@ -560,9 +553,9 @@ if (${private:*0} = $PSCmdlet.SessionState.PSVariable.Get('*')) {
 	${*0} = if (${*0}.Description -eq 'IB') {${*0}.Value}
 }
 New-Variable * -Description IB ([PSCustomObject]@{
-	Tasks = [IB]::List()
-	Errors = [IB]::List()
-	Warnings = [IB]::List()
+	Tasks = [System.Collections.Generic.List[object]]@()
+	Errors = [System.Collections.Generic.List[object]]@()
+	Warnings = [System.Collections.Generic.List[object]]@()
 	All = ${private:*a} = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Prm1 = $_ = ${*p1}
 	Prm2 = ${*r}
