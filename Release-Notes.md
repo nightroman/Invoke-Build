@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.0.1
+
+Invoke-Build is cross-platform with PowerShell v6.0.0-alpha.
+
 ## v3.0.0
 
 Build script parameters are specified as Invoke-Build dynamic parameters.

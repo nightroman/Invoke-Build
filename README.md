@@ -22,6 +22,8 @@ ISE and VSCode, see *Invoke-TaskFromISE.ps1* and *Invoke-TaskFromVSCode.ps1*.
 Invoke-Build can be used as the task runner in VSCode with tasks maintained in
 a PowerShell build script instead of *tasks.json*, see *New-VSCodeTask.ps1*.
 
+Invoke-Build v3.0.1 is cross-platform with PowerShell v6.0.0-alpha.
+
 ## The package
 
 The standalone script *Invoke-Build.ps1* is enough for invoking build scripts.
