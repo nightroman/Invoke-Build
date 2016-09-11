@@ -193,3 +193,18 @@ task InvalidCheckpointOnResume {
 	($r = try {Invoke-Build -Checkpoint $BuildFile -Resume} catch {$_})
 	equals "$r" 'Invalid checkpoint file?'
 }
+
+# Synopsis: #34, VSTS expects $LASTEXITCODE 0 on success
+task ExitCodeOnSuccessShouldBe0 {
+	Set-Content z.ps1 {
+		task CmdExitCode42 {
+			exec {cmd.exe /c exit 42} 42
+			equals $LASTEXITCODE 42
+		}
+	}
+
+	Invoke-Build CmdExitCode42 z.ps1
+	equals $LASTEXITCODE 0
+
+	Remove-Item z.ps1
+}

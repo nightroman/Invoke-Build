@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.0.2
+
+Use `exit 0` on success (#34).
+
 ## v3.0.1
 
 Invoke-Build is cross-platform with PowerShell v6.0.0-alpha.

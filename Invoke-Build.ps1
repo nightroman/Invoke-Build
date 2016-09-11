@@ -221,7 +221,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.0.1'}
+function Get-BuildVersion {[Version]'3.0.2'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -665,6 +665,7 @@ try {
 		. *UC Exit-Build
 	}
 	${*r} = 1
+	exit 0
 }
 catch {
 	${*r} = 2
