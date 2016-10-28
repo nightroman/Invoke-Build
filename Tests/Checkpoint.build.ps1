@@ -18,14 +18,14 @@ param(
 	$Param2 = 'param2'
 )
 
-# These data are shared and changed by tasks. They have to be persisted using
-# event functions Export-Build and Import-Build.
+# These data are shared and changed by tasks.
+# They are persisted with Export-Build and Import-Build.
 $shared1 = 'shared1'
 $shared2 = 'shared2'
 
 # It outputs data to be exported to clixml. This example uses the most
 # straightforward way of persisting two script variables.
-function Export-Build {
+Export-Build {
 	$shared1
 	$shared2
 	equals $BuildRoot (Get-Location).ProviderPath
@@ -35,7 +35,7 @@ function Export-Build {
 # clixml and then imported back. This example uses the most straightforward way
 # of persisting two script variables. Note: Import-Build is invoked in the
 # script scope and variable names do not have to use the prefix `script:`.
-function Import-Build {
+Import-Build {
 	$shared1, $shared2 = $args[0]
 }
 

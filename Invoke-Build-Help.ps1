@@ -82,9 +82,8 @@
 		$BuildTask - initial tasks
 		$Task      - current task
 
-	$Task is available for the task script blocks defined by parameters If,
-	Inputs, Outputs, Jobs, and the event functions Enter|Exit-BuildTask and
-	Enter|Exit-BuildJob.
+	$Task is available for script blocks defined by task parameters If, Inputs,
+	Outputs, and Jobs and by events Enter|Exit-BuildTask, Enter|Exit-BuildJob.
 
 		$Task properties available for reading:
 
@@ -99,35 +98,32 @@
 	The variable $_ may be exposed. In special cases it is used as an input.
 	In other cases build scripts should not assume anything about its value.
 
-	EVENT FUNCTIONS
+	EVENT BLOCKS
 
-	The build engine defines and calls the following empty functions:
+	Scripts may define the following event blocks. They are invoked:
 
-		Enter-Build     - before all tasks
-		Exit-Build      - after all tasks
+		Enter-Build {} - before all tasks
+		Exit-Build {} - after all tasks
 
-		Enter-BuildTask - before each task
-		Exit-BuildTask  - after each task
+		Enter-BuildTask {} - before each task
+		Exit-BuildTask {} - after each task
 
-		Enter-BuildJob  - before each task script job
-		Exit-BuildJob   - after each task script job
+		Enter-BuildJob {} - before each task action
+		Exit-BuildJob {} - after each task action
 
-		Export-Build    - on saving persistent build checkpoints
-		Import-Build    - once on resuming of a persistent build
+		Export-Build {} - on saving persistent build checkpoints
+		Import-Build {param($data)} - once on resuming persistent builds
 
-	A script can redefine them. Note that nested builds do not inherit events,
-	the engine always defines new empty functions before invoking a new script.
-
-	Events are not called on WhatIf. If Enter-* is called then its pair Exit-*
-	is called, too. Events are suitable for initializing, cleaning, logging.
+	Events are not called on WhatIf.
+	Nested builds do not inherit parent events.
+	If Enter-X is called then Exit-X is called.
 
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
 	a good place for heavy initialization, it does not have to care of WhatIf.
-	Also, unlike the top level script code, Enter-Build can output/log data.
+	Also, unlike the top level script code, Enter-Build can output text.
 
 	Enter-BuildTask, Exit-BuildTask, Enter-BuildJob, and Exit-BuildJob are
-	invoked in the same scope, the parent of a task. *Job functions take a
-	single argument, the job number.
+	invoked in the same scope, the parent of task action blocks.
 
 	Export-Build and Import-Build are used with persistent builds. Export-Build
 	outputs data to be exported to clixml. Import-Build is called with a single
@@ -214,8 +210,8 @@
 		checkpoint file and the switch Resume. Task, File, and build script
 		parameters should not be used, they are restored from the file.
 
-		Persistent builds must be designed properly. Data shared by tasks are
-		exported and imported by the functions Export-Build and Import-Build.
+		Persistent builds must be designed properly. Data shared by tasks
+		may have to be persisted with Export-Build and Import-Build.
 
 		Note that this is not needed for script parameters, the engine takes
 		care of them. Some variables may be declared as parameters simply in

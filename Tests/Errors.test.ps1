@@ -19,7 +19,7 @@
 task 'Exit-Build error should have no task' {
 	{
 		task Test {42}
-		function Exit-Build {throw 13}
+		Exit-Build {throw 13}
 	} > z.build.ps1
 
 	Invoke-Build . z.build.ps1 -Safe -Result Result

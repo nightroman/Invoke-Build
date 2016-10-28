@@ -221,7 +221,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.0.2'}
+function Get-BuildVersion {[Version]'3.1.0'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -420,14 +420,12 @@ function *Task {
 	}
 
 	if (${*}.Checkpoint) {*CP}
-	${private:*n} = 0
 	${private:*a} = $Task.Jobs
 	${private:*i} = [int]($null -ne $Task.Inputs)
 	$Task.Started = [DateTime]::Now
 	try {
 		. *UC Enter-BuildTask
 		foreach(${private:*j} in ${*a}) {
-			++${*n}
 			if (${*j} -is [string]) {
 				try {
 					*Task ${*j} ${*p}
@@ -454,7 +452,7 @@ function *Task {
 
 			try {
 				*SL
-				. Enter-BuildJob ${*n}
+				. Enter-BuildJob
 				*SL
 				if (0 -eq ${*i}) {
 					& ${*j}
@@ -480,7 +478,7 @@ function *Task {
 			}
 			finally {
 				*SL
-				. Exit-BuildJob ${*n}
+				. Exit-BuildJob
 			}
 		}
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
@@ -535,9 +533,14 @@ function Write-Warning([Parameter()]$Message) {
 	})
 }
 
-function Enter-Build {} function Enter-BuildTask {} function Enter-BuildJob {}
-function Exit-Build {} function Exit-BuildTask {} function Exit-BuildJob {}
-function Export-Build {} function Import-Build {}
+function Enter-Build {if ($args) {${function:Enter-Build} = $args}}
+function Enter-BuildJob {if ($args) {${function:Enter-BuildJob} = $args}}
+function Enter-BuildTask {if ($args) {${function:Enter-BuildTask} = $args}}
+function Exit-Build {if ($args) {${function:Exit-Build} = $args}}
+function Exit-BuildJob {if ($args) {${function:Exit-BuildJob} = $args}}
+function Exit-BuildTask {if ($args) {${function:Exit-BuildTask} = $args}}
+function Export-Build {if ($args) {${function:Export-Build} = $args}}
+function Import-Build {if ($args -and $args[0] -is [scriptblock]) {${function:Import-Build} = $args}}
 
 $ErrorActionPreference = 'Stop'
 if (!${*p1}) {

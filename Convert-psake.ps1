@@ -83,15 +83,15 @@
 				Not supported.
 
 	TaskSetup -> Enter-BuildTask
-		Define the function Enter-BuildTask in the script and copy the code.
+		Use Enter-BuildTask.
 
 	TaskTearDown -> Exit-BuildTask
-		Define the function Exit-BuildTask in the script. Unlike TaskTearDown,
-		Exit-BuildTask is always called if its pair Enter-BuildTask is called.
+		Use Exit-BuildTask. Note that unlike TaskTearDown, Exit-BuildTask is
+		always called if its pair Enter-BuildTask is called.
 
 	FormatTaskName ->
-		Not supported. This feature can be added on a request.
-		Use functions Enter|Exit-BuildTask for extra task headers and footers.
+		Not supported. Enter-BuildTask and Exit-BuildTask may be used for some
+		custom task "headers" and "footers".
 
 	VARIABLES (should be done manually)
 
@@ -200,11 +200,11 @@ function Write-Include([string]$fileNamePathToInclude) {
 }
 
 function Write-TaskSetup([scriptblock]$setup) {
-	"function Enter-BuildTask {$setup}"
+	"Enter-BuildTask {$setup}"
 }
 
 function Write-TaskTearDown([scriptblock]$teardown) {
-	"function Exit-BuildTask {$teardown}"
+	"Exit-BuildTask {$teardown}"
 }
 
 function Write-Task

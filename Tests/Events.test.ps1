@@ -1,13 +1,13 @@
 
 <#
 .Synopsis
-	Tests of event functions.
+	Tests build events.
 
 .Description
-	The tasks and events of this script sets a noise location and check that on
-	calling the location is restored to $BuildRoot.
+	The tasks and events of this script set a noise location and check that on
+	calling the current location is restored to $BuildRoot.
 
-	Check task and job event scopes, they must be the same for a task.
+	Task and job event scopes must be the same for a task.
 
 	Events try to set the constant variable $Task and check expected failures.
 
@@ -15,66 +15,66 @@
 	Invoke-Build * Events.test.ps1
 #>
 
-$err = '*Cannot overwrite variable Task because it is read-only or constant.*'
 Set-Location $HOME
 
-# Enter-Build is called before the first task in the script scope. Its local
-# variables become available for all tasks and other event functions.
-function Enter-Build {
+function Assert-CannotSetTask {
+	$r = try {$Task = 1} catch {$_}
+	equals $r.FullyQualifiedErrorId VariableNotWritable
+}
+
+# Enter-Build is called before the first task in the script scope.
+# Its local definitions are available for tasks and event blocks.
+Enter-Build {
 	"Enter build"
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 }
 
 # Exit-Build is called after the last task or on build failures.
-function Exit-Build {
+Exit-Build {
 	"Exit build"
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
 }
 
 # Enter-BuildTask is called before each task.
-# The scope is new, the parent for the task script jobs.
-function Enter-BuildTask {
+# The scope is new, the parent of task actions.
+Enter-BuildTask {
 	$TaskName = $Task.Name # set just here, check later
 	'Enter task {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	$$ = try {$Task = 1} catch {$_}
-	assert ($$ -like $err)
+	. Assert-CannotSetTask
 }
 
 # Exit-BuildTask is called after each task.
 # The scope is the same as for Enter-BuildTask.
-function Exit-BuildTask {
+Exit-BuildTask {
 	equals $TaskName $Task.Name # the same scope
 	'Exit task {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	$$ = try {$Task = 1} catch {$_}
-	assert ($$ -like $err)
+	. Assert-CannotSetTask
 }
 
-# Enter-BuildJob is called before each script job. Its argument is the job number.
+# Enter-BuildJob is called before each action.
 # The scope is the same as for Enter-BuildTask.
-function Enter-BuildJob($Number) {
+Enter-BuildJob {
 	equals $TaskName $Task.Name # the same scope
-	'Enter job {1} of {0}' -f $TaskName, $Number
+	'Enter job {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	$$ = try {$Task = 1} catch {$_}
-	assert ($$ -like $err)
+	. Assert-CannotSetTask
 }
 
-# Exit-BuildJob is called after each script job. Its argument is the job number.
+# Exit-BuildJob is called after each script job.
 # The scope is the same as for Enter-BuildTask.
-function Exit-BuildJob($Number) {
+Exit-BuildJob {
 	equals $TaskName $Task.Name # the same scope
-	'Exit job {1} of {0}' -f $TaskName, $Number
+	'Exit job {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	$$ = try {$Task = 1} catch {$_}
-	assert ($$ -like $err)
+	. Assert-CannotSetTask
 }
 
 task Task1 {

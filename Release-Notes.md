@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.1.0
+
+Event blocks instead of functions, see [#36](https://github.com/nightroman/Invoke-Build/issues/36).
+
 ## v3.0.2
 
 Use `exit 0` on success (#34).
