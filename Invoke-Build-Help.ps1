@@ -192,13 +192,13 @@
 
 		If it is not specified then Invoke-Build looks for *.build.ps1 files in
 		the current location. A single file is used as the script. If there are
-		more files then .build.ps1 is used.
+		more files then .build.ps1 is used if it exists, otherwise build fails.
 
 		If the build file is not found then a script defined by the environment
-		variable InvokeBuildGetFile is called with the path as an argument. It
-		may get a non standard build file. The full path should be returned.
+		variable InvokeBuildGetFile is called with the path as an argument. For
+		this location it may return the full path of a special build script.
 
-		If the file is still not defined then parent directories are searched.
+		If the file is still not found then parent directories are searched.
 '@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is
@@ -845,11 +845,11 @@
 ### Get-BuildFile
 @{
 	command = 'Get-BuildFile'
-	synopsis = 'Gets full path of the default build file in a directory.'
+	synopsis = 'Gets full path of the default build file.'
 
 	description = @'
-	This function is not designed for build scripts and tasks. It is used
-	internally and exists only as a pattern to follow for wrapper scripts.
+	This function is not designed for build scripts and tasks.
+	It is used by the engine and exposed for related tools.
 '@
 
 	parameters = @{

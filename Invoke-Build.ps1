@@ -29,7 +29,9 @@ dynamicparam {
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildFile($Path) {
 	do {
-		if (($_ = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1 -or ($_ = $_ -match '[\\/]\.build\.ps1$')) {return $_}
+		if (($f = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $f}
+		if ($_ = $f -match '[\\/]\.build\.ps1$') {return $_}
+		if ($f.Length -ge 2) {throw "Ambiguous default script in '$Path'."}
 		if ([System.IO.File]::Exists(($_ = $env:InvokeBuildGetFile)) -and ($_ = & $_ $Path)) {return $_}
 	} while($Path = Split-Path $Path)
 }

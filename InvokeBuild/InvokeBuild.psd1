@@ -1,6 +1,6 @@
 
 @{
-	ModuleVersion = '3.0.2'
+	ModuleVersion = '3.1.0'
 	ModuleToProcess = 'InvokeBuild.psm1'
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
 	Author = 'Roman Kuzmin'
