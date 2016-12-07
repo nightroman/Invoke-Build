@@ -126,3 +126,25 @@ task MissingDirectory {
 	($r = try {<##> use MissingDirectory MyScript} catch {$_})
 	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''MissingDirectory''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
 }
+
+# v3.2.0
+task VisualStudio {
+	function Test-VisualStudio($Version) {
+		try {
+			use VisualStudio\$Version devenv
+			(Get-Alias devenv).Definition
+		}
+		catch {
+			Write-Warning $_
+		}
+	}
+
+	$versions = '9.0', '10.0', '14.0'
+	$ok = 0
+	foreach ($v in $versions) {
+		($r = Test-VisualStudio $v)
+		if ($r) {++$ok}
+	}
+	$ok
+	assert $ok
+}

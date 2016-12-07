@@ -1,6 +1,11 @@
 
 # Invoke-Build Release Notes
 
+## v3.2.0
+
+`use`: The conventional path `VisualStudio\<version>` is resolved via the
+registry to the Visual Studio tools directory (`devenv`, `mstest`, `tf`).
+
 ## v3.1.0
 
 Event blocks instead of functions, see [#36](https://github.com/nightroman/Invoke-Build/issues/36).

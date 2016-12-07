@@ -773,7 +773,7 @@
 	scope aliases. But it can be called from tasks in order to use more tools
 	including other framework or tool directories.
 
-	MSBuild is one of frequently used tools. Examples:
+	MSBuild is a popular tool. Examples:
 
 		use * MSBuild
 		use 4.0 MSBuild
@@ -791,13 +791,17 @@
 		If it is like Framework* then it is assumed to be a path relative to
 		Microsoft.NET in the Windows directory.
 
+		If it is like VisualStudio\<version> then it is resolved to the
+		specified Visual Studio tools directory (devenv, mstest, tf, ...).
+
 		Otherwise it is a full or relative literal path of any directory.
 
-		Examples: *, 4.0, Framework\v4.0.30319, .\Tools
+		Examples: *, 4.0, Framework\v4.0.30319, VisualStudio\14.0, .\Tools
 '@
 		Name = @'
-		Tool names to set aliases for. These names also become aliases and they
-		should be used later exactly as specified in here.
+		Specifies the tool names. They become aliases in the current scope.
+		If it is a build script then the aliases are created for all tasks.
+		If it is a task then the aliases are available just for this task.
 '@
 	}
 

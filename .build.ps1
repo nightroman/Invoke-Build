@@ -72,7 +72,7 @@ task Package Markdown, Help, GitStatus, {
 # Synopsis: Install module and clean.
 task Module Version, Markdown, Help, {
 	# mirror module folder
-	$dir = "$env:ProgramFiles\WindowsPowerShell\Modules\InvokeBuild"
+	$dir = "$env:ProgramFiles\WindowsPowerShell\Modules\InvokeBuild\$Version"
 	exec {$null = robocopy.exe InvokeBuild $dir /mir} (0..2)
 
 	# copy files

@@ -192,9 +192,13 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
 	trap {*TE $_ 5}
 	$d = switch -regex ($Path) {
-		'^\*$' {@(Get-ChildItem HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions | Sort-Object {[Version]$_.PSChildName})[-1].GetValue('MSBuildToolsPath')}
-		'^\d+\.' {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$_", 'MSBuildToolsPath', '')}
-		'^Framework' {"$env:windir\Microsoft.NET\$_"}
+		^\*$ {@(Get-ChildItem HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions | Sort-Object {[Version]$_.PSChildName})[-1].GetValue('MSBuildToolsPath')}
+		^\d+\. {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$_", 'MSBuildToolsPath', '')}
+		^VisualStudio\\ {
+			$x = if ([IntPtr]::Size -eq 8) {'\Wow6432Node'}
+			[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE$x\Microsoft\$_", 'InstallDir', '')
+		}
+		^Framework {"$env:windir\Microsoft.NET\$_"}
 		default {*FP $_}
 	}
 	if (![System.IO.Directory]::Exists($d)) {throw "Cannot resolve '$Path'."}
@@ -223,7 +227,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.1.0'}
+function Get-BuildVersion {[Version]'3.2.0'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
