@@ -91,19 +91,22 @@ PowerShell use an alias `ib` defined in a PowerShell profile
 
 ## Getting help
 
-If you are using the module then import it at first. If you are using scripts
-then make sure *Invoke-Build-Help.xml* from the package is in the same
-directory as *Invoke-Build.ps1*. Then invoke
+If you are using the module (see [#2899]) or the script is not in the path
+then use the full path to *Invoke-Build.ps1* instead of *Invoke-Build* in
+the below commands.
+
+[#2899]: https://github.com/PowerShell/PowerShell/issues/2899
+
+In order to get help for the engine, invoke:
 
     help Invoke-Build -full
 
-In order to get help for commands, dot-source `Invoke-Build`:
+In order to get help for internal commands:
 
     . Invoke-Build
-
-This imports commands and makes their help available:
-
     help task -full
+    help exec -full
+    ...
 
 ## Online resources
 

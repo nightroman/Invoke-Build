@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.0.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) 2011-2016 Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, ISE
