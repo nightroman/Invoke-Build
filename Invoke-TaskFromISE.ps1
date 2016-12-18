@@ -58,11 +58,7 @@ $ErrorActionPreference = 'Stop'
 
 $private:ib = "$(Split-Path $MyInvocation.MyCommand.Path)\Invoke-Build.ps1"
 if (!(Test-Path -LiteralPath $ib)) {
-	$ib = 'Invoke-Build.ps1'
-    # In case Invoke-Build is installed via module.
-    if ((Get-Command $ib -ErrorAction SilentlyContinue) -eq $null) { 
-       $ib = 'Invoke-Build'
-    }
+	$ib = 'Invoke-Build'
 }
 
 $private:_Console = $Console
