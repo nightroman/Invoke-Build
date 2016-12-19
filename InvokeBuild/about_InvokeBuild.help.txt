@@ -19,6 +19,13 @@ LONG DESCRIPTION
 
         Import-Module InvokeBuild
 
-    See help:
+    Get help for the engine:
 
-        Get-Help Invoke-Build -Full
+        help <path>\Invoke-Build.ps1 -full
+
+    Get help for build commands:
+
+        . <path>\Invoke-Build.ps1
+        help task -full
+        help exec -full
+        ...

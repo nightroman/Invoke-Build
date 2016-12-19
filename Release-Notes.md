@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.2.1
+
+Module help tweaks.
+
 ## v3.2.0
 
 `use`: The conventional path `VisualStudio\<version>` is resolved via the
