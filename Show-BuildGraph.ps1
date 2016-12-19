@@ -31,8 +31,9 @@
 		See: help Invoke-Build -Parameter File
 .Parameter Output
 		The output file path and format specified by extension. For available
-		formats simply use unlikely supported one and check the error message.
-		The default is "$env:TEMP\Graphviz.pdf".
+		formats simply use a likely supported one and check the error message.
+		If not supplied, a PDF will be generated in your $env:TEMP folder with
+		a random filename like "tmpC8B4.tmp.Graphviz.pdf".
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
 		The default 'graph [rankdir=LR]' tells edges to go from left to right.
@@ -57,7 +58,7 @@ param(
 	[Parameter(Position=0)]
 	[string]$File,
 	[Parameter(Position=1)]
-	[string]$Output = "$env:TEMP\Graphviz.pdf",
+	[string]$Output = [System.IO.Path]::GetTempFileName() + '.Graphviz.pdf',
 	[string]$Code = 'graph [rankdir=LR]',
 	[hashtable]$Parameters,
 	[switch]$NoShow,
@@ -126,7 +127,7 @@ $text = @(
 )
 
 #! temp file UTF8 no BOM
-$temp = "$env:TEMP\Graphviz.dot"
+$temp = [System.IO.Path]::GetTempFileName()
 [System.IO.File]::WriteAllLines($temp, $text)
 
 # make
