@@ -227,7 +227,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.2.1'}
+function Get-BuildVersion {[Version]'3.2.2'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -358,7 +358,7 @@ function *IO {
 		$_
 		${*p}.Add($_.FullName)
 	}
-	if (!${*p}) {return 'Skipping empty input.'}
+	if (!${*p}) {return 2, 'Skipping empty input.'}
 
 	${private:*o} = $Task.Outputs
 	if ($Task.Partial) {
@@ -382,11 +382,11 @@ function *IO {
 				$o.Add($p)
 			}
 		}
-		if ($i) {return}
+		if ($i) {return $null, "Out-of-date outputs: $($o.Count)/$(${*p}.Count)."}
 	}
 	else {
 		if (${*o} -is [scriptblock]) {
-			$Task.Outputs = ${*o} = & ${*o}
+			$Task.Outputs = ${*o} = ${*p} | & ${*o}
 			*SL
 		}
 		if (!${*o}) {throw 'Outputs must not be empty.'}
@@ -394,10 +394,12 @@ function *IO {
 		$Task.Inputs = ${*p}
 		$m = (${*i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
 		foreach($_ in ${*o}) {
-			if ($m -gt [System.IO.File]::GetLastWriteTime((*FP $_)).Ticks) {return}
+			if ($m -gt [System.IO.File]::GetLastWriteTime((*FP $_)).Ticks) {
+				return $null, "Out-of-date output '$_'."
+			}
 		}
 	}
-	'Skipping up-to-date output.'
+	2, 'Skipping up-to-date output.'
 }
 
 function *Task {
@@ -427,7 +429,7 @@ function *Task {
 
 	if (${*}.Checkpoint) {*CP}
 	${private:*a} = $Task.Jobs
-	${private:*i} = [int]($null -ne $Task.Inputs)
+	${private:*i} = , [int]($null -ne $Task.Inputs)
 	$Task.Started = [DateTime]::Now
 	try {
 		. *UC Enter-BuildTask
@@ -450,9 +452,11 @@ function *Task {
 				continue
 			}
 
-			if (1 -eq ${*i}) {${*i} = *IO}
-			if (${*i}) {
-				Write-Build 8 ${*i}
+			if (1 -eq ${*i}[0]) {
+				${*i} = *IO
+				Write-Build 8 ${*i}[1]
+			}
+			if (${*i}[0]) {
 				continue
 			}
 
@@ -460,7 +464,7 @@ function *Task {
 				*SL
 				. Enter-BuildJob
 				*SL
-				if (0 -eq ${*i}) {
+				if (0 -eq ${*i}[0]) {
 					& ${*j}
 				}
 				else {

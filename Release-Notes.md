@@ -1,6 +1,11 @@
 
 # Invoke-Build Release Notes
 
+## v3.2.2
+
+- Incremental tasks print some more info (#49)
+- Outputs block receives piped Inputs (#50)
+
 ## v3.2.1
 
 Module help tweaks.

@@ -479,31 +479,31 @@
 		and requires the parameter Outputs with the optional switch Partial.
 
 		Inputs are file items or paths or a script block which gets them.
-		Outputs are file paths or a script block which gets them.
 
-		Automatic variables for incremental task script jobs:
+		Outputs are file paths or a script block which gets them.
+		A script block is invoked with input paths piped to it.
+
+		Automatic variables for incremental task actions:
 
 			$Inputs - full input paths, array of strings
-			$Outputs - result of the evaluated parameter Outputs
+			$Outputs - result of the evaluated Outputs
 
 		With the switch Partial the task is processed as partial incremental.
 		There must be one-to-one correspondence between Inputs and Outputs.
 
-		Partial Outputs are file paths or a script block which is invoked with
-		input paths piped to it in order to transform them into output paths.
+		Partial task actions often contain "process {}" blocks.
+		Two more automatic variables are available for them:
 
-		In addition to automatic variables $Inputs and $Outputs, inside
-		process{} blocks of a partial task two more variables are defined:
-
-			$_ - current full input path
-			$2 - current output path
+			$_ - full path of an input item
+			$2 - corresponding output path
 
 		See also wiki topics about incremental tasks:
 		https://github.com/nightroman/Invoke-Build/wiki
 '@
 		Outputs = @'
-		Specifies the output paths of the incremental task. It is used together
-		with Inputs. See Inputs for details.
+		Specifies the output paths of the incremental task, either directly on
+		task creation or as a script block invoked with the task. It is used
+		together with Inputs. See Inputs for more details.
 '@
 		Partial = @'
 		Tells to process the incremental task as partial incremental. It is

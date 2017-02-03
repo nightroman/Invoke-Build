@@ -149,11 +149,6 @@ task Dynamic {
 	equals $result.Tasks.Count 5
 }
 
-# Synopsis: Test incremental and partial incremental tasks.
-task Incremental {
-	Invoke-Build . Incremental.build.ps1
-}
-
 # Synopsis: Test the default parameter.
 task TestDefaultParameter {
 	Invoke-Build TestDefaultParameter Conditional.build.ps1
@@ -302,7 +297,6 @@ AllTestScripts,
 Checkpoint,
 Conditional,
 Dynamic,
-Incremental,
 TestDefaultParameter,
 TestExitCode,
 TestSelfAlias,
