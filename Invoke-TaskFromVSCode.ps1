@@ -2,7 +2,7 @@
 <#PSScriptInfo
 .VERSION 1.0.2
 .AUTHOR Roman Kuzmin
-.COPYRIGHT (c) 2011-2016 Roman Kuzmin
+.COPYRIGHT (c) 2011-2017 Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
 .GUID 1dcf7c94-b68d-4fb7-9e2b-886889b6c42e
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0

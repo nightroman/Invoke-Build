@@ -2,7 +2,7 @@
 <#PSScriptInfo
 .VERSION 1.0.2
 .AUTHOR Roman Kuzmin
-.COPYRIGHT (c) 2011-2016 Roman Kuzmin
+.COPYRIGHT (c) 2011-2017 Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, ISE
 .GUID 713b2e68-8b62-40f5-99cb-07c6952abca6
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0

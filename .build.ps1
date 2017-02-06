@@ -86,7 +86,7 @@ task Module Version, Markdown, Help, {
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
 	Author = 'Roman Kuzmin'
 	CompanyName = 'Roman Kuzmin'
-	Copyright = '(c) 2011-2016 Roman Kuzmin'
+	Copyright = '(c) 2011-2017 Roman Kuzmin'
 	Description = 'Build and test automation in PowerShell'
 	PowerShellVersion = '2.0'
 	PrivateData = @{

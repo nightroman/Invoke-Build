@@ -3,7 +3,7 @@
 .Synopsis
 	Shows Invoke-Build task graph using Graphviz.
 	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2016 Roman Kuzmin
+	Copyright (c) 2011-2017 Roman Kuzmin
 
 .Description
 	Requires:
