@@ -160,3 +160,40 @@ task Measure-Invoke-Build-Overhead {
 	# Invoke-Build overhead
 	($r2 - $r1).TotalMilliseconds
 }
+
+<#
+	Synopsis: Condition and related targets
+
+	MSBuild processing of a target:
+	- Condition is checked before related targets.
+	- If Condition=true then invoke DependsOnTargets.
+	- Invoke BeforeTargets always (unlike IB).
+	- If Condition=true then invoke own tasks.
+	- Invoke AfterTargets always (unlike IB).
+
+	See also #51.
+	See wiki Comparison-with-MSBuild.md
+#>
+task Condition-and-related-targets {
+	Set-Content z.proj @'
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Target Name="Test" Condition="false" DependsOnTargets="Target1">
+		<Message Text="In Test"/>
+	</Target>
+	<Target Name="Target1">
+		<Message Text="In Target1"/>
+	</Target>
+	<Target Name="Target2" BeforeTargets="Test">
+		<Message Text="In Target2"/>
+	</Target>
+	<Target Name="Target3" AfterTargets="Test">
+		<Message Text="In Target3"/>
+	</Target>
+</Project>
+'@
+
+	use * MSBuild
+	exec { MSBuild /v:d }
+
+	Remove-Item z.proj
+}
