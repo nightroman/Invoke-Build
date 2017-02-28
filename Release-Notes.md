@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.2.3
+
+Use `exit /B` in *ib.cmd* (#52).
+
 ## v3.2.2
 
 - Incremental tasks print some more info (#49)

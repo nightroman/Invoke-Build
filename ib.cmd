@@ -12,8 +12,8 @@ exit /B %errorlevel%
 
 :list
 PowerShell.exe -NoProfile -ExecutionPolicy Bypass "& '%~dp0Invoke-Build.ps1' %* | Format-Table -AutoSize"
-exit
+exit /B 0
 
 :help
 PowerShell.exe -NoProfile -ExecutionPolicy Bypass "help -Full '%~dp0Invoke-Build.ps1'"
-exit
+exit /B 0
