@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) 2011-2017 Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
@@ -22,11 +22,15 @@
 	add, remove, rename, reorder tasks, change tags or Invoke-Build location
 	then regenerate VSCode tasks.
 
-	The default task becomes a so called VSCode build task (Ctrl-Shift-B).
+	The default task becomes a so called VSCode build task (Ctrl+Shift+B).
 	The default task is '.' if it exists, otherwise it is the first task.
 
-	In order to invoke another task from VSCode use Ctrl-P and type 'task'.
-	Then type a task name or select it from the opened list of all tasks.
+	To invoke another task from VSCode, use Ctrl+Shift+P and type 'Run Task'.
+	Then type a task name or select it from the opened list of your tasks.
+	Or simply define a shortcut in keybindings.json, for example:
+
+		// show the task list
+		{ "key": "ctrl+k k", "command": "workbench.action.tasks.runTask" }
 
 	Only tasks with certain names are included. They contain alphanumeric
 	characters, '_', '.', and '-', with the first character other than '-'.
