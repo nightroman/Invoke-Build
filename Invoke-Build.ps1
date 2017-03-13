@@ -183,8 +183,8 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 	${private:*x} = $ExitCode
 	Remove-Variable Command, ExitCode
 	. ${*c}
-	if (${*x} -notcontains $LastExitCode) {
-		*TE "Command {${*c}} exited with code $LastExitCode." 8
+	if (${*x} -notcontains $global:LastExitCode) {
+		*TE "Command {${*c}} exited with code $global:LastExitCode." 8
 	}
 }
 
@@ -227,7 +227,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.2.3'}
+function Get-BuildVersion {[Version]'3.2.4'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'

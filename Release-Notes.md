@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.2.4
+
+Fix #54, `exec` should use `$global:LastExitCode`.
+
 ## v3.2.3
 
 Use `exit /B` in *ib.cmd* (#52).
