@@ -41,6 +41,7 @@ Extra tools, see PSGallery and the repository:
 * *Invoke-TaskFromISE.ps1* - invokes a task from a build script opened in ISE
 * *Invoke-TaskFromVSCode.ps1* - invokes a task from a build script opened in VSCode
 * *New-VSCodeTask.ps1* - generates VSCode tasks bound to build script tasks
+* *Resolve-MSBuild.ps1* - finds the specified or latest version of MSBuild
 
 And some more tools, see the repository:
 
