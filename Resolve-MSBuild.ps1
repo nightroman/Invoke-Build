@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -11,14 +11,17 @@
 
 <#
 .Synopsis
-	Finds the specified or latest version of MSBuild.
+	Finds the specified or latest MSBuild.
 
 .Description
-	For MSBuild 15.0+ the command uses VSSetup module if it is installed, see
-	PSGallery. If it is not installed then some typical locations are checked.
-	Thus, VSSetup module is required for not standard installations.
+	The script finds the path to the specified or latest version of MSBuild.
+	It is designed to work for MSBuild 2.0-15.0 and support future versions.
 
-	For MSBuild 14.0 and older the information is taken from the registry.
+	For MSBuild 15.0+ the command uses VSSetup module from PSGallery.
+	If it is not installed then some default locations are checked.
+	Thus, VSSetup module is required for not default installations.
+
+	For MSBuild 2.0-14.0 the information is taken from the registry.
 
 .Parameter Version
 		Specifies the required MSBuild version. If it is omitted, empty, or *
@@ -112,5 +115,5 @@ try {
 	throw 'The specified version is not found.'
 }
 catch {
-	Write-Error "Cannot resolve MSBuild $Version : $_" -ErrorAction 1
+	Write-Error "Cannot resolve MSBuild $Version : $_"
 }

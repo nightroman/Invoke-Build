@@ -4,8 +4,9 @@
 	Examples of Use-BuildAlias (use).
 
 .Description
-	Points of interest:
+	Since v3.3.0 the command `use <version> MSBuild` uses Resolve-MSBuild.
 
+	Points of interest:
 	* If a build script changes the location it does not have to restore it.
 	* Conditional tasks, see the parameters -If (...).
 	* Use of several frameworks simultaneously.
@@ -79,7 +80,17 @@ task Version.14.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions
 	$script:LatestVersion = $version
 }
 
-task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, {
+# VS 2017 ~ v15
+if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
+$VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
+task Version.15.0 -If $VS2017 {
+	use 15.0 MSBuild
+	($version = exec { MSBuild /version /nologo })
+	assert ($version -like '15.*')
+	$script:LatestVersion = $version
+}
+
+task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, Version.15.0, {
 	use * MSBuild
 	($version = exec { MSBuild /version /nologo })
 	equals $version $script:LatestVersion
@@ -100,7 +111,7 @@ task ResolvedPath {
 # Error: missing version.
 task MissingVersion {
 	($r = try {<##> use 3.14 MSBuild} catch {$_})
-	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''3.14''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
+	assert (($r | Out-String) -like '*Cannot resolve MSBuild 3.14 :*<##>*FullyQualifiedErrorId : Use-BuildAlias*')
 }
 
 # Error: invalid framework.

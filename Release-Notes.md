@@ -1,6 +1,15 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.0
+
+New *Resolve-MSBuild.ps1* for finding MSBuild 2.0-15.0, specified or the latest.
+It may be used directly. Build scripts use it via the alias `Resolve-MSBuild`.
+NuGet and PSGallery packages include this script.
+
+The old way `use <version> MSBuild` is supported and works with all versions.
+But the new script is used internally, *Invoke-Build.ps1* alone is not enough.
+
 ## v3.2.4
 
 Fix #54, `exec` should use `$global:LastExitCode`.

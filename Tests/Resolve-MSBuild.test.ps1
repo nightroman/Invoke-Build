@@ -61,11 +61,10 @@ task testAll15 -If $VS2017 {
 }
 
 task testAll14 {
-	Set-Mock Get-MSBuild15VSSetup Get-Nothing
-	Set-Mock Get-MSBuild15Guess Get-Nothing
+	Set-Mock Get-MSBuild15 Get-Nothing
 	$r = Resolve-MSBuild
 	Test-MSBuild $r
-	equals $calls.Nothing 2
+	equals $calls.Nothing 1
 	assert ($r -like '*\14.0\*')
 }
 
@@ -89,4 +88,9 @@ task missing15 {
 task invalidVersion {
 	($r = try {Resolve-MSBuild invalid} catch {$_})
 	assert (($r | Out-String) -like '*Cannot resolve MSBuild invalid :*"invalid"*Resolve-MSBuild.test.ps1:*')
+}
+
+task alias-of-Resolve-MSBuild {
+	$r = @(Get-Command Resolve-MSBuild)[0]
+	equals "$($r.CommandType)" Alias
 }

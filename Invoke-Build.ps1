@@ -192,13 +192,13 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
 	trap {*TE $_ 5}
 	$d = switch -regex ($Path) {
-		^\*$ {@(Get-ChildItem HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions | Sort-Object {[Version]$_.PSChildName})[-1].GetValue('MSBuildToolsPath')}
-		^\d+\. {[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSBuild\ToolsVersions\$_", 'MSBuildToolsPath', '')}
+		^\*$ {Split-Path (Resolve-MSBuild)}
+		^\d+\. {Split-Path (Resolve-MSBuild $_)}
+		^Framework {"$env:windir\Microsoft.NET\$_"}
 		^VisualStudio\\ {
 			$x = if ([IntPtr]::Size -eq 8) {'\Wow6432Node'}
 			[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE$x\Microsoft\$_", 'InstallDir', '')
 		}
-		^Framework {"$env:windir\Microsoft.NET\$_"}
 		default {*FP $_}
 	}
 	if (![System.IO.Directory]::Exists($d)) {throw "Cannot resolve '$Path'."}
@@ -227,7 +227,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.2.4'}
+function Get-BuildVersion {[Version]'3.3.0'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -523,7 +523,9 @@ Set-Alias property Get-BuildProperty
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
-Set-Alias Invoke-Builds (Join-Path (Split-Path $_) Invoke-Builds.ps1)
+$_ = Split-Path $_
+Set-Alias Invoke-Builds (Join-Path $_ Invoke-Builds.ps1)
+Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
 
 if ($MyInvocation.InvocationName -eq '.') {
 	if ($BuildFile = $MyInvocation.ScriptName) {

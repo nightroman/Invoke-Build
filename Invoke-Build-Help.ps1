@@ -53,6 +53,7 @@
 		Get-BuildVersion
 		Invoke-BuildExec (exec)
 		New-BuildJob (job)
+		Resolve-MSBuild
 		Use-BuildAlias (use)
 		Write-Build
 		Write-Warning [1]
@@ -388,6 +389,7 @@
 		@{ text = 'Get-BuildProperty (property)' }
 		@{ text = 'Invoke-BuildExec (exec)' }
 		@{ text = 'New-BuildJob (job)' }
+		@{ text = 'Resolve-MSBuild' }
 		@{ text = 'Use-BuildAlias (use)' }
 		@{ text = 'Write-Build' }
 	)
@@ -772,12 +774,6 @@
 	This function is often called from a build script and all tasks use script
 	scope aliases. But it can be called from tasks in order to use more tools
 	including other framework or tool directories.
-
-	MSBuild is a popular tool. Examples:
-
-		use * MSBuild
-		use 4.0 MSBuild
-		use Framework\v2.0.50727 MSBuild
 '@
 
 	parameters = @{
@@ -785,14 +781,16 @@
 		Specifies the tools directory.
 
 		If it is * or it starts with digits followed by a dot then the MSBuild
-		version and the path is taken from the registry. The * is used for the
-		latest available version.
+		path is resolved using the package script Resolve-MSBuild.ps1. Build
+		scripts may invoke it directly by the provided alias Resolve-MSBuild.
 
 		If it is like Framework* then it is assumed to be a path relative to
 		Microsoft.NET in the Windows directory.
 
 		If it is like VisualStudio\<version> then it is resolved to the
 		specified Visual Studio tools directory (devenv, mstest, tf, ...).
+		NOTE: This way is not supported starting with Visual Studio 2017,
+		use the special Microsoft module VSSetup from PSGallery instead.
 
 		Otherwise it is a full or relative literal path of any directory.
 
@@ -816,6 +814,7 @@
 
 	links = @(
 		@{ text = 'Invoke-BuildExec' }
+		@{ text = 'Resolve-MSBuild' }
 	)
 }
 

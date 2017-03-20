@@ -54,6 +54,7 @@ function Copy-File($Destination) {
 	Invoke-Build.ps1,
 	Invoke-Builds.ps1,
 	Invoke-Build-Help.xml,
+	Resolve-MSBuild.ps1,
 	README.htm,
 	LICENSE.txt,
 	Release-Notes.htm

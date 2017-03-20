@@ -26,12 +26,11 @@ Invoke-Build v3.0.1 is cross-platform with PowerShell v6.0.0-alpha.
 
 ## The package
 
-The standalone script *Invoke-Build.ps1* is enough for invoking build scripts.
-It can be downloaded directly from the repository and used alone right away.
-The package also includes helper scripts and the generated help file:
+The package includes the engine, helpers, and the generated help:
 
 * *Invoke-Build.ps1* - invokes build scripts, this is the build engine
 * *Invoke-Builds.ps1* - invokes parallel builds using the engine
+* *Resolve-MSBuild.ps1* - finds the specified or latest MSBuild
 * *Invoke-Build-Help.xml* - external content for Get-Help
 * *ib.cmd* - Invoke-Build helper for cmd.exe
 
@@ -41,7 +40,6 @@ Extra tools, see PSGallery and the repository:
 * *Invoke-TaskFromISE.ps1* - invokes a task from a build script opened in ISE
 * *Invoke-TaskFromVSCode.ps1* - invokes a task from a build script opened in VSCode
 * *New-VSCodeTask.ps1* - generates VSCode tasks bound to build script tasks
-* *Resolve-MSBuild.ps1* - finds the specified or latest version of MSBuild
 
 And some more tools, see the repository:
 
