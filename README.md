@@ -1,6 +1,6 @@
 
-<img src="https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png" align="right"/>
 [![NuGet](https://buildstats.info/nuget/Invoke-Build)](https://www.nuget.org/packages/Invoke-Build)
+<img src="https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png" align="right"/>
 
 ## Build Automation in PowerShell
 
