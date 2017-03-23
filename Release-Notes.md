@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.1
+
+Improve errors on invalid script syntax (#56).
+
 ## v3.3.0
 
 New *Resolve-MSBuild.ps1* for finding MSBuild 2.0-15.0, specified or the latest.

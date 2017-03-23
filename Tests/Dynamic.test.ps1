@@ -46,6 +46,7 @@ task DynamicConflictParam {
 }
 
 # 3.0.0 Explicitly throw 'Invalid script syntax?'
+# 3.3.1 Amend this not useful error.
 task DynamicSyntaxError {
 	Set-Content z.ps1 @'
 param($p1)
@@ -53,7 +54,7 @@ param($p1)
 '@
 
 	($r = try { Invoke-Build . z.ps1 -p1 v1 } catch {$_})
-	equals "$r" 'Invalid script syntax?'
+	assert ($r | Out-String) '*\z.ps1:2 *Missing closing*\Dynamic.test.ps1:*'
 
 	Remove-Item z.ps1
 }

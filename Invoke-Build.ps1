@@ -81,7 +81,10 @@ elseif (!($BuildFile = Get-BuildFile ${*cd})) {
 }
 
 $_ = (Get-Command $BuildFile -ErrorAction 1).Parameters
-if (!$_) {throw 'Invalid script syntax?'}
+if (!$_) {
+	& $BuildFile
+	throw 'Invalid script.'
+}
 if (!$_.Count) {return}
 
 (${private:*a} = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
@@ -227,7 +230,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.0'}
+function Get-BuildVersion {[Version]'3.3.1'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
