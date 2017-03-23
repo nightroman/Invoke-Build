@@ -85,10 +85,10 @@ if (!$_) {throw 'Invalid script syntax?'}
 if (!$_.Count) {return}
 
 (${private:*a} = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
-foreach($_ in $_.Values) {
-	if (${*pn} -notcontains (${private:*b} = $_.Name)) {
-		if (${*pp} -contains ${*b}) {throw "Script uses reserved parameter '${*b}'."}
-		${*r}.Add(${*b}, (New-Object System.Management.Automation.RuntimeDefinedParameter ${*b}, $_.ParameterType, ${*a}))
+foreach(${private:*b} in $_.Values) {
+	if (${*pn} -notcontains ($_ = ${*b}.Name)) {
+		if (${*pp} -contains $_) {throw "Script uses reserved parameter '$_'."}
+		${*r}.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, ${*b}.ParameterType, ${*a}))
 	}
 }
 ${*r}
