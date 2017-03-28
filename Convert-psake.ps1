@@ -295,9 +295,8 @@ Add-Line @'
 	Build script invoked by Invoke-Build.
 
 .Description
-	TODO: Declare build parameters as standard script parameters. Parameters
-	are specified directly for Invoke-Build if their names do not conflict.
-	Otherwise or alternatively they are passed in as "-Parameters @{...}".
+	TODO: Declare build script parameters as usual by param().
+	The parameters are specified for Invoke-Build on invoking.
 #>
 
 # TODO: [CmdletBinding()] is optional but recommended for strict name checks.
