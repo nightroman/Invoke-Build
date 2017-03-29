@@ -141,3 +141,44 @@ task ResumeWithoutCheckpoint {
 	$$ = try { Invoke-Build -Resume } catch {$_}
 	assert ($$ -like 'Checkpoint must be defined for Resume.')
 }
+
+task MissingCommaInJobs {
+	Set-Content z.ps1 {
+		task t1 t2 {}
+	}
+
+	$log = [System.Collections.Generic.List[object]]@()
+	function Test-Write-Warning($Text) {
+		$log.Add($Text)
+	}
+	Set-Alias Write-Warning Test-Write-Warning
+
+	$r = try {Invoke-Build . z.ps1} catch {$_}
+	equals $r[-1].FullyQualifiedErrorId 'PositionalParameterNotFound,Add-BuildTask'
+	equals $log.Count 1
+	equals $log[0] 'Check task positional parameters: a name and comma separated jobs.'
+
+	Remove-Item z.ps1
+}
+
+task DanglingScriptblock {
+	Set-Content z.ps1 {
+		task t1
+		42
+		{bar}
+	}
+
+	$log = [System.Collections.Generic.List[object]]@()
+	function Test-Write-Warning($Text) {
+		$log.Add($Text)
+	}
+	Set-Alias Write-Warning Test-Write-Warning
+
+	$r = try {Invoke-Build . z.ps1} catch {$_}
+	assert (($r | Out-String) -like '*Dangling scriptblock at *\z.ps1:4*\Invalid.test.ps1:*')
+	equals $log.Count 2
+	equals $log[0] 'Unexpected output: 42.'
+	equals $log[1] 'Unexpected output: bar.'
+
+	Remove-Item z.ps1
+}

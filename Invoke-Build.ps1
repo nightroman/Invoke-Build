@@ -230,7 +230,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.1'}
+function Get-BuildVersion {[Version]'3.3.2'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -611,8 +611,22 @@ try {
 	}
 
 	*SL ($BuildRoot = Split-Path $BuildFile)
-	if ($_ = . $BuildFile @_) {
-		Write-Warning "$BuildFile output: $_"
+	try {
+		$_ = . $BuildFile @_
+	}
+	catch {
+		if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
+			Write-Warning 'Check task positional parameters: a name and comma separated jobs.'
+		}
+		throw
+	}
+	if ($_) {
+		foreach($_ in $_) {
+			Write-Warning "Unexpected output: $_."
+			if ($_ -is [scriptblock]) {
+				throw "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)"
+			}
+		}
 	}
 	if (!${*a}.Count) {throw "No tasks in '$BuildFile'."}
 

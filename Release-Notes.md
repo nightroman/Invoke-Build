@@ -1,6 +1,14 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.2
+
+Improve info on typical mistakes:
+
+- missing comma in job lists
+- unexpected build output
+- dangling script blocks
+
 ## v3.3.1
 
 Improve errors on invalid script syntax (#56).
