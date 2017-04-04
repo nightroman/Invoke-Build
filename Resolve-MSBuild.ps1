@@ -46,9 +46,19 @@ param(
 function Get-MSBuild15VSSetup {
 	if (Get-Module VSSetup -ListAvailable) {
 		Import-Module VSSetup
-		$vs = @(Get-VSSetupInstance | Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild)
-		if ($vs) {
-			Join-Path ($vs[0].InstallationPath) MSBuild\15.0\Bin\MSBuild.exe
+
+		$vsInstances = @(Get-VSSetupInstance)
+		if ($vsInstances)
+		{
+			$vs = @($vsInstances | Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild)
+			if ($vs) {
+				return Join-Path ($vs[0].InstallationPath) MSBuild\15.0\Bin\MSBuild.exe
+			}
+
+			$vsbt = @($vsInstances | Select-VSSetupInstance -Version 15.0 -Product Microsoft.VisualStudio.Product.BuildTools)
+			if ($vsbt) {
+				return Join-Path ($vsbt[0].InstallationPath) MSBuild\15.0\Bin\MSBuild.exe
+			}
 		}
 	}
 }
