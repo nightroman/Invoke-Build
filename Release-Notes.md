@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.3
+
+`Resolve-MSBuild` supports the *BuildTools* installation (#57).
+
 ## v3.3.2
 
 Improve info on typical mistakes:
