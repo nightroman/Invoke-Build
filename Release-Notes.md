@@ -1,6 +1,15 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.4
+
+Adjust `property` behaviour to PowerShell and MSBuild (#60):
+
+- get the session variable value if it is not $null or ''
+- get the environment value if it is not $null or ''
+- get the specified default if it is not $null
+- throw an error
+
 ## v3.3.3
 
 `Resolve-MSBuild` supports the *BuildTools* installation (#57).

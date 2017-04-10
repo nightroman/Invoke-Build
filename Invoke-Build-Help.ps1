@@ -653,9 +653,12 @@
 	synopsis = 'Gets the session or environment variable or the default value.'
 
 	description = @'
-	Scripts use its alias 'property'. It gets the first not null value of these
-	three: session variable, environment variable, optional default value.
-	Otherwise an error is thrown.
+	Scripts use its alias 'property'. The command returns:
+
+		- PowerShell variable value if it is not $null or ''
+		- environment variable if it is not $null or ''
+		- default value if it is not $null
+		- error
 
 	CAUTION: Properties should be used sparingly with carefully chosen names
 	that unlikely can already exist and be not related to the build script.
@@ -663,7 +666,7 @@
 
 	parameters = @{
 		Name = @'
-		Session or environment variable name.
+		Specifies the session or environment variable name.
 '@
 		Value = @'
 		Specifies the default value to be used if the variable is not found.

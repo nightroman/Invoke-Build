@@ -174,7 +174,7 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
-	if ($null -eq ($_ = $PSCmdlet.GetVariableValue($Name)) -and $null -eq ($_ = [Environment]::GetEnvironmentVariable($Name)) -and $null -eq ($_ = $Value)) {
+	if (($null -eq ($_ = $PSCmdlet.GetVariableValue($Name)) -or '' -eq $_ ) -and !($_ = [Environment]::GetEnvironmentVariable($Name)) -and $null -eq ($_ = $Value)) {
 		*TE "Missing variable '$Name'." 13
 	}
 	$_
@@ -230,7 +230,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.3'}
+function Get-BuildVersion {[Version]'3.3.4'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'

@@ -10,13 +10,10 @@
 	Invoke-Build * Property.test.ps1
 #>
 
-param
-(
+param(
 	$Param1 = (property BuildFile),
 	$Param2 = (property UserName)
 )
-
-. .\Shared.ps1
 
 equals $Param1 $BuildFile
 equals $Param2 $env:USERNAME
@@ -34,10 +31,19 @@ equals $MissingNullProperty 42
 
 # Error: missing property
 task MissingProperty {
-	property _111126_181750
+	$r = try {property _111126_181750} catch {$_}
+	assert (($r | Out-String) -like "*Missing variable '_111126_181750'.*At *\Property.test.ps1:*ObjectNotFound*")
 }
 
-# Test error cases.
-task . (job MissingProperty -Safe), {
-	Test-Error MissingProperty "Missing variable '_111126_181750'.*At *\Property.test.ps1:*ObjectNotFound*"
+# v3.3.4 (#60): Treat '' as not defined.
+task EmptyStringAsNotDefined {
+	$_170410_105214 = ''
+	$env:_170410_105214 = ''
+	equals (property _170410_105214 default-value) default-value
+
+	$env:_170410_105214 = 'env-value'
+	equals (property _170410_105214) env-value
+
+	$_170410_105214 = 'var-value'
+	equals (property _170410_105214) var-value
 }
