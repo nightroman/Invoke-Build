@@ -54,6 +54,10 @@ In PowerShell 5.0 or with PowerShellGet you can install it by this command
 
     Install-Module InvokeBuild
 
+To install the module with Chocolatey, run the following command
+
+    choco install invoke-build
+
 The module provides commands `Invoke-Build` and `Invoke-Builds`.
 Import the module in order to make them available:
 
