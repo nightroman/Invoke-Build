@@ -52,7 +52,7 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	++$Step
 
 	# synopsis
-	$synopsis = *TS $Task.InvocationInfo $docs
+	$synopsis = *Synopsis $Task.InvocationInfo $docs
 
 	# name
 	$info = $tab + $Task.Name
@@ -80,7 +80,7 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 }
 
 # Task synopsis.
-function *TS($I, $H) {
+function *Synopsis($I, $H) {
 	$f = $I.ScriptName
 	if (!($d = $H[$f])) {
 		$H[$f] = $d = @{}

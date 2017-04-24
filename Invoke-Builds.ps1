@@ -51,10 +51,10 @@ for ($1 = 0; $1 -lt $Build.Count) {
 	$Build[$1++] = $b
 
 	if ($file = $b['File']) {
-		if (![System.IO.File]::Exists(($file = *FP $file))) {*TE "Missing script '$file'." 13}
+		if (![System.IO.File]::Exists(($file = *Path $file))) {*Die "Missing script '$file'." 13}
 	}
-	elseif (!($file = Get-BuildFile (*FP))) {
-		*TE "Missing default script in build $1." 5
+	elseif (!($file = Get-BuildFile (*Path))) {
+		*Die "Missing default script in build $1." 5
 	}
 
 	$b.Result = @{}
@@ -68,7 +68,7 @@ for ($1 = 0; $1 -lt $Build.Count) {
 }
 
 # runspace pool
-if ($MaximumBuilds -lt 1) {*TE "MaximumBuilds should be a positive number." 5}
+if ($MaximumBuilds -lt 1) {*Die "MaximumBuilds should be a positive number." 5}
 $pool = [RunspaceFactory]::CreateRunspacePool(1, $MaximumBuilds)
 $failures = @()
 
@@ -81,7 +81,7 @@ try {
 		# log
 		if ($log = $b['Log']) {
 			$b.Remove('Log')
-			[System.IO.File]::Delete(($log = *FP $log))
+			[System.IO.File]::Delete(($log = *Path $log))
 		}
 		else {
 			$work.Temp = $true
@@ -155,7 +155,7 @@ try {
 		}
 		if ($_) {
 			Write-Build Cyan "Build $($work.Title) FAILED."
-			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {*EI $_ $_} else {"$_"}
+			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {*Error $_ $_} else {"$_"}
 			Write-Build Red "ERROR: $_"
 			$failures += @{
 				File = $work.Title
@@ -169,7 +169,7 @@ try {
 
 	# fail
 	if ($failures) {
-		*TE ($(
+		*Die ($(
 			"Failed builds:"
 			foreach($_ in $failures) {
 				"Build: $($_.File)"

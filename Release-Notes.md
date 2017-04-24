@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.5
+
+Use less cryptic names for internal functions (#63).
+
 ## v3.3.4
 
 Adjust `property` behaviour to PowerShell and MSBuild (#60):

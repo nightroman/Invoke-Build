@@ -123,10 +123,10 @@ In order to get help for internal commands:
 : Build scripts used in various projects.
 - [Tasks](https://github.com/nightroman/Invoke-Build/tree/master/Tasks)
 : Samples, patterns, and various techniques.
+- [Design Notes](https://github.com/nightroman/Invoke-Build/wiki/Design-Notes)
+: Technical details for contributors.
 
-Questions, suggestions, and issues are welcome at
-[Google Group](https://groups.google.com/forum/#!forum/invoke-build) and
-[Project Issues](https://github.com/nightroman/Invoke-Build/issues).
+Questions, suggestions, and reports are welcome as project issues.
 Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 
 ## Credits

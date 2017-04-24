@@ -154,7 +154,7 @@ task ParallelBadMaximumBuilds {
 }
 
 # Error: Invoke-Build.ps1 is not in the same directory.
-# Covers #27, *TE was not found before loading IB.
+# Covers #27, *Die was not found before loading IB.
 task ParallelMissingEngine {
 	$script = "$env:TEMP\Invoke-Builds.ps1"
 	Copy-Item ..\Invoke-Builds.ps1 $script -Force

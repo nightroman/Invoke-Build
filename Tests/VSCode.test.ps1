@@ -56,7 +56,7 @@ start PowerShell.exe -NoExit -NoProfile -ExecutionPolicy Bypass "& 'Invoke-Build
 }
 
 task FullPaths {
-	$InvokeBuild = *FP ..\Invoke-Build.ps1
+	$InvokeBuild = *Path ..\Invoke-Build.ps1
 	New-VSCodeTask.ps1 $BuildFile $InvokeBuild
 
 	$r = (Get-Content .vscode\tasks.cmd) -match 'PowerShell\.exe'
