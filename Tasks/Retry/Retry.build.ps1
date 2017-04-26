@@ -13,7 +13,6 @@
 
 # Import retry-task tools.
 . .\Retry.tasks.ps1
-. .\RetryNr.tasks.ps1
 
 $RetryWorks = $false
 
@@ -38,8 +37,8 @@ retry RetryFails -RetryTimeout 4 -RetryInterval 2 {
 	throw "It fails."
 }
 
-# Synopsis: A task with a safe reference to a retry-task.
-task CallRetryFails (job RetryFails -Safe)
+# Synopsis: Safe RetryFails for testing.
+task SafeRetryFails (job RetryFails -Safe)
 
 # Synopsis: A task uses Invoke-RetryAction directly.
 task InvokeRetryAction {
@@ -48,7 +47,7 @@ task InvokeRetryAction {
 
 	# invoke the action
 	$script:RetryWorks = $false
-	Invoke-RetryAction 10 2 {
+	Invoke-RetryAction -RetryTimeout 10 -RetryInterval 2 {
 		if ($RetryWorks) {
 			"It works."
 		}
@@ -62,31 +61,37 @@ task InvokeRetryAction {
 	"After the action"
 }
 
-# Synopsis: A task uses Inovke-RetryNrAction directly.
-task InvokeRetryNrAction {
-	# before the action started
-	"Before the action"
-
-	# invoke the action
-	$script:RetryWorks = $false
-	Invoke-RetryNrAction 1 5 {
-		if ($RetryWorks) {
-			"It works."
-		}
-		else {
-			$script:RetryWorks = $true
-			throw "It fails."
-		}
+# Synopsis: Test RetryCount with final success.
+# The action fails 2 times. We allow 2 retries. As a result, the task works.
+retry RetryCountWorks -RetryCount 2 -RetryInterval 2 {
+	if (++$script:RetryCountWorks -le 2) {
+		throw "It fails."
 	}
-
-	# after the action succeeded
-	"After the action"
+	"It works"
 }
+$RetryCountWorks = 0
 
-# Synopsis: This retrynr-task always fails. It is referenced by another task.
-retrynr RetryNrFails -RetryCount 5 -RetryInterval 1 {
+# Synopsis: Test RetryCount with final failure.
+# The action keeps failing. We allow 2 retries. As a result, the task fails.
+retry RetryCountFails -RetryCount 2 -RetryInterval 2 {
 	throw "It fails."
 }
 
-# Synopsis: A task with a safe reference to a retrynr-task.
-task CallRetryNrFails (job RetryNrFails -Safe)
+# Synopsis: Safe RetryCountFails for testing.
+task SafeRetryCountFails (job RetryCountFails -Safe)
+
+# Synopsis: Retry with both count and time limits. It fails due to count.
+retry CountAndTimeFailByCount -RetryCount 2 -RetryTimeout 100 -RetryInterval 2 {
+	throw "It fails."
+}
+
+# Synopsis: Safe CountAndTimeFailByCount for testing.
+task SafeCountAndTimeFailByCount (job CountAndTimeFailByCount -Safe)
+
+# Synopsis: Retry with both count and time limits. It fails due to timeout.
+retry CountAndTimeFailByTime -RetryCount 100 -RetryTimeout 10 -RetryInterval 2 {
+	throw "It fails."
+}
+
+# Synopsis: Safe CountAndTimeFailByTime for testing.
+task SafeCountAndTimeFailByTime (job CountAndTimeFailByTime -Safe)

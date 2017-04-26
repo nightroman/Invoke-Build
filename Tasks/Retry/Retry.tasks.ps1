@@ -7,12 +7,17 @@
 	Build scripts dot-source this script in order to use the task "retry" or
 	the function "Invoke-RetryAction".
 
-	A retry-task has a single action. This action is repeated for the specified
-	time until it succeeds. When the time is out the last error is re-thrown.
+	A retry-task has a single action. This action is repeated the specified
+	number of times or for the specified time until it succeeds. When the
+	retry count or time is out the last error is re-thrown.
+
+	If the parameters RetryCount and RetryTimeout are both defined (positive)
+	then the action is repeated until one of these conditions is out.
 
 	Retry-task parameters:
 		Name, If, Inputs, Outputs - as usual
 		Jobs - as usual but with a single action
+		RetryCount - [int], total number of tries
 		RetryTimeout - [int], seconds, total time for retrying
 		RetryInterval - [int], seconds, time to wait before trying again
 
@@ -33,7 +38,7 @@
 	# Or use Invoke-RetryAction directly
 	task Task2 {
 		...
-		Invoke-RetryAction 10 2 { ... }
+		Invoke-RetryAction -RetryCount 3 -RetryInterval 2 { ... }
 		...
 	}
 #>
@@ -43,38 +48,57 @@ Set-Alias retry Add-RetryTask
 
 <#
 .Synopsis
-	Invokes the action until it succeeds or the time is out.
+	Invokes the action and retries on failures.
 
 .Description
-	The action is repeated for the specified time until it succeeds.
-	When the time is out the last error is re-thrown.
+	The action is repeated on failures the specified number of times or for the
+	specified time. When the retry count or time is out the last error is
+	re-thrown.
 
+	If the parameters RetryCount and RetryTimeout are both defined (positive)
+	then the action is repeated until one of these conditions is out.
+
+.Parameter Action
+		Specifies the action, a script block or a command name.
+		The parameter name is optional.
+.Parameter RetryCount
+		Total number of tries before failing.
 .Parameter RetryTimeout
 		Total time for retrying, in seconds.
 .Parameter RetryInterval
 		Time to wait before trying again, in seconds.
-.Parameter Action
-		Specifies the action, a script block or a command name.
 #>
 function Invoke-RetryAction(
-	[Parameter()][int]$RetryTimeout,
-	[int]$RetryInterval,
-	$Action
+	[Parameter(Position=0, Mandatory=1)]$Action,
+	[int]$RetryCount,
+	[int]$RetryTimeout,
+	[int]$RetryInterval
 )
 {
+	${private:*Action} = $Action
+	${private:*RetryCount} = $RetryCount
 	${private:*RetryTimeout} = $RetryTimeout
 	${private:*RetryInterval} = $RetryInterval
-	${private:*Action} = $Action
-	Remove-Variable RetryTimeout, RetryInterval, Action
+	Remove-Variable Action, RetryCount, RetryTimeout, RetryInterval
 
 	${private:*time} = [System.Diagnostics.Stopwatch]::StartNew()
+	${private:*count} = ${*RetryCount}
 	for() {
 		try {
 			. ${*Action}
 			return
 		}
 		catch {
-			if (${*time}.Elapsed.TotalSeconds -gt ${*RetryTimeout}) {throw}
+			# no retry
+			if (${*RetryCount} -le 0 -and ${*RetryTimeout} -le 0) {throw}
+
+			# count is out
+			if (${*RetryCount} -gt 0 -and --${*count} -lt 0) {throw}
+
+			# time is out
+			if (${*RetryTimeout} -gt 0 -and ${*time}.Elapsed.TotalSeconds -gt ${*RetryTimeout}) {throw}
+
+			# wait and retry
 			Write-Build Yellow "$($Task.Name) error: $_"
 			"Waiting for ${*RetryInterval} seconds..."
 			Start-Sleep -Seconds ${*RetryInterval}
@@ -91,6 +115,7 @@ function Add-RetryTask(
 	$If=$true,
 	$Inputs,
 	$Outputs,
+	[int]$RetryCount,
 	[int]$RetryTimeout,
 	[int]$RetryInterval
 )
@@ -117,6 +142,7 @@ function Add-RetryTask(
 		# wrap a task with data @{Action = the original action; Retry* = extra parameters}
 		task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Source:$MyInvocation -Data:@{
 			Action = $action
+			RetryCount = $RetryCount
 			RetryTimeout = $RetryTimeout
 			RetryInterval = $RetryInterval
 		}
