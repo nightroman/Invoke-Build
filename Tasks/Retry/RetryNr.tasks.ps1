@@ -67,21 +67,19 @@ function Invoke-RetryNrAction(
 	${private:*Action} = $Action
 	Remove-Variable RetryCount, RetryInterval, Action
 	
-	${private:*ex} = $null
-	for($i=0; $i -le ${*RetryCount}; $i++) {
+	for(;;${*RetryCount}--) {
 		try {
 			. ${*Action}
 			return
 		}
 		catch {
-			${*ex} = $_
+			if (${*RetryCount} -le 0) {throw}
 			Write-Build Yellow "$($Task.Name) error: $_"
 			"Waiting for ${*RetryInterval} seconds..."
 			Start-Sleep -Seconds ${*RetryInterval}
-			"Retrying... ($(${*RetryCount} - $i) retries left)"
+			"Retrying... (${*RetryCount} retries left)"
 		}
 	}
-	throw ${*ex}
 }
 
 # Wrapper of "task" which adds a customized task used as "retrynr".
