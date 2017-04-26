@@ -13,6 +13,7 @@
 
 # Import retry-task tools.
 . .\Retry.tasks.ps1
+. .\RetryNr.tasks.ps1
 
 $RetryWorks = $false
 
@@ -60,3 +61,32 @@ task InvokeRetryAction {
 	# after the action succeeded
 	"After the action"
 }
+
+# Synopsis: A task uses Inovke-RetryNrAction directly.
+task InvokeRetryNrAction {
+	# before the action started
+	"Before the action"
+
+	# invoke the action
+	$script:RetryWorks = $false
+	Invoke-RetryNrAction 1 5 {
+		if ($RetryWorks) {
+			"It works."
+		}
+		else {
+			$script:RetryWorks = $true
+			throw "It fails."
+		}
+	}
+
+	# after the action succeeded
+	"After the action"
+}
+
+# Synopsis: This retrynr-task always fails. It is referenced by another task.
+retrynr RetryNrFails -RetryCount 5 -RetryInterval 1 {
+	throw "It fails."
+}
+
+# Synopsis: A task with a safe reference to a retrynr-task.
+task CallRetryNrFails (job RetryNrFails -Safe)
