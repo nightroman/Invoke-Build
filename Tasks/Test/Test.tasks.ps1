@@ -44,28 +44,25 @@ function Add-TestTask(
 	$Outputs
 )
 {
-	try {
-		# wrap an action
-		$action = $null
-		$Jobs = foreach($j in $Jobs) {
-			if ($j -isnot [scriptblock]) {
-				$j
-			}
-			elseif ($action) {
-				throw 'Test-task cannot have two action jobs.'
-			}
-			else {
-				$action = $j
-				{. Invoke-TestAction}
-			}
-		}
+	trap {$PSCmdlet.ThrowTerminatingError($_)}
 
-		# wrapped task with data = the original action
-		task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Source:$MyInvocation -Data:$action
+	# wrap an action
+	$action = $null
+	$Jobs = foreach($j in $Jobs) {
+		if ($j -isnot [scriptblock]) {
+			$j
+		}
+		elseif ($action) {
+			throw 'Test-task cannot have two action jobs.'
+		}
+		else {
+			$action = $j
+			{. Invoke-TestAction}
+		}
 	}
-	catch {
-		$PSCmdlet.ThrowTerminatingError($_)
-	}
+
+	# wrapped task with data = the original action
+	task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Source:$MyInvocation -Data:$action
 }
 
 # Invokes the current test action.

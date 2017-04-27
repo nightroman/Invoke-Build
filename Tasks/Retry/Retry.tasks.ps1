@@ -120,34 +120,31 @@ function Add-RetryTask(
 	[int]$RetryInterval
 )
 {
-	try {
-		# wrap an action
-		$action = $null
-		$Jobs = foreach($j in $Jobs) {
-			if ($j -isnot [scriptblock]) {
-				$j
-			}
-			elseif ($action) {
-				throw 'Retry-task cannot have two action jobs.'
-			}
-			else {
-				$action = $j
-				{
-					$_ = $Task.Data
-					. Invoke-RetryAction @_
-				}
-			}
-		}
+	trap {$PSCmdlet.ThrowTerminatingError($_)}
 
-		# wrap a task with data @{Action = the original action; Retry* = extra parameters}
-		task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Source:$MyInvocation -Data:@{
-			Action = $action
-			RetryCount = $RetryCount
-			RetryTimeout = $RetryTimeout
-			RetryInterval = $RetryInterval
+	# wrap an action
+	$action = $null
+	$Jobs = foreach($j in $Jobs) {
+		if ($j -isnot [scriptblock]) {
+			$j
+		}
+		elseif ($action) {
+			throw 'Retry-task cannot have two action jobs.'
+		}
+		else {
+			$action = $j
+			{
+				$_ = $Task.Data
+				. Invoke-RetryAction @_
+			}
 		}
 	}
-	catch {
-		$PSCmdlet.ThrowTerminatingError($_)
+
+	# wrap a task with data @{Action = the original action; Retry* = extra parameters}
+	task $Name $Jobs -If:$If -Inputs:$Inputs -Outputs:$Outputs -Source:$MyInvocation -Data:@{
+		Action = $action
+		RetryCount = $RetryCount
+		RetryTimeout = $RetryTimeout
+		RetryInterval = $RetryInterval
 	}
 }
