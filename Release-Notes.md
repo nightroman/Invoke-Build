@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.6
+
+Retire obsolete events defined as functions, see [#66](https://github.com/nightroman/Invoke-Build/issues/66).
+
 ## v3.3.5
 
 Use less cryptic names for internal functions (#63).
@@ -63,7 +67,7 @@ registry to the Visual Studio tools directory (`devenv`, `mstest`, `tf`).
 
 ## v3.1.0
 
-Event blocks instead of functions, see [#36](https://github.com/nightroman/Invoke-Build/issues/36).
+Event blocks instead of functions, see #36.
 
 ## v3.0.2
 

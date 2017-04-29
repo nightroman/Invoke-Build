@@ -93,4 +93,21 @@ task Task2 task1, {
 }
 
 #! reference has lower case
-task . task2
+task RefTask2WithLowerCase task2
+
+#! #66 define events before "?" processing
+task HelpTaskAndEvents {
+	# new session, are not defined by parents
+	$null = exec {PowerShell.exe Invoke-Build ? $BuildFile}
+}
+
+# #66 changes; ideally, need to test each but they are similar
+task InvalidEvents {
+	# invalid parameter type
+	($r = try {<##> Enter-Build 42} catch {$_})
+	assert (($r | Out-String) -like '*<##>*FullyQualifiedErrorId : ParameterArgumentTransformationError,Enter-Build*')
+
+	# invalid parameter number
+	($r = try {<##> Enter-Build {} 42} catch {$_})
+	assert (($r | Out-String) -like '*<##>*FullyQualifiedErrorId : PositionalParameterNotFound,Enter-Build*')
+}

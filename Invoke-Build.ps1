@@ -230,7 +230,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.5'}
+function Get-BuildVersion {[Version]'3.3.6'}
 
 function *IsIB {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -241,7 +241,7 @@ function *SL($P=$BuildRoot) {
 }
 
 function *Run($_) {
-	if (!$WhatIf) {
+	if ($_ -and !$WhatIf) {
 		*SL
 		. $_ @args
 	}
@@ -307,7 +307,7 @@ function *Check($J, $T, $P=@()) {
 
 function *Save {
 	Export-Clixml ${*}.Checkpoint -InputObject @{
-		User = *Run Export-Build
+		User = *Run ${*}.Export
 		Task = $BuildTask
 		File = $BuildFile
 		Prm1 = ${*}.Prm1
@@ -438,7 +438,7 @@ function *Task {
 	${private:*i} = , [int]($null -ne $Task.Inputs)
 	$Task.Started = [DateTime]::Now
 	try {
-		. *Run Enter-BuildTask
+		. *Run ${*}.EnterTask
 		foreach(${private:*j} in ${*a}) {
 			if (${*j} -is [string]) {
 				try {
@@ -467,8 +467,7 @@ function *Task {
 			}
 
 			try {
-				*SL
-				. Enter-BuildJob
+				. *Run ${*}.EnterJob
 				*SL
 				if (0 -eq ${*i}[0]) {
 					& ${*j}
@@ -493,8 +492,7 @@ function *Task {
 				throw
 			}
 			finally {
-				*SL
-				. Exit-BuildJob
+				. *Run ${*}.ExitJob
 			}
 		}
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
@@ -506,7 +504,7 @@ function *Task {
 		else {
 			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
 		}
-		if ($Task.Done) {*Run $Task.Done}
+		*Run $Task.Done
 	}
 	catch {
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
@@ -516,7 +514,7 @@ function *Task {
 	}
 	finally {
 		${*}.Tasks.Add($Task)
-		. *Run Exit-BuildTask
+		. *Run ${*}.ExitTask
 	}
 }
 
@@ -551,15 +549,6 @@ function Write-Warning([Parameter()]$Message) {
 	})
 }
 
-function Enter-Build {if ($args) {${function:Enter-Build} = $args}}
-function Enter-BuildJob {if ($args) {${function:Enter-BuildJob} = $args}}
-function Enter-BuildTask {if ($args) {${function:Enter-BuildTask} = $args}}
-function Exit-Build {if ($args) {${function:Exit-Build} = $args}}
-function Exit-BuildJob {if ($args) {${function:Exit-BuildJob} = $args}}
-function Exit-BuildTask {if ($args) {${function:Exit-BuildTask} = $args}}
-function Export-Build {if ($args) {${function:Export-Build} = $args}}
-function Import-Build {if ($args -and $args[0] -is [scriptblock]) {${function:Import-Build} = $args}}
-
 $ErrorActionPreference = 'Stop'
 if (!${*p1}) {
 	${*p1} = @{}
@@ -585,6 +574,14 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Elapsed = $null
 	Error = $null
 	Task = $null
+	EnterBuild = $null
+	ExitBuild = $null
+	EnterTask = $null
+	ExitTask = $null
+	EnterJob = $null
+	ExitJob = $null
+	Export = $null
+	Import = $null
 })
 if (${private:*?} = $BuildTask -eq '??' -or $BuildTask -eq '?') {
 	$WhatIf = $true
@@ -612,6 +609,15 @@ try {
 		${*r} = 1
 		return
 	}
+
+	function Enter-Build([Parameter()][scriptblock]$Script) {${*}.EnterBuild = $Script}
+	function Exit-Build([Parameter()][scriptblock]$Script) {${*}.ExitBuild = $Script}
+	function Enter-BuildTask([Parameter()][scriptblock]$Script) {${*}.EnterTask = $Script}
+	function Exit-BuildTask([Parameter()][scriptblock]$Script) {${*}.ExitTask = $Script}
+	function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.EnterJob = $Script}
+	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.ExitJob = $Script}
+	function Export-Build([Parameter()][scriptblock]$Script) {${*}.Export = $Script}
+	function Import-Build([Parameter()][scriptblock]$Script) {${*}.Import = $Script}
 
 	*SL ($BuildRoot = Split-Path $BuildFile)
 	try {
@@ -678,7 +684,7 @@ try {
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	${*b} = 0
 	try {
-		. *Run Enter-Build
+		. *Run ${*}.EnterBuild
 		if (${*cp}) {
 			foreach($_ in ${*cp}.Done) {
 				${*a}[$_].Elapsed = [TimeSpan]::Zero
@@ -686,7 +692,7 @@ try {
 			foreach($_ in ${*cp}.Prm2.GetEnumerator()) {
 				Set-Variable $_.Key $_.Value
 			}
-			. *Run Import-Build ${*cp}.User
+			. *Run ${*}.Import ${*cp}.User
 		}
 		foreach($_ in $BuildTask) {
 			*Task $_ ''
@@ -697,7 +703,7 @@ try {
 	}
 	finally {
 		${*}.Task = $null
-		. *Run Exit-Build
+		. *Run ${*}.ExitBuild
 	}
 	${*r} = 1
 	exit 0
