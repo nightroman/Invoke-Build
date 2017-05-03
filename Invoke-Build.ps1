@@ -80,8 +80,7 @@ elseif (!($BuildFile = Get-BuildFile ${*cd})) {
 	throw 'Missing default script.'
 }
 
-$_ = (Get-Command $BuildFile -ErrorAction 1).Parameters
-if (!$_) {
+if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 	& $BuildFile
 	throw 'Invalid script.'
 }
@@ -277,7 +276,9 @@ function *Unsafe($N, $J, $X) {
 	}
 }
 
-filter *Amend($N, $B) {
+filter *Amend($X, $B) {
+	trap {throw *Error "Task '$n': $_" $X}
+	$n = $X.Name
 	$r, $d = *Job $_
 	if (!($t = ${*}.All[$r])) {throw "Missing task '$r'."}
 	$j = $t.Jobs
@@ -286,9 +287,9 @@ filter *Amend($N, $B) {
 		for($k = -1; ++$k -lt $i -and $j[$k] -is [string]) {}
 		$i = $k
 	}
-	$j.Insert($i, $N)
+	$j.Insert($i, $n)
 	if (1 -eq $d) {
-		$t.Safe.Add($N)
+		$t.Safe.Add($n)
 	}
 }
 
@@ -639,16 +640,11 @@ try {
 	}
 	if (!${*a}.Count) {throw "No tasks in '$BuildFile'."}
 
-	try {
-		foreach(${private:**} in ${*a}.Values) {
-			if (${**}.Before) {${**}.Before | *Amend ${**}.Name 1}
-		}
-		foreach(${**} in ${*a}.Values) {
-			if (${**}.After) {${**}.After | *Amend ${**}.Name}
-		}
+	foreach($_ in ${*a}.Values) {
+		if ($_.Before) {$_.Before | *Amend $_ 1}
 	}
-	catch {
-		throw *Error "Task '$(${**}.Name)': $_" ${**}
+	foreach($_ in ${*a}.Values) {
+		if ($_.After) {$_.After | *Amend $_}
 	}
 
 	if (${*?}) {
@@ -664,7 +660,7 @@ try {
 
 	if ($BuildTask -eq '*') {
 		*Check ${*a}.Keys
-		${**} = @{}
+		${private:**} = @{}
 		foreach($_ in ${*a}.Values) {
 			foreach($_ in $_.Jobs) {
 				if ($_ -is [string]) {
