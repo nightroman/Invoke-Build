@@ -1,7 +1,7 @@
 
 ### Samples, patterns, techniques
 
-- [Ask (prototype)](https://gist.github.com/nightroman/00e32a770f5af1506eed4f7aa62403ea) shows the custom task `ask` which asks for the confirmation.
+- [Ask](Ask) shows the custom task `ask` which asks for the confirmation.
 - [Check](Check) shows the custom task `check` which is invoked once even if a build script (check list) is invoked repeatedly.
 - [File](File) shows the custom task `file`, an incremental task with simplified syntax, somewhat similar to Rake's `file`.
 - [Param](Param) shows how to create several tasks which perform similar actions with some differences defined by parameters.
