@@ -236,11 +236,12 @@
 
 		Result object properties:
 
-			All - all defined tasks
+			All - all available tasks
 			Error - a terminating build error
 			Tasks - invoked tasks including nested
 			Errors - error objects including nested
-			Warnings - warning messages including nested
+			Warnings - warning objects including nested
+			Redefined - list of original redefined tasks
 
 		Tasks is a list of objects:
 

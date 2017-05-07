@@ -208,3 +208,27 @@ task ExitCodeOnSuccessShouldBe0 {
 
 	Remove-Item z.ps1
 }
+
+task RedefinedTask {
+	# script with task t1 redefined twice
+	Set-Content z.ps1 {
+		task t1 {}
+		task t1 {}
+		task t1 {'in-last-t1'}
+	}
+
+	# build, get text and result
+	($t = Invoke-Build . z.ps1 -Result r | Out-String)
+
+	# "Redefined" message is printed twice, the last added works
+	assert ($t -like "*Redefined task 't1'.*Redefined task 't1'.*in-last-t1*")
+
+	# result has two redefined tasks
+	equals $r.Redefined.Count 2
+	equals $r.Redefined[0].Name t1
+	equals $r.Redefined[1].Name t1
+	equals $r.Redefined[0].InvocationInfo.ScriptLineNumber 2
+	equals $r.Redefined[1].InvocationInfo.ScriptLineNumber 3
+
+	Remove-Item z.ps1
+}

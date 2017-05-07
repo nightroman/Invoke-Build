@@ -1,13 +1,18 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.8
+
+- Write messages about redefined tasks, resolve [#68](https://github.com/nightroman/Invoke-Build/issues/68).
+- Fix unexpected output on some debugging cases.
+
 ## v3.3.7
 
 Improve errors on tasks check failures (#67).
 
 ## v3.3.6
 
-Retire obsolete events defined as functions, see [#66](https://github.com/nightroman/Invoke-Build/issues/66).
+Retire obsolete events defined as functions, see #66.
 
 ## v3.3.5
 

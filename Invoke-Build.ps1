@@ -112,6 +112,7 @@ function Add-BuildTask(
 	[switch]$Partial
 )
 {
+	if ($_ = ${*}.All[$Name]) {${*}.Redefined.Add($_)}
 	${*}.All[$Name] = [PSCustomObject]@{
 		Name = $Name
 		Error = $null
@@ -229,7 +230,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.7'}
+function Get-BuildVersion {[Version]'3.3.8'}
 
 function *IsIB {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -569,6 +570,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Tasks = [System.Collections.Generic.List[object]]@()
 	Errors = [System.Collections.Generic.List[object]]@()
 	Warnings = [System.Collections.Generic.List[object]]@()
+	Redefined = [System.Collections.Generic.List[object]]@()
 	All = ${private:*a} = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Prm1 = $_ = ${*p1}
 	Prm2 = ${*r}
@@ -680,6 +682,10 @@ try {
 	}
 
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
+	foreach($_ in ${*}.Redefined) {
+		Write-Build 8 "Redefined task '$($_.Name)'."
+	}
+
 	${*b} = 0
 	try {
 		. *Run ${*}.EnterBuild
