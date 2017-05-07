@@ -1,11 +1,11 @@
 
 <#
 .Synopsis
-	Example of scheduled tasks.
+	Example of `repeat` tasks.
 
 .Description
 	This script is a demo of the custom repeat-task.
-	See "Repeat.tasks.ps1" for the details of "repeat".
+	See "Repeat.tasks.ps1" for the details of `repeat`.
 
 .Example
 	Invoke-Build * Repeat.build.ps1
@@ -16,7 +16,7 @@
 #>
 
 # Import repeat-task definitions.
-. .\Repeat.tasks.ps1
+. ./Repeat.tasks.ps1
 
 # Synopsis: Repeat every minute.
 repeat task1 -Minutes 1 {
