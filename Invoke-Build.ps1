@@ -229,7 +229,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.6'}
+function Get-BuildVersion {[Version]'3.3.7'}
 
 function *IsIB {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -276,31 +276,33 @@ function *Unsafe($N, $J, $X) {
 	}
 }
 
-filter *Amend($X, $B) {
-	trap {throw *Error "Task '$n': $_" $X}
+function *Amend([Parameter()]$X, $J, $B) {
+	trap {*Die (*Error "Task '$n': $_" $X) 5}
 	$n = $X.Name
-	$r, $d = *Job $_
-	if (!($t = ${*}.All[$r])) {throw "Missing task '$r'."}
-	$j = $t.Jobs
-	$i = $j.Count
-	if ($B) {
-		for($k = -1; ++$k -lt $i -and $j[$k] -is [string]) {}
-		$i = $k
-	}
-	$j.Insert($i, $n)
-	if (1 -eq $d) {
-		$t.Safe.Add($n)
+	foreach($_ in $J) {
+		$r, $d = *Job $_
+		if (!($t = ${*}.All[$r])) {throw "Missing task '$r'."}
+		$j = $t.Jobs
+		$i = $j.Count
+		if ($B) {
+			for($k = -1; ++$k -lt $i -and $j[$k] -is [string]) {}
+			$i = $k
+		}
+		$j.Insert($i, $n)
+		if (1 -eq $d) {
+			$t.Safe.Add($n)
+		}
 	}
 }
 
-function *Check($J, $T, $P=@()) {
+function *Check([Parameter()]$J, $T, $P=@()) {
 	foreach($_ in $J) { if ($_ -is [string]) {
 		if (!($r = ${*}.All[$_])) {
 			$_ = "Missing task '$_'."
-			throw $(if ($T) {*Error "Task '$($T.Name)': $_" $T} else {$_})
+			*Die $(if ($T) {*Error "Task '$($T.Name)': $_" $T} else {$_}) 5
 		}
 		if ($P -contains $r) {
-			throw *Error "Task '$($T.Name)': Cyclic reference to '$_'." $T
+			*Die (*Error "Task '$($T.Name)': Cyclic reference to '$_'." $T) 5
 		}
 		*Check $r.Jobs $r ($P + $r)
 	}}
@@ -641,10 +643,10 @@ try {
 	if (!${*a}.Count) {throw "No tasks in '$BuildFile'."}
 
 	foreach($_ in ${*a}.Values) {
-		if ($_.Before) {$_.Before | *Amend $_ 1}
+		if ($_.Before) {*Amend $_ $_.Before 1}
 	}
 	foreach($_ in ${*a}.Values) {
-		if ($_.After) {$_.After | *Amend $_}
+		if ($_.After) {*Amend $_ $_.After}
 	}
 
 	if (${*?}) {

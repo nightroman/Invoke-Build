@@ -69,21 +69,21 @@ task InvalidJobValue {
 
 # The task has invalid value in After.
 task InvalidJobValueAfter {
-	Test "Task 'InvalidAfter': Invalid job.*InvalidAfter -After*OperationStopped*" {
+	Test "Task 'InvalidAfter': Invalid job.*InvalidAfter -After*InvalidArgument*" {
 		task InvalidAfter -After @{}
 	}
 }
 
 # The task has invalid value in Before.
 task InvalidJobValueBefore {
-	Test "Task 'InvalidBefore': Invalid job.*InvalidBefore -Before*OperationStopped*" {
+	Test "Task 'InvalidBefore': Invalid job.*InvalidBefore -Before*InvalidArgument*" {
 		task InvalidBefore -Before @{}
 	}
 }
 
 # Missing task in jobs.
 task TaskNotDefined {
-	Test "Task 'task1': Missing task 'missing'.*At *\z.build.ps1:*OperationStopped*" {
+	Test "Task 'task1': Missing task 'missing'.*At *\z.build.ps1:*InvalidArgument*" {
 		task TaskNotDefined task1, {}
 		task task1 missing, {}
 	}
@@ -91,21 +91,21 @@ task TaskNotDefined {
 
 # Missing task in After.
 task TaskNotDefinedAfter {
-	Test "Task 'AfterMissing': Missing task 'MissingTask'.*At *\z.build.ps1*OperationStopped*" {
+	Test "Task 'AfterMissing': Missing task 'MissingTask'.*At *\z.build.ps1*InvalidArgument*" {
 		task AfterMissing -After MissingTask {}
 	}
 }
 
 # Missing task in Before.
 task TaskNotDefinedBefore {
-	Test "Task 'BeforeMissing': Missing task 'MissingTask'.*At *\z.build.ps1*OperationStopped*" {
+	Test "Task 'BeforeMissing': Missing task 'MissingTask'.*At *\z.build.ps1*InvalidArgument*" {
 		task BeforeMissing -Before MissingTask {}
 	}
 }
 
 # Tasks with a cyclic reference: . -> task1 -> task2 -> task1
 task CyclicReference {
-	Test "Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:*OperationStopped*" {
+	Test "Task 'task2': Cyclic reference to 'task1'.*At *\z.build.ps1:*InvalidArgument*" {
 		task CyclicReference task1
 		task task1 task2
 		task task2 task1
@@ -114,7 +114,7 @@ task CyclicReference {
 
 # Cyclic references should be caught on ? as well.
 task CyclicReferenceList {
-	Test -Task ? "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:*OperationStopped*" {
+	Test -Task ? "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:*InvalidArgument*" {
 		task test1 test2
 		task test2 test1
 	}
@@ -122,7 +122,7 @@ task CyclicReferenceList {
 
 # Cyclic references should be caught on * as well.
 task CyclicReferenceStar {
-	Test -Task * "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *OperationStopped*" {
+	Test -Task * "Task 'test2': Cyclic reference to 'test1'.*At *\z.build.ps1:3 *InvalidArgument*" {
 		task test1 test2
 		task test2 test1
 	}
@@ -131,7 +131,7 @@ task CyclicReferenceStar {
 # On * missing references should be reported with location.
 # On developing v2.14.6 some code used to fail this.
 task MissingReferenceStar {
-	Test -Task * "Task 'bad': Missing task 'missing'.*At *\z.build.ps1:3 *OperationStopped*" {
+	Test -Task * "Task 'bad': Missing task 'missing'.*At *\z.build.ps1:3 *InvalidArgument*" {
 		task good {}
 		task bad missing
 	}
