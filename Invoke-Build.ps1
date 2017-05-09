@@ -625,21 +625,10 @@ try {
 	function Import-Build([Parameter()][scriptblock]$Script) {${*}.Import = $Script}
 
 	*SL ($BuildRoot = Split-Path $BuildFile)
-	try {
-		$_ = . $BuildFile @_
-	}
-	catch {
-		if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
-			Write-Warning 'Check task positional parameters: a name and comma separated jobs.'
-		}
-		throw
-	}
-	if ($_) {
-		foreach($_ in $_) {
+	if (${private:**} = . $BuildFile @_) {
+		foreach($_ in ${**}) {
 			Write-Warning "Unexpected output: $_."
-			if ($_ -is [scriptblock]) {
-				throw "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)"
-			}
+			if ($_ -is [scriptblock]) {throw "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)"}
 		}
 	}
 	if (!${*a}.Count) {throw "No tasks in '$BuildFile'."}
@@ -664,7 +653,7 @@ try {
 
 	if ($BuildTask -eq '*') {
 		*Check ${*a}.Keys
-		${private:**} = @{}
+		${**} = @{}
 		foreach($_ in ${*a}.Values) {
 			foreach($_ in $_.Jobs) {
 				if ($_ -is [string]) {
@@ -716,6 +705,9 @@ catch {
 	${*r} = 2
 	${*}.Error = $_
 	*AddError ${*}.Task
+	if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
+		Write-Warning 'Check task positional parameters: a name and comma separated jobs.'
+	}
 	if (${*Safe}) {
 		Write-Build 12 (*Error "ERROR: $_" $_)
 	}

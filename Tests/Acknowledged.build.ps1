@@ -64,7 +64,7 @@ Out-String is recommended with Format-* cmdlets in builds.
 #>
 task Footer-Lost-Color-Workaround {
 	Get-Process svchost | Format-Table Name, PM -AutoSize | Out-String
-	Get-Process svchost | Select-Object Name, PM
+	Get-Process svchost | Select-Object Name, PM | Out-String
 }
 
 ### Colors from job builds and remote builds

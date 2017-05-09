@@ -153,7 +153,7 @@ task MissingCommaInJobs {
 	}
 	Set-Alias Write-Warning Test-Write-Warning
 
-	$r = try {Invoke-Build . z.ps1} catch {$_}
+	($r = try {Invoke-Build . z.ps1} catch {$_})
 	equals $r[-1].FullyQualifiedErrorId 'PositionalParameterNotFound,Add-BuildTask'
 	equals $log.Count 1
 	equals $log[0] 'Check task positional parameters: a name and comma separated jobs.'
@@ -174,7 +174,7 @@ task DanglingScriptblock {
 	}
 	Set-Alias Write-Warning Test-Write-Warning
 
-	$r = try {Invoke-Build . z.ps1} catch {$_}
+	($r = try {Invoke-Build . z.ps1} catch {$_})
 	assert (($r | Out-String) -like '*Dangling scriptblock at *\z.ps1:4*\Invalid.test.ps1:*')
 	equals $log.Count 2
 	equals $log[0] 'Unexpected output: 42.'
