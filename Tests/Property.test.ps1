@@ -31,7 +31,7 @@ equals $MissingNullProperty 42
 
 # Error: missing property
 task MissingProperty {
-	$r = try {property _111126_181750} catch {$_}
+	($r = try {property _111126_181750} catch {$_})
 	assert (($r | Out-String) -like "*Missing variable '_111126_181750'.*At *\Property.test.ps1:*ObjectNotFound*")
 }
 

@@ -18,7 +18,7 @@
 Set-Location $HOME
 
 function Assert-CannotSetTask {
-	$r = try {$Task = 1} catch {$_}
+	($r = try {$Task = 1} catch {$_})
 	equals $r.FullyQualifiedErrorId VariableNotWritable
 }
 

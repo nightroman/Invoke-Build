@@ -12,7 +12,7 @@ task AmbigiousDefaultScript {
 	1 > z.1.build.ps1
 	1 > z.2.build.ps1
 
-	$r = try {Invoke-Build} catch {$_}
+	($r = try {Invoke-Build} catch {$_})
 	assert ("$r" -like "*Ambiguous default script in '*\z'.")
 
 	Pop-Location
@@ -106,8 +106,8 @@ task Summary {
 
 #! Fixed differences of PS v2/v3
 task StarsMissingDirectory {
-	$$ = try {Invoke-Build ** miss} catch {$_}
-	assert ($$ -like "Missing directory '*\Tests\miss'.")
+	($r = try {Invoke-Build ** miss} catch {$_})
+	assert ($r -like "Missing directory '*\Tests\miss'.")
 }
 
 #! Test StarsMissingDirectory first

@@ -63,12 +63,12 @@ task DynamicMissingScript {
 	Set-Location $env:TEMP
 
 	# missing custom
-	$$ = try {Invoke-Build . missing.ps1} catch {$_}
-	assert ($$ -like "Missing script '*\missing.ps1'.")
-	assert ($$.InvocationInfo.Line -like '*{Invoke-Build . missing.ps1}*')
+	($r = try {Invoke-Build . missing.ps1} catch {$_})
+	assert ($r -like "Missing script '*\missing.ps1'.")
+	assert ($r.InvocationInfo.Line -like '*{Invoke-Build . missing.ps1}*')
 
 	# missing default
-	$$ = try {Invoke-Build} catch {$_}
-	assert ($$ -like 'Missing default script.')
-	assert ($$.InvocationInfo.Line -like '*{Invoke-Build}*')
+	($r = try {Invoke-Build} catch {$_})
+	assert ($r -like 'Missing default script.')
+	assert ($r.InvocationInfo.Line -like '*{Invoke-Build}*')
 }

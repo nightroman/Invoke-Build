@@ -138,8 +138,8 @@ task MissingReferenceStar {
 }
 
 task ResumeWithoutCheckpoint {
-	$$ = try { Invoke-Build -Resume } catch {$_}
-	assert ($$ -like 'Checkpoint must be defined for Resume.')
+	($r = try { Invoke-Build -Resume } catch {$_})
+	assert ($r -like 'Checkpoint must be defined for Resume.')
 }
 
 task MissingCommaInJobs {
