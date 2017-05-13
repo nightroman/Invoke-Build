@@ -40,3 +40,14 @@ function Test-Error($Task, $Sample)
 		Write-Error -ErrorAction Stop "Task '$Task': different error:`n Sample : $Sample`n Result : $message"
 	}
 }
+
+# Invoke the current PowerShell, for v6 beta.
+function Invoke-PowerShell {
+	if ($PSVersionTable.PSVersion.Major -eq 2) {
+		PowerShell.exe -Version 2 -NoProfile @args
+	}
+	else {
+		$exe = (Get-Process -Id $PID).Path
+		& $exe -NoProfile @args
+	}
+}

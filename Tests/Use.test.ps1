@@ -16,7 +16,7 @@
 #>
 
 # Use the current framework at the script level (used by CurrentFramework).
-use ([System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) MSBuild
+use ([System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) MSBuild.exe
 
 # It is fine to change the location (used for -If) and leave it changed.
 Set-Location "$env:windir\Microsoft.NET\Framework"
@@ -98,7 +98,12 @@ task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version
 
 # This task simply uses the alias set at the scope level.
 task CurrentFramework {
-	($version = exec { MSBuild /version /nologo })
+	# v6 beta
+	if (!(Test-Path -LiteralPath (Get-Alias MSBuild.exe).Definition)) {
+		Write-Warning 'Missing MSBuild.'
+		return
+	}
+	($version = exec { MSBuild.exe /version /nologo })
 }
 
 # The directory path used for aliased commands should be resolved.
