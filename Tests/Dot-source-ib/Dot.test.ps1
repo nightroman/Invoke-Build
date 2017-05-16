@@ -12,11 +12,9 @@
 	Invoke-Build * Dot.test.ps1
 #>
 
-. ../Shared.ps1
-
 # Synopsis: Invokes Dot-test.ps1
 task Dot-test {
-	exec {Invoke-PowerShell .\Dot-test.ps1}
+	exec {Invoke-PowerShell -NoProfile ./Dot-test.ps1}
 }
 
 # Synopsis: Dot-sourcing with a specified root.

@@ -159,7 +159,7 @@ task ParallelMissingEngine {
 	$script = "$env:TEMP\Invoke-Builds.ps1"
 	Copy-Item ..\Invoke-Builds.ps1 $script -Force
 
-	($r = Invoke-PowerShell "& '$script' @{bar=1}" | Out-String)
+	($r = Invoke-PowerShell -NoProfile "& '$script' @{bar=1}" | Out-String)
 
 	[System.IO.File]::Delete($script)
 	assert ($r -like "*'$env:TEMP\Invoke-Build.ps1'*@{bar=1}*CommandNotFoundException*")
@@ -235,6 +235,6 @@ Build succeeded. 3 tasks, 0 errors, 0 warnings 00:00:*
 # Covers #27, [IB] was not found before loading IB.
 task ParallelEmptyRun {
 	$version = $PSVersionTable.PSVersion.Major
-	($r = Invoke-PowerShell 'Invoke-Builds.ps1 -Result r; $r.GetType().Name')
+	($r = Invoke-PowerShell -NoProfile 'Invoke-Builds.ps1 -Result r; $r.GetType().Name')
 	equals $r $(if ($version -eq 2) {'Hashtable'} else {'PSCustomObject'})
 }

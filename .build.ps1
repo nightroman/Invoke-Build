@@ -4,13 +4,19 @@
 	Build script (https://github.com/nightroman/Invoke-Build)
 
 .Description
-	The script automates tasks like:
-	* Clean the project directory
-	* Run tests and compare results with expected
-	* Build the help file, PowerShell MAML format
-	* Convert markdown files to HTML for packages
-	* Push the release with a tag to GitHub
-	* Make and push the package to NuGet
+	TASKS AND REQUIREMENTS
+	Run tests and compare results with expected
+		- Assert-SameFile.ps1 https://www.powershellgallery.com/packages/Assert-SameFile
+		- Invoke-PowerShell.ps1 https://www.powershellgallery.com/packages/Invoke-PowerShell
+	Make the help file in PowerShell XML format
+		- Helps.ps1 https://www.nuget.org/packages/Helps
+	Convert markdown files to HTML for packages
+		- pandoc https://github.com/jgm/pandoc/releases
+	Push the release with a tag to GitHub
+		- git
+	Make and push the package to NuGet
+		- NuGet
+	Clean the project directory
 #>
 
 # Build script parameters are standard parameters
@@ -30,7 +36,7 @@ task Markdown {
 
 # Synopsis: Remove generated and temp files.
 task Clean {
-	Remove-Item z, README.htm, Release-Notes.htm, Invoke-Build.*.zip, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
+	Remove-Item z, README.htm, Release-Notes.htm, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
 }
 
 # Synopsis: Warn about not empty git status if .git exists.
@@ -112,12 +118,6 @@ task Version {
 	assert ($r -eq $Version) 'Invoke-Build and Release-Notes versions mismatch.'
 }
 
-# Synopsis: Make the zip package.
-task Zip Version, Package, {
-	Set-Location z\tools
-	exec { & 7za a ..\..\Invoke-Build.$Version.zip * }
-}
-
 # Synopsis: Make the NuGet package.
 task NuGet Version, Package, {
 	$text = @'
@@ -174,9 +174,9 @@ task Loop {
 	}
 }
 
-# Synopsis: Invoke Tests scripts and check expected output.
+# Synopsis: Test and check expected output.
 # Requires PowerShelf/Assert-SameFile.ps1, #ConsoleHost
-task Test {
+task Test3 {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
 	if ($NoTestDiff) {return}
@@ -192,11 +192,22 @@ task Test {
 	Remove-Item $resultPath
 }
 
-# Synopsis: Invoke Test with PowerShell 2.0.
+# Synopsis: Test with PowerShell v2.
 # #ConsoleHost
 task Test2 {
-	exec { PowerShell -Version 2 -NoProfile Invoke-Build Test }
+	$diff = if ($NoTestDiff) {'-NoTestDiff'}
+	exec {powershell.exe -Version 2 -NoProfile Invoke-Build Test3 $diff}
 }
 
-# Synopsis: The default task: make and test all, then clean.
-task . Help, Test, Test2, Clean
+# Synopsis: Test with PowerShell v6.
+# #ConsoleHost
+task Test6 -If $env:powershell6 {
+	$diff = if ($NoTestDiff) {'-NoTestDiff'}
+	exec {& $env:powershell6 -NoProfile Invoke-Build Test3 $diff}
+}
+
+# Synopsis: Test v3+ and v2.
+task Test Test3, Test2, Test6
+
+# Synopsis: The default task: make, test, clean.
+task . Help, Test, Clean

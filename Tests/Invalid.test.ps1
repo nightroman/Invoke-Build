@@ -161,6 +161,12 @@ task MissingCommaInJobs {
 	Remove-Item z.ps1
 }
 
+<#
+We use `throw "Dangling scriptblock.." -> fine, we get: (1) "Build ABORTED"; (2) Errors: 1.
+But if we use `*Die` -> KO: (1) no "Build ABORTED"; (2) Errors: 0.
+This is weird but we should keep `throw`.
+NB: v2 works fine with *Die.
+#>
 task DanglingScriptblock {
 	Set-Content z.ps1 {
 		task t1
@@ -175,7 +181,7 @@ task DanglingScriptblock {
 	Set-Alias Write-Warning Test-Write-Warning
 
 	($r = try {Invoke-Build . z.ps1} catch {$_})
-	assert (($r | Out-String) -like '*Dangling scriptblock at *\z.ps1:4*\Invalid.test.ps1:*')
+	assert (($r | Out-String) -like 'Build ABORTED*Dangling scriptblock at *\z.ps1:4*\Invalid.test.ps1:*')
 	equals $log.Count 2
 	equals $log[0] 'Unexpected output: 42.'
 	equals $log[1] 'Unexpected output: bar.'
