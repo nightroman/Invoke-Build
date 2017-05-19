@@ -40,8 +40,11 @@ task Something2 {
 
 ### Advanced approach with a custom task
 
+# Import
+. ./Param.task.ps1
+
 # Synopsis: Custom task with some parameters.
-.\Param.task.ps1 CustomTask1 data1 data2
+MyTask CustomTask1 data1 data2
 
 # Synopsis: Custom task with other parameters.
-.\Param.task.ps1 CustomTask2 data3 data4
+MyTask CustomTask2 data3 data4
