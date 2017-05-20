@@ -387,7 +387,8 @@ function *IO {
 		$Task.Inputs = $i = [System.Collections.Generic.List[object]]@()
 		$Task.Outputs = $o = [System.Collections.Generic.List[object]]@()
 		foreach($_ in ${*i}) {
-			if ($_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime((*Path ($p = ${*o}[++$k])))) {
+			$p = *Path ($p = ${*o}[++$k])
+			if (![System.IO.File]::Exists($p) -or $_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime($p)) {
 				$i.Add(${*p}[$k])
 				$o.Add($p)
 			}
@@ -404,7 +405,8 @@ function *IO {
 		$Task.Inputs = ${*p}
 		$m = (${*i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
 		foreach($_ in ${*o}) {
-			if ($m -gt [System.IO.File]::GetLastWriteTime((*Path $_)).Ticks) {
+			$p = *Path $_
+			if (![System.IO.File]::Exists($p) -or $m -gt [System.IO.File]::GetLastWriteTime($p).Ticks) {
 				return $null, "Out-of-date output '$_'."
 			}
 		}
