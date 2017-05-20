@@ -230,7 +230,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.8'}
+function Get-BuildVersion {[Version]'3.3.9'}
 
 function *IsIB {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -387,8 +387,8 @@ function *IO {
 		$Task.Inputs = $i = [System.Collections.Generic.List[object]]@()
 		$Task.Outputs = $o = [System.Collections.Generic.List[object]]@()
 		foreach($_ in ${*i}) {
-			$p = *Path ($p = ${*o}[++$k])
-			if (![System.IO.File]::Exists($p) -or $_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime($p)) {
+			$f = *Path ($p = ${*o}[++$k])
+			if (![System.IO.File]::Exists($f) -or $_.LastWriteTime -gt [System.IO.File]::GetLastWriteTime($f)) {
 				$i.Add(${*p}[$k])
 				$o.Add($p)
 			}

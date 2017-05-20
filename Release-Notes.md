@@ -1,9 +1,13 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.9
+
+Fix incremental tasks on Mono/Xamarin (#69).
+
 ## v3.3.8
 
-- Write messages about redefined tasks, resolve [#68](https://github.com/nightroman/Invoke-Build/issues/68).
+- Write messages about redefined tasks, resolve #68.
 - Fix unexpected output on some debugging cases.
 
 ## v3.3.7
