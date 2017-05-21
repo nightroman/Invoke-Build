@@ -16,13 +16,9 @@ In addition to basic task processing the engine supports
 - Batch invocation of tests composed as tasks.
 - Ability to define new classes of tasks.
 
-Invoke-Build can invoke the current task from a build script being composed in
-ISE and VSCode, see *Invoke-TaskFromISE.ps1* and *Invoke-TaskFromVSCode.ps1*.
+Invoke-Build v3.0.1+ is cross-platform with PowerShell v6.
 
-Invoke-Build can be used as the task runner in VSCode with tasks maintained in
-a PowerShell build script instead of *tasks.json*, see *New-VSCodeTask.ps1*.
-
-Invoke-Build v3.0.1 is cross-platform with PowerShell v6.0.0-alpha.
+Invoke-Build can be effectively used in VSCode and ISE.
 
 ## The package
 

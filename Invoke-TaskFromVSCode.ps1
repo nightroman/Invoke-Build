@@ -1,8 +1,8 @@
 
 <#PSScriptInfo
-.VERSION 1.0.2
+.VERSION 1.0.3
 .AUTHOR Roman Kuzmin
-.COPYRIGHT (c) 2011-2017 Roman Kuzmin
+.COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
 .GUID 1dcf7c94-b68d-4fb7-9e2b-886889b6c42e
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
@@ -14,26 +14,21 @@
 	Invokes the current task from VSCode by Invoke-Build.ps1
 
 .Description
-	This script invokes the current task from the build script being edited in
-	Visual Studio Code. It is invoked either in VSCode or PowerShell console.
-
-	The script is used with VSCode PowerShell extension:
-	https://marketplace.visualstudio.com/items?itemName=ms-vscode.PowerShell
-
-	Invoke-Build.ps1 is searched in the directory of Invoke-TaskFromVSCode.ps1
-	and then in the path.
+	This script invokes the current task from the build script in VSCode. It is
+	invoked either in the VSCode session or in an external PowerShell console.
+	The script requires the VSCode PowerShell extension.
 
 	The current task is the task at the caret line or above. If none is found
 	then the default task is invoked. Currently the script should be saved
 	manually before invoking.
 
-	In order to register editor commands create or open VSCode profile:
+	In order to register editor commands create or open the VSCode profile:
 
 		C:\Users\...\Documents\WindowsPowerShell\Microsoft.VSCode_profile.ps1
 
 	and add two commands:
 
-		Register-EditorCommand -Name IBVSCode -DisplayName 'Invoke task in VSCode' -ScriptBlock {
+		Register-EditorCommand -Name IB -DisplayName 'Invoke task' -ScriptBlock {
 			param($Context)
 			Invoke-TaskFromVSCode.ps1
 		}
@@ -44,11 +39,11 @@
 		}
 
 	These commands assume that Invoke-TaskFromVSCode.ps1 is in the path.
-	If this is not the case then specify the full script path there.
+	If this is not the case then specify the full script path.
 
-	In order to show and invoke commands in VSCode, press Ctrl+Shift+P to open
-	the command palette. Type the characters addi until you see the item
-	"PowerShell: Show additional commands" and then press Enter.
+	In order to invoke commands, press F1 or Ctrl+Shift+P to open the command
+	palette. Type "addi" until you see the item "PowerShell: Show Additional
+	Commands", then press Enter.
 
 .Parameter Console
 		Tells to invoke the current task in a new PowerShell console.
