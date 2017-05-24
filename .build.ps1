@@ -96,6 +96,7 @@ task Module Version, Markdown, Help, {
 	Copyright = '(c) 2011-2017 Roman Kuzmin'
 	Description = 'Build and test automation in PowerShell'
 	PowerShellVersion = '2.0'
+	AliasesToExport = @('Invoke-Build', 'Invoke-Builds')
 	PrivateData = @{
 		PSData = @{
 			Tags = 'Build', 'Test', 'Automation'
