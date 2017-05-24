@@ -230,7 +230,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.9'}
+function Get-BuildVersion {[Version]'3.3.10'}
 
 function *IsIB {
 	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
@@ -538,9 +538,11 @@ Set-Alias Invoke-Builds (Join-Path $_ Invoke-Builds.ps1)
 Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
 
 if ($MyInvocation.InvocationName -eq '.') {
-	if ($BuildFile = $MyInvocation.ScriptName) {
+	if ($_ = $MyInvocation.ScriptName) {
 		$ErrorActionPreference = 'Stop'
-		*SL ($BuildRoot = if ($Task) {*Path $Task} else {Split-Path $BuildFile})
+		$BuildFile = $_
+		$BuildRoot = if ($Task) {*Path $Task} else {Split-Path $_}
+		if ('.' -ne $Task) {*SL}
 	}
 	Remove-Variable Task, File, Checkpoint, Result, Safe, Summary, Resume, WhatIf
 	return

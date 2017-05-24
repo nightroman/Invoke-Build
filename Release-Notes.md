@@ -1,6 +1,11 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.10
+
+- Add exported aliases to .psd1, work around #71.
+- Fix leaked variable on dot-sourcing Invoke-Build.
+
 ## v3.3.9
 
 Fix incremental tasks on Mono/Xamarin (#69).
