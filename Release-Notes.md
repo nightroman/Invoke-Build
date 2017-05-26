@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.3.11
+
+Rework engine variables to reduce noise on debugging (#72).
+
 ## v3.3.10
 
 - Add exported aliases to .psd1, work around #71.

@@ -176,7 +176,7 @@ task Loop {
 }
 
 # Synopsis: Test and check expected output.
-# Requires PowerShelf/Assert-SameFile.ps1, #ConsoleHost
+# Requires PowerShelf/Assert-SameFile.ps1
 task Test3 {
 	# invoke tests, get output and result
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
@@ -194,14 +194,12 @@ task Test3 {
 }
 
 # Synopsis: Test with PowerShell v2.
-# #ConsoleHost
 task Test2 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
 	exec {powershell.exe -Version 2 -NoProfile Invoke-Build Test3 $diff}
 }
 
 # Synopsis: Test with PowerShell v6.
-# #ConsoleHost
 task Test6 -If $env:powershell6 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
 	exec {& $env:powershell6 -NoProfile Invoke-Build Test3 $diff}

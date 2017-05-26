@@ -1,9 +1,9 @@
 
 <#PSScriptInfo
-.VERSION 1.0.4
+.VERSION 1.0.5
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
-.TAGS Invoke, Task, Invoke-Build, VSCode
+.TAGS Invoke-Build, Task, VSCode
 .GUID 1dcf7c94-b68d-4fb7-9e2b-886889b6c42e
 .LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
 .PROJECTURI https://github.com/nightroman/Invoke-Build
@@ -15,32 +15,19 @@
 
 .Description
 	This script invokes the current task from the build script in VSCode.
-	It is invoked in the session or in an external PowerShell console.
-	The script requires the VSCode PowerShell extension.
 
-	The current task is the task at the caret or above. If none is found then
-	the default task is invoked. Currently the script should be saved manually.
+	Requires:
+	- Invoke-Build
+	- VSCode PowerShell
 
-	Invoke the script directly from the integrated console or register it for
-	PowerShell.ShowAdditionalCommands. Create or open the VSCode profile:
-
-		C:\Users\...\Documents\WindowsPowerShell\Microsoft.VSCode_profile.ps1
-
-	and add commands:
-
-		Register-EditorCommand -Name IB1 -DisplayName 'Invoke task' -ScriptBlock {
-			Invoke-TaskFromVSCode.ps1
-		}
-
-		Register-EditorCommand -Name IB2 -DisplayName 'Invoke task in console' -SuppressOutput -ScriptBlock {
-			Invoke-TaskFromVSCode.ps1 -Console
-		}
-
-	Specify the full path if Invoke-TaskFromVSCode.ps1 is not in the path.
-	You can add a keyboard shortcut for PowerShell.ShowAdditionalCommands.
+	How to use:
+	https://github.com/nightroman/Invoke-Build/wiki/Invoke-Task-from-VSCode
 
 .Parameter Console
-		Tells to invoke the task in an external PowerShell console.
+		Tells to invoke the task in an external console.
+
+.Link
+	https://github.com/nightroman/Invoke-Build/wiki/Invoke-Task-from-VSCode
 #>
 
 param(
