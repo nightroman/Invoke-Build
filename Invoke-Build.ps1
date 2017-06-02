@@ -439,9 +439,8 @@ function *IO {
 }
 
 function *Task {
-	New-Variable -Name Task -Value ${*}.All[$args[0]] -Option Constant
+	New-Variable -Name Task -Option Constant -Value (${*}.Task = ${*}.All[$args[0]])
 	${private:*p} = $args[1] + '/' + $Task.Name
-	${*}.Task = $Task
 
 	if ($Task.Elapsed) {
 		Write-Build 8 "Done ${*p}"
@@ -464,12 +463,11 @@ function *Task {
 	}
 
 	if (${*}.Checkpoint) {*Save}
-	${private:*a} = $Task.Jobs
 	${private:*i} = , [int]($null -ne $Task.Inputs)
 	$Task.Started = [DateTime]::Now
 	try {
 		. *Run ${*}.EnterTask
-		foreach(${private:*j} in ${*a}) {
+		foreach(${private:*j} in $Task.Jobs) {
 			if (${*j} -is [string]) {
 				try {
 					*Task ${*j} ${*p}
