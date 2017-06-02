@@ -9,18 +9,11 @@
 
 	Task and job event scopes must be the same for a task.
 
-	Events try to set the constant variable $Task and check expected failures.
-
 .Example
 	Invoke-Build * Events.test.ps1
 #>
 
 Set-Location $HOME
-
-function Assert-CannotSetTask {
-	($r = try {$Task = 1} catch {$_})
-	equals $r.FullyQualifiedErrorId VariableNotWritable
-}
 
 # Enter-Build is called before the first task in the script scope.
 # Its local definitions are available for tasks and event blocks.
@@ -44,7 +37,6 @@ Enter-BuildTask {
 	'Enter task {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	. Assert-CannotSetTask
 }
 
 # Exit-BuildTask is called after each task.
@@ -54,7 +46,6 @@ Exit-BuildTask {
 	'Exit task {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	. Assert-CannotSetTask
 }
 
 # Enter-BuildJob is called before each action.
@@ -64,7 +55,6 @@ Enter-BuildJob {
 	'Enter job {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	. Assert-CannotSetTask
 }
 
 # Exit-BuildJob is called after each script job.
@@ -74,7 +64,6 @@ Exit-BuildJob {
 	'Exit job {0}' -f $TaskName
 	equals $BuildRoot (Get-Location).ProviderPath
 	Set-Location $HOME
-	. Assert-CannotSetTask
 }
 
 task Task1 {
@@ -110,4 +99,48 @@ task InvalidEvents {
 	# invalid parameter number
 	($r = try {<##> Enter-Build {} 42} catch {$_})
 	assert (($r | Out-String) -like '*<##>*FullyQualifiedErrorId : PositionalParameterNotFound,Enter-Build*')
+}
+
+# If a task fails then its $Task.Error is available in Exit-BuildJob.
+task FailedTaskErrorInExitBuildJob {
+	Set-Content z.ps1 {
+		Exit-BuildJob {
+			assert $Task.Error
+		}
+		task . {
+			throw 42
+		}
+	}
+	($r = try {Invoke-Build . z.ps1} catch {$_})
+	equals $r[-1].FullyQualifiedErrorId '42'
+	Remove-Item z.ps1
+}
+
+# Task and job events cannot assign the constant variable $Task.
+task CannotAssignTaskInEvents {
+	Set-Content z.ps1 {
+		function Assert-CannotSetTask {
+			($r = try {$Task = 1} catch {$_})
+			equals $r.FullyQualifiedErrorId VariableNotWritable
+		}
+		Enter-BuildTask {
+			'Enter-BuildTask'
+			. Assert-CannotSetTask
+		}
+		Exit-BuildTask {
+			'Exit-BuildTask'
+			. Assert-CannotSetTask
+		}
+		Enter-BuildJob {
+			'Enter-BuildJob'
+			. Assert-CannotSetTask
+		}
+		Exit-BuildJob {
+			'Exit-BuildJob'
+			. Assert-CannotSetTask
+		}
+		task . {}
+	}
+	Invoke-Build . z.ps1
+	Remove-Item z.ps1
 }
