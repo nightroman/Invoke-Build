@@ -218,6 +218,7 @@ task TestFunctions {
 		'Import-Build'
 		'Invoke-BuildExec'
 		'New-BuildJob'
+		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'
 		'Write-Warning'
@@ -280,6 +281,7 @@ task ShowHelp {
 		'Get-BuildProperty'
 		'Get-BuildVersion'
 		'Invoke-BuildExec'
+		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'
 	) | %{

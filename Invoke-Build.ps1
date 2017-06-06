@@ -199,7 +199,7 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 	if (($null -eq ($_ = $PSCmdlet.GetVariableValue($Name)) -or '' -eq $_ ) -and !($_ = [Environment]::GetEnvironmentVariable($Name)) -and $null -eq ($_ = $Value)) {
-		*Die "Missing variable '$Name'." 13
+		*Die "Missing property '$Name'." 13
 	}
 	$_
 }
@@ -213,6 +213,20 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 	if (${*x} -notcontains $global:LastExitCode) {
 		*Die "Command {${*c}} exited with code $global:LastExitCode." 8
 	}
+}
+
+#.ExternalHelp Invoke-Build-Help.xml
+function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$Environment, [string[]]$Property) {
+	Remove-Variable Variable, Environment, Property
+	if ($_ = $PSBoundParameters['Variable']) {foreach($_ in $_) {
+		if ($null -eq ($$ = $PSCmdlet.GetVariableValue($_)) -or '' -eq $$) {*Die "Missing variable '$_'." 13}
+	}}
+	if ($_ = $PSBoundParameters['Environment']) {foreach($_ in $_) {
+		if (!([Environment]::GetEnvironmentVariable($_))) {*Die "Missing environment variable '$_'." 13}
+	}}
+	if ($_ = $PSBoundParameters['Property']) {foreach($_ in $_) {
+		if ('' -eq (Get-BuildProperty $_ '')) {*Die "Missing property '$_'." 13}
+	}}
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -254,10 +268,10 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.3.11'}
+function Get-BuildVersion {[Version]'3.4.0'}
 
-function *IsIB {
-	$_.InvocationInfo.ScriptName -match '[\\/]Invoke-Build\.ps1$'
+function *My {
+	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
 }
 
 function *SL($P=$BuildRoot) {
@@ -552,6 +566,7 @@ Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
 Set-Alias job New-BuildJob
 Set-Alias property Get-BuildProperty
+Set-Alias requires Test-BuildAsset
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
@@ -709,7 +724,7 @@ catch {
 		Write-Build 12 (*Error "ERROR: $_" $_)
 	}
 	else {
-		if (*IsIB) {$PSCmdlet.ThrowTerminatingError($_)}
+		if (*My) {$PSCmdlet.ThrowTerminatingError($_)}
 		throw
 	}
 }
@@ -723,7 +738,7 @@ finally {
 			foreach($_ in $t) {
 				'{0,-16} {1} - {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber
 				if ($_ = $_.Error) {
-					Write-Build 12 "ERROR: $(if (*IsIB) {$_} else {*Error $_ $_})"
+					Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
 				}
 			}
 		}

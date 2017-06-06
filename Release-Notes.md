@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.4.0
+
+New command `requires`, the alias of `Test-BuildAsset` (#73).
+
 ## v3.3.11
 
 Rework engine variables to reduce noise on debugging (#72).
@@ -12,7 +16,7 @@ Rework engine variables to reduce noise on debugging (#72).
 
 ## v3.3.9
 
-Fix incremental tasks on Mono/Xamarin (#69).
+Fix incremental tasks on Mono (#69).
 
 ## v3.3.8
 

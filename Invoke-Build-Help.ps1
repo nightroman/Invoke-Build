@@ -54,6 +54,7 @@
 		Invoke-BuildExec (exec)
 		New-BuildJob (job)
 		Resolve-MSBuild
+		Test-BuildAsset (requires)
 		Use-BuildAlias (use)
 		Write-Build
 		Write-Warning [1]
@@ -150,6 +151,7 @@
 	    - equals
 	    - exec
 	    - property
+	    - requires
 	    - use
 	    - Write-Build
 
@@ -391,6 +393,7 @@
 		@{ text = 'Invoke-BuildExec (exec)' }
 		@{ text = 'New-BuildJob (job)' }
 		@{ text = 'Resolve-MSBuild' }
+		@{ text = 'Test-BuildAsset (requires)' }
 		@{ text = 'Use-BuildAlias (use)' }
 		@{ text = 'Write-Build' }
 	)
@@ -698,6 +701,10 @@
 	$WarningLevel = property WarningLevel 4
 		}}
 	)
+
+	links = @(
+		@{ text = 'Test-BuildAsset' }
+	)
 }
 
 ### Get-BuildVersion
@@ -760,6 +767,38 @@
 
 	links = @(
 		@{ text = 'Use-BuildAlias' }
+	)
+}
+
+### Test-BuildAsset
+@{
+	command = 'Test-BuildAsset'
+	synopsis = 'Checks for required build assets.'
+
+	description = @'
+	Scripts use its alias 'requires'. This command tests the required build
+	assets. It fails if something is missing or invalid. It is used either
+	in script code (common assets) or in tasks (individual assets).
+'@
+
+	parameters = @{
+		Variable = @'
+		Specifies session variable names and tells to fail if a variable is
+		missing or its value is null or an empty string.
+'@
+		Environment = @'
+		Specifies environment variable names and tells to fail if a variable is
+		not defined or its value is an empty string.
+'@
+		Property = @'
+		Specifies session or environment variable names and tells to fail if a
+		variable is missing or its value is null or an empty string. It makes
+		sense to use `property` later with tested names without defaults.
+'@
+	}
+
+	links = @(
+		@{ text = 'Get-BuildProperty' }
 	)
 }
 

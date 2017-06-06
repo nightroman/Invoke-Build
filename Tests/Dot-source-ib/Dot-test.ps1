@@ -74,14 +74,14 @@ Push-Location function:
 assert (!(Test-Path Write-Warning))
 
 # expected public functions
-$OK = 'Add-BuildTask,Assert-Build,Assert-BuildEquals,Get-BuildError,Get-BuildFile,Get-BuildProperty,Get-BuildVersion,Invoke-BuildExec,New-BuildJob,Use-BuildAlias,Write-Build'
+$OK = 'Add-BuildTask,Assert-Build,Assert-BuildEquals,Get-BuildError,Get-BuildFile,Get-BuildProperty,Get-BuildVersion,Invoke-BuildExec,New-BuildJob,Test-BuildAsset,Use-BuildAlias,Write-Build'
 $KO = (Get-ChildItem *-Build* -Name | Sort-Object) -join ','
 assert ($OK -ceq $KO) "Unexpected functions:
 OK: [$OK]
 KO: [$KO]"
 
 # expected internal functions
-$OK = '*AddError,*Amend,*At,*Check,*Die,*Error,*Help,*IO,*IsIB,*Job,*Path,*Run,*Save,*SL,*Synopsis,*Task,*Unsafe'
+$OK = '*AddError,*Amend,*At,*Check,*Die,*Error,*Help,*IO,*Job,*My,*Path,*Run,*Save,*SL,*Synopsis,*Task,*Unsafe'
 $KO = (Get-ChildItem [*]* -Name | Sort-Object) -join ','
 assert ($OK -ceq $KO) "Unexpected functions:
 OK: [$OK]
@@ -122,7 +122,7 @@ equals $r $env:COMPUTERNAME
 equals $r 'DefaultValue'
 
 ($e = try {property MissingVariable} catch {$_ | Out-String})
-assert ($e -like 'property : Missing variable *try {property *')
+assert ($e -like 'property : Missing property *try {property *')
 
 ### use
 
