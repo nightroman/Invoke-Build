@@ -1,31 +1,40 @@
 
 <#
 .Synopsis
-	Example of imported tasks with `requires`.
+	Example of imported tasks and `requires`.
 
 .Description
-	This example build script does not have its own tasks. All tasks are
-	imported by dot-sourcing some "conventional" task files. In practice,
-	build scripts have own tasks and import some extras in addition.
-
-	Before importing, the script defines variables required by imported
-	scripts. If you remove any of them then the import fails due to the
-	`requires` commands in the imported scripts.
+	See README.
 
 .Example
 	> Invoke-Build ?
-	Show tasks. In this sample they are all imported.
+	Show tasks. In this sample most of them are imported.
 #>
 
-# Required session variable for 1.tasks.ps1
+### EXAMPLE 1. Import from conventional task scripts
+
+# Define required
+# - session variable for 1.tasks.ps1
+# - environment variable for 2.tasks.ps1
+# - session or environment variables for 3.tasks.ps1
 $MyVar1 = 'var1'
-
-# Required environment variable for 2.tasks.ps1
 $env:MyEnv1 = 'env1'
-
-# Required session or environment variables for 3.tasks.ps1
 $MyProp1 = 'prop1'
 $env:MyProp2 = 'prop2'
 
-# Import tasks by dot-sourcing all available task scripts
-foreach($_ in Get-ChildItem *.tasks.ps1) {. $_}
+# Import tasks by dot-sourcing available task scripts
+foreach($_ in Get-ChildItem MyScript/*.tasks.ps1) {. $_}
+
+### EXAMPLE 2. Import from a module with tasks
+
+# Required variable
+$MyModuleParam = 'param1'
+
+# Import the module and dot-source its tasks
+Import-Module ./MyModule
+. MyModule.tasks
+
+### MAIN SCRIPT. Define own tasks
+
+# Synopsis: This task calls imported tasks.
+task . MyVar, MyEnv, MyProp, MyModuleTask

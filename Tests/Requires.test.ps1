@@ -8,11 +8,13 @@
 #>
 
 task ImportSample {
-	($r = Invoke-Build * ../Tasks/Import/.build.ps1)
+	($r = Invoke-Build . ../Tasks/Import/.build.ps1)
 	assert ($r -contains 'MyVar1 = var1')
 	assert ($r -contains 'MyEnv1 = env1')
 	assert ($r -contains 'MyProp1 = prop1')
 	assert ($r -contains 'MyProp2 = prop2')
+	assert ($r -contains '@Invoke-MyModuleStuff param1')
+	assert ($r -contains 'MyExtraStuff = stuff1')
 }
 
 task Variable {

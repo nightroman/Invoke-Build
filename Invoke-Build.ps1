@@ -108,15 +108,15 @@ if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 if (!$_.Count) {return}
 
 ($a = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
-$p1 = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
-$p2 = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
+$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
+$r = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
 foreach($p in $_.Values) {
-	if ($p1 -notcontains ($_ = $p.Name)) {
-		if ($p2 -contains $_) {throw "Script uses reserved parameter '$_'."}
+	if ($c -notcontains ($_ = $p.Name)) {
+		if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
 		${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $a))
 	}
 }
-Remove-Variable a, p, p1, p2
+Remove-Variable a, c, r, p
 ${*}.DP
 
 } end {
@@ -578,8 +578,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 	if ($_ = $MyInvocation.ScriptName) {
 		$ErrorActionPreference = 'Stop'
 		$BuildFile = $_
-		$BuildRoot = if ($Task) {*Path $Task} else {Split-Path $_}
-		if ('.' -ne $Task) {*SL}
+		*SL ($BuildRoot = if ($Task) {*Path $Task} else {Split-Path $_})
 	}
 	Remove-Variable Task, File, Checkpoint, Result, Safe, Summary, Resume, WhatIf
 	return
