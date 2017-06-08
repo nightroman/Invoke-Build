@@ -2,8 +2,8 @@
 ## How to share and import tasks
 
 Tasks designed for sharing are normally defined in standard PowerShell scripts
-with recommended suffix *.tasks.ps1*. Then these scripts are dot-sourced in
-build scripts.
+with the recommended suffix *.tasks.ps1*. Then these scripts are dot-sourced
+in build scripts.
 
 This sample demonstrates:
 
@@ -16,12 +16,12 @@ The build script `.build.ps1` imports tasks from external task scripts.
 ***
 ### EXAMPLE 1. Import from conventional task scripts
 
-Several task script are located in the directory *MyScript*. All found there
+Several task scripts are located in the directory *MyScript*. All found there
 `*.tasks.ps1` are imported by dot-sourcing. In practice, where to get such
 files and how to name them is up to authors.
 
 Each sample `*.tasks.ps1` specifies assets of different types by `requires`.
-In practice, assets of different types may be used together.
+In practice, assets of different types may be specified together.
 
 ***
 ### EXAMPLE 2. Import from a module with tasks
@@ -33,7 +33,7 @@ some known module scope features, tasks normally should not be defined in
 In a module, to export:
 
 - Define tasks in a usual script file, e.g. *MyModule.tasks.ps1*.
-- Export an alias with a full path to *MyModule.tasks.ps1*.
+- In the module *.psm1* define and export an alias to this script.
 
 ```powershell
     Set-Alias MyModule.tasks $PSScriptRoot/MyModule.tasks.ps1
@@ -43,7 +43,7 @@ In a module, to export:
 In a build, to import:
 
 - Import a module.
-- Dot-source its task script by its exported alias.
+- Dot-source its task script using its alias.
 
 ```powershell
     Import-Module MyModule
