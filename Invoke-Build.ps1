@@ -52,7 +52,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Tasks = [System.Collections.Generic.List[object]]@()
 	Errors = [System.Collections.Generic.List[object]]@()
 	Warnings = [System.Collections.Generic.List[object]]@()
-	Redefined = [System.Collections.Generic.List[object]]@()
+	Redefined = @()
 	Started = [DateTime]::Now
 	Elapsed = $null
 	Error = $null
@@ -107,19 +107,18 @@ if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 	& $BuildFile
 	throw 'Invalid script.'
 }
-if (!$_.Count) {return}
-
-($a = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
-$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
-$r = 'Task', 'File', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
-foreach($p in $_.Values) {
-	if ($c -notcontains ($_ = $p.Name)) {
-		if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
-		${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $a))
+if ($_.Count) {&{
+	($a = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
+	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
+	$r = 'Task', 'File', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
+	foreach($p in $_.Values) {
+		if ($c -notcontains ($_ = $p.Name)) {
+			if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
+			${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $a))
+		}
 	}
-}
-Remove-Variable a, c, r, p
-${*}.DP
+	${*}.DP
+}}
 
 } end {
 
@@ -138,7 +137,7 @@ function Add-BuildTask(
 	[switch]$Partial
 )
 {
-	if ($_ = ${*}.All[$Name]) {${*}.Redefined.Add($_)}
+	if ($_ = ${*}.All[$Name]) {${*}.Redefined += $_}
 	${*}.All[$Name] = [PSCustomObject]@{
 		Name = $Name
 		Error = $null
@@ -200,10 +199,12 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 
 #.ExternalHelp Invoke-Build-Help.xml
 function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
-	if (($null -eq ($_ = $PSCmdlet.GetVariableValue($Name)) -or '' -eq $_ ) -and !($_ = [Environment]::GetEnvironmentVariable($Name)) -and $null -eq ($_ = $Value)) {
-		*Die "Missing property '$Name'." 13
-	}
-	$_
+	${*n} = $Name
+	${*v} = $Value
+	Remove-Variable Name, Value
+	if (($null -ne ($_ = $PSCmdlet.GetVariableValue(${*n})) -and '' -ne $_) -or ($_ = [Environment]::GetEnvironmentVariable(${*n}))) {return $_}
+	if ($null -eq ${*v}) {*Die "Missing property '${*n}'." 13}
+	${*v}
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
@@ -225,7 +226,7 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 	${private:*c} = $Command
 	${private:*x} = $ExitCode
 	Remove-Variable Command, ExitCode
-	. ${*c}
+	& ${*c}
 	if (${*x} -notcontains $global:LastExitCode) {
 		*Die "Command {${*c}} exited with code $global:LastExitCode." 8
 	}
@@ -284,7 +285,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.5.1'}
+function Get-BuildVersion {[Version]'3.5.2'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
@@ -381,11 +382,7 @@ function *Save {
 }
 
 function *AddError($T) {
-	${*}.Errors.Add([PSCustomObject]@{
-		Error = $_
-		File = $BuildFile
-		Task = $T
-	})
+	${*}.Errors.Add([PSCustomObject]@{Error = $_; File = $BuildFile; Task = $T})
 }
 
 filter *Help {
@@ -596,11 +593,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 
 function Write-Warning([Parameter()]$Message) {
 	$PSCmdlet.WriteWarning($Message)
-	${*}.Warnings.Add([PSCustomObject]@{
-		Message = $Message
-		File = $BuildFile
-		Task = ${*}.Task
-	})
+	${*}.Warnings.Add([PSCustomObject]@{Message = $Message; File = $BuildFile; Task = ${*}.Task})
 }
 
 $ErrorActionPreference = 'Stop'

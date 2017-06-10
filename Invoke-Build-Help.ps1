@@ -13,7 +13,7 @@
 	The command invokes specified and referenced tasks defined in a PowerShell
 	script. The process is called build and the script is called build script.
 
-	A build script defines parameters, variables, tasks, and events. Any code
+	A build script defines parameters, variables, tasks, and blocks. Any code
 	is invoked with the current location set to $BuildRoot, the build script
 	directory. $ErrorActionPreference is set to 'Stop'.
 
@@ -86,7 +86,8 @@
 		$Task      - current task
 
 	$Task is available for script blocks defined by task parameters If, Inputs,
-	Outputs, and Jobs and by events Enter|Exit-BuildTask, Enter|Exit-BuildJob.
+	Outputs, and Jobs and by blocks Enter|Exit-BuildTask, Enter|Exit-BuildJob,
+	Set-BuildHeader.
 
 		$Task properties available for reading:
 
@@ -101,9 +102,9 @@
 	The variable $_ may be exposed. In special cases it is used as an input.
 	In other cases build scripts should not assume anything about its value.
 
-	EVENT BLOCKS
+	BUILD BLOCKS
 
-	Scripts may define the following event blocks. They are invoked:
+	Scripts may define the following build blocks. They are invoked:
 
 		Enter-Build {} - before all tasks
 		Exit-Build {} - after all tasks
@@ -119,9 +120,9 @@
 
 		Set-BuildHeader {param($path)} - custom task header writer
 
-	Nested builds do not inherit parent events.
+	Nested builds do not inherit parent blocks.
 	If Enter-X is called then Exit-X is called.
-	Events are not called on WhatIf, except Set-BuildHeader.
+	Blocks are not called on WhatIf, except Set-BuildHeader.
 
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
 	a good place for heavy initialization, it does not have to care of WhatIf.
@@ -300,9 +301,9 @@
 		Build process log which includes task starts, ends with durations,
 		warnings, errors, and output of tasks and commands that they invoke.
 
-		Output is expected from tasks and event functions. But build scripts
-		should not output anything. Unexpected output is shown as a warning,
-		in the future it may be treated as an error.
+		Output is expected from tasks and blocks. But script scope code should
+		not output anything. Unexpected output causes warnings, in the future
+		it may be treated as an error.
 '@
 		}
 	)
@@ -657,18 +658,15 @@
 ### Get-BuildProperty
 @{
 	command = 'Get-BuildProperty'
-	synopsis = 'Gets the session or environment variable or the default value.'
+	synopsis = 'Gets the session or environment variable or default value.'
 
 	description = @'
 	Scripts use its alias 'property'. The command returns:
 
-		- PowerShell variable value if it is not $null or ''
+		- session variable value if it is not $null or ''
 		- environment variable if it is not $null or ''
 		- default value if it is not $null
 		- error
-
-	CAUTION: Properties should be used sparingly with carefully chosen names
-	that unlikely can already exist and be not related to the build script.
 '@
 
 	parameters = @{
@@ -676,18 +674,15 @@
 		Specifies the session or environment variable name.
 '@
 		Value = @'
-		Specifies the default value to be used if the variable is not found.
-		Omitted or null values require the variable to exist and be not null.
-		Otherwise an error is thrown.
+		Specifies the default value. If it is omitted or null then the variable
+		must exist with a not empty value. Otherwise an error is thrown.
 '@
 	}
 
 	outputs = @(
 		@{
 			type = 'Object'
-			description = @'
-		Requested property value.
-'@
+			description = 'Requested property value.'
 		}
 	)
 

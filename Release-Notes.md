@@ -1,6 +1,12 @@
 
 # Invoke-Build Release Notes
 
+## v3.5.2
+
+- Avoid some `property` limitations (#75).
+- Use `&` in `exec`, it looks safer.
+- Tweak help.
+
 ## v3.5.1
 
 - Remove redundant information from safe errors.
