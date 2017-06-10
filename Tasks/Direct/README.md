@@ -33,8 +33,9 @@ or directly
     <script> <tasks> <parameters>
 ```
 
-Note that Invoke-Build own parameters are not available for direct calls, i.e.
+Note that some Invoke-Build parameters are not available on direct calls, i.e.
 `Safe`, `Summary`, `WhatIf`, etc. When they are needed just use the normal
-invocation by the engine.
+invocation by the engine, this is easier than to support them on direct
+calls (possible but not so neat).
 
 See the script [build.ps1](build.ps1) for a working example.
