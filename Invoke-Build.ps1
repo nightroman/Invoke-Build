@@ -111,7 +111,7 @@ if (!$_.Count) {return}
 
 ($a = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
 $c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
-$r = 'Task', 'File', 'Parameters', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
+$r = 'Task', 'File', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
 foreach($p in $_.Values) {
 	if ($c -notcontains ($_ = $p.Name)) {
 		if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
@@ -284,7 +284,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.5.0'}
+function Get-BuildVersion {[Version]'3.5.1'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
@@ -396,6 +396,13 @@ filter *Help {
 	$r
 }
 
+function *Root($A) {
+	*Check $A.Keys
+	$h = @{}
+	foreach($_ in $A.Values) {foreach($_ in $_.Jobs) {if ($_ -is [string]) {$h[$_] = 1}}}
+	foreach($_ in $A.Keys) {if (!$h[$_]) {$_}}
+}
+
 function *IO {
 	if ((${private:*i} = $Task.Inputs) -is [scriptblock]) {
 		*SL
@@ -492,7 +499,7 @@ function *Task {
 				catch {
 					if (*Unsafe ${*j} $BuildTask) {throw}
 					*AddError ${*}.All[${*j}]
-					Write-Build 12 (*Error "ERROR: Task ${*p}/${*j}: $_" $_)
+					Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
 				}
 				continue
 			}
@@ -544,7 +551,7 @@ function *Task {
 		if ($_ = $Task.Error) {
 			*AddError $Task
 			Write-Build 14 (*At $Task)
-			Write-Build 12 (*Error "ERROR: Task ${*p}: $_" $_)
+			Write-Build 12 "ERROR: $(*Error $_ $_)"
 		}
 		else {
 			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
@@ -646,41 +653,32 @@ try {
 			if ($_ -is [scriptblock]) {throw "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)"}
 		}
 	}
-	if (!${*}.All.Count) {throw "No tasks in '$BuildFile'."}
+	if (!(${**} = ${*}.All).Count) {throw "No tasks in '$BuildFile'."}
 
-	foreach($_ in ${*}.All.Values) {
+	foreach($_ in ${**}.Values) {
 		if ($_.Before) {*Amend $_ $_.Before 1}
 	}
-	foreach($_ in ${*}.All.Values) {
+	foreach($_ in ${**}.Values) {
 		if ($_.After) {*Amend $_ $_.After}
 	}
 
 	if (${*}.Q) {
-		*Check ${*}.All.Keys
+		*Check ${**}.Keys
 		if ($BuildTask -eq '??') {
-			${*}.All
+			${**}
 		}
 		else {
-			${*}.All.Values | *Help
+			${**}.Values | *Help
 		}
 		return
 	}
 
 	if ($BuildTask -eq '*') {
-		*Check ${*}.All.Keys
-		${**} = @{}
-		foreach($_ in ${*}.All.Values) {
-			foreach($_ in $_.Jobs) {
-				if ($_ -is [string]) {
-					${**}[$_] = 1
-				}
-			}
-		}
-		$BuildTask = foreach($_ in ${*}.All.Keys) {if (!${**}[$_]) {$_}}
+		$BuildTask = *Root ${**}
 	}
 	else {
 		if (!$BuildTask -or '.' -eq $BuildTask) {
-			$BuildTask = if (${*}.All['.']) {'.'} else {${*}.All.Item(0).Name}
+			$BuildTask = if (${**}['.']) {'.'} else {${**}.Item(0).Name}
 		}
 		*Check $BuildTask
 	}
@@ -695,7 +693,7 @@ try {
 		. *Run ${*}.EnterBuild
 		if (${*}.CP) {
 			foreach($_ in ${*}.CP.Done) {
-				${*}.All[$_].Elapsed = [TimeSpan]::Zero
+				${**}[$_].Elapsed = [TimeSpan]::Zero
 			}
 			foreach($_ in ${*}.CP.Prm2.GetEnumerator()) {
 				Set-Variable $_.Key $_.Value

@@ -50,6 +50,7 @@
 		Assert-BuildEquals (equals)
 		Get-BuildError (error)
 		Get-BuildProperty (property)
+		Get-BuildSynopsis
 		Get-BuildVersion
 		Invoke-BuildExec (exec)
 		New-BuildJob (job)

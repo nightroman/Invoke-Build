@@ -1,6 +1,11 @@
 
 # Invoke-Build Release Notes
 
+## v3.5.1
+
+- Remove redundant information from safe errors.
+- Remove retired "Parameters" from reserved.
+
 ## v3.5.0
 
 - New block `Set-BuildHeader` for writing custom task headers.
