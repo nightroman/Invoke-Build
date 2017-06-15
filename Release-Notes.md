@@ -1,6 +1,13 @@
 
 # Invoke-Build Release Notes
 
+## v3.5.0
+
+- New block `Set-BuildHeader` for writing custom task headers.
+- New function `Get-BuildSynopsis`, e.g. for `Set-BuildHeader`.
+
+See *repo/Tasks/Header* for examples of `Set-BuildHeader` and `Get-BuildSynopsis`.
+
 ## v3.4.0
 
 New command `requires`, the alias of `Test-BuildAsset` (#73).

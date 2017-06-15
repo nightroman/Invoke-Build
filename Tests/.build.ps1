@@ -197,7 +197,7 @@ task TestStartJob {
 task TestFunctions {
 	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
 	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
-	$exposed = @(
+	$known = @(
 		# build script and tests
 		'Copy-File'
 		'Invoke-MyModuleStuff'
@@ -215,10 +215,12 @@ task TestFunctions {
 		'Get-BuildError'
 		'Get-BuildFile'
 		'Get-BuildProperty'
+		'Get-BuildSynopsis'
 		'Get-BuildVersion'
 		'Import-Build'
 		'Invoke-BuildExec'
 		'New-BuildJob'
+		'Set-BuildHeader'
 		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'
@@ -226,10 +228,7 @@ task TestFunctions {
 	)
 	Get-Command -CommandType Function | .{process{
 		if (($list -notcontains $_.Name) -and ($_.Name[0] -ne '*')) {
-			if ($exposed -contains $_.Name) {
-				"Function $($_.Name) is from Invoke-Build."
-			}
-			else {
+			if ($known -notcontains $_.Name) {
 				Write-Warning "Unknown function '$_'."
 			}
 		}
@@ -280,6 +279,7 @@ task ShowHelp {
 		'Assert-BuildEquals'
 		'Get-BuildError'
 		'Get-BuildProperty'
+		'Get-BuildSynopsis'
 		'Get-BuildVersion'
 		'Invoke-BuildExec'
 		'Test-BuildAsset'

@@ -3,9 +3,10 @@
 
 **Techniques**
 
-- [Direct](Direct) shows how to make build scripts invokable directly.
-- [Import](Import) shows how to share and import tasks from external task scripts including exported by modules.
-- [Param](Param) shows how to create tasks which perform similar actions with some differences defined by parameters.
+- [Direct](Direct) How to make build scripts invokable directly.
+- [Header](Header) How to print more task details in task headers.
+- [Import](Import) How to share and import tasks from external task scripts including exported by modules.
+- [Param](Param) How to create tasks which perform similar actions with some differences defined by parameters.
 
 **Custom tasks**
 

@@ -116,9 +116,11 @@
 		Export-Build {} - on saving persistent build checkpoints
 		Import-Build {param($data)} - once on resuming persistent builds
 
-	Events are not called on WhatIf.
+		Set-BuildHeader {param($path)} - custom task header writer
+
 	Nested builds do not inherit parent events.
 	If Enter-X is called then Exit-X is called.
+	Events are not called on WhatIf, except Set-BuildHeader.
 
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
 	a good place for heavy initialization, it does not have to care of WhatIf.
@@ -704,6 +706,52 @@
 
 	links = @(
 		@{ text = 'Test-BuildAsset' }
+	)
+}
+
+### Get-BuildSynopsis
+@{
+	command = 'Get-BuildSynopsis'
+	synopsis = 'Gets the task synopsis.'
+
+	description = @'
+	Gets the specified task synopsis if it is available.
+	Task synopsis is defined in preceding comments as # Synopsis: ...
+'@
+
+	parameters = @{
+		Task = @'
+		The task object. During the build, the current task is available as the
+		automatic variable $Task.
+'@
+		Hash = @'
+		Any hashtable to be used as a cache. Build scripts do not have to
+		specify it, it is designed for external tools.
+'@
+	}
+
+	outputs = @(
+		@{
+			type = 'String'
+			description = 'Task synopsis line.'
+		}
+	)
+
+	examples = @(
+		@{code={
+	# Print task path and synopsis
+	Set-BuildHeader {
+		param($Path)
+	    Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
+	}
+
+	# Synopsis: Show task data useful for headers
+	task Task1 {
+		$Task.Name
+		$Task.InvocationInfo.ScriptName
+		$Task.InvocationInfo.ScriptLineNumber
+	}
+		}}
 	)
 }
 

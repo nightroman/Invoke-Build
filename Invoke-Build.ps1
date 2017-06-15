@@ -68,6 +68,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	A = 1
 	B = 0
 	Q = 0
+	H = @{}
 	EnterBuild = $null
 	ExitBuild = $null
 	EnterTask = $null
@@ -76,6 +77,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	ExitJob = $null
 	Export = $null
 	Import = $null
+	Header = {Write-Build 11 "Task $($args[0])"}
 })
 $BuildTask = $PSBoundParameters['Task']
 $BuildFile = $PSBoundParameters['File']
@@ -205,6 +207,20 @@ function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
+function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
+	$f = ($I = $Task.InvocationInfo).ScriptName
+	if (!($d = $Hash[$f])) {
+		$Hash[$f] = $d = @{}
+		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
+			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
+		}
+	}
+	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
+		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
+	}
+}
+
+#.ExternalHelp Invoke-Build-Help.xml
 function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0) {
 	${private:*c} = $Command
 	${private:*x} = $ExitCode
@@ -268,7 +284,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.4.0'}
+function Get-BuildVersion {[Version]'3.5.0'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
@@ -372,24 +388,11 @@ function *AddError($T) {
 	})
 }
 
-function *Synopsis($I, $H) {
-	$f = $I.ScriptName
-	if (!($d = $H[$f])) {
-		$H[$f] = $d = @{}
-		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
-			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
-		}
-	}
-	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
-		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
-	}
-}
-
-filter *Help($H) {
+filter *Help {
 	$r = 1 | Select-Object Name, Jobs, Synopsis
 	$r.Name = $_.Name
 	$r.Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
-	$r.Synopsis = *Synopsis $_.InvocationInfo $H
+	$r.Synopsis = Get-BuildSynopsis $_
 	$r
 }
 
@@ -494,7 +497,7 @@ function *Task {
 				continue
 			}
 
-			Write-Build 11 "Task ${*p}"
+			& ${*}.Header ${*p}
 			if ($WhatIf) {
 				${*j}
 				continue
@@ -633,6 +636,7 @@ try {
 	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.ExitJob = $Script}
 	function Export-Build([Parameter()][scriptblock]$Script) {${*}.Export = $Script}
 	function Import-Build([Parameter()][scriptblock]$Script) {${*}.Import = $Script}
+	function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
 
 	*SL ($BuildRoot = Split-Path $BuildFile)
 	$_ = ${*}.SP
@@ -657,7 +661,7 @@ try {
 			${*}.All
 		}
 		else {
-			${*}.All.Values | *Help @{}
+			${*}.All.Values | *Help
 		}
 		return
 	}

@@ -9,8 +9,6 @@
 	This script analyses task references and shows parent tasks and child trees
 	for the specified tasks. Tasks are not invoked.
 
-	Invoke-Build.ps1 should be in the script directory or in the path.
-
 .Parameter Task
 		Task names.
 		If it is "*" then all root tasks are used.
@@ -52,7 +50,7 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	++$Step
 
 	# synopsis
-	$synopsis = *Synopsis $Task.InvocationInfo $docs
+	$synopsis = Get-BuildSynopsis $Task $docs
 
 	# name
 	$info = $tab + $Task.Name
@@ -79,31 +77,12 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	}
 }
 
-# Task synopsis.
-function *Synopsis($I, $H) {
-	$f = $I.ScriptName
-	if (!($d = $H[$f])) {
-		$H[$f] = $d = @{}
-		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
-			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
-		}
-	}
-	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
-		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
-	}
-}
-
-# To amend errors
+$ErrorActionPreference = 'Stop'
 try {
-	# resolve Invoke-Build.ps1
-	$ib = Get-Command "$(Split-Path $MyInvocation.MyCommand.Path)/Invoke-Build.ps1" -CommandType ExternalScript -ErrorAction 0
-	if (!$ib) {
-		$ib = Get-Command Invoke-Build.ps1 -CommandType ExternalScript -ErrorAction 0
-		if (!$ib) {throw 'Cannot find Invoke-Build.ps1'}
-	}
+	. Invoke-Build .
 
 	# get tasks
-	$tasks = & $ib ?? $_File @_Parameters
+	$tasks = Invoke-Build ?? $_File @_Parameters
 
 	# references
 	$references = @{}
