@@ -742,7 +742,7 @@
 	# Print task path and synopsis
 	Set-BuildHeader {
 		param($Path)
-	    Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
+		Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
 	}
 
 	# Synopsis: Show task data useful for headers
@@ -751,7 +751,7 @@
 		$Task.InvocationInfo.ScriptName
 		$Task.InvocationInfo.ScriptLineNumber
 	}
-		}}
+}}
 	)
 }
 
