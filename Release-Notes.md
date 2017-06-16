@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.6.0
+
+Support script block as `File` (#78).
+
 ## v3.5.3
 
 Improved product selection logic in `Resolve-MSBuild` (#77).

@@ -206,6 +206,12 @@
 		this location it may return the full path of a special build script.
 
 		If the file is still not found then parent directories are searched.
+
+		INLINE SCRIPT
+
+		`File` is a script block as a build script. It is used in order to
+		assemble a build on the fly without creating an extra build script.
+		Dynamic parameters and persistent builds are not used in this case.
 '@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is

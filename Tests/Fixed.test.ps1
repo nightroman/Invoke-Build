@@ -11,12 +11,11 @@ Set-StrictMode -Version Latest
 
 # Synopsis: 2.10.1 Fixed incomplete error on Safe.
 task IncompleteErrorOnSafe {
-	{
+	$file = {
 		task test { throw 42 }
-	} > z.build.ps1
-	($r = Invoke-Build * z.build.ps1 -Safe | Out-String)
-	assert ($r -clike 'Build test*Task /test*At *\z.build.ps1:2*ERROR: 42*At *\z.build.ps1:2*')
-	Remove-Item z.build.ps1
+	}
+	($r = Invoke-Build * $file -Safe | Out-String)
+	assert ($r -clike 'Build test*Task /test*At *\Fixed.test.ps1:*ERROR: 42*At *\Fixed.test.ps1:*')
 }
 
 # Synopsis: #5 Invoke-Build ** -Safe propagates -Safe.
@@ -56,12 +55,12 @@ failed chain. The reason is that all these tasks have failed die to this error.
 On analysis of tasks Result.Tasks.Error should contain this error.
 #>
 task NestedErrorInResult {
-	{
+	$file = {
 		task t1 t2
 		task t2 {throw 42}
-	} > z.build.ps1
+	}
 
-	Invoke-Build . z.build.ps1 -Safe -Result r
+	Invoke-Build . $file -Safe -Result r
 
 	# build failed
 	equals $r.Error.FullyQualifiedErrorId '42'
@@ -73,8 +72,6 @@ task NestedErrorInResult {
 	equals $r.Tasks.Count 2
 	assert $r.Tasks[0].Error
 	assert $r.Tasks[1].Error
-
-	Remove-Item z.build.ps1
 }
 
 # Synopsis: Fixed #12 Write-Warning fails in a trap.
@@ -102,20 +99,18 @@ Synopsis: #17 Process all Before tasks and then process all After tasks
 		</Project>
 #>
 task AfterTaskMustBeAfterBeforeTask {
-	{
+	$file = {
 		task Task1
 		task After -After Task1
 		task Before -Before Task1
-	} > z.build.ps1
+	}
 
-	Invoke-Build . z.build.ps1 -Result r
+	Invoke-Build . $file -Result r
 
 	equals $r.Tasks.Count 3
 	equals $r.Tasks[0].Name Before
 	equals $r.Tasks[1].Name After
 	equals $r.Tasks[2].Name Task1
-
-	Remove-Item z.build.ps1
 }
 
 # Synopsis: #20, persistent builds with cmdlet binding parameters.
@@ -196,29 +191,27 @@ task InvalidCheckpointOnResume {
 
 # Synopsis: #34, VSTS expects $LASTEXITCODE 0 on success
 task ExitCodeOnSuccessShouldBe0 {
-	Set-Content z.ps1 {
+	$file = {
 		task CmdExitCode42 {
 			exec {cmd.exe /c exit 42} 42
 			equals $LASTEXITCODE 42
 		}
 	}
 
-	Invoke-Build CmdExitCode42 z.ps1
+	Invoke-Build CmdExitCode42 $file
 	equals $LASTEXITCODE 0
-
-	Remove-Item z.ps1
 }
 
 task RedefinedTask {
 	# script with task t1 redefined twice
-	Set-Content z.ps1 {
-		task t1 {}
-		task t1 {}
+	$file = {
+		task t1 {<#t1#>}
+		task t1 {<#t2#>}
 		task t1 {'in-last-t1'}
 	}
 
 	# build, get text and result
-	($t = Invoke-Build . z.ps1 -Result r | Out-String)
+	($t = Invoke-Build . $file -Result r | Out-String)
 
 	# "Redefined" message is printed twice, the last added works
 	assert ($t -like "*Redefined task 't1'.*Redefined task 't1'.*in-last-t1*")
@@ -227,8 +220,6 @@ task RedefinedTask {
 	equals $r.Redefined.Count 2
 	equals $r.Redefined[0].Name t1
 	equals $r.Redefined[1].Name t1
-	equals $r.Redefined[0].InvocationInfo.ScriptLineNumber 2
-	equals $r.Redefined[1].InvocationInfo.ScriptLineNumber 3
-
-	Remove-Item z.ps1
+	assert $r.Redefined[0].InvocationInfo.Line.Contains('<#t1#>')
+	assert $r.Redefined[1].InvocationInfo.Line.Contains('<#t2#>')
 }

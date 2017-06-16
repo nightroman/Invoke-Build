@@ -103,7 +103,7 @@ task InvalidEvents {
 
 # If a task fails then its $Task.Error is available in Exit-BuildJob.
 task FailedTaskErrorInExitBuildJob {
-	Set-Content z.ps1 {
+	$file = {
 		Exit-BuildJob {
 			assert $Task.Error
 		}
@@ -111,14 +111,13 @@ task FailedTaskErrorInExitBuildJob {
 			throw 42
 		}
 	}
-	($r = try {Invoke-Build . z.ps1} catch {$_})
+	($r = try {Invoke-Build . $file} catch {$_})
 	equals $r[-1].FullyQualifiedErrorId '42'
-	Remove-Item z.ps1
 }
 
 # Task and job events cannot assign the constant variable $Task.
 task CannotAssignTaskInEvents {
-	Set-Content z.ps1 {
+	$file = {
 		function Assert-CannotSetTask {
 			($r = try {$Task = 1} catch {$_})
 			equals $r.FullyQualifiedErrorId VariableNotWritable
@@ -141,6 +140,5 @@ task CannotAssignTaskInEvents {
 		}
 		task . {}
 	}
-	Invoke-Build . z.ps1
-	Remove-Item z.ps1
+	Invoke-Build . $file
 }

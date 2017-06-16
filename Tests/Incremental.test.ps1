@@ -223,20 +223,18 @@ task TestMissingInputs (job IncrementalMissingInputs -Safe), (job PartialMissing
 
 ### #49
 task PartialIncremental49 {
-	Set-Content z.ps1 {
+	$file = {
 		task t1 -Partial -Inputs z.New1.tmp, z.Old2.tmp -Outputs z.Old1.tmp, z.New2.tmp {}
 	}
-	($r = Invoke-Build . z.ps1)
+	($r = Invoke-Build . $file)
 	equals $r[2] 'Out-of-date outputs: 1/2.'
-	Remove-Item z.ps1
 }
 task FullIncremental49 {
-	Set-Content z.ps1 {
+	$file = {
 		task t1 -Inputs z.New1.tmp, z.Old2.tmp -Outputs z.Old1.tmp, z.New2.tmp {}
 	}
-	($r = Invoke-Build . z.ps1)
+	($r = Invoke-Build . $file)
 	equals $r[2] "Out-of-date output 'z.Old1.tmp'."
-	Remove-Item z.ps1
 }
 
 ### #50

@@ -17,17 +17,13 @@
 
 # The last task ${*}.Task should be reset before Exit-Build.
 task 'Exit-Build error should have no task' {
-	{
+	Invoke-Build . -Safe -Result Result {
 		task Test {42}
 		Exit-Build {throw 13}
-	} > z.build.ps1
-
-	Invoke-Build . z.build.ps1 -Safe -Result Result
+	}
 
 	equals $Result.Errors.Count 1
 	equals $Result.Errors[0].Task
-
-	Remove-Item z.build.ps1
 }
 
 <#
@@ -45,45 +41,38 @@ added to errors ($Task), not the last (${*}.Task). In the latter this test used
 to add 3 identical errors for the task Test1.
 #>
 task 'Custom child errors added for parent tasks' {
-	{
-		. ..\Tasks\Test\Test.tasks.ps1
+	Invoke-Build Test3 -Result Result {
+		. ../Tasks/Test/Test.tasks.ps1
 		test Test1 {throw 'Oops Test1'}
 		test Test2 Test1, {assert 0}
 		test Test3 Test2, {assert 0}
-	} > z.build.ps1
-
-	Invoke-Build Test3 z.build.ps1 -Result Result
+	}
 
 	equals $Result.Errors.Count 3
-	equals $Result.Errors[0].Task.Name 'Test1'
-	equals $Result.Errors[1].Task.Name 'Test2'
-	equals $Result.Errors[2].Task.Name 'Test3'
-
-	Remove-Item z.build.ps1
+	equals $Result.Errors[0].Task.Name Test1
+	equals $Result.Errors[1].Task.Name Test2
+	equals $Result.Errors[2].Task.Name Test3
 }
 
 task Warnings {
-	{
+	$file = {
 		Write-Warning demo-file-warning
 		task t1 {Write-Warning demo-task-warning}
-	} > z.build.ps1
-
-	($r = Invoke-Build t1 z.build.ps1 -Result Result)
+	}
+	($r = Invoke-Build t1 $file -Result Result)
 
 	# output
-	assert ($r[-3] -clike 'WARNING: demo-file-warning File: *\z.build.ps1.')
-	assert ($r[-2] -clike 'WARNING: demo-task-warning Task: t1. File: *\z.build.ps1.')
+	assert ($r[-3] -clike 'WARNING: demo-file-warning File: *Errors.test.ps1.')
+	assert ($r[-2] -clike 'WARNING: demo-task-warning Task: t1. File: *Errors.test.ps1.')
 	assert ($r[-1] -clike 'Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *')
 
 	# result
 	equals $Result.Warnings.Count 2
 	$1, $2 = $Result.Warnings
-	equals $1.Message 'demo-file-warning'
-	assert ($1.File -like '*\z.build.ps1')
+	equals $1.Message demo-file-warning
+	equals $1.File $BuildFile
 	equals $1.Task
-	equals $2.Message 'demo-task-warning'
-	assert ($2.File -like '*\z.build.ps1')
-	equals $2.Task.Name 't1'
-
-	Remove-Item z.build.ps1
+	equals $2.Message demo-task-warning
+	equals $2.File $BuildFile
+	equals $2.Task.Name t1
 }

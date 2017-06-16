@@ -30,18 +30,15 @@ function Test($ExpectedPattern, $Script, $Task = '.') {
 # Build scripts should have at least one task.
 task NoTasks {
 	# build
-	'' > z.build.ps1
 	$e = 0
-	($r = try {Invoke-Build . z.build.ps1 -Result result} catch {$e = $_})
+	($r = try {Invoke-Build . {} -Result result} catch {$e = $_})
 
 	# caught error
 	assert ($e.FullyQualifiedErrorId -clike 'No tasks in *')
 
 	# 2.10.4, was 0 errors
-	assert ($r -clike 'Build ABORTED *\z.build.ps1. 0 tasks, 1 errors, 0 warnings *')
+	assert ($r -clike 'Build ABORTED *\Invalid.test.ps1. 0 tasks, 1 errors, 0 warnings *')
 	equals $result.Errors.Count 1
-
-	Remove-Item z.build.ps1
 }
 
 # The task has three valid jobs and one invalid (42 ~ invalid type).
@@ -143,7 +140,7 @@ task ResumeWithoutCheckpoint {
 }
 
 task MissingCommaInJobs {
-	Set-Content z.ps1 {
+	$file = {
 		task t1 t2 {}
 	}
 
@@ -153,12 +150,10 @@ task MissingCommaInJobs {
 	}
 	Set-Alias Write-Warning Test-Write-Warning
 
-	($r = try {Invoke-Build . z.ps1} catch {$_})
+	($r = try {Invoke-Build . $file} catch {$_})
 	equals $r[-1].FullyQualifiedErrorId 'PositionalParameterNotFound,Add-BuildTask'
 	equals $log.Count 1
 	equals $log[0] 'Check task positional parameters: a name and comma separated jobs.'
-
-	Remove-Item z.ps1
 }
 
 <#
@@ -168,7 +163,7 @@ This is weird but we should keep `throw`.
 NB: v2 works fine with *Die.
 #>
 task DanglingScriptblock {
-	Set-Content z.ps1 {
+	$file = {
 		task t1
 		42
 		{bar}
@@ -180,11 +175,9 @@ task DanglingScriptblock {
 	}
 	Set-Alias Write-Warning Test-Write-Warning
 
-	($r = try {Invoke-Build . z.ps1} catch {$_})
-	assert (($r | Out-String) -like 'Build ABORTED*Dangling scriptblock at *\z.ps1:4*\Invalid.test.ps1:*')
+	($r = try {Invoke-Build . $file} catch {$_})
+	assert (($r | Out-String) -like 'Build ABORTED*Dangling scriptblock at *\Invalid.test.ps1:*\Invalid.test.ps1:*')
 	equals $log.Count 2
 	equals $log[0] 'Unexpected output: 42.'
 	equals $log[1] 'Unexpected output: bar.'
-
-	Remove-Item z.ps1
 }

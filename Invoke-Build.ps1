@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 #.ExternalHelp Invoke-Build-Help.xml
 param(
 	[Parameter(Position=0)][string[]]$Task,
-	[Parameter(Position=1)][string]$File,
+	[Parameter(Position=1)]$File,
 	[string]$Checkpoint,
 	$Result,
 	[switch]$Safe,
@@ -57,6 +57,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Elapsed = $null
 	Error = $null
 	Task = $null
+	File = $BuildFile = $PSBoundParameters['File']
 	Checkpoint = $PSBoundParameters['Checkpoint']
 	Safe = $PSBoundParameters['Safe']
 	Summary = $PSBoundParameters['Summary']
@@ -80,7 +81,10 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Header = {Write-Build 11 "Task $($args[0])"}
 })
 $BuildTask = $PSBoundParameters['Task']
-$BuildFile = $PSBoundParameters['File']
+if ($BuildFile -is [scriptblock]) {
+	$BuildFile = $BuildFile.File
+	return
+}
 
 if ($BuildTask -eq '**') {
 	if (![System.IO.Directory]::Exists(($_ = *Path $BuildFile))) {throw "Missing directory '$_'."}
@@ -102,6 +106,7 @@ elseif ($BuildFile) {
 elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
 	throw 'Missing default script.'
 }
+${*}.File = $BuildFile
 
 if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 	& $BuildFile
@@ -285,7 +290,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.5.3'}
+function Get-BuildVersion {[Version]'3.6.0'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
@@ -638,13 +643,12 @@ try {
 	function Import-Build([Parameter()][scriptblock]$Script) {${*}.Import = $Script}
 	function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
 
-	*SL ($BuildRoot = Split-Path $BuildFile)
+	*SL ($BuildRoot = if ($BuildFile) {Split-Path $BuildFile} else {${*}.CD})
 	$_ = ${*}.SP
-	if (${private:**} = . $BuildFile @_) {
-		foreach($_ in ${**}) {
-			Write-Warning "Unexpected output: $_."
-			if ($_ -is [scriptblock]) {throw "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)"}
-		}
+	${private:**} = @(. ${*}.File @_)
+	foreach($_ in ${**}) {
+		Write-Warning "Unexpected output: $_."
+		if ($_ -is [scriptblock]) {throw "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)"}
 	}
 	if (!(${**} = ${*}.All).Count) {throw "No tasks in '$BuildFile'."}
 

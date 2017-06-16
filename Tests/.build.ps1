@@ -171,16 +171,27 @@ task TestExitCode {
 	equals $LastExitCode 1
 }
 
-# Synopsis: Test the internally defined alias Invoke-Build.
-# It is recommended for nested calls instead of the script name. In a new (!)
-# session set ${*}, build, check for the alias. It also covers work around
-# "Default Host" exception on setting colors.
+# Synopsis: Test alias Invoke-Build and more.
+# In a new (!) session set ${*}, build, check for the alias. It also covers
+# work around "Default Host" exception on setting colors and the case with
+# null $BuildFile.
 task TestSelfAlias {
-    'task . { (Get-Alias Invoke-Build -ea Stop).Definition }' > z.build.ps1
-    $log = [PowerShell]::Create().AddScript("`${*} = 42; Invoke-Build . '$BuildRoot\z.build.ps1'").Invoke() | Out-String
-    $log
-    assert ($log.Contains('Build succeeded'))
-    Remove-Item z.build.ps1
+	$script = {
+		${*} = 42
+		Invoke-Build . {
+			task . {
+				# null?
+				equals $BuildFile
+				# defined?
+				(Get-Alias Invoke-Build -ErrorAction Stop).Definition
+			}
+		}
+		# two errors on setting ForegroundColor
+		foreach($_ in $Error) {"$_"}
+	}
+
+	($log = [PowerShell]::Create().AddScript($script).Invoke() | Out-String)
+	assert $log.Contains('Build succeeded')
 }
 
 # Synopsis: Test a build invoked from a background job just to be sure it works.
