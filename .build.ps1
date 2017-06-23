@@ -202,7 +202,7 @@ task Test2 {
 # Synopsis: Test with PowerShell v6.
 task Test6 -If $env:powershell6 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec {& $env:powershell6 -NoProfile Invoke-Build Test3 $diff}
+	exec {& $env:powershell6 -NoProfile -Command Invoke-Build Test3 $diff}
 }
 
 # Synopsis: Test v3+ and v2.
