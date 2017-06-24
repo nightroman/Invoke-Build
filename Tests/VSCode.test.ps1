@@ -12,6 +12,17 @@ function Get-Json {
 	ConvertFrom-Json ($3 | Out-String)
 }
 
+function Get-BuildTask($Tasks) {
+	Set-StrictMode -Off
+	foreach ($task in $Tasks) {
+		if ($group = $task.group) {
+			equals $group.kind build
+			equals $group.isDefault $true
+			$task
+		}
+	}
+}
+
 function Test-Json {
 	'Test-Json'
 	$r = Get-Json
@@ -24,7 +35,7 @@ function Test-Json {
 
 	# default is the first and the only
 	equals $r.tasks[0].taskName OmittedPaths
-	$r2 = $r.tasks | Select-Object taskName, isBuildCommand, args | .{process{ if ($_.isBuildCommand) {$_} }}
+	$r2 = Get-BuildTask $r.tasks
 	equals $r2.taskName OmittedPaths
 }
 
@@ -32,7 +43,7 @@ task OmittedPaths {
 	New-VSCodeTask.ps1
 
 	$r = Get-Json
-	$t = $r.tasks | Select-Object taskName, isBuildCommand, args | .{process{ if ($_.isBuildCommand) {$_} }}
+	$t = Get-BuildTask $r.tasks
 	equals $t.taskName .
  	equals $t.args[0] 'Invoke-Build -Task .'
 
@@ -44,7 +55,7 @@ task FullPaths {
 	New-VSCodeTask.ps1 $BuildFile $InvokeBuild
 
 	$r = Get-Json
-	$t = $r.tasks | Select-Object taskName, isBuildCommand, args | .{process{ if ($_.isBuildCommand) {$_} }}
+	$t = Get-BuildTask $r.tasks
 	equals $t.taskName OmittedPaths
  	equals $t.args[0] ("& '{0}' -Task OmittedPaths -File '{1}'" -f $InvokeBuild.Replace('\', '/'), $BuildFile.Replace('\', '/'))
 
@@ -56,7 +67,7 @@ task RelativePaths {
 	New-VSCodeTask.ps1 .\VSCode.test.ps1 ..\Invoke-Build.ps1
 
 	$r = Get-Json
-	$t = $r.tasks | Select-Object taskName, isBuildCommand, args | .{process{ if ($_.isBuildCommand) {$_} }}
+	$t = Get-BuildTask $r.tasks
 	equals $t.taskName OmittedPaths
  	equals $t.args[0] "& '../Invoke-Build.ps1' -Task OmittedPaths -File './VSCode.test.ps1'"
 
@@ -69,7 +80,7 @@ task DiscoverEngine {
 	New-VSCodeTask.ps1
 
 	$r = Get-Json
-	$t = $r.tasks | Select-Object taskName, isBuildCommand, args | .{process{ if ($_.isBuildCommand) {$_} }}
+	$t = Get-BuildTask $r.tasks
 	equals $t.taskName .
  	equals $t.args[0] "& './Invoke-Build.ps1' -Task ."
 

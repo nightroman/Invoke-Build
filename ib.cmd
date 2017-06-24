@@ -7,13 +7,13 @@
 if "%1"=="?" goto list
 if "%1"=="/?" goto help
 
-PowerShell.exe -NoProfile -ExecutionPolicy Bypass "& '%~dp0Invoke-Build.ps1' %*"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0Invoke-Build.ps1' %*"
 exit /B %errorlevel%
 
 :list
-PowerShell.exe -NoProfile -ExecutionPolicy Bypass "& '%~dp0Invoke-Build.ps1' %* | Format-Table -AutoSize"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0Invoke-Build.ps1' %* | Format-Table -AutoSize"
 exit /B 0
 
 :help
-PowerShell.exe -NoProfile -ExecutionPolicy Bypass "help -Full '%~dp0Invoke-Build.ps1'"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "help -Full '%~dp0Invoke-Build.ps1'"
 exit /B 0

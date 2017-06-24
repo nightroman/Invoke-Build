@@ -196,7 +196,7 @@ task Test3 {
 # Synopsis: Test with PowerShell v2.
 task Test2 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec {powershell.exe -Version 2 -NoProfile Invoke-Build Test3 $diff}
+	exec {powershell.exe -Version 2 -NoProfile -Command Invoke-Build Test3 $diff}
 }
 
 # Synopsis: Test with PowerShell v6.
