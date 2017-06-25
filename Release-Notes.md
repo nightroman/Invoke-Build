@@ -1,6 +1,11 @@
 
 # Invoke-Build Release Notes
 
+## v3.6.1
+
+- Fix #80, lost `Task` in the collected errors.
+- Fix potential PS v6-beta.3 issues in *ib.cmd*.
+
 ## v3.6.0
 
 Support script block as `File` (#78).

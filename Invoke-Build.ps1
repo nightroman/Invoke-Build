@@ -290,7 +290,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.6.0'}
+function Get-BuildVersion {[Version]'3.6.1'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
@@ -700,12 +700,12 @@ try {
 		foreach($_ in $BuildTask) {
 			*Task $_ ''
 		}
+		${*}.Task = $null
 		if (${*}.Checkpoint) {
 			[System.IO.File]::Delete(${*}.Checkpoint)
 		}
 	}
 	finally {
-		${*}.Task = $null
 		. *Run ${*}.ExitBuild
 	}
 	${*}.B = 1

@@ -223,3 +223,23 @@ task RedefinedTask {
 	assert $r.Redefined[0].InvocationInfo.Line.Contains('<#t1#>')
 	assert $r.Redefined[1].InvocationInfo.Line.Contains('<#t2#>')
 }
+
+# In the main `catch` `${*}.Task` must be the failed task, not null. Otherwise,
+# we lose `Task` in the added error info object. After the change, `${*}.Task`
+# keeps the fatal task. This may be documented, if needed. [#80]
+task CurrentTaskError {
+	$file = {
+		task Bad {
+			throw 42
+		}
+	}
+
+	Invoke-Build Bad $file -Safe -Result r
+
+	equals $r.Errors.Count 1
+	assert $r.Error
+
+	$e = $r.Errors[0]
+	assert $e.Task
+	equals $e.Task.Name Bad
+}
