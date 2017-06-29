@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.1.0
+.VERSION 1.1.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -20,6 +20,9 @@
 	For MSBuild 15.0+ the command uses VSSetup module from PSGallery.
 	If it is not installed then some default locations are checked.
 	Thus, VSSetup module is required for not default installations.
+
+	MSBuild 15.0+ resolution precedence: Enterprise, Professional, Community,
+	another product. If this is not suitable then use VSSetup module directly.
 
 	For MSBuild 2.0-14.0 the information is taken from the registry.
 
@@ -44,28 +47,37 @@ param(
 )
 
 function Get-MSBuild15VSSetup {
-	if (Get-Module VSSetup -ListAvailable) {
-		Import-Module VSSetup
-		if ($vsInstances = Get-VSSetupInstance) {
-			$vs = @($vsInstances | Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild)
-			if ($vs) {
-				return Join-Path ($vs[0].InstallationPath) MSBuild\15.0\Bin\MSBuild.exe
-			}
-			$vs = @($vsInstances | Select-VSSetupInstance -Version 15.0 -Product Microsoft.VisualStudio.Product.BuildTools)
-			if ($vs) {
-				return Join-Path ($vs[0].InstallationPath) MSBuild\15.0\Bin\MSBuild.exe
-			}
-		}
+	if (!(Get-Module VSSetup -ListAvailable)) {return}
+	Import-Module VSSetup
+
+	$vs = Get-VSSetupInstance | Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild -Product *
+	if (!$vs) {return}
+
+	$vs = if ($r = $vs | Select-VSSetupInstance -Product Microsoft.VisualStudio.Product.Enterprise) {$r}
+	elseif ($r = $vs | Select-VSSetupInstance -Product Microsoft.VisualStudio.Product.Professional) {$r}
+	elseif ($r = $vs | Select-VSSetupInstance -Product Microsoft.VisualStudio.Product.Community) {$r}
+	else {$vs}
+
+	if ($vs) {
+		Join-Path @($vs)[0].InstallationPath MSBuild\15.0\Bin\MSBuild.exe
 	}
 }
 
 function Get-MSBuild15Guess {
 	if (!($root = ${env:ProgramFiles(x86)})) {$root = $env:ProgramFiles}
-	if (Test-Path -LiteralPath "$root\Microsoft Visual Studio\2017") {
-		$rp = @(Resolve-Path "$root\Microsoft Visual Studio\2017\*\MSBuild\15.0\Bin\MSBuild.exe" -ErrorAction 0)
-		if ($rp) {
-			$rp[-1].ProviderPath
+	if (!(Test-Path -LiteralPath "$root\Microsoft Visual Studio\2017")) {return}
+
+	$paths = @(
+		foreach($_ in Resolve-Path "$root\Microsoft Visual Studio\2017\*\MSBuild\15.0\Bin\MSBuild.exe" -ErrorAction 0) {
+			$_.ProviderPath
 		}
+	)
+
+	if ($paths) {
+		if ($r = $paths -like '*\Enterprise\*') {return $r}
+		if ($r = $paths -like '*\Professional\*') {return $r}
+		if ($r = $paths -like '*\Community\*') {return $r}
+		$paths[0]
 	}
 }
 

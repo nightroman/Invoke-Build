@@ -282,13 +282,14 @@ task ShowHelp {
 		'Get-BuildSynopsis'
 		'Get-BuildVersion'
 		'Invoke-BuildExec'
+		'Resolve-MSBuild'
 		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'
-	) | %{
+	) | .{process{
 		'#'*77
 		Get-Help -Full $_
-	} |
+	}} |
 	Out-String -Width 80
 }
 

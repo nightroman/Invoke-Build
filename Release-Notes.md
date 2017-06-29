@@ -1,6 +1,12 @@
 
 # Invoke-Build Release Notes
 
+## v3.5.3
+
+Improved product selection logic in `Resolve-MSBuild` (#77).
+If you use the module `VSSetup` make sure it is not too old.
+It should support `-Product *`.
+
 ## v3.5.2
 
 - Avoid some `property` limitations (#75).

@@ -92,7 +92,7 @@ PowerShell use an alias `ib` defined in a PowerShell profile
 
 If you are using the module (see [#2899]) or the script is not in the path
 then use the full path to *Invoke-Build.ps1* instead of *Invoke-Build* in
-the below commands.
+the below commands, see `(Get-Alias Invoke-Build).Definition`
 
 [#2899]: https://github.com/PowerShell/PowerShell/issues/2899
 

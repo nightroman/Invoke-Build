@@ -285,7 +285,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.5.2'}
+function Get-BuildVersion {[Version]'3.5.3'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
