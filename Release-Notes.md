@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.6.2
+
+Warn about always skipped double references (#82).
+
 ## v3.6.1
 
 - Fix #80, lost `Task` in the collected errors.

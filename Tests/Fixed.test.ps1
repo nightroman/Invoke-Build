@@ -243,3 +243,16 @@ task CurrentTaskError {
 	assert $e.Task
 	equals $e.Task.Name Bad
 }
+
+task WarnDoubleReferenced {
+	$log = [System.Collections.Generic.List[object]]@()
+	function Test-Write-Warning($Message) {$log.Add($Message)}
+	Set-Alias Write-Warning Test-Write-Warning
+	Invoke-Build . {
+		task . Clean, Build, Clean, Build
+		task Clean {}
+		task -If {1} Build {}
+	}
+	equals $log.Count 1
+	equals $log[0] "Task '.' always skips 'Clean'."
+}

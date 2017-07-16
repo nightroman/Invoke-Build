@@ -53,6 +53,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Errors = [System.Collections.Generic.List[object]]@()
 	Warnings = [System.Collections.Generic.List[object]]@()
 	Redefined = @()
+	Doubles = @()
 	Started = [DateTime]::Now
 	Elapsed = $null
 	Error = $null
@@ -164,6 +165,7 @@ function Add-BuildTask(
 	trap {*Die "Task '$Name': $_" 5}
 	foreach($_ in $Jobs) {
 		$r, $d = *Job $_
+		if ($1 -contains $r) {${*}.Doubles += ,($Name, $r)}
 		$1.Add($r)
 		if (1 -eq $d) {
 			$2.Add($r)
@@ -290,7 +292,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.6.1'}
+function Get-BuildVersion {[Version]'3.6.2'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
@@ -683,6 +685,11 @@ try {
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	foreach($_ in ${*}.Redefined) {
 		Write-Build 8 "Redefined task '$($_.Name)'."
+	}
+	foreach($_ in ${*}.Doubles) {
+		if (${*}.All[$_[1]].If -isnot [scriptblock]) {
+			Write-Warning "Task '$($_[0])' always skips '$($_[1])'."
+		}
 	}
 
 	${*}.A = 0
