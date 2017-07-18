@@ -7,14 +7,11 @@
 	Invoke-Build * Resolve-MSBuild.test.ps1
 #>
 
+. ./Shared.ps1
+
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
 $VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
 $VSSetup = Get-Module VSSetup -ListAvailable
-
-function Set-Mock($Name, $Block) {
-	Set-Alias $Name Mock-$Name
-	Set-Content function:\Mock-$Name $Block
-}
 
 function Test-MSBuild([Parameter()]$Path) {
 	if ($Path -notlike '*\MSBuild.exe') {Write-Error "Unexpected path $Path"}

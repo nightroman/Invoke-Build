@@ -145,10 +145,7 @@ task MissingCommaInJobs {
 	}
 
 	$log = [System.Collections.Generic.List[object]]@()
-	function Test-Write-Warning($Text) {
-		$log.Add($Text)
-	}
-	Set-Alias Write-Warning Test-Write-Warning
+	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
 
 	($r = try {Invoke-Build . $file} catch {$_})
 	equals $r[-1].FullyQualifiedErrorId 'PositionalParameterNotFound,Add-BuildTask'
@@ -170,10 +167,7 @@ task DanglingScriptblock {
 	}
 
 	$log = [System.Collections.Generic.List[object]]@()
-	function Test-Write-Warning($Text) {
-		$log.Add($Text)
-	}
-	Set-Alias Write-Warning Test-Write-Warning
+	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
 
 	($r = try {Invoke-Build . $file} catch {$_})
 	assert (($r | Out-String) -like 'Build ABORTED*Dangling scriptblock at *\Invalid.test.ps1:*\Invalid.test.ps1:*')

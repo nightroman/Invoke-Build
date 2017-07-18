@@ -7,13 +7,14 @@
 	Invoke-Build * Inline.test.ps1
 #>
 
+. ./Shared.ps1
+
 Enter-BuildJob {
 	$log = New-Object System.IO.StringWriter
-	function Write-Host2($M) {
-		$M
-		$log.Write($M)
+	. Set-Mock Write-Host {param($Object)
+		$Object
+		$log.Write($Object)
 	}
-	Set-Alias Write-Host Write-Host2
 }
 
 task app1 {

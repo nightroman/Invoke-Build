@@ -9,6 +9,8 @@
 
 Set-StrictMode -Version Latest
 
+. ./Shared.ps1
+
 # Synopsis: 2.10.1 Fixed incomplete error on Safe.
 task IncompleteErrorOnSafe {
 	$file = {
@@ -244,10 +246,10 @@ task CurrentTaskError {
 	equals $e.Task.Name Bad
 }
 
+# Warn about always skipped double referenced tasks #82
 task WarnDoubleReferenced {
 	$log = [System.Collections.Generic.List[object]]@()
-	function Test-Write-Warning($Message) {$log.Add($Message)}
-	Set-Alias Write-Warning Test-Write-Warning
+	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
 	Invoke-Build . {
 		task . Clean, Build, Clean, Build
 		task Clean {}
