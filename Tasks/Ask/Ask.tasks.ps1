@@ -12,7 +12,9 @@
 	When the original `If` gets false then the task is skipped without asking.
 
 	Extra ask-task parameters:
-		Prompt: optional [string], the custom message printed on confirmation.
+		Prompt:
+			Optional custom message printed on confirmation. If it is a
+			[scriptblock] then it is invoked and its output is used.
 
 	Script scope names:
 		Alias: ask
@@ -41,6 +43,15 @@ Set-Alias ask Add-AskTask
 function Test-AskTask {
 	[CmdletBinding(SupportsShouldProcess=1, ConfirmImpact='High')] param()
 	$prompt = $Task.Data.Prompt
+	if ($prompt -is [scriptblock]) {
+		try {
+			$prompt = & $prompt
+		}
+		catch {
+			Write-Warning 'Exception on getting Prompt.'
+			throw
+		}
+	}
 	$caption = "Task $($Task.Name)"
 	$PSCmdlet.ShouldProcess($prompt, $prompt, $caption)
 }
@@ -50,7 +61,7 @@ function Test-AskTask {
 function Add-AskTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
 	[Parameter(Position=1)][object[]]$Jobs,
-	[string]$Prompt='',
+	$Prompt='',
 	$If=$true,
 	$Inputs,
 	$Outputs,

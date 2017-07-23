@@ -13,14 +13,6 @@ Enter-BuildJob {
 	}
 }
 
-function Find-Task($Tasks, $Name) {
-	foreach ($task in $Tasks) {
-		if ($task.Name -eq $Name) {
-			$task
-		}
-	}
-}
-
 # default script in this folder
 task OmittedPaths {
 	$r1 = Register-VSCodeTask.ps1
