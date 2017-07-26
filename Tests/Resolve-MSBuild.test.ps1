@@ -19,6 +19,11 @@ function Test-MSBuild([Parameter()]$Path) {
 	$Path
 }
 
+# same as in the script
+function Get-MSBuild15Path {
+	if ([System.IntPtr]::Size -eq 8) {'MSBuild\15.0\Bin\amd64\MSBuild.exe'} else {'MSBuild\15.0\Bin\MSBuild.exe'}
+}
+
 task test15VSSetup -If $VS2017 {
 	if (!$VSSetup) {Write-Warning 'VSSetup is not installed'}
 	$r = Resolve-MSBuild 15.0
@@ -101,19 +106,19 @@ task Get-MSBuild15VSSetup -If $VSSetup {
 
 	$all = @{Product = 'Microsoft.VisualStudio.Product.Enterprise'; InstallationPath = 'Enterprise'}
 	($r = Resolve-MSBuild)
-	equals $r Enterprise\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "Enterprise\$(Get-MSBuild15Path)"
 
 	$all = @{Product = 'Microsoft.VisualStudio.Product.Professional'; InstallationPath = 'Professional'}
 	($r = Resolve-MSBuild)
-	equals $r Professional\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "Professional\$(Get-MSBuild15Path)"
 
 	$all = @{Product = 'Microsoft.VisualStudio.Product.Community'; InstallationPath = 'Community'}
 	($r = Resolve-MSBuild)
-	equals $r Community\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "Community\$(Get-MSBuild15Path)"
 
 	$all = @{Product = 'Microsoft.VisualStudio.Product.Something'; InstallationPath = 'Something'}
 	($r = Resolve-MSBuild)
-	equals $r Something\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "Something\$(Get-MSBuild15Path)"
 
 	$all = @(
 		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
@@ -123,7 +128,7 @@ task Get-MSBuild15VSSetup -If $VSSetup {
 		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
 	)
 	($r = Resolve-MSBuild)
-	equals $r Enterprise\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "Enterprise\$(Get-MSBuild15Path)"
 
 	$all = @(
 		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
@@ -132,7 +137,7 @@ task Get-MSBuild15VSSetup -If $VSSetup {
 		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
 	)
 	($r = Resolve-MSBuild)
-	equals $r Professional\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "Professional\$(Get-MSBuild15Path)"
 
 	$all = @(
 		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
@@ -140,14 +145,14 @@ task Get-MSBuild15VSSetup -If $VSSetup {
 		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
 	)
 	($r = Resolve-MSBuild)
-	equals $r Community\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "Community\$(Get-MSBuild15Path)"
 
 	$all = @(
 		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
 		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
 	)
 	($r = Resolve-MSBuild)
-	equals $r BuildTools\MSBuild\15.0\Bin\MSBuild.exe
+	equals $r "BuildTools\$(Get-MSBuild15Path)"
 }
 
 task Get-MSBuild15Guess {

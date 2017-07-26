@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.1.1
+.VERSION 1.1.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -46,6 +46,10 @@ param(
 	[string]$Version
 )
 
+function Get-MSBuild15Path {
+	if ([System.IntPtr]::Size -eq 8) {'MSBuild\15.0\Bin\amd64\MSBuild.exe'} else {'MSBuild\15.0\Bin\MSBuild.exe'}
+}
+
 function Get-MSBuild15VSSetup {
 	if (!(Get-Module VSSetup -ListAvailable)) {return}
 	Import-Module VSSetup
@@ -59,7 +63,7 @@ function Get-MSBuild15VSSetup {
 	else {$vs}
 
 	if ($vs) {
-		Join-Path @($vs)[0].InstallationPath MSBuild\15.0\Bin\MSBuild.exe
+		Join-Path @($vs)[0].InstallationPath (Get-MSBuild15Path)
 	}
 }
 
@@ -68,7 +72,7 @@ function Get-MSBuild15Guess {
 	if (!(Test-Path -LiteralPath "$root\Microsoft Visual Studio\2017")) {return}
 
 	$paths = @(
-		foreach($_ in Resolve-Path "$root\Microsoft Visual Studio\2017\*\MSBuild\15.0\Bin\MSBuild.exe" -ErrorAction 0) {
+		foreach($_ in Resolve-Path "$root\Microsoft Visual Studio\2017\*\$(Get-MSBuild15Path)" -ErrorAction 0) {
 			$_.ProviderPath
 		}
 	)

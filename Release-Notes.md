@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.6.3
+
+Resolve MSBuild 15 to ../amd64/MSBuild.exe on x64 (#84).
+
 ## v3.6.2
 
 Warn about always skipped double references (#82).

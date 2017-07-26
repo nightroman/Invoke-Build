@@ -4,13 +4,9 @@
 	Tests Register-VSCodeTask.ps1
 #>
 
-. ./Shared.ps1
-
-Enter-BuildJob {
-	. Set-Mock Register-EditorTask {
-		param ($Name, $Source, $Command)
-		$PSBoundParameters
-	}
+# Mocks VSCode Register-EditorTask
+function Register-EditorTask($Name, $Source, $Command) {
+	$PSBoundParameters
 }
 
 # default script in this folder
