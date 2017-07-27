@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.6.4
+
+Support version suffix x86 in `use` and `Resolve-MSBuild` (#85).
+
 ## v3.6.3
 
 Resolve MSBuild 15 to ../amd64/MSBuild.exe on x64 (#84).

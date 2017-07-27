@@ -257,8 +257,7 @@ function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$
 function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
 	trap {*Die $_ 5}
 	$d = switch -regex ($Path) {
-		^\*$ {Split-Path (Resolve-MSBuild)}
-		^\d+\. {Split-Path (Resolve-MSBuild $_)}
+		'^\*|^\d+\.' {Split-Path (Resolve-MSBuild $_)}
 		^Framework {"$env:windir\Microsoft.NET\$_"}
 		^VisualStudio\\ {
 			$x = if ([IntPtr]::Size -eq 8) {'\Wow6432Node'}
@@ -292,7 +291,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.6.3'}
+function Get-BuildVersion {[Version]'3.6.4'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName

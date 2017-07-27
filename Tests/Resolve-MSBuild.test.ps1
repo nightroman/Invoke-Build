@@ -12,16 +12,16 @@
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
 $VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
 $VSSetup = Get-Module VSSetup -ListAvailable
+$Is64 = [IntPtr]::Size -eq 8
 
-function Test-MSBuild([Parameter()]$Path) {
-	if ($Path -notlike '*\MSBuild.exe') {Write-Error "Unexpected path $Path"}
-	if (![System.IO.File]::Exists($Path)) {Write-Error "Missing file $Path"}
-	$Path
-}
-
-# same as in the script
-function Get-MSBuild15Path {
-	if ([System.IntPtr]::Size -eq 8) {'MSBuild\15.0\Bin\amd64\MSBuild.exe'} else {'MSBuild\15.0\Bin\MSBuild.exe'}
+# from Resolve-MSBuild
+function Get-MSBuild15Path($Bitness) {
+	if ([System.IntPtr]::Size -eq 4 -or $Bitness -eq 'x86') {
+		'MSBuild\15.0\Bin\MSBuild.exe'
+	}
+	else {
+		'MSBuild\15.0\Bin\amd64\MSBuild.exe'
+	}
 }
 
 task test15VSSetup -If $VS2017 {
@@ -29,38 +29,81 @@ task test15VSSetup -If $VS2017 {
 	$r = Resolve-MSBuild 15.0
 	Test-MSBuild $r
 	assert ($r -like '*\15.0\*')
+
+	$r = Resolve-MSBuild 15.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\15.0\Bin\MSBuild.exe')
 }
 
 task test15Guess -If $VS2017 {
 	. Set-Mock Get-MSBuild15VSSetup {}
+
 	$r = Resolve-MSBuild 15.0
 	Test-MSBuild $r
 	assert ($r -like '*\15.0\*')
+
+	$r = Resolve-MSBuild 15.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\15.0\Bin\MSBuild.exe')
 }
 
 task test14 {
 	$r = Resolve-MSBuild 14.0
 	Test-MSBuild $r
 	assert ($r -like '*\14.0\*')
+
+	$r = Resolve-MSBuild 14.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\14.0\Bin\MSBuild.exe')
 }
 
 task test40 {
 	$r = Resolve-MSBuild 4.0
 	Test-MSBuild $r
-	assert ($r -like '*\Microsoft.NET\Framework*\v4.0.*\MSBuild.exe')
+	if ($Is64) {
+		assert ($r -like '*\Microsoft.NET\Framework64\v4.0.*\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\Microsoft.NET\Framework\v4.0.*\MSBuild.exe')
+	}
+
+	$r = Resolve-MSBuild 4.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\Microsoft.NET\Framework\v4.0.*\MSBuild.exe')
 }
 
 task testAll15 -If $VS2017 {
 	$r = Resolve-MSBuild
 	Test-MSBuild $r
-	assert ($r -like '*\15.0\*')
+	if ($Is64) {
+		assert ($r -like '*\15.0\bin\amd64\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\15.0\bin\MSBuild.exe')
+	}
+
+	$r = Resolve-MSBuild *x86
+	Test-MSBuild $r
+	assert ($r -like '*\15.0\bin\MSBuild.exe')
+	equals $r (Resolve-MSBuild x86) # same but *
 }
 
 task testAll14 {
 	. Set-Mock Get-MSBuild15 {}
+
 	$r = Resolve-MSBuild
 	Test-MSBuild $r
-	assert ($r -like '*\14.0\*')
+	if ($Is64) {
+		assert ($r -like '*\14.0\bin\amd64\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\14.0\bin\MSBuild.exe')
+	}
+
+	$r = Resolve-MSBuild *x86
+	Test-MSBuild $r
+	assert ($r -like '*\14.0\bin\MSBuild.exe')
+	equals $r (Resolve-MSBuild x86) # same but *
 }
 
 task missingOld {

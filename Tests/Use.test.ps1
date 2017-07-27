@@ -15,6 +15,9 @@
 	Invoke-Build * Use.test.ps1
 #>
 
+. ./Shared.ps1
+$Is64 = [IntPtr]::Size -eq 8
+
 # Use the current framework at the script level (used by CurrentFramework).
 use ([System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) MSBuild.exe
 
@@ -24,10 +27,22 @@ Set-Location "$env:windir\Microsoft.NET\Framework"
 # These tasks calls MSBuild X.Y and test its version.
 
 task Version.2.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\2.0') {
-	use 2.0 MSBuild
-	($version = exec { MSBuild /version /nologo })
+	use 2.0 MSBuild.exe
+	($version = exec { MSBuild.exe /version /nologo })
 	assert ($version -like '2.0.*')
 	$script:LatestVersion = $version
+
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r -like '*\Framework64\v2.0.*\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\Framework\v2.0.*\MSBuild.exe')
+	}
+
+	use 2.0x86 MSBuild.exe
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	assert ($r -like '*\Framework\v2.0.*\MSBuild.exe')
 }
 
 task Framework.2.0.50727 -If (Test-Path 'v2.0.50727') {
@@ -37,10 +52,22 @@ task Framework.2.0.50727 -If (Test-Path 'v2.0.50727') {
 }
 
 task Version.3.5 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\3.5') {
-	use 3.5 MSBuild
-	($version = exec { MSBuild /version /nologo })
+	use 3.5 MSBuild.exe
+	($version = exec { MSBuild.exe /version /nologo })
 	assert ($version -like '3.5.*')
 	$script:LatestVersion = $version
+
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r -like '*\Framework64\v3.5*\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\Framework\v3.5*\MSBuild.exe')
+	}
+
+	use 3.5x86 MSBuild.exe
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	assert ($r -like '*\Framework\v3.5*\MSBuild.exe')
 }
 
 task Framework.3.5 -If (Test-Path 'v3.5') {
@@ -50,11 +77,23 @@ task Framework.3.5 -If (Test-Path 'v3.5') {
 }
 
 task Version.4.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\4.0') {
-	use 4.0 MSBuild
-	($version = exec { MSBuild /version /nologo })
+	use 4.0 MSBuild.exe
+	($version = exec { MSBuild.exe /version /nologo })
 	#! 4.6.81.0 after installing VS2015
 	assert ($version -like '4.*')
 	$script:LatestVersion = $version
+
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r -like '*\Framework64\v4*\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\Framework\v4*\MSBuild.exe')
+	}
+
+	use 4.0x86 MSBuild.exe
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	assert ($r -like '*\Framework\v4*\MSBuild.exe')
 }
 
 task Framework.4.0.30319 -If (Test-Path 'v4.0.30319') {
@@ -74,26 +113,60 @@ task Version.12.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions
 
 # VS 2015 ~ v14
 task Version.14.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0') {
-	use 14.0 MSBuild
-	($version = exec { MSBuild /version /nologo })
+	use 14.0 MSBuild.exe
+	($version = exec { MSBuild.exe /version /nologo })
 	assert ($version -like '14.0.*')
 	$script:LatestVersion = $version
+
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r -like '*\14.0\bin\amd64\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\14.0\bin\MSBuild.exe')
+	}
+
+	use 14.0x86 MSBuild.exe
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	assert ($r -like '*\14.0\bin\MSBuild.exe')
 }
 
 # VS 2017 ~ v15
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
 $VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
 task Version.15.0 -If $VS2017 {
-	use 15.0 MSBuild
-	($version = exec { MSBuild /version /nologo })
+	use 15.0 MSBuild.exe
+	($version = exec { MSBuild.exe /version /nologo })
 	assert ($version -like '15.*')
 	$script:LatestVersion = $version
+
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r -like '*\15.0\bin\amd64\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\15.0\bin\MSBuild.exe')
+	}
+
+	use 15.0x86 MSBuild.exe
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	assert ($r -like '*\15.0\bin\MSBuild.exe')
 }
 
 task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, Version.15.0, {
-	use * MSBuild
-	($version = exec { MSBuild /version /nologo })
+	use * MSBuild.exe
+	($r1 = Test-MSBuild (Get-Alias MSBuild.exe))
+	($version = exec { MSBuild.exe /version /nologo })
 	equals $version $script:LatestVersion
+
+	use *x86 MSBuild.exe
+	($r2 = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r1 -ne $r2)
+	}
+	else {
+		equals $r1 $r2
+	}
 }
 
 # This task simply uses the alias set at the scope level.

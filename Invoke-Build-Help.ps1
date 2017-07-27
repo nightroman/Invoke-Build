@@ -876,6 +876,7 @@
 		If it is * or it starts with digits followed by a dot then the MSBuild
 		path is resolved using the package script Resolve-MSBuild.ps1. Build
 		scripts may invoke it directly by the provided alias Resolve-MSBuild.
+		The optional suffix x86 tells to use 32-bit MSBuild.
 
 		If it is like Framework* then it is assumed to be a path relative to
 		Microsoft.NET in the Windows directory.

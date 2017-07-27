@@ -41,6 +41,17 @@ function Test-Error($Task, $Sample)
 	}
 }
 
+# Tests and outputs MSBuild.exe path.
+# $Path: full path or an alias.
+function Test-MSBuild([Parameter()]$Path) {
+	if ($Path -is [System.Management.Automation.AliasInfo]) {
+		$Path = $Path.Definition
+	}
+	if ($Path -notlike '*\MSBuild.exe') {Write-Error "Unexpected path $Path"}
+	if (![System.IO.File]::Exists($Path)) {Write-Error "Missing file $Path"}
+	$Path
+}
+
 # Simple mock helper. Must be dot-sourced.
 # Arguments:
 # [0]: Command name
