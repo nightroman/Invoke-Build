@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.6.5
+
+Fix resuming of persistent builds after failures in task `-If` (#90).
+
 ## v3.6.4
 
 Support version suffix x86 in `use` and `Resolve-MSBuild` (#85).

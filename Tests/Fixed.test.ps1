@@ -258,3 +258,34 @@ task WarnDoubleReferenced {
 	equals $log.Count 1
 	equals $log[0] "Task '.' always skips 'Clean'."
 }
+
+# If a task of a persistent build fails in its -If then the build should resume
+# at this task, not at the preceding. #90
+task SaveCheckpointBeforeIf {
+	# This is not a proper persistent build because it depends on external $Log and $Fail.
+	# But for testing it is fine.
+	Set-Content z.ps1 {
+		task t1 {$Log.t1 = 1}
+		task t2 -If {if ($Fail) {throw 'in-if'} else {1}} {$Log.t2 = 1}
+	}
+
+	# fail in task 2 -If
+	$Log = @{}
+	$Fail = $true
+	try {Invoke-Build * z.ps1 -Checkpoint z.clixml} catch {$_}
+
+	# task 1 worked, task 2 did not
+	equals $Log['t1'] 1
+	equals $Log['t2'] $null
+
+	# resume and let task 2 -If work
+	$Log = @{}
+	$Fail = $false
+	Invoke-Build -Resume -Checkpoint z.clixml
+
+	# task 1 skipped, task 2 worked
+	equals $Log['t1'] $null
+	equals $Log['t2'] 1
+
+	Remove-Item z.ps1
+}

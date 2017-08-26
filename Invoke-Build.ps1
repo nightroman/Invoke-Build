@@ -291,7 +291,7 @@ catch {
 }
 
 #.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.6.4'}
+function Get-BuildVersion {[Version]'3.6.5'}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
@@ -474,6 +474,7 @@ function *Task {
 		return
 	}
 
+	if (${*}.Checkpoint) {*Save}
 	if ((${private:*x} = $Task.If) -is [scriptblock] -and !$WhatIf) {
 		*SL
 		try {
@@ -489,7 +490,6 @@ function *Task {
 		return
 	}
 
-	if (${*}.Checkpoint) {*Save}
 	${private:*i} = , [int]($null -ne $Task.Inputs)
 	$Task.Started = [DateTime]::Now
 	try {
