@@ -87,7 +87,7 @@ task RefTask2WithLowerCase task2
 #! #66 define events before "?" processing
 task HelpTaskAndEvents {
 	# new session, are not defined by parents
-	$null = exec {PowerShell.exe Invoke-Build ? $BuildFile}
+	$null = exec {Invoke-PowerShell -NoProfile -Command Invoke-Build ? $BuildFile}
 }
 
 # #66 changes; ideally, need to test each but they are similar

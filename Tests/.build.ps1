@@ -160,14 +160,14 @@ task TestExitCode {
 	$ErrorActionPreference = 'Continue'
 
 	# missing file
-	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 Foo MissingFile
+	Invoke-PowerShell -NoProfile -Command Invoke-Build.ps1 Foo MissingFile
 	equals $LastExitCode 1
 
 	# missing task
-	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 MissingTask Dynamic.build.ps1
+	Invoke-PowerShell -NoProfile -Command Invoke-Build.ps1 MissingTask Dynamic.build.ps1
 	equals $LastExitCode 1
 
-	cmd /c PowerShell.exe -NoProfile Invoke-Build.ps1 AssertDefault Assert.test.ps1
+	Invoke-PowerShell -NoProfile -Command Invoke-Build.ps1 AssertDefault Assert.test.ps1
 	equals $LastExitCode 1
 }
 
