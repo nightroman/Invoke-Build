@@ -69,7 +69,7 @@ function Copy-File($Destination) {
 # Synopsis: Make the package directory z\tools for NuGet.
 task Package Markdown, Help, GitStatus, {
 	# temp package folder
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\tools
 
 	# copy files

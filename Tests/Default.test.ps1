@@ -5,7 +5,7 @@
 #>
 
 task AmbigiousDefaultScript {
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z
 	Push-Location z
 
@@ -20,7 +20,7 @@ task AmbigiousDefaultScript {
 }
 
 task ParentHasManyCandidates {
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\1
 
 	Push-Location z
@@ -39,7 +39,7 @@ task ParentHasManyCandidates {
 }
 
 task ParentHasOneCandidate {
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\1\2
 
 	Set-Content z\test.build.ps1 'task SingleScript'
@@ -60,7 +60,7 @@ task ParentHasOneCandidate {
 }
 
 task InvokeBuildGetFile {
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z\1
 
 	# register the hook by the environment variable
@@ -112,7 +112,7 @@ task StarsMissingDirectory {
 
 #! Test StarsMissingDirectory first
 task Stars StarsMissingDirectory, {
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z
 
 	# no .test.ps1 files

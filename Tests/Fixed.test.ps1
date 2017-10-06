@@ -22,7 +22,7 @@ task IncompleteErrorOnSafe {
 
 # Synopsis: #5 Invoke-Build ** -Safe propagates -Safe.
 task SafeTests {
-	Remove-Item [z] -Force -Recurse
+	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z
 
 	{
