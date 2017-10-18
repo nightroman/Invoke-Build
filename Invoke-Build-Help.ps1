@@ -51,7 +51,6 @@
 		Get-BuildError (error)
 		Get-BuildProperty (property)
 		Get-BuildSynopsis
-		Get-BuildVersion
 		Invoke-BuildExec (exec)
 		New-BuildJob (job)
 		Resolve-MSBuild
@@ -755,23 +754,6 @@
 	}
 }}
 	)
-}
-
-### Get-BuildVersion
-@{
-	command = 'Get-BuildVersion'
-	synopsis = 'Gets the current Invoke-Build version.'
-
-	outputs = @{ type = 'System.Version' }
-
-	examples = @{
-		code = {assert ((Get-BuildVersion).Major -ge 2)}
-		remarks = @'
-	This command works like `require version`. Use it as the first command in a
-	build script in order to ensure that the script is being built by a proper
-	engine (version 2+ in this example).
-'@
-	}
 }
 
 ### Invoke-BuildExec

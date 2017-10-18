@@ -54,8 +54,22 @@ task Help {
 	Convert-Helps Invoke-Build-Help.ps1 Invoke-Build-Help.xml
 }
 
-function Copy-File($Destination) {
-	Copy-Item -Destination $Destination `
+# Synopsis: Set $script:Version.
+task Version {
+	# get the version from Release-Notes
+	($script:Version = .{ switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {return $Matches[1]}} })
+	assert $Version
+}
+
+# Synopsis: Make the module folder.
+task Module Version, Markdown, Help, {
+	# mirror the module folder
+	Remove-Item [z] -Force -Recurse
+	$dir = "$BuildRoot\z\tools"
+	exec {$null = robocopy.exe InvokeBuild $dir /mir} (0..2)
+
+	# copy files
+	Copy-Item -Destination $dir `
 	ib.cmd,
 	Invoke-Build.ps1,
 	Invoke-Builds.ps1,
@@ -64,26 +78,6 @@ function Copy-File($Destination) {
 	README.htm,
 	LICENSE.txt,
 	Release-Notes.htm
-}
-
-# Synopsis: Make the package directory z\tools for NuGet.
-task Package Markdown, Help, GitStatus, {
-	# temp package folder
-	Get-Item [z] | Remove-Item -Force -Recurse
-	$null = mkdir z\tools
-
-	# copy files
-	Copy-File z\tools
-}
-
-# Synopsis: Install module and clean.
-task Module Version, Markdown, Help, {
-	# mirror module folder
-	$dir = "$env:ProgramFiles\WindowsPowerShell\Modules\InvokeBuild\$Version"
-	exec {$null = robocopy.exe InvokeBuild $dir /mir} (0..2)
-
-	# copy files
-	Copy-File $dir
 
 	# make manifest
 	Set-Content "$dir\InvokeBuild.psd1" @"
@@ -108,19 +102,10 @@ task Module Version, Markdown, Help, {
 	}
 }
 "@
-},
-Clean
-
-# Synopsis: Set $script:Version.
-task Version {
-	# get and test version
-	($script:Version = (Get-BuildVersion).ToString())
-	$r = .{ switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {return $Matches[1]}} }
-	assert ($r -eq $Version) 'Invoke-Build and Release-Notes versions mismatch.'
 }
 
 # Synopsis: Make the NuGet package.
-task NuGet Version, Package, {
+task NuGet Module, {
 	$text = @'
 Invoke-Build is a build and test automation tool which invokes tasks defined in
 PowerShell v2.0+ scripts. It is similar to psake but arguably easier to use and

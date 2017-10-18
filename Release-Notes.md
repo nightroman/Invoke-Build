@@ -1,6 +1,15 @@
 
 # Invoke-Build Release Notes
 
+## v3.7.0
+
+Package the module files together with scripts. As a result, the script package
+may be used as the module, too. This change does not affect the module package.
+
+Retire `Get-BuildVersion`. Use `(Get-Module InvokeBuild).Version` instead.
+In theory, this change is breaking but it seems the function was not used.
+The standard module version is used from now on.
+
 ## v3.6.5
 
 Fix resuming of persistent builds after failures in task `-If` (#90).

@@ -210,7 +210,6 @@ task TestFunctions {
 	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
 	$known = @(
 		# build script and tests
-		'Copy-File'
 		'Invoke-MyModuleStuff'
 		# engine tools
 		'Add-BuildTask'
@@ -227,7 +226,6 @@ task TestFunctions {
 		'Get-BuildFile'
 		'Get-BuildProperty'
 		'Get-BuildSynopsis'
-		'Get-BuildVersion'
 		'Import-Build'
 		'Invoke-BuildExec'
 		'New-BuildJob'
@@ -291,7 +289,6 @@ task ShowHelp {
 		'Get-BuildError'
 		'Get-BuildProperty'
 		'Get-BuildSynopsis'
-		'Get-BuildVersion'
 		'Invoke-BuildExec'
 		'Resolve-MSBuild'
 		'Test-BuildAsset'

@@ -65,6 +65,8 @@ directory to the path. In this scenario you do not have to import the module.
 ## Install as scripts
 
 Invoke-Build is also distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
+This package includes the module files, so it can be used as the module, too,
+either copy it to the standard module folder or import its `InvokeBuild.psd1`.
 
 If you use [scoop](https://github.com/lukesampson/scoop) then invoke
 
@@ -79,7 +81,8 @@ this PowerShell command:
     Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} Invoke-Build"
 
 Consider to include the directory with scripts to the path so that script paths
-may be omitted in commands.
+may be omitted in commands. Alternatively, copy the directory to the PowerShell
+module directory and use the package as the module.
 
 With *cmd.exe* use the helper *ib.cmd*. For similar experience in interactive
 PowerShell use an alias `ib` defined in a PowerShell profile

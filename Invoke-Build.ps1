@@ -290,9 +290,6 @@ catch {
 	function Write-Build($Color, [string]$Text) {$Text}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
-function Get-BuildVersion {[Version]'3.6.5'}
-
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
 }

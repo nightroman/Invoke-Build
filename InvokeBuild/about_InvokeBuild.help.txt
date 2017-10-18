@@ -15,9 +15,13 @@ LONG DESCRIPTION
             The alias of Invoke-Builds.ps1
             It invokes parallel builds using the engine.
 
-    Import the module:
+    Import the installed module:
 
         Import-Module InvokeBuild
+
+    Or import from the specified location:
+
+        Import-Module <path>\InvokeBuild.psd1
 
     Get help for the engine:
 

@@ -106,7 +106,7 @@
 		-> (Get-Item -LiteralPath $BuildFile), if the item is needed
 
 	$psake.version
-		-> Get-BuildVersion or (Get-BuildVersion).ToString()
+		-> (Get-Module InvokeBuild).Version
 
 	$psake.<other>
 		-> Not supported.
@@ -343,7 +343,7 @@ $findPsake = {
 			++$todo['$psake.build_script_dir -> $BuildRoot']
 		}
 		elseif ($rePsakeVersion.IsMatch($text)) {
-			++$todo['$psake.version -> (Get-BuildVersion).ToString()']
+			++$todo['$psake.version -> (Get-Module InvokeBuild).Version']
 		}
 		elseif (($m = $rePsakeOther.Match($text)).Success) {
 			++$todo["$($m.Groups[0]) is not supported"]
