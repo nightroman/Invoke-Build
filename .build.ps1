@@ -36,7 +36,8 @@ task Markdown {
 
 # Synopsis: Remove generated and temp files.
 task Clean {
-	Remove-Item z, README.htm, Release-Notes.htm, Invoke-Build.*.nupkg -Force -Recurse -ErrorAction 0
+	Get-Item z, Tests\z, Tests\z.*, README.htm, Release-Notes.htm, Invoke-Build.*.nupkg -ErrorAction 0 |
+	Remove-Item -Force -Recurse
 }
 
 # Synopsis: Warn about not empty git status if .git exists.

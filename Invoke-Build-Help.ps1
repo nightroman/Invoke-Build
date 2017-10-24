@@ -983,6 +983,9 @@
 		MaximumBuilds = @{default = 'Number of processors.'; description = @'
 		Maximum number of builds invoked at the same time.
 '@}
+		FailHard = @'
+		Tells to abort all builds if any build fails.
+'@
 	}
 
 	outputs = @{

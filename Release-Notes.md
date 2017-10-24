@@ -1,6 +1,14 @@
 
 # Invoke-Build Release Notes
 
+## v3.7.1
+
+*Invoke-Builds* (parallel builds)
+
+- Add `FailHard`, it tells to abort builds if any build fails.
+- Redesign the script without using runspace pools.
+- Avoid some duplicated info in output.
+
 ## v3.7.0
 
 Package the module files together with scripts. As a result, the script package

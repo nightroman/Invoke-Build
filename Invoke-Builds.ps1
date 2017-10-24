@@ -17,7 +17,8 @@ param(
 	[Parameter(Position=0)][hashtable[]]$Build,
 	$Result,
 	[int]$Timeout=[int]::MaxValue,
-	[int]$MaximumBuilds=[Environment]::ProcessorCount
+	[int]$MaximumBuilds=[Environment]::ProcessorCount,
+	[switch]$FailHard
 )
 
 # info, result
@@ -44,7 +45,7 @@ if (!$Build) {return}
 $ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 try {. $ib .} catch {$PSCmdlet.ThrowTerminatingError($_)}
 
-### works
+### make works, check scripts
 $works = @()
 for ($1 = 0; $1 -lt $Build.Count) {
 	$b = @{} + $Build[$1]
@@ -64,83 +65,122 @@ for ($1 = 0; $1 -lt $Build.Count) {
 	$work = @{}
 	$works += $work
 	$work.Build = $b
+	$work.Done = $false
+	$work.Error = $null
 	$work.Title = "($1/$($Build.Count)) $file"
 }
 
-# runspace pool
-if ($MaximumBuilds -lt 1) {*Die "MaximumBuilds should be a positive number." 5}
-$pool = [RunspaceFactory]::CreateRunspacePool(1, $MaximumBuilds)
-$failures = @()
-
-try {
-	### begin
-	$pool.Open()
-	foreach($work in $works) {
-		$b = $work.Build
-
-		# log
-		if ($log = $b['Log']) {
-			$b.Remove('Log')
-			[System.IO.File]::Delete(($log = *Path $log))
-		}
-		else {
-			$work.Temp = $true
-			$log = [System.IO.Path]::GetTempFileName()
-		}
-		$work.Log = $log
-
-		# PS
-		$work.PS = $ps = [PowerShell]::Create()
-		$ps.RunspacePool = $pool
-		$work.Job =
-		$ps.AddCommand($ib).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log).AddParameter('Encoding', 'UTF8').BeginInvoke()
+### prepare logs and make shells
+foreach($work in $works) {
+	$b = $work.Build
+	if ($log = $b['Log']) {
+		$work.Temp = $false
+		$b.Remove('Log')
+		[System.IO.File]::Delete(($log = *Path $log))
 	}
-
-	### wait
-	$stopwatch = [Diagnostics.Stopwatch]::StartNew()
-	foreach($work in $works) {
-		Write-Build Cyan $work.Title
-		$t = $Timeout - $stopwatch.ElapsedMilliseconds
-		$work.Done = if ($t -gt 0) {$work.Job.AsyncWaitHandle.WaitOne($t)}
+	else {
+		$work.Temp = $true
+		$log = [System.IO.Path]::GetTempFileName()
 	}
+	$work.Log = $log
+	$work.PS = [PowerShell]::Create().AddCommand($ib).AddParameters($b).AddCommand('Out-File').AddParameter('FilePath', $log).AddParameter('Encoding', 'UTF8')
+}
 
-	### end
-	foreach($work in $works) {
-		Write-Build Cyan "Build $($work.Title):"
-
-		$ps = $work.PS
-		$exception = $null
+function Write-Log($work) {
+	$file = $work.Log
+	if ($work.Temp) {
 		try {
-			if ($work.Done) {
-				$ps.EndInvoke($work.Job)
-			}
-			else {
-				$ps.Stop()
-				$exception = 'Build timed out.'
+			$read = [System.IO.File]::OpenText($file)
+			while($null -ne ($_ = $read.ReadLine())) {$_}
+			$read.Close()
+		}
+		catch {
+			Write-Warning $_
+		}
+		[System.IO.File]::Delete($file)
+	}
+	else {
+		"Log: $file"
+	}
+}
+
+### main
+if ($MaximumBuilds -lt 1) {*Die "MaximumBuilds should be a positive number." 5}
+$MaximumBuilds = [math]::Min($MaximumBuilds, $Build.Count)
+$stage = [System.Collections.Generic.List[object]]@()
+$iWork = 0
+$abort = ''
+$failures = @()
+$stopwatch = [Diagnostics.Stopwatch]::StartNew()
+try {
+	for() {
+		### stage next work(s), BeginInvoke
+		while($stage.Count -lt $MaximumBuilds -and $iWork -lt $works.Count) {
+			$work = $works[$iWork++]
+			$stage.Add($work)
+
+			Write-Build Cyan "Start $($work.Title)"
+			$work.Job = $work.PS.BeginInvoke()
+		}
+		if (!$stage) {break}
+
+		### wait for any staged
+		$waits = New-Object System.Collections.Generic.List[System.Threading.WaitHandle]
+		foreach($work in $stage) {$waits.Add($work.Job.AsyncWaitHandle)}
+		$time = $Timeout - $stopwatch.ElapsedMilliseconds
+		$index = [System.Threading.WaitHandle]::WaitAny($waits.ToArray(), $time, $true)
+		if ($index -eq [System.Threading.WaitHandle]::WaitTimeout) {
+			$abort = 'Build timed out.'
+			break
+		}
+
+		### unstage done, EndInvoke
+		$work = $stage[$index]
+		$stage.RemoveAt($index)
+		$work.Done = $true
+		try {
+			$work.PS.EndInvoke($work.Job)
+			if ($r = $work.Build.Result['Value']) {
+				$work.Error = $r.Error
 			}
 		}
 		catch {
-			$exception = $_
+			$work.Error = $_
 		}
 
-		# log
-		$log = $work.Log
-		if ($work['Temp']) {
-			try {
-				$read = [System.IO.File]::OpenText($log)
-				while($null -ne ($_ = $read.ReadLine())) {$_}
-				$read.Close()
-			}
-			catch {
-				Write-Warning $_
-			}
-			[System.IO.File]::Delete($log)
+		### abort?
+		if ($work.Error -and $FailHard) {
+			$abort = "Aborted by $($work.Title)"
+			break
 		}
-		else {
-			"Log: $log"
+	}
+
+	### finish works
+	foreach($work in $works) {
+		Write-Build Cyan "Build $($work.Title):"
+
+		### dispose
+		$reason = $null
+		try {
+			if ($work.Done) {
+				$reason = $work.Error
+			}
+			else {
+				$work.PS.Stop()
+				$reason = $abort
+			}
+		}
+		catch {
+			$reason = $_
+		}
+		finally {
+			$work.PS.Dispose()
 		}
 
-		# result, error
+		### log
+		Write-Log $work
+
+		### result
 		$_ = if ($r = $work.Build.Result['Value']) {
 			$r.Error
 			$info.Tasks.AddRange($r.Tasks)
@@ -148,10 +188,10 @@ try {
 			$info.Warnings.AddRange($r.Warnings)
 		}
 		else {
-			"'$($work.Build.File)' invocation failed: $exception"
+			"$reason"
 		}
 		if (!$_) {
-			$_ = $exception
+			$_ = $reason
 		}
 		if ($_) {
 			Write-Build Cyan "Build $($work.Title) FAILED."
@@ -167,7 +207,7 @@ try {
 		}
 	}
 
-	# fail
+	### fail?
 	if ($failures) {
 		*Die ($(
 			"Failed builds:"
@@ -175,11 +215,10 @@ try {
 				"Build: $($_.File)"
 				"ERROR: $($_.Error)"
 			}
-		) -join "`r`n")
+		) -join [Environment]::NewLine)
 	}
 }
 finally {
-	$pool.Close()
 	$errors = $info.Errors.Count
 	$warnings = $info.Warnings.Count
 	$info.Elapsed = [DateTime]::Now - $info.Started

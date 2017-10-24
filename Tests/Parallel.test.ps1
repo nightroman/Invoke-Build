@@ -183,7 +183,7 @@ task ParallelErrorCases @(
 	{
 		Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 		Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
-		Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: '*\Dynamic.build.ps1' *parameter name 'Parameters'*"
+		Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: *parameter name 'Parameters'*"
 	}
 )
 
@@ -193,40 +193,20 @@ task OmittedBuildParameterFile {
 	$null = mkdir z -Force
 
 	# new build script; its default task calls two parallel builds in the same script
-	@'
-task t1 { 'out 1' }
-task t2 { 'out 2' }
-task . { Invoke-Builds @{Task='t1'}, @{Task='t2'} }
-'@ > z\.build.ps1
+	Set-Content z\.build.ps1 {
+		task t1 { 'out 1' }
+		task t2 { 'out 2'; Start-Sleep 1 }
+		task . { Invoke-Builds @{Task='t1'}, @{Task='t2'} }
+	}
 
 	Push-Location z
-	$out = Invoke-Build | Out-String
+	Invoke-Build -Result result
 
-	Write-Build Magenta $out
-	assert ($out -like @'
-Build . *\z\.build.ps1
-Task /.
-(1/2) *\z\.build.ps1
-(2/2) *\z\.build.ps1
-Build (1/2) *\z\.build.ps1:
-Build t1 *\z\.build.ps1
-Task /t1
-out 1
-Done /t1 00:00:*
-Build succeeded. 1 tasks, 0 errors, 0 warnings 00:00:*
-Build (1/2) *\z\.build.ps1 succeeded.
-Build (2/2) *\z\.build.ps1:
-Build t2 *\z\.build.ps1
-Task /t2
-out 2
-Done /t2 00:00:*
-Build succeeded. 1 tasks, 0 errors, 0 warnings 00:00:*
-Build (2/2) *\z\.build.ps1 succeeded.
-Tasks: 2 tasks, 0 errors, 0 warnings
-Builds succeeded. 2 builds, 0 failed 00:00:*
-Done /. 00:00:*
-Build succeeded. 3 tasks, 0 errors, 0 warnings 00:00:*
-'@)
+	$r = $result.Tasks
+	equals $r.Count 3
+	equals $r[0].Name t1
+	equals $r[1].Name t2
+	equals $r[2].Name .
 
 	Pop-Location
 	Remove-Item z -Recurse
