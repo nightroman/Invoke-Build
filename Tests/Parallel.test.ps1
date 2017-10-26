@@ -218,3 +218,46 @@ task ParallelEmptyRun {
 	($r = Invoke-PowerShell -NoProfile -Command 'Invoke-Builds.ps1 -Result r; $r.GetType().Name')
 	equals $r $(if ($version -eq 2) {'Hashtable'} else {'PSCustomObject'})
 }
+
+# Covers #93 with the new switch FailHard.
+task FailHard {
+	# task script
+	Set-Content z.build.ps1 {
+		task t1 { Start-Sleep 100 }
+		task t2 { throw 13 }
+		task t3 { }
+	}
+
+	# unofficial way to get individual build results
+	[hashtable[]]$build = @(
+		@{File='z.build.ps1'; Task='t1'}
+		@{File='z.build.ps1'; Task='t2'}
+		@{File='z.build.ps1'; Task='t3'}
+	)
+
+	# invoke 3 parallel builds
+	$null = try {Invoke-Builds -FailHard -MaximumBuilds 2 -Build $build -Result result} catch {$_}
+
+	# unofficial results
+	# has Result but no Error, started and aborted
+	equals $build[0].Result.Value.Error
+	# has Result and Error, started and failed
+	equals $build[1].Result.Value.Error.FullyQualifiedErrorId '13'
+	# has no Result, not started
+	equals $build[2].Result.ContainsKey('Value') $false
+
+	# official result
+	# two tasks started
+	$r = $result.Tasks
+	equals $r.Count 2
+	# t1 started but not finished
+	equals $r[0].Name t1
+	equals $r[0].Elapsed
+	equals $r[0].Error
+	# t2 started and failed
+	equals $r[1].Name t2
+	assert ($null -ne $r[1].Elapsed)
+	equals $r[1].Error.FullyQualifiedErrorId '13'
+
+	Remove-Item z.build.ps1
+}

@@ -50,7 +50,8 @@ In PowerShell 5.0 or with PowerShellGet you can install it by this command
 
     Install-Module InvokeBuild
 
-To install the module with Chocolatey, run the following command
+To install the module with Chocolatey, run the following command.
+NOTE: This package is maintained by its owner, see package info.
 
     choco install invoke-build
 
@@ -81,8 +82,8 @@ this PowerShell command:
     Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} Invoke-Build"
 
 Consider to include the directory with scripts to the path so that script paths
-may be omitted in commands. Alternatively, copy the directory to the PowerShell
-module directory and use the package as the module.
+may be omitted in commands. Alternatively, rename to *InvokeBuild* and copy to
+the PowerShell module directory in order to use as the module.
 
 With *cmd.exe* use the helper *ib.cmd*. For similar experience in interactive
 PowerShell use an alias `ib` defined in a PowerShell profile
