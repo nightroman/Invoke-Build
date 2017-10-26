@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.1.2
+.VERSION 1.1.3
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) 2011-2017 Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
@@ -96,11 +96,11 @@ Add-Line '    "command": "powershell.exe",'
 Add-Line '    "args": [ "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command" ]'
 Add-Line '  },'
 Add-Line '  "linux": {'
-Add-Line '    "command": "/usr/bin/powershell",'
+Add-Line '    "command": "/usr/bin/pwsh",'
 Add-Line '    "args": [ "-NoProfile", "-Command" ]'
 Add-Line '  },'
 Add-Line '  "osx": {'
-Add-Line '    "command": "/usr/local/bin/powershell",'
+Add-Line '    "command": "/usr/local/bin/pwsh",'
 Add-Line '    "args": [ "-NoProfile", "-Command" ]'
 Add-Line '  },'
 Add-Line '  "tasks": ['
