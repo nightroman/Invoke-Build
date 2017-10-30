@@ -412,7 +412,7 @@ function *IO {
 	${private:*p} = [System.Collections.Generic.List[object]]@()
 	${*i} = foreach($_ in ${*i}) {
 		if ($_ -isnot [System.IO.FileInfo]) {$_ = [System.IO.FileInfo](*Path $_)}
-		if (!$_.Exists) {throw "Missing Inputs item: '$_'."}
+		if (!$_.Exists) {throw "Missing Inputs item '$_'."}
 		$_
 		${*p}.Add($_.FullName)
 	}
@@ -677,6 +677,9 @@ try {
 		}
 		*Check $BuildTask
 	}
+
+	New-Variable BuildRoot (*Path $BuildRoot) -Option Constant -Force
+	if (![System.IO.Directory]::Exists($BuildRoot)) {throw "Missing build root '$BuildRoot'."}
 
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	foreach($_ in ${*}.Redefined) {

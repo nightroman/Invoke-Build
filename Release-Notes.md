@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v3.7.2
+
+Normalize, test, and make `$BuildRoot` constant after loading tasks (#95).
+
 ## v3.7.1
 
 *Invoke-Builds* (parallel builds)

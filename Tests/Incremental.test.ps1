@@ -217,8 +217,8 @@ task TestInputsOutputsMismatch (job InputsOutputsMismatch -Safe), {
 task IncrementalMissingInputs -Inputs {'missing'} -Outputs {} {throw}
 task PartialMissingInputs -Partial -Inputs {'missing'} -Outputs {} {throw}
 task TestMissingInputs (job IncrementalMissingInputs -Safe), (job PartialMissingInputs -Safe), {
-	Test-Error IncrementalMissingInputs "Missing Inputs item: '*\missing'.*"
-	Test-Error PartialMissingInputs "Missing Inputs item: '*\missing'.*"
+	Test-Error IncrementalMissingInputs "Missing Inputs item '*\missing'.*"
+	Test-Error PartialMissingInputs "Missing Inputs item '*\missing'.*"
 }
 
 ### #49

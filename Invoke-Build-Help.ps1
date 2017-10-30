@@ -14,8 +14,8 @@
 	script. The process is called build and the script is called build script.
 
 	A build script defines parameters, variables, tasks, and blocks. Any code
-	is invoked with the current location set to $BuildRoot, the build script
-	directory. $ErrorActionPreference is set to 'Stop'.
+	is invoked with the current location set to $BuildRoot, normally the build
+	script directory. $ErrorActionPreference is set to 'Stop'.
 
 	To get help for commands dot-source Invoke-Build:
 
@@ -79,10 +79,13 @@
 	Exposed variables designed for build scripts and tasks:
 
 		$WhatIf    - WhatIf mode, Invoke-Build parameter
-		$BuildRoot - build script location
+		$BuildRoot - build script location, by default
 		$BuildFile - build script path
 		$BuildTask - initial tasks
 		$Task      - current task
+
+	$BuildRoot may be changed by scripts on loading in order to set a custom
+	build root directory. Other variables should not be changed.
 
 	$Task is available for script blocks defined by task parameters If, Inputs,
 	Outputs, and Jobs and by blocks Enter|Exit-BuildTask, Enter|Exit-BuildJob,
@@ -208,9 +211,20 @@
 
 		INLINE SCRIPT
 
-		`File` is a script block as a build script. It is used in order to
-		assemble a build on the fly without creating an extra build script.
-		Dynamic parameters and persistent builds are not used in this case.
+		`File` is a script block which is normally used in order to assemble a
+		build on the fly without creating and using an extra build script file.
+
+		Script parameters are not supported. Use the parent scope variables
+		instead, either directly or with the helpers `property` and `requires`.
+
+		$BuildRoot is the calling script root (or the current location). If it
+		is not what the build needs as its root directory, then change this
+		variable in the beginning of the inline script block.
+
+		$BuildFile is the calling script (it may be null, e.g. in jobs).
+		This variable is rarely used, just keep in mind the difference.
+
+		Persistent and parallel builds are not supported.
 '@
 		Checkpoint = @'
 		Specifies the checkpoint file and makes the build persistent. It is
