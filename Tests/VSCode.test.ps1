@@ -45,7 +45,7 @@ task OmittedPaths {
 	$r = Get-Json
 	$t = Get-BuildTask $r.tasks
 	equals $t.taskName .
- 	equals $t.args[0] 'Invoke-Build -Task .'
+ 	equals $t.command 'Invoke-Build -Task .'
 
 	Remove-Item .vscode -Force -Recurse
 }
@@ -57,7 +57,7 @@ task FullPaths {
 	$r = Get-Json
 	$t = Get-BuildTask $r.tasks
 	equals $t.taskName OmittedPaths
- 	equals $t.args[0] ("& '{0}' -Task OmittedPaths -File '{1}'" -f $InvokeBuild.Replace('\', '/'), $BuildFile.Replace('\', '/'))
+ 	equals $t.command ("& '{0}' -Task OmittedPaths -File '{1}'" -f $InvokeBuild.Replace('\', '/'), $BuildFile.Replace('\', '/'))
 
 	Test-Json
 	Remove-Item .vscode -Force -Recurse
@@ -69,7 +69,7 @@ task RelativePaths {
 	$r = Get-Json
 	$t = Get-BuildTask $r.tasks
 	equals $t.taskName OmittedPaths
- 	equals $t.args[0] "& '../Invoke-Build.ps1' -Task OmittedPaths -File './VSCode.test.ps1'"
+ 	equals $t.command "& '../Invoke-Build.ps1' -Task OmittedPaths -File './VSCode.test.ps1'"
 
 	Test-Json
 	Remove-Item .vscode -Force -Recurse
@@ -82,7 +82,7 @@ task DiscoverEngine {
 	$r = Get-Json
 	$t = Get-BuildTask $r.tasks
 	equals $t.taskName .
- 	equals $t.args[0] "& './Invoke-Build.ps1' -Task ."
+ 	equals $t.command "& './Invoke-Build.ps1' -Task ."
 
 	Remove-Item .vscode -Force -Recurse
 }
