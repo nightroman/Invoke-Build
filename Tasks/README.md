@@ -7,6 +7,7 @@
 - [Header](Header) How to print more task details in task headers.
 - [Import](Import) How to share and import tasks from external task scripts including exported by modules.
 - [Inline](Inline) How to assemble a whole build inline as a script block without creating an extra script.
+- [Paket](Paket) Build script with automatic bootstrapping using `paket`.
 - [Param](Param) How to create tasks which perform similar actions with some differences defined by parameters.
 
 **Custom tasks**

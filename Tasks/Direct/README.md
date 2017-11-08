@@ -39,3 +39,6 @@ invocation by the engine, this is easier than to support them on direct
 calls (possible but not so neat).
 
 See the script [build.ps1](build.ps1) for a working example.
+
+See also the sample [Paket](../Paket) where a directly invokable build script
+is designed for automatic bootstrapping with Invoke-Build downloaded as well.
