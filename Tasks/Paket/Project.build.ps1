@@ -55,5 +55,5 @@ task Init {
 
 # Synopsis: Remove temporary stuff.
 task Clean {
-	Remove-Item packages, paket-files, paket.lock -Force -Recurse
+	Remove-Item packages, paket-files, paket.lock -Force -Recurse -ErrorAction 2
 }

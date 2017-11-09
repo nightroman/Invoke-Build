@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.1.4
+.VERSION 1.1.5
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) 2011-2017 Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
@@ -124,7 +124,7 @@ foreach($task in $all.Values) {
 		continue
 	}
 	Add-Line ('    {')
-	Add-Line ('      "taskName": "{0}",' -f $name)
+	Add-Line ('      "label": "{0}",' -f $name)
 	Add-Line ('      "type": "shell",')
 	Add-Line ('      "problemMatcher": [ "$msCompile" ],')
 	if ($name -eq $dot) {
@@ -139,7 +139,7 @@ foreach($task in $all.Values) {
 
 # last task and ending
 Add-Line ('    {')
-Add-Line ('      "taskName": "?",')
+Add-Line ('      "label": "?",')
 Add-Line ('      "type": "shell",')
 Add-Line ('      "problemMatcher": [],')
 Add-Line ('      "command": "{0} -Task ?{1}"' -f $InvokeBuild2, $BuildFile2)
