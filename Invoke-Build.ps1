@@ -12,21 +12,19 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 #>
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 param(
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)]$File,
-	[string]$Checkpoint,
 	$Result,
 	[switch]$Safe,
 	[switch]$Summary,
-	[switch]$Resume,
 	[switch]$WhatIf
 )
 
 dynamicparam {
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Get-BuildFile($Path) {
 	do {
 		if (($f = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $f}
@@ -59,13 +57,11 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Error = $null
 	Task = $null
 	File = $BuildFile = $PSBoundParameters['File']
-	Checkpoint = $PSBoundParameters['Checkpoint']
 	Safe = $PSBoundParameters['Safe']
 	Summary = $PSBoundParameters['Summary']
 	CD = *Path
 	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
-	SP = $null
-	CP = $null
+	SP = @{}
 	P = $(if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}})
 	A = 1
 	B = 0
@@ -77,9 +73,10 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	ExitTask = $null
 	EnterJob = $null
 	ExitJob = $null
-	Export = $null
-	Import = $null
 	Header = {Write-Build 11 "Task $($args[0])"}
+	Data = @{}
+	XBuild = $null
+	XTask = $null
 })
 $BuildTask = $PSBoundParameters['Task']
 if ($BuildFile -is [scriptblock]) {
@@ -93,15 +90,7 @@ if ($BuildTask -eq '**') {
 	return
 }
 
-if (${*}.Checkpoint) {${*}.Checkpoint = *Path ${*}.Checkpoint}
-if ($PSBoundParameters['Resume']) {
-	if (!${*}.Checkpoint) {throw 'Checkpoint must be defined for Resume.'}
-	${*}.CP = $_ = try {Import-Clixml ${*}.Checkpoint} catch {throw 'Invalid checkpoint file?'}
-	$BuildTask = $_.Task
-	$BuildFile = $_.File
-	${*}.SP = $_.Prm1
-}
-elseif ($BuildFile) {
+if ($BuildFile) {
 	if (![System.IO.File]::Exists(($BuildFile = *Path $BuildFile))) {throw "Missing script '$BuildFile'."}
 }
 elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
@@ -116,7 +105,7 @@ if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 if ($_.Count) {&{
 	($a = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
 	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
-	$r = 'Task', 'File', 'Checkpoint', 'Result', 'Safe', 'Summary', 'Resume', 'WhatIf'
+	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
 	foreach($p in $_.Values) {
 		if ($c -notcontains ($_ = $p.Name)) {
 			if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
@@ -128,7 +117,7 @@ if ($_.Count) {&{
 
 } end {
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Add-BuildTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
 	[Parameter(Position=1)][object[]]$Jobs,
@@ -173,19 +162,19 @@ function Add-BuildTask(
 	}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function New-BuildJob([Parameter(Mandatory=1)][string]$Name, [switch]$Safe) {
 	if ($Safe) {@{$Name = 1}} else {$Name}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Assert-Build([Parameter()]$Condition, [string]$Message) {
 	if (!$Condition) {
 		*Die "Assertion failed.$(if ($Message) {" $Message"})" 7
 	}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Assert-BuildEquals([Parameter()]$A, $B) {
 	if (![Object]::Equals($A, $B)) {
 		*Die @"
@@ -196,7 +185,7 @@ B:$(if ($null -ne $B) {" $B [$($B.GetType())]"})
 	}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 	if (!($_ = ${*}.All[$Task])) {
 		*Die "Missing task '$Task'." 13
@@ -204,7 +193,7 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 	$_.Error
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 	${*n} = $Name
 	${*v} = $Value
@@ -214,7 +203,7 @@ function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 	${*v}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 	$f = ($I = $Task.InvocationInfo).ScriptName
 	if (!($d = $Hash[$f])) {
@@ -228,7 +217,7 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 	}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0) {
 	${private:*c} = $Command
 	${private:*x} = $ExitCode
@@ -239,7 +228,7 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 	}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$Environment, [string[]]$Property) {
 	Remove-Variable Variable, Environment, Property
 	if ($_ = $PSBoundParameters['Variable']) {foreach($_ in $_) {
@@ -253,7 +242,7 @@ function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$
 	}}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
 	trap {*Die $_ 5}
 	$d = switch -regex ($Path) {
@@ -271,7 +260,7 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 	}
 }
 
-#.ExternalHelp Invoke-Build-Help.xml
+#.ExternalHelp InvokeBuild-Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	$i = $Host.UI.RawUI
 	$_ = $i.ForegroundColor
@@ -367,23 +356,6 @@ function *Check([Parameter()]$J, $T, $P=@()) {
 	}}
 }
 
-function *Save {
-	Export-Clixml ${*}.Checkpoint -InputObject @{
-		User = *Run ${*}.Export
-		Task = $BuildTask
-		File = $BuildFile
-		Prm1 = ${*}.SP
-		Prm2 = $(
-			$r = @{}
-			foreach($_ in ${*}.DP.Keys) {
-				$r[$_] = Get-Variable -Name $_ -Scope Script -ValueOnly
-			}
-			$r
-		)
-		Done = @(foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}})
-	}
-}
-
 function *AddError($T) {
 	${*}.Errors.Add([PSCustomObject]@{Error = $_; File = $BuildFile; Task = $T})
 }
@@ -463,7 +435,7 @@ function *IO {
 }
 
 function *Task {
-	New-Variable -Name Task -Option Constant -Value (${*}.Task = ${*}.All[$args[0]])
+	New-Variable Task (${*}.Task = ${*}.All[$args[0]]) -Option Constant
 	${private:*p} = $args[1] + '/' + $Task.Name
 
 	if ($Task.Elapsed) {
@@ -471,7 +443,7 @@ function *Task {
 		return
 	}
 
-	if (${*}.Checkpoint) {*Save}
+	if (${*}.XTask) {& ${*}.XTask}
 	if ((${private:*x} = $Task.If) -is [scriptblock] -and !$WhatIf) {
 		*SL
 		try {
@@ -581,7 +553,7 @@ Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
 $_ = Split-Path $_
-Set-Alias Invoke-Builds (Join-Path $_ Invoke-Builds.ps1)
+Set-Alias Build-Parallel (Join-Path $_ Build-Parallel.ps1)
 Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
 
 if ($MyInvocation.InvocationName -eq '.') {
@@ -590,7 +562,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 		$BuildFile = $_
 		*SL ($BuildRoot = if ($Task) {*Path $Task} else {Split-Path $_})
 	}
-	Remove-Variable Task, File, Checkpoint, Result, Safe, Summary, Resume, WhatIf
+	Remove-Variable Task, File, Result, Safe, Summary, WhatIf
 	return
 }
 
@@ -600,12 +572,9 @@ function Write-Warning([Parameter()]$Message) {
 }
 
 $ErrorActionPreference = 'Stop'
-if (!${*}.SP) {
-	${*}.SP = @{}
-	foreach($_ in $PSBoundParameters.Keys) {
-		if (${*}.DP.ContainsKey($_)) {
-			${*}.SP[$_] = $PSBoundParameters[$_]
-		}
+foreach($_ in $PSBoundParameters.Keys) {
+	if (${*}.DP.ContainsKey($_)) {
+		${*}.SP[$_] = $PSBoundParameters[$_]
 	}
 }
 if (${*}.Q = $BuildTask -eq '??' -or $BuildTask -eq '?') {
@@ -613,13 +582,15 @@ if (${*}.Q = $BuildTask -eq '??' -or $BuildTask -eq '?') {
 }
 if ($Result) {
 	if ($Result -is [string]) {
-		New-Variable -Force -Scope 1 $Result ${*}
+		New-Variable $Result ${*} -Scope 1 -Force
 	}
 	else {
+		${*}.XBuild = $Result['XBuild']
+		${*}.XTask = $Result['XTask']
 		$Result.Value = ${*}
 	}
 }
-Remove-Variable Task, File, Checkpoint, Result, Safe, Summary, Resume
+Remove-Variable Task, File, Result, Safe, Summary
 
 try {
 	if ($BuildTask -eq '**') {
@@ -637,9 +608,8 @@ try {
 	function Exit-BuildTask([Parameter()][scriptblock]$Script) {${*}.ExitTask = $Script}
 	function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.EnterJob = $Script}
 	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.ExitJob = $Script}
-	function Export-Build([Parameter()][scriptblock]$Script) {${*}.Export = $Script}
-	function Import-Build([Parameter()][scriptblock]$Script) {${*}.Import = $Script}
 	function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
+	function Set-BuildData([Parameter()]$Key, $Value) {${*}.Data[$Key] = $Value}
 
 	*SL ($BuildRoot = if ($BuildFile) {Split-Path $BuildFile} else {${*}.CD})
 	$_ = ${*}.SP
@@ -694,22 +664,11 @@ try {
 	${*}.A = 0
 	try {
 		. *Run ${*}.EnterBuild
-		if (${*}.CP) {
-			foreach($_ in ${*}.CP.Done) {
-				${**}[$_].Elapsed = [TimeSpan]::Zero
-			}
-			foreach($_ in ${*}.CP.Prm2.GetEnumerator()) {
-				Set-Variable $_.Key $_.Value
-			}
-			. *Run ${*}.Import ${*}.CP.User
-		}
+		if (${*}.XBuild) {. ${*}.XBuild}
 		foreach($_ in $BuildTask) {
 			*Task $_ ''
 		}
 		${*}.Task = $null
-		if (${*}.Checkpoint) {
-			[System.IO.File]::Delete(${*}.Checkpoint)
-		}
 	}
 	finally {
 		. *Run ${*}.ExitBuild

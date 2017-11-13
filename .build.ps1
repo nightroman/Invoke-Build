@@ -30,8 +30,9 @@ Set-StrictMode -Version Latest
 # Synopsis: Convert markdown files to HTML.
 # <http://johnmacfarlane.net/pandoc/>
 task Markdown {
-	exec { pandoc.exe --standalone --from=markdown_strict --output=README.htm README.md }
-	exec { pandoc.exe --standalone --from=markdown_strict --output=Release-Notes.htm Release-Notes.md }
+	function Convert-Markdown($Name) {pandoc.exe --standalone --from=gfm "--output=$Name.htm" "--metadata=pagetitle=$Name" "$Name.md"}
+	exec { Convert-Markdown README }
+	exec { Convert-Markdown Release-Notes }
 }
 
 # Synopsis: Remove generated and temp files.
@@ -52,7 +53,7 @@ task GitStatus -If (Test-Path .git) {
 # <https://github.com/nightroman/Helps>
 task Help {
 	. Helps.ps1
-	Convert-Helps Invoke-Build-Help.ps1 Invoke-Build-Help.xml
+	Convert-Helps InvokeBuild-Help.ps1 InvokeBuild-Help.xml
 }
 
 # Synopsis: Set $script:Version.
@@ -72,9 +73,10 @@ task Module Version, Markdown, Help, {
 	# copy files
 	Copy-Item -Destination $dir `
 	ib.cmd,
+	Build-Checkpoint.ps1,
+	Build-Parallel.ps1,
 	Invoke-Build.ps1,
-	Invoke-Builds.ps1,
-	Invoke-Build-Help.xml,
+	InvokeBuild-Help.xml,
 	Resolve-MSBuild.ps1,
 	README.htm,
 	LICENSE.txt,
@@ -91,7 +93,7 @@ task Module Version, Markdown, Help, {
 	Copyright = '(c) 2011-2017 Roman Kuzmin'
 	Description = 'Build and test automation in PowerShell'
 	PowerShellVersion = '2.0'
-	AliasesToExport = @('Invoke-Build', 'Invoke-Builds')
+	AliasesToExport = 'Invoke-Build', 'Build-Checkpoint', 'Build-Parallel'
 	PrivateData = @{
 		PSData = @{
 			Tags = 'Build', 'Test', 'Automation'

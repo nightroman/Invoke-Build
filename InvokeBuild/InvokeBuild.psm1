@@ -1,4 +1,5 @@
 
+Set-Alias -Name Build-Checkpoint -Value (Join-Path $PSScriptRoot Build-Checkpoint.ps1)
+Set-Alias -Name Build-Parallel -Value (Join-Path $PSScriptRoot Build-Parallel.ps1)
 Set-Alias -Name Invoke-Build -Value (Join-Path $PSScriptRoot Invoke-Build.ps1)
-Set-Alias -Name Invoke-Builds -Value (Join-Path $PSScriptRoot Invoke-Builds.ps1)
-Export-ModuleMember -Alias Invoke-Build, Invoke-Builds
+Export-ModuleMember -Alias Build-Checkpoint, Build-Parallel, Invoke-Build

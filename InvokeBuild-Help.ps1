@@ -28,13 +28,10 @@
 	$ParameterName for reading and as $script:ParameterName for writing.
 
 	The following parameter names are reserved for the engine:
-	Task, File, Result, Safe, Summary, WhatIf, Checkpoint, Resume, Log
+	Task, File, Result, Safe, Summary, WhatIf, Log
 
 	Script parameters are specified for Invoke-Build as if they are its own.
 	Known issue #4. Script switches should be specified after Task and File.
-
-	Build script parameters are automatically exported and imported by the
-	engine on persistent builds, see Checkpoint.
 
 	RESERVED FUNCTION AND VARIABLE NAMES
 
@@ -68,9 +65,9 @@
 	SPECIAL ALIASES
 
 		Invoke-Build
-		Invoke-Builds
+		Build-Parallel
 
-	These aliases are for the scripts Invoke-Build.ps1 and Invoke-Builds.ps1.
+	These aliases are for the scripts Invoke-Build.ps1 and Build-Parallel.ps1.
 	Use them for calling nested builds, i.e. omit script extensions and paths.
 	With this rule Invoke-Build tools can be kept together with build scripts.
 
@@ -117,9 +114,6 @@
 		Enter-BuildJob {} - before each task action
 		Exit-BuildJob {} - after each task action
 
-		Export-Build {} - on saving persistent build checkpoints
-		Import-Build {param($data)} - once on resuming persistent builds
-
 		Set-BuildHeader {param($path)} - custom task header writer
 
 	Nested builds do not inherit parent blocks.
@@ -132,13 +126,6 @@
 
 	Enter-BuildTask, Exit-BuildTask, Enter-BuildJob, and Exit-BuildJob are
 	invoked in the same scope, the parent of task action blocks.
-
-	Export-Build and Import-Build are used with persistent builds. Export-Build
-	outputs data to be exported to clixml. Import-Build is called with a single
-	argument containing the original data imported from clixml. It is called in
-	the script scope and normally restores script scope variables. Note that
-	this is not needed for script parameters, the engine takes care of them.
-	Variables may be declared as parameters just in order to be persistent.
 
 	DOT-SOURCING Invoke-Build
 
@@ -185,8 +172,7 @@
 		Tasks ? and ?? set $WhatIf to true. Properly designed build scripts
 		should not perform anything significant if $WhatIf is set to true.
 
-		* - Tells to invoke all tasks. This is useful when all tasks are tests
-		or steps in a sequence that can be stopped and resumed, see Checkpoint.
+		* - Tells to invoke all tasks, for example when tasks are tests.
 
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
@@ -225,34 +211,6 @@
 		This variable is rarely used, just keep in mind the difference.
 
 		Persistent and parallel builds are not supported.
-'@
-		Checkpoint = @'
-		Specifies the checkpoint file and makes the build persistent. It is
-		possible to resume an interrupted build starting at the interrupted
-		task. The checkpoint file is written before processing of each task
-		and deleted if the build succeeds.
-
-		In order to resume an interrupted persistent build specify the same
-		checkpoint file and the switch Resume. Task, File, and build script
-		parameters should not be used, they are restored from the file.
-
-		Persistent builds must be designed properly. Data shared by tasks
-		may have to be persisted with Export-Build and Import-Build.
-
-		Note that this is not needed for script parameters, the engine takes
-		care of them. Some variables may be declared as parameters simply in
-		order to be persistent and custom export and import may be avoided.
-
-		Notes
-		- Think carefully of what the persistent build state is.
-		- Some data are not suitable for persistence in clixml files.
-		- Changes in stopped build scripts may cause incorrect resuming.
-		- Checkpoint files must not be used with different engine versions.
-'@
-		Resume = @'
-		Tells to resume an interrupted persistent build from a checkpoint file
-		specified by Checkpoint. Task, File, and build script parameters should
-		not be used, they are restored from the file.
 '@
 		Result = @'
 		Tells to output build information using a variable. It is either a name
@@ -369,14 +327,6 @@
 		}}
 
 		@{code={
-	# Invoke a persistent sequence of steps defined as tasks
-	Invoke-Build * Steps.build.ps1 -Checkpoint temp.clixml
-
-	# Resume the above steps at the stopped one
-	Invoke-Build -Checkpoint temp.clixml -Resume
-		}}
-
-		@{code={
 	# Using the build results, e.g. for performance analysis
 
 	# Invoke the build and keep results in the variable Result
@@ -408,6 +358,7 @@
 	links = @(
 		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
+		# internal
 		@{ text = 'Add-BuildTask (task)' }
 		@{ text = 'Assert-Build (assert)' }
 		@{ text = 'Assert-BuildEquals (equals)' }
@@ -419,6 +370,9 @@
 		@{ text = 'Test-BuildAsset (requires)' }
 		@{ text = 'Use-BuildAlias (use)' }
 		@{ text = 'Write-Build' }
+		# external
+		@{ text = 'Build-Checkpoint' }
+		@{ text = 'Build-Parallel' }
 	)
 }
 
@@ -551,6 +505,72 @@
 		provide the actual source for location messages and task help synopsis.
 '@
 	}
+
+	examples = @(
+		### Job combinations
+		@{
+			code={
+	# Dummy task with no jobs
+	task Task1
+
+	# Alias of another task
+	task Task2 Task1
+
+	# Combination of tasks
+	task Task3 Task1, Task2
+
+	# Simple action task
+	task Task4 {
+	    # action
+	}
+
+	# Typical complex task: referenced task(s) and one own action
+	task Task5 Task1, Task2, {
+	    # action after referenced tasks
+	}
+
+	# Possible complex task: actions and tasks in any required order
+	task Task6 {
+	    # action before Task1
+	},
+	Task1, {
+	    # action after Task1 and before Task2
+	},
+	Task2
+			}
+			remarks = @'
+	This example shows various possible combinations of task jobs.
+'@
+		}
+
+		### Splatting helper
+		@{
+			code={
+	# Helper for tasks with complex parameters composed as hashtables
+	function taskx($Name, $Param) {task $Name @Param -Source $MyInvocation}
+
+	# Synopsis: Complex task with parameters as a hashtable.
+	taskx MakeDocs @{
+		Inputs = {Get-Item *.md}
+		Outputs = {Get-Item *.htm}
+		Partial = $true
+		Jobs = 'Task1', {
+			#...
+		}
+	}
+
+	# Synopsis: Simple task with usual parameters.
+	task Task1 {
+		#...
+	}
+			}
+			remarks = @'
+	Tasks with complex parameters are often difficult to compose in a readable
+	way. Use PowerShell splatting or add the above helper `taskx` to a script
+	in order to compose parameters as hashtables.
+'@
+		}
+	)
 
 	links = @(
 		@{ text = 'New-BuildJob' }
@@ -954,10 +974,10 @@
 	outputs = @{ type = 'String' }
 }
 
-### Invoke-Builds.ps1
+### Build-Parallel.ps1
 @{
-	command = 'Invoke-Builds.ps1'
-	synopsis = 'Invokes parallel builds by Invoke-Build.ps1'
+	command = 'Build-Parallel.ps1'
+	synopsis = 'Invokes parallel builds by Invoke-Build'
 
 	description = @'
 	This script invokes build scripts simultaneously using Invoke-Build.ps1
@@ -1010,7 +1030,7 @@
 	examples = @(
 		@{
 			code = {
-	Invoke-Builds @(
+	Build-Parallel @(
 		@{File='Project1.build.ps1'}
 		@{File='Project2.build.ps1'; Task='MakeHelp'}
 		@{File='Project2.build.ps1'; Task='Build', 'Test'}
@@ -1026,6 +1046,86 @@
 		}
 	)
 
+	links = @(
+		@{ text = 'Invoke-Build' }
+	)
+}
+
+### Build-Checkpoint.ps1
+@{
+	command = 'Build-Checkpoint.ps1'
+	synopsis = 'Invokes persistent builds with checkpoints.'
+	description = @'
+	This command invokes the build specified by the hashtable Build so that it
+	writes checkpoints to the file specified by Checkpoint. If the build fails
+	then it may be resumed later, use the switch Resume in addition to the
+	original Checkpoint parameter. The build is resumed at the failed task.
+
+	Not every build may be persistent, right away or at all:
+
+		- Think carefully of what the persistent build state is.
+		- Some data are not suitable for persistence in clixml files.
+		- Changes in stopped build scripts may cause incorrect resuming.
+		- Checkpoint files must not be used with different engine versions.
+
+	CUSTOM EXPORT AND IMPORT
+
+	By default, the command saves and restores build tasks, script path, and
+	all parameters declared by the build script, not just specified by Build.
+	Tip: consider to declare some script variables as artificial parameters
+	in order to make them persistent.
+
+	If this is not enough for saving and restoring the build state then use
+	custom export and import blocks. The export block is called on writing
+	checkpoints, i.e. on each task. The import block is called on resuming
+	once, before the task to be resumed.
+
+	The export block is defined as
+
+		Set-BuildData Checkpoint.Export {
+			$script:var1
+			$script:var2
+		}
+
+	The import block is defined as
+
+		Set-BuildData Checkpoint.Import {
+			param($data)
+			$var1, $var2 = $data
+		}
+
+	Note that the import block is called in the script scope. In the example,
+	variables $var1, $var2 are the script variables, you may but do not have
+	to use the prefix `$script:`. The parameter $data is the data written by
+	Checkpoint.Export, exported to clixml and then imported from clixml.
+'@
+	parameters = @{
+		Checkpoint = @'
+		Specifies the checkpoint file (clixml). The checkpoint file is removed
+		after successful builds. If a build fails and it is not going to be
+		resumed then delete the checkpoint file manually.
+'@
+		Build = @'
+		Specifies Invoke-Build parameters. If the build is resumed then tasks,
+		script, and script parameters are ignored and restored from the file.
+'@
+		Resume = @'
+		Tells to resume the build from the existing checkpoint file.
+'@
+	}
+	outputs = @{
+		type = 'Text'
+		description = 'Output of the invoked build.'
+	}
+	examples = @(
+		@{code={
+	# Invoke a persistent sequence of steps defined as tasks.
+	Build-Checkpoint temp.clixml @{Task = '*'; File = 'Steps.build.ps1'}
+
+	# Given the above failed, resume at the failed step.
+	Build-Checkpoint temp.clixml -Resume
+		}}
+	)
 	links = @(
 		@{ text = 'Invoke-Build' }
 	)

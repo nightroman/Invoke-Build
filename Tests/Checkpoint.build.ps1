@@ -19,23 +19,25 @@ param(
 )
 
 # These data are shared and changed by tasks.
-# They are persisted with Export-Build and Import-Build.
+# They are persisted by Checkpoit.Export and Checkpoit.Import.
 $shared1 = 'shared1'
 $shared2 = 'shared2'
 
 # It outputs data to be exported to clixml. This example uses the most
 # straightforward way of persisting two script variables.
-Export-Build {
+Set-BuildData Checkpoint.Export {
 	$shared1
 	$shared2
+
+	# (not for export) test the current location
 	equals $BuildRoot (Get-Location).ProviderPath
 }
 
 # It restores data. The first argument is the output of Export-Build exported to
 # clixml and then imported back. This example uses the most straightforward way
-# of persisting two script variables. Note: Import-Build is invoked in the
-# script scope and variable names do not have to use the prefix `script:`.
-Import-Build {
+# of persisting two script variables. This block is invoked in the script scope
+# and variable names do not have to use the prefix `script:`.
+Set-BuildData Checkpoint.Import {
 	$shared1, $shared2 = $args[0]
 }
 
@@ -76,20 +78,20 @@ task task2 task1, {
 
 # Interactive demo.
 task . {
-	Invoke-Build task2 Checkpoint.build.ps1 -Checkpoint checkpoint.clixml
+	Build-Checkpoint checkpoint.clixml @{Task = 'task2'; File = 'Checkpoint.build.ps1'}
 }
 
-# Test resume at the task2. Note: -Checkpoint is used alone for resuming.
+# Test resume at the task2. Note: build parameters are not needed on resuming.
 task resume {
 	$env:ResumeBuild = 1
-	Invoke-Build -Resume -Checkpoint checkpoint.clixml
+	Build-Checkpoint -Resume -Checkpoint checkpoint.clixml
 	$env:ResumeBuild = $null
 }
 
 # Test non interactive break in the task2.
 task break {
 	#! issue: use 2 tasks
-	Invoke-Build task1, task2 Checkpoint.build.ps1 -Checkpoint checkpoint.clixml -Test
+	Build-Checkpoint checkpoint.clixml @{Task = 'task1', 'task2'; File = 'Checkpoint.build.ps1'; Test = $true}
 }
 
 # Tests the code used for clixml export and import

@@ -25,9 +25,10 @@ Invoke-Build can be effectively used in VSCode and ISE.
 The package includes the engine, helpers, and the generated help:
 
 * *Invoke-Build.ps1* - invokes build scripts, this is the build engine
-* *Invoke-Builds.ps1* - invokes parallel builds using the engine
+* *Build-Checkpoint.ps1* - invokes persistent builds using the engine
+* *Build-Parallel.ps1* - invokes parallel builds using the engine
 * *Resolve-MSBuild.ps1* - finds the specified or latest MSBuild
-* *Invoke-Build-Help.xml* - external content for Get-Help
+* *InvokeBuild-Help.xml* - external content for Get-Help
 * *ib.cmd* - Invoke-Build helper for cmd.exe
 
 Extra tools, see PSGallery and the repository:
@@ -55,7 +56,7 @@ NOTE: This package is maintained by its owner, see package info.
 
     choco install invoke-build
 
-The module provides commands `Invoke-Build` and `Invoke-Builds`.
+Module commands: `Invoke-Build`, `Build-Checkpoint`, `Build-Parallel`.
 Import the module in order to make them available:
 
     Import-Module InvokeBuild

@@ -1,7 +1,7 @@
 ﻿
 <#
 .Synopsis
-	Tests parallel builds called by Invoke-Builds
+	Tests parallel builds called by Build-Parallel
 
 .Example
 	Invoke-Build * Parallel.test.ps1
@@ -9,23 +9,23 @@
 
 . .\Shared.ps1
 
-# The build engine defines aliases Invoke-Build and Invoke-Builds
+# The build engine defines aliases Invoke-Build and Build-Parallel
 task Alias {
 	#! also covers 1.2.0, see notes
 	$alias1 = Get-Alias Invoke-Build
-	$alias2 = Get-Alias Invoke-Builds
-	equals $alias2.Definition (Join-Path (Split-Path $alias1.Definition) Invoke-Builds.ps1)
+	$alias2 = Get-Alias Build-Parallel
+	equals $alias2.Definition (Join-Path (Split-Path $alias1.Definition) Build-Parallel.ps1)
 }
 
-# 1. Invoke-Builds with 0 builds is allowed (but this is not normal).
+# 1. Build-Parallel with 0 builds is allowed (but this is not normal).
 # 2. Get the build result using a hashtable.
 task NoBuilds {
 	$Result = @{}
-	Invoke-Builds -Result $Result
+	Build-Parallel -Result $Result
 	equals $Result.Value.Tasks.Count 0
 }
 
-# 1. Invoke-Builds with 1 build is allowed (but this is not normal).
+# 1. Build-Parallel with 1 build is allowed (but this is not normal).
 # 2. Get the build result using the [ref] variable.
 task OneBuild {
 	#?? V3 does not return anything via [ref]
@@ -35,7 +35,7 @@ task OneBuild {
 	else {
 		$Result = [ref]$null
 	}
-	Invoke-Builds @{File='Dynamic.build.ps1'} -Result $Result
+	Build-Parallel @{File='Dynamic.build.ps1'} -Result $Result
 	equals $Result.Value.Tasks.Count 5
 }
 
@@ -47,7 +47,7 @@ and Parameters are used as Invoke-Build parameters.
 
 Four parallel builds of this test could be invoked as simple as this
 
-	Invoke-Builds @(
+	Build-Parallel @(
 		@{File='Dynamic.build.ps1'}
 		@{File='Safe.test.ps1'; Task='Error1'}
 		@{File='Dynamic.build.ps1'; Task='Task0'}
@@ -75,7 +75,7 @@ task Many {
 	# Get the results using the variable name.
 	$message = ''
 	try {
-		Invoke-Builds -Build $build -Result Result
+		Build-Parallel -Build $build -Result Result
 	}
 	catch {
 		$message = "$_"
@@ -122,7 +122,7 @@ task Timeout -If ($BuildRoot -notmatch '[\[\]]') {
 	# Invoke using try..catch because it fails and use log files for outputs.
 	$message = ''
 	try {
-		Invoke-Builds -Timeout 500 @(
+		Build-Parallel -Timeout 500 @(
 			@{File='Sleep.build.ps1'; Milliseconds=10; Log='z.1'}
 			@{File='Sleep.build.ps1'; Milliseconds=2000; Log='z.2'}
 			@{File='Sleep.build.ps1'; Milliseconds=3000; Log='z.3'}
@@ -150,14 +150,14 @@ ERROR: Build timed out.*
 
 # Error: invalid MaximumBuilds
 task ParallelBadMaximumBuilds {
-	Invoke-Builds -MaximumBuilds 0 @{File='Dynamic.build.ps1'}
+	Build-Parallel -MaximumBuilds 0 @{File='Dynamic.build.ps1'}
 }
 
 # Error: Invoke-Build.ps1 is not in the same directory.
 # Covers #27, *Die was not found before loading IB.
 task ParallelMissingEngine {
-	$script = "$env:TEMP\Invoke-Builds.ps1"
-	Copy-Item ..\Invoke-Builds.ps1 $script -Force
+	$script = "$env:TEMP\Build-Parallel.ps1"
+	Copy-Item ..\Build-Parallel.ps1 $script -Force
 
 	($r = Invoke-PowerShell -NoProfile -Command "& '$script' @{bar=1}" | Out-String)
 
@@ -167,12 +167,12 @@ task ParallelMissingEngine {
 
 # Error: missing script
 task ParallelMissingFile {
-	Invoke-Builds @{File='MissingFile'}
+	Build-Parallel @{File='MissingFile'}
 }
 
-# Error: invalid Parameters type on calling Invoke-Builds
+# Error: invalid Parameters type on calling Build-Parallel
 task ParallelBadParameters {
-	Invoke-Builds @{File='Dynamic.build.ps1'; Parameters='BadParameters'}
+	Build-Parallel @{File='Dynamic.build.ps1'; Parameters='BadParameters'}
 }
 
 # Test error cases.
@@ -196,7 +196,7 @@ task OmittedBuildParameterFile {
 	Set-Content z\.build.ps1 {
 		task t1 { 'out 1' }
 		task t2 { 'out 2'; Start-Sleep 1 }
-		task . { Invoke-Builds @{Task='t1'}, @{Task='t2'} }
+		task . { Build-Parallel @{Task='t1'}, @{Task='t2'} }
 	}
 
 	Push-Location z
@@ -215,7 +215,7 @@ task OmittedBuildParameterFile {
 # Covers #27, [IB] was not found before loading IB.
 task ParallelEmptyRun {
 	$version = $PSVersionTable.PSVersion.Major
-	($r = Invoke-PowerShell -NoProfile -Command 'Invoke-Builds.ps1 -Result r; $r.GetType().Name')
+	($r = Invoke-PowerShell -NoProfile -Command 'Build-Parallel.ps1 -Result r; $r.GetType().Name')
 	equals $r $(if ($version -eq 2) {'Hashtable'} else {'PSCustomObject'})
 }
 
@@ -236,7 +236,7 @@ task FailHard {
 	)
 
 	# invoke 3 parallel builds
-	$null = try {Invoke-Builds -FailHard -MaximumBuilds 2 -Build $build -Result result} catch {$_}
+	$null = try {Build-Parallel -FailHard -MaximumBuilds 2 -Build $build -Result result} catch {$_}
 
 	# unofficial results
 	# has Result but no Error, started and aborted

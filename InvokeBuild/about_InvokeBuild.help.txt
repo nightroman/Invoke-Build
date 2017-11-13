@@ -11,8 +11,12 @@ LONG DESCRIPTION
             The alias of Invoke-Build.ps1
             It invokes build scripts, this is the build engine.
 
-        Invoke-Builds
-            The alias of Invoke-Builds.ps1
+        Build-Checkpoint
+            The alias of Build-Checkpoint.ps1
+            It invokes persistent builds using the engine.
+
+        Build-Parallel
+            The alias of Build-Parallel.ps1
             It invokes parallel builds using the engine.
 
     Import the installed module:

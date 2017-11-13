@@ -1,6 +1,14 @@
 
 # Invoke-Build Release Notes
 
+## v4.0.0
+
+New command `Build-Checkpoint` replaces `Invoke-Build -Checkpoint`. If you use
+persistent builds then change the command and parameters, see [#101](https://github.com/nightroman/Invoke-Build/issues/101).
+
+New command `Build-Parallel` replaces `Invoke-Builds` (mind "s"). If you use
+parallel builds then simply rename the command, see [#100](https://github.com/nightroman/Invoke-Build/issues/100).
+
 ## v3.7.2
 
 Normalize, test, and make `$BuildRoot` constant after loading tasks (#95).

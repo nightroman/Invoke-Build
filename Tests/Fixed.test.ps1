@@ -25,17 +25,17 @@ task SafeTests {
 	Get-Item [z] | Remove-Item -Force -Recurse
 	$null = mkdir z
 
-	{
+	Set-Content z\1.test.ps1 {
 		task task11 { 'works-11' }
 		task task12 { throw 'oops-12' }
 		task task23 { throw 'unexpected' }
-	} > z\1.test.ps1
+	}
 
-	{
+	Set-Content z\2.test.ps1 {
 		task task21 { 'works-21' }
 		task task22 { throw 'oops-22' }
 		task task23 { throw 'unexpected' }
-	} > z\2.test.ps1
+	}
 
 	Invoke-Build ** z -Safe -Result r
 
@@ -124,7 +124,7 @@ task good
 task bad {throw 'oops'}
 '@
 	$r = ''
-	try {Invoke-Build * z.build.ps1 -Checkpoint z.clixml -Param1 Fix20} catch {$r = $_}
+	try {Build-Checkpoint z.clixml @{Task = '*'; File = 'z.build.ps1'; Param1 = 'Fix20'}} catch {$r = $_}
 	equals $r.FullyQualifiedErrorId oops
 
 	$r = Import-Clixml z.clixml
@@ -148,13 +148,13 @@ task Fix22 {
 
 	# fail in the first task
 	$env:TestFix22 = 1
-	Invoke-Build . z.build.ps1 -Checkpoint z.clixml -Safe -Result r
+	Build-Checkpoint z.clixml @{Task = '.'; File = 'z.build.ps1'; Safe = $true; Result = 'r'}
 	assert $r.Error
 	assert (Test-Path z.clixml)
 
 	# resume
 	$env:TestFix22 = ''
-	Invoke-Build -Checkpoint z.clixml -Resume
+	Build-Checkpoint z.clixml -Resume
 	assert (!(Test-Path z.clixml))
 }
 
@@ -171,13 +171,13 @@ task Fix29Resume {
 	}
 
 	$Log = [System.Collections.Generic.List[object]]@()
-	Invoke-Build -File z.ps1 -p1 new-p1 -Checkpoint z.clixml -Safe
+	Build-Checkpoint z.clixml @{File = 'z.ps1'; p1 = 'new-p1'; Safe = $true}
 	equals $Log.Count 2
 	equals $Log[0] script-new-p1
 	equals $Log[1] task-new-p1
 
 	$Log = [System.Collections.Generic.List[object]]@()
-	Invoke-Build -Resume -Checkpoint z.clixml -Safe
+	Build-Checkpoint z.clixml -Resume @{Safe = $true}
 	equals $Log.Count 2
 	equals $Log[0] script-new-p1 #! not script-default-p1
 	equals $Log[1] task-new-p1
@@ -187,7 +187,7 @@ task Fix29Resume {
 
 # v3.0.0
 task InvalidCheckpointOnResume {
-	($r = try {Invoke-Build -Checkpoint $BuildFile -Resume} catch {$_})
+	($r = try {Build-Checkpoint $BuildFile -Resume} catch {$_})
 	equals "$r" 'Invalid checkpoint file?'
 }
 
@@ -272,7 +272,7 @@ task SaveCheckpointBeforeIf {
 	# fail in task 2 -If
 	$Log = @{}
 	$Fail = $true
-	try {Invoke-Build * z.ps1 -Checkpoint z.clixml} catch {$_}
+	try {Build-Checkpoint z.clixml @{Task = '*'; File = 'z.ps1'}} catch {$_}
 
 	# task 1 worked, task 2 did not
 	equals $Log['t1'] 1
@@ -281,7 +281,7 @@ task SaveCheckpointBeforeIf {
 	# resume and let task 2 -If work
 	$Log = @{}
 	$Fail = $false
-	Invoke-Build -Resume -Checkpoint z.clixml
+	Build-Checkpoint -Resume -Checkpoint z.clixml
 
 	# task 1 skipped, task 2 worked
 	equals $Log['t1'] $null
