@@ -1101,8 +1101,8 @@
 		resumed then delete the checkpoint file manually.
 '@
 		Build = @'
-		Specifies Invoke-Build parameters. If the build is resumed then tasks,
-		script, and script parameters are ignored and restored from the file.
+		Specifies the build and script parameters. WhatIf is not supported.
+		On Resume tasks, script path, and script parameters are ignored.
 '@
 		Resume = @'
 		Tells to resume the build from the existing checkpoint file.

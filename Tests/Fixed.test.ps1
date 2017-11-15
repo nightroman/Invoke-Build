@@ -289,3 +289,22 @@ task SaveCheckpointBeforeIf {
 
 	Remove-Item z.ps1
 }
+
+# Test Build-Checkpoint with Safe, Summary, WhatIf
+task CheckpontSafeSummaryWhatIf {
+	Set-Content z.ps1 {
+		task t1 {}
+		task t2 {throw 'Oops'}
+	}
+
+	# test Safe and Summary
+	($r = Build-Checkpoint z.clixml @{Task='*'; File='z.ps1'; Safe=$true; Summary=$true} | Out-String)
+	assert ($r -like '*Oops*Build summary:*Build FAILED. 2 tasks, 1 errors, 0 warnings*')
+	assert (Test-Path z.clixml)
+
+	# test WhatIf
+	($r = try {Build-Checkpoint z.clixml @{Task='*'; File='z.ps1'; WhatIf=$true}} catch {$_})
+	equals $r.FullyQualifiedErrorId 'WhatIf is not supported.,Build-Checkpoint.ps1'
+
+	Remove-Item z.ps1, z.clixml
+}

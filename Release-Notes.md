@@ -5,6 +5,10 @@
 
 - `use VisualStudio`: not used much or at all, not working for VS 2017
 
+## v4.0.2
+
+`Build-Checkpoint` should fail if not supported `WhatIf` is specified.
+
 ## v4.0.1
 
 - Support colored output in AppVeyor, [#103](https://github.com/nightroman/Invoke-Build/issues/103).

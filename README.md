@@ -1,5 +1,6 @@
 
 [![NuGet](https://buildstats.info/nuget/Invoke-Build)](https://www.nuget.org/packages/Invoke-Build)
+[![PSGallery](https://img.shields.io/powershellgallery/dt/InvokeBuild.svg)](https://www.powershellgallery.com/packages/InvokeBuild)
 <img src="https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png" align="right"/>
 
 ## Build Automation in PowerShell

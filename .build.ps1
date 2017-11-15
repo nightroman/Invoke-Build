@@ -67,8 +67,8 @@ task Version {
 task Module Version, Markdown, Help, {
 	# mirror the module folder
 	Remove-Item [z] -Force -Recurse
-	$dir = "$BuildRoot\z\tools"
-	exec {$null = robocopy.exe InvokeBuild $dir /mir} (0..2)
+	$dir = "$BuildRoot\z\InvokeBuild"
+	exec {$null = robocopy.exe InvokeBuild $dir /mir} 1
 
 	# copy files
 	Copy-Item -Destination $dir `
@@ -109,11 +109,17 @@ task Module Version, Markdown, Help, {
 
 # Synopsis: Make the NuGet package.
 task NuGet Module, {
+	# rename the folder
+	Rename-Item z\InvokeBuild tools
+
+	# summary and description
 	$text = @'
 Invoke-Build is a build and test automation tool which invokes tasks defined in
 PowerShell v2.0+ scripts. It is similar to psake but arguably easier to use and
 more powerful. It is complete, bug free, well covered by tests.
 '@
+
+	# manifest
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
@@ -134,6 +140,8 @@ more powerful. It is complete, bug free, well covered by tests.
 	</metadata>
 </package>
 "@
+
+	# package
 	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
 }
 

@@ -23,7 +23,9 @@ try {
 $ErrorActionPreference = 'Stop'
 
 $Checkpoint = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Checkpoint)
+
 $Build = if ($Build) {@{} + $Build} else {@{}}
+if ($Build['WhatIf']) {throw 'WhatIf is not supported.'}
 
 ${*checkpoint} = @{
 	Checkpoint = $Checkpoint
