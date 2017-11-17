@@ -897,14 +897,9 @@
 		If it is like Framework* then it is assumed to be a path relative to
 		Microsoft.NET in the Windows directory.
 
-		If it is like VisualStudio\<version> then it is resolved to the
-		specified Visual Studio tools directory (devenv, mstest, tf, ...).
-		NOTE: This way is not supported starting with Visual Studio 2017,
-		use the special Microsoft module VSSetup from PSGallery instead.
-
 		Otherwise it is a full or relative literal path of any directory.
 
-		Examples: *, 4.0, Framework\v4.0.30319, VisualStudio\14.0, .\Tools
+		Examples: *, 4.0, Framework\v4.0.30319, .\Tools
 '@
 		Name = @'
 		Specifies the tool names. They become aliases in the current scope.

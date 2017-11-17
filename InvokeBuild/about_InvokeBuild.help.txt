@@ -5,7 +5,7 @@ SHORT DESCRIPTION
     Build and test automation in PowerShell
 
 LONG DESCRIPTION
-    The module provides two commands:
+    The module provides the following commands:
 
         Invoke-Build
             The alias of Invoke-Build.ps1
@@ -37,3 +37,6 @@ LONG DESCRIPTION
         help task -full
         help exec -full
         ...
+
+    The package contains the build engine with a few helpers, all you need
+    for running build scripts. There are various related tools, see README.
