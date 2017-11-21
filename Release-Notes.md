@@ -1,6 +1,15 @@
 
 # Invoke-Build Release Notes
 
+**Deprecated**
+
+- `use VisualStudio`: not used much or at all, not working for VS 2017
+
+## v4.0.1
+
+- Support colored output in AppVeyor, [#103](https://github.com/nightroman/Invoke-Build/issues/103).
+- Deprecate `use VisualStudio`.
+
 ## v4.0.0
 
 New command `Build-Checkpoint` replaces `Invoke-Build -Checkpoint`. If you use

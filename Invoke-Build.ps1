@@ -272,11 +272,11 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 		$i.ForegroundColor = $_
 	}
 }
-try {
-	$null = Write-Build 0
+if ($env:APPVEYOR) {
+	function Write-Build([ConsoleColor]$Color, [string]$Text) {Write-Host $Text -ForegroundColor $Color}
 }
-catch {
-	function Write-Build($Color, [string]$Text) {$Text}
+else {
+	try {$null = Write-Build 0} catch {function Write-Build($Color, [string]$Text) {$Text}}
 }
 
 function *My {
