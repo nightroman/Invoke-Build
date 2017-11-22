@@ -188,7 +188,7 @@ task TestPartIncrementalTwoOutOfDate PartIncrementalTwoOutOfDate, {
 # The inputs script fails.
 task IncrementalInputsFails -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
 task PartialInputsFails -Partial -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
-task TestInputsFails (job IncrementalInputsFails -Safe),  (job PartialInputsFails -Safe), {
+task TestInputsFails ?IncrementalInputsFails, ?PartialInputsFails, {
 	Test-Error IncrementalInputsFails "Throw in input.*At *\Incremental.test.ps1:*"
 	Test-Error PartialInputsFails "Throw in input.*At *\Incremental.test.ps1:*"
 }
@@ -196,27 +196,27 @@ task TestInputsFails (job IncrementalInputsFails -Safe),  (job PartialInputsFail
 # The outputs script fails.
 task IncrementalOutputsFails -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
 task PartialOutputsFails -Partial -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
-task TestOutputsFails (job IncrementalOutputsFails -Safe), (job PartialOutputsFails -Safe), {
+task TestOutputsFails ?IncrementalOutputsFails, ?PartialOutputsFails, {
 	Test-Error IncrementalOutputsFails "Throw in output.*At *\Incremental.test.ps1:*"
 	Test-Error PartialOutputsFails "Throw in output.*At *\Incremental.test.ps1:*"
 }
 
 # Error: incremental output is empty
 task IncrementalOutputsIsEmpty -Inputs {'.build.ps1'} -Outputs {} {throw}
-task TestIncrementalOutputsIsEmpty (job IncrementalOutputsIsEmpty -Safe), {
+task TestIncrementalOutputsIsEmpty ?IncrementalOutputsIsEmpty, {
 	Test-Error IncrementalOutputsIsEmpty 'Outputs must not be empty.*'
 }
 
 # Error: partial inputs and outputs have different number of items
 task InputsOutputsMismatch -Partial -Inputs {'.build.ps1'} -Outputs {} {throw}
-task TestInputsOutputsMismatch (job InputsOutputsMismatch -Safe), {
+task TestInputsOutputsMismatch ?InputsOutputsMismatch, {
 	Test-Error InputsOutputsMismatch 'Different Inputs/Outputs counts: 1/0.*'
 }
 
 # Error: one of the input items is missing.
 task IncrementalMissingInputs -Inputs {'missing'} -Outputs {} {throw}
 task PartialMissingInputs -Partial -Inputs {'missing'} -Outputs {} {throw}
-task TestMissingInputs (job IncrementalMissingInputs -Safe), (job PartialMissingInputs -Safe), {
+task TestMissingInputs ?IncrementalMissingInputs, ?PartialMissingInputs, {
 	Test-Error IncrementalMissingInputs "Missing Inputs item '*\missing'.*"
 	Test-Error PartialMissingInputs "Missing Inputs item '*\missing'.*"
 }

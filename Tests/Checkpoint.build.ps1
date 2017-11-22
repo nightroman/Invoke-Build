@@ -142,4 +142,4 @@ task TestSerialization {
 # This is a test. Call the task `break` safe because it fails. The checkpoint
 # should be created, as a result. Then call the task `resume` and check that
 # the checkpoint has been deleted.
-task test TestSerialization, (job break -Safe), {assert (Test-Path checkpoint.clixml)}, resume, {assert !(Test-Path checkpoint.clixml)}
+task test TestSerialization, ?break, {assert (Test-Path checkpoint.clixml)}, resume, {assert !(Test-Path checkpoint.clixml)}

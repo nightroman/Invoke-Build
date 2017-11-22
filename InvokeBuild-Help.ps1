@@ -33,26 +33,21 @@
 	Script parameters are specified for Invoke-Build as if they are its own.
 	Known issue #4. Script switches should be specified after Task and File.
 
-	RESERVED FUNCTION AND VARIABLE NAMES
+	PUBLIC COMMANDS
 
-	Function and variable names starting with '*' are reserved for the engine.
-	Scripts should not use functions and variables with such names.
+	Scripts should use available aliases, function names are for reference.
 
-	EXPOSED FUNCTIONS AND ALIASES
+		task      (Add-BuildTask)
+		exec      (Invoke-BuildExec)
+		assert    (Assert-Build)
+		equals    (Assert-BuildEquals)
+		property  (Get-BuildProperty)
+		requires  (Test-BuildAsset)
+		use       (Use-BuildAlias)
+		error     (Get-BuildError)
 
-	Scripts should use available aliases instead of function names.
-
-		Add-BuildTask (task)
-		Assert-Build (assert)
-		Assert-BuildEquals (equals)
-		Get-BuildError (error)
-		Get-BuildProperty (property)
 		Get-BuildSynopsis
-		Invoke-BuildExec (exec)
-		New-BuildJob (job)
 		Resolve-MSBuild
-		Test-BuildAsset (requires)
-		Use-BuildAlias (use)
 		Write-Build
 		Write-Warning [1]
 		Get-BuildFile [2]
@@ -71,7 +66,7 @@
 	Use them for calling nested builds, i.e. omit script extensions and paths.
 	With this rule Invoke-Build tools can be kept together with build scripts.
 
-	EXPOSED VARIABLES
+	PUBLIC VARIABLES
 
 	Exposed variables designed for build scripts and tasks:
 
@@ -150,6 +145,11 @@
 
 	Some other build commands are also imported. They are available for getting
 	help and not designed for use in normal scripts.
+
+	PRIVATE FUNCTIONS AND VARIABLES
+
+	Function and variable names starting with '*' are reserved for the engine.
+	Scripts should avoid using functions and variables with such names.
 '@
 
 	parameters = @{
@@ -158,13 +158,18 @@
 		or equal to '.' then the task '.' is invoked if it exists, otherwise
 		the first added task is invoked.
 
-		Names with wildcard characters are reserved for special tasks.
+		Names with wildcard characters are reserved for special cases.
+
+		SAFE TASKS
+
+		If a task name is appended with "?" then the task is allowed to fail
+		without stopping the build, i.e. other specified tasks are invoked.
 
 		SPECIAL TASKS
 
 		? - Tells to list the tasks with brief information without invoking. It
 		also checks tasks and throws errors on missing or cyclic references.
-		Task synopsis is defined in preceding comments as # Synopsis: ...
+		Task synopses are defined in preceding comments as # Synopsis: ...
 
 		?? - Tells to collect and get all tasks as an ordered dictionary. It
 		can be used by external tools for analysis, TabExpansion, and etc.
@@ -358,17 +363,18 @@
 	links = @(
 		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
-		# internal
-		@{ text = 'Add-BuildTask (task)' }
-		@{ text = 'Assert-Build (assert)' }
-		@{ text = 'Assert-BuildEquals (equals)' }
-		@{ text = 'Get-BuildError (error)' }
-		@{ text = 'Get-BuildProperty (property)' }
-		@{ text = 'Invoke-BuildExec (exec)' }
-		@{ text = 'New-BuildJob (job)' }
+		# aliases
+		@{ text = 'task      (Add-BuildTask)' }
+		@{ text = 'exec      (Invoke-BuildExec)' }
+		@{ text = 'assert    (Assert-Build)' }
+		@{ text = 'equals    (Assert-BuildEquals)' }
+		@{ text = 'property  (Get-BuildProperty)' }
+		@{ text = 'requires  (Test-BuildAsset)' }
+		@{ text = 'use       (Use-BuildAlias)' }
+		@{ text = 'error     (Get-BuildError)' }
+		# functions
+		@{ text = 'Get-BuildSynopsis' }
 		@{ text = 'Resolve-MSBuild' }
-		@{ text = 'Test-BuildAsset (requires)' }
-		@{ text = 'Use-BuildAlias (use)' }
 		@{ text = 'Write-Build' }
 		# external
 		@{ text = 'Build-Checkpoint' }
@@ -379,7 +385,7 @@
 ### Add-BuildTask
 @{
 	command = 'Add-BuildTask'
-	synopsis = 'Defines a build task and adds it to the internal task list.'
+	synopsis = '(task) Defines a build task and adds it to the task list.'
 
 	description = @'
 	Scripts use its alias 'task'. This is the main feature of build scripts. At
@@ -401,18 +407,19 @@
 
 	parameters = @{
 		Name = @'
-		The task name. Wildcard characters are deprecated. Duplicated names are
-		allowed, each added task overrides previously added with the same name.
+		The task name. Wildcard characters are deprecated and "?" must not be
+		the first character. Duplicated names are allowed, each added task
+		overrides previously added with the same name.
 '@
 		Jobs = @'
 		Specifies the task jobs. Jobs are other task references and own
 		actions. Any number of jobs is allowed. Jobs are invoked in the
 		specified order.
 
-		Valid job types are:
+		Valid jobs are:
 
-			[string] - simple reference, an existing task name
-			[object] - advanced reference created by 'job' (New-BuildJob)
+			[string] - an existing task name, normal reference
+			[string] "?TaskName" - reference to a task allowed to fail
 			[scriptblock] - action, a script block invoked for this task
 '@
 		After = @'
@@ -573,52 +580,19 @@
 	)
 
 	links = @(
-		@{ text = 'New-BuildJob' }
 		@{ text = 'Get-BuildError' }
 		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
-	)
-}
-
-### New-BuildJob
-@{
-	command = 'New-BuildJob'
-	synopsis = 'Creates a new task reference with options.'
-
-	description = @'
-	Scripts use its alias 'job'. It is called on job list creation for a task.
-	It creates a reference to another task with options. The only used option
-	is the switch Safe.
-'@
-
-	parameters = @{
-		Name = @'
-		The referenced task name.
-'@
-		Safe = @'
-		Tells to create a safe task job. If the referenced task fails the build
-		continues if this task is safe everywhere in the current build. Other
-		tasks use 'error' (Get-BuildError) in order to check for errors.
-'@
-	}
-
-	outputs = @{
-		type = 'Object'
-		description = 'A new job used as an argument on task creation.'
-	}
-
-	links = @(
-		@{ text = 'Get-BuildError' }
 	)
 }
 
 ### Get-BuildError
 @{
 	command = 'Get-BuildError'
-	synopsis = 'Gets an error of the specified task if the task has failed.'
+	synopsis = '(error) Gets the specified task error if it has failed.'
 
 	description = @'
-	Scripts use its alias 'error'. It is used when some tasks are referenced
-	safe (job Task -Safe) in order to get and analyse their potential errors.
+	Scripts use its alias 'error'. It is used when some tasks are referenced as
+	'?TaskName' in order to get and analyse their errors on allowed failures.
 '@
 
 	parameters = @{
@@ -638,14 +612,13 @@
 
 	links = @(
 		@{ text = 'Add-BuildTask' }
-		@{ text = 'New-BuildJob' }
 	)
 }
 
 ### Assert-Build
 @{
 	command = 'Assert-Build'
-	synopsis = 'Checks for a condition.'
+	synopsis = '(assert) Checks for a condition.'
 
 	description = @'
 	Scripts use its alias 'assert'. This command checks for a condition and if
@@ -673,7 +646,7 @@
 ### Assert-BuildEquals
 @{
 	command = 'Assert-BuildEquals'
-	synopsis = 'Verifies that two specified objects are equal.'
+	synopsis = '(equals) Verifies that two specified objects are equal.'
 
 	description = @'
 	Scripts use its alias 'equals'. This command verifies that two specified
@@ -697,7 +670,7 @@
 ### Get-BuildProperty
 @{
 	command = 'Get-BuildProperty'
-	synopsis = 'Gets the session or environment variable or default value.'
+	synopsis = '(property) Gets the session or environment variable or the default.'
 
 	description = @'
 	Scripts use its alias 'property'. The command returns:
@@ -793,7 +766,7 @@
 ### Invoke-BuildExec
 @{
 	command = 'Invoke-BuildExec'
-	synopsis = 'Invokes an application and checks $LastExitCode.'
+	synopsis = '(exec) Invokes an application and checks $LastExitCode.'
 
 	description = @'
 	Scripts use its alias 'exec'. It invokes the specified script block which
@@ -839,7 +812,7 @@
 ### Test-BuildAsset
 @{
 	command = 'Test-BuildAsset'
-	synopsis = 'Checks for required build assets.'
+	synopsis = '(requires) Checks for required build assets.'
 
 	description = @'
 	Scripts use its alias 'requires'. This command tests the required build
@@ -871,7 +844,7 @@
 ### Use-BuildAlias
 @{
 	command = 'Use-BuildAlias'
-	synopsis = 'Sets framework/directory tool aliases.'
+	synopsis = '(use) Sets framework or directory tool aliases.'
 
 	description = @'
 	Scripts use its alias 'use'. Invoke-Build does not change the system path

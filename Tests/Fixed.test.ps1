@@ -248,15 +248,39 @@ task CurrentTaskError {
 
 # Warn about always skipped double referenced tasks #82
 task WarnDoubleReferenced {
-	$log = [System.Collections.Generic.List[object]]@()
 	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
+
+	$log = [System.Collections.Generic.List[object]]@()
 	Invoke-Build . {
-		task . Clean, Build, Clean, Build
-		task Clean {}
-		task -If {1} Build {}
+		task t1
+		task t2 t1, t1
 	}
 	equals $log.Count 1
-	equals $log[0] "Task '.' always skips 'Clean'."
+	equals $log[0] "Task 't2' always skips 't1'."
+
+	$log.Clear()
+	Invoke-Build . {
+		task t1
+		task t2 t1, ?t1
+	}
+	equals $log.Count 1
+	equals $log[0] "Task 't2' always skips 't1'."
+
+	$log.Clear()
+	Invoke-Build . {
+		task t1
+		task t2 ?t1, t1
+	}
+	equals $log.Count 1
+	equals $log[0] "Task 't2' always skips 't1'."
+
+	$log.Clear()
+	Invoke-Build . {
+		task t1
+		task t2 ?t1, ?t1
+	}
+	equals $log.Count 1
+	equals $log[0] "Task 't2' always skips 't1'."
 }
 
 # If a task of a persistent build fails in its -If then the build should resume

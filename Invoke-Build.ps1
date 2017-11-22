@@ -132,6 +132,8 @@ function Add-BuildTask(
 	[switch]$Partial
 )
 {
+	trap {*Die "Task '$Name': $_" 5}
+	if ($Name[0] -eq '?') {throw 'Invalid task name.'}
 	if ($_ = ${*}.All[$Name]) {${*}.Redefined += $_}
 	${*}.All[$Name] = [PSCustomObject]@{
 		Name = $Name
@@ -139,7 +141,6 @@ function Add-BuildTask(
 		Started = $null
 		Elapsed = $null
 		Jobs = $1 = [System.Collections.Generic.List[object]]@()
-		Safe = $2 = [System.Collections.Generic.List[object]]@()
 		After = $After
 		Before = $Before
 		If = $If
@@ -151,20 +152,13 @@ function Add-BuildTask(
 		InvocationInfo = $Source
 	}
 	if (!$Jobs) {return}
-	trap {*Die "Task '$Name': $_" 5}
-	foreach($_ in $Jobs) {
-		$r, $d = *Job $_
-		if ($1 -contains $r) {${*}.Doubles += ,($Name, $r)}
-		$1.Add($r)
-		if (1 -eq $d) {
-			$2.Add($r)
-		}
+	$1.AddRange($Jobs)
+	$2 = @()
+	foreach($j in $1) {
+		$r, $null = *Job $j
+		if ($2 -contains $r) {${*}.Doubles += ,($Name, $r)}
+		$2 += $r
 	}
-}
-
-#.ExternalHelp InvokeBuild-Help.xml
-function New-BuildJob([Parameter(Mandatory=1)][string]$Name, [switch]$Safe) {
-	if ($Safe) {@{$Name = 1}} else {$Name}
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
@@ -306,19 +300,16 @@ $(*At $I)
 }
 
 function *Job($J) {
-	if ($J -is [scriptblock] -or $J -is [string]) {
-		$J
-	}
-	elseif ($J -is [hashtable] -and $J.Count -eq 1) {
-		$J.Keys
-		$J.Values
-	}
+	if ($J -is [string]) {if ($J[0] -eq '?') {$J.Substring(1), 1} else {$J}}
+	elseif ($J -is [scriptblock]) {$J}
 	else {throw 'Invalid job.'}
 }
 
-function *Unsafe($N, $J, $X) {
+function *Unsafe($N, $J) {
+	if ($J -contains $N) {return 1}
 	foreach($_ in $J) {
-		if (($t = ${*}.All[$_]) -and $t.If -and $(if ($_ -eq $N) {$X -notcontains $_} else {*Unsafe $N $t.Jobs $t.Safe})) {
+		$r, $null = *Job $_
+		if ($r -ne $N -and ($t = ${*}.All[$r]) -and $t.If -and (*Unsafe $N $t.Jobs)) {
 			return 1
 		}
 	}
@@ -328,7 +319,7 @@ function *Amend([Parameter()]$X, $J, $B) {
 	trap {*Die (*Error "Task '$n': $_" $X) 5}
 	$n = $X.Name
 	foreach($_ in $J) {
-		$r, $d = *Job $_
+		$r, $s = *Job $_
 		if (!($t = ${*}.All[$r])) {throw "Missing task '$r'."}
 		$j = $t.Jobs
 		$i = $j.Count
@@ -336,15 +327,13 @@ function *Amend([Parameter()]$X, $J, $B) {
 			for($k = -1; ++$k -lt $i -and $j[$k] -is [string]) {}
 			$i = $k
 		}
-		$j.Insert($i, $n)
-		if (1 -eq $d) {
-			$t.Safe.Add($n)
-		}
+		$j.Insert($i, $(if ($s) {"?$n"} else {$n}))
 	}
 }
 
 function *Check([Parameter()]$J, $T, $P=@()) {
 	foreach($_ in $J) { if ($_ -is [string]) {
+		$_, $null = *Job $_
 		if (!($r = ${*}.All[$_])) {
 			$_ = "Missing task '$_'."
 			*Die $(if ($T) {*Error "Task '$($T.Name)': $_" $T} else {$_}) 5
@@ -371,7 +360,12 @@ filter *Help {
 function *Root($A) {
 	*Check $A.Keys
 	$h = @{}
-	foreach($_ in $A.Values) {foreach($_ in $_.Jobs) {if ($_ -is [string]) {$h[$_] = 1}}}
+	foreach($_ in $A.Values) {foreach($_ in $_.Jobs) {
+		if ($_ -is [string]) {
+			$_, $null = *Job $_
+			$h[$_] = 1
+		}
+	}}
 	foreach($_ in $A.Keys) {if (!$h[$_]) {$_}}
 }
 
@@ -435,14 +429,16 @@ function *IO {
 }
 
 function *Task {
-	New-Variable Task (${*}.Task = ${*}.All[$args[0]]) -Option Constant
-	${private:*p} = $args[1] + '/' + $Task.Name
+	${private:*p} = "$($args[1])/$($args[0])"
+	${private:*n}, ${private:*s} = *Job $args[0]
+	New-Variable Task (${*}.Task = ${*}.All[${*n}]) -Option Constant
 
 	if ($Task.Elapsed) {
 		Write-Build 8 "Done ${*p}"
 		return
 	}
 
+	$Task.Started = [DateTime]::Now
 	if (${*}.XTask) {& ${*}.XTask}
 	if ((${private:*x} = $Task.If) -is [scriptblock] -and !$WhatIf) {
 		*SL
@@ -450,7 +446,11 @@ function *Task {
 			${*x} = & ${*x}
 		}
 		catch {
+			*AddError $Task
 			$Task.Error = $_
+			${*}.Tasks.Add($Task)
+			$Task.Elapsed = [TimeSpan]::Zero
+			Write-Build 14 (*At $Task)
 			throw
 		}
 	}
@@ -460,19 +460,11 @@ function *Task {
 	}
 
 	${private:*i} = , [int]($null -ne $Task.Inputs)
-	$Task.Started = [DateTime]::Now
 	try {
 		. *Run ${*}.EnterTask
 		foreach(${private:*j} in $Task.Jobs) {
 			if (${*j} -is [string]) {
-				try {
-					*Task ${*j} ${*p}
-				}
-				catch {
-					if (*Unsafe ${*j} $BuildTask) {throw}
-					*AddError ${*}.All[${*j}]
-					Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
-				}
+				*Task ${*j} ${*p}
 				continue
 			}
 
@@ -534,7 +526,9 @@ function *Task {
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
 		$Task.Error = $_
 		Write-Build 14 (*At $Task)
-		throw
+		if (!${*s} -or (*Unsafe ${*n} $BuildTask)) {throw}
+		*AddError $Task
+		Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
 	}
 	finally {
 		${*}.Tasks.Add($Task)
@@ -542,11 +536,11 @@ function *Task {
 	}
 }
 
+function job($Name, [switch]$Safe) {if ($Safe) {"?$Name"} else {$Name}}
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
-Set-Alias job New-BuildJob
 Set-Alias property Get-BuildProperty
 Set-Alias requires Test-BuildAsset
 Set-Alias task Add-BuildTask

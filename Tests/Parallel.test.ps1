@@ -177,9 +177,9 @@ task ParallelBadParameters {
 
 # Test error cases.
 task ParallelErrorCases @(
-	(job ParallelMissingFile -Safe)
-	(job ParallelBadMaximumBuilds -Safe)
-	(job ParallelBadParameters -Safe)
+	'?ParallelMissingFile'
+	'?ParallelBadMaximumBuilds'
+	'?ParallelBadParameters'
 	{
 		Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 		Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"

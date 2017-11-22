@@ -43,24 +43,12 @@ task NoTasks {
 
 # The task has three valid jobs and one invalid (42 ~ invalid type).
 task InvalidJobType {
-	Test "Task 'InvalidJob': Invalid job.*At *InvalidArgument*" {
-		task task1 {}
-		task task2 {}
-		task InvalidJob @(
-			'task1'           # [string] - task name
-			(job task2 -Safe) # [object] - tells to ignore task2 errors
-			{ $x = 123 }      # [scriptblock] - code invoked as this task
-			42                # all other types are invalid
-		)
-	}
-}
-
-# The task has invalid job value.
-task InvalidJobValue {
-	Test "Task 'InvalidJobValue': Invalid job.*InvalidJobValue @(*InvalidArgument*" {
-		task InvalidJobValue @(
-			@{ task2 = 1; task1 = 1 }
-		)
+	Test "Task 'BadTask': Invalid job.*At*BadTask*InvalidArgument*" {
+		task task1
+		task task2 task1   # [string] - task reference
+		task task3 ?task2  # [string] - "?safe" task reference
+		task task4 {$x=42} # [scriptblock] - task action block
+		task BadTask 42    # other types are invalid
 	}
 }
 

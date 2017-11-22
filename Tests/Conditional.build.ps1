@@ -99,10 +99,10 @@ task TestScriptCondition @(
 	}
 )
 
-# The If script fails.
+# The If block fails.
 task ScriptConditionFails -If { throw 'If fails.' } { throw }
-
-# Test errors.
-task ConditionalErrors (job ScriptConditionFails -Safe), {
+task ScriptConditionFails2 ?ScriptConditionFails, { throw }
+task ConditionalErrors ?ScriptConditionFails2, {
 	Test-Error ScriptConditionFails "If fails.*At *\Conditional.build.ps1*'If fails.'*"
+	Test-Error ScriptConditionFails2 "If fails.*At *\Conditional.build.ps1*'If fails.'*"
 }

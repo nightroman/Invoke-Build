@@ -34,7 +34,7 @@ retry RetryFails -RetryTimeout 4 -RetryInterval 2 {
 }
 
 # Synopsis: Safe RetryFails for testing.
-task SafeRetryFails (job RetryFails -Safe)
+task SafeRetryFails ?RetryFails
 
 # Synopsis: A task uses Invoke-RetryAction directly.
 task InvokeRetryAction {
@@ -71,7 +71,7 @@ retry RetryCountFails -RetryCount 2 -RetryInterval 2 {
 }
 
 # Synopsis: Safe RetryCountFails for testing.
-task SafeRetryCountFails (job RetryCountFails -Safe)
+task SafeRetryCountFails ?RetryCountFails
 
 # Synopsis: Retry with both count and time limits. It fails due to count.
 retry CountAndTimeFailByCount -RetryCount 2 -RetryTimeout 100 -RetryInterval 2 {
@@ -79,7 +79,7 @@ retry CountAndTimeFailByCount -RetryCount 2 -RetryTimeout 100 -RetryInterval 2 {
 }
 
 # Synopsis: Safe CountAndTimeFailByCount for testing.
-task SafeCountAndTimeFailByCount (job CountAndTimeFailByCount -Safe)
+task SafeCountAndTimeFailByCount ?CountAndTimeFailByCount
 
 # Synopsis: Retry with both count and time limits. It fails due to timeout.
 retry CountAndTimeFailByTime -RetryCount 100 -RetryTimeout 10 -RetryInterval 2 {
@@ -87,4 +87,4 @@ retry CountAndTimeFailByTime -RetryCount 100 -RetryTimeout 10 -RetryInterval 2 {
 }
 
 # Synopsis: Safe CountAndTimeFailByTime for testing.
-task SafeCountAndTimeFailByTime (job CountAndTimeFailByTime -Safe)
+task SafeCountAndTimeFailByTime ?CountAndTimeFailByTime

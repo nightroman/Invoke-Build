@@ -25,7 +25,7 @@ task Error2 {
 # This task has two safe references to failing tasks.
 task Survives1 @(
 	# Tells to call the task Error1 and ignore its errors
-	(job Error1 -Safe)
+	'?Error1'
 	# Code invoked after the task Error1
 	{
 		"After Error1"
@@ -39,7 +39,7 @@ task Survives1 @(
 		equals $error2
 	}
 	# Tells to call the task Error2 and ignore its errors
-	(job Error2 -Safe)
+	'?Error2'
 	# Code invoked after the task Error2
 	{
 		"After Error2"
@@ -52,31 +52,33 @@ task Survives1 @(
 
 # Similar task. It checks that failed tasks are not called again.
 task Survives2 @(
+	#! run test 1 which fails two safe tasks
+	'Survives1'
 	# tells to call the task Error1 and ignore its failure
-	(job Error1 -Safe)
+	'?Error1'
 	# code invoked after the task Error1
 	{
 		"After Error1"
 
 		$error1 = error Error1
-		equals $MyCountError1 1
+		equals $MyCountError1 1 #! not 2
 		equals "$error1" Error1
 	}
 	# tells to call the task Error2 and ignore its failure
-	(job Error2 -Safe)
+	'?Error2'
 	# code invoked after the task Error2
 	{
 		"After Error2"
 
 		$error2 = error Error2
-		equals $MyCountError2 1
+		equals $MyCountError2 1 #! not 2
 		equals "$error2" Error2
 	}
 )
 
 ### Survives3, Survives4 use the same job list (there was an issue)
 
-$JobList = (job Error1 -Safe), (job Error2 -Safe)
+$JobList = '?Error1', '?Error2'
 task Survives3 $JobList
 task Survives4 $JobList
 
@@ -91,13 +93,13 @@ task Error4 {throw 'Error4'}
 # it fails because the error in Error4 is going to break AlmostSurvives2.
 task AlmostSurvives1 @(
 	# Tells to call the task Error3 and ignore its failure
-	(job Error3 -Safe)
+	'?Error3'
 	# Code invoked after the task Error3
 	{
 		"After Error3 -- this works"
 	}
 	# Tells to call the task Error4 and ignore its failure
-	(job Error4 -Safe)
+	'?Error4'
 	# This code is not going to be invoked
 	{
 		throw "After Error4 -- this is not called"
@@ -109,7 +111,7 @@ task AlmostSurvives1 @(
 # that is why the whole build fails even though AlmostSurvives calls this task
 # safe.
 task AlmostSurvives2 @(
-	(job Error3 -Safe)
+	'?Error3'
 	{}
 	# This unprotected reference makes the build to fail.
 	# IMPORTANT: This task AlmostSurvives2 is not even get called.
@@ -120,10 +122,10 @@ task AlmostSurvives2 @(
 # This task calls the tests and fails due to issues in the AlmostSurvives2.
 # Even safe call does not help: AlmostSurvives2 is not ready for errors in
 # Error4.
-task AlmostSurvives AlmostSurvives1, (job AlmostSurvives2 -Safe)
+task AlmostSurvives AlmostSurvives1, ?AlmostSurvives2
 
 # Trigger tasks and check for expected results.
-task TestAlmostSurvives (job AlmostSurvives -Safe), {
+task TestAlmostSurvives ?AlmostSurvives, {
 	Test-Error AlmostSurvives "Error4*At *\Safe.test.ps1*'Error4'*OperationStopped*"
 }
 
@@ -136,10 +138,10 @@ task FailedUsedByMany {
 task DependsOnFailed FailedUsedByMany, {
 	throw 'Must not be called'
 }
-task DependsOnFailedDirectlyAndIndirectly (job FailedUsedByMany -Safe), (job DependsOnFailed -Safe), {
+task DependsOnFailedDirectlyAndIndirectly ?FailedUsedByMany, ?DependsOnFailed, {
 	throw 'Must not be called'
 }
-task TestDependsOnFailedDirectlyAndIndirectly (job DependsOnFailedDirectlyAndIndirectly -Safe), {
+task TestDependsOnFailedDirectlyAndIndirectly ?DependsOnFailedDirectlyAndIndirectly, {
 	# error of initial failure
 	equals "$(error FailedUsedByMany)" 'Oops in FailedUsedByMany'
 
@@ -159,4 +161,17 @@ task ErrorMissingTask {
 	($r = try {<##> error missing} catch {$_})
 	equals "$r" "Missing task 'missing'."
 	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
+}
+
+# Safe tasks in the command line
+task SafeParameter {
+	$file = {
+		task t1 {throw 42}
+		task t2 {}
+	}
+	Invoke-Build ?t1, t2 $file -Result r
+
+	equals $r.Error
+	equals $r.Tasks.Count 2
+	equals $r.Errors.Count 1
 }

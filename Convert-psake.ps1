@@ -32,13 +32,12 @@
 			Depends, PreAction, Action, PostAction -> Jobs
 				"-Jobs" is normally omitted.
 				Comma separated list of referenced tasks and actions.
-				Tasks may be safe-referenced as (job TaskName -Safe).
 			PreCondition -> If
 				"If" also accepts values evaluated at creation.
 			PostCondition ->
 				Use an extra action with assert in Jobs: ..., {assert ...}
 			ContinueOnError ->
-				Use (job TaskName -Safe) in parent tasks.
+				Use '?TaskName' in parent tasks or command lines.
 			RequiredVariables ->
 				Use "$VarName = property VarName" in the action.
 			Description ->
@@ -229,7 +228,7 @@ function Write-Task
 	}
 
 	if ($alias) {"# TODO: Alias '$alias' is not supported. Do not use it or define another task: task $alias $($name)"}
-	if ($continueOnError) {"# TODO: ContinueOnError is not supported. Instead, in parent tasks use references: (job $name -Safe)"}
+	if ($continueOnError) {"# TODO: ContinueOnError is not supported. Instead, invoke or reference it as '?TaskName'"}
 	if ($requiredVariables) {'# TODO: RequiredVariables is not supported. Instead, in the action use: $VarName = property VarName'}
 
 	### task Name

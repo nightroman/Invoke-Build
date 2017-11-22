@@ -69,7 +69,8 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	# task jobs
 	foreach($_ in $Task.Jobs) {
 		if ($_ -is [string]) {
-			ShowTaskTree $tasks[$_] $Docs $Step
+			$r, $s = *Job $_
+			ShowTaskTree $tasks[$r] $Docs $Step
 		}
 		else {
 			$tab + '    {}'
@@ -99,7 +100,7 @@ try {
 	if ($_Task -eq '*') {
 		$_Task = :task foreach($_ in $tasks.Keys) {
 			foreach($task in $tasks.Values) {
-				if ($task.Jobs -contains $_) {
+				if ($task.Jobs -contains $_ -or $task.Jobs -contains "?$_") {
 					continue task
 				}
 			}

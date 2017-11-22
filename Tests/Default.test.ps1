@@ -96,7 +96,7 @@ task Summary {
 	# build fails
 	Set-Content z.ps1 {
 		task task1 { throw 'Demo error in task1.' }
-		task . (job task1 -Safe)
+		task . ?task1
 	}
 	($r = Invoke-Build . z.ps1 -Summary | Out-String)
 	assert ($r -clike '*Build summary:*00:00:00* task1 *\z.ps1:2*Demo error in task1.*00:00:00* . *\z.ps1:3*')

@@ -63,13 +63,15 @@ task WhatIf {
 # 2) get task as an ordered dictionary
 task ListTask {
 	# show tasks info
-	($r = Invoke-Build ? Assert.test.ps1)
+	$r = Invoke-Build ? Assert.test.ps1
+	$r | Out-String
+
 	equals $r.Count 3
 	equals $r[0].Name AssertDefault
 	equals $r[0].Jobs '{}'
 	equals $r[0].Synopsis 'Fail with the default message.'
 	equals $r[2].Name .
-	equals ($r[2].Jobs -join ', ') 'AssertDefault, AssertMessage, {}'
+	equals ($r[2].Jobs -join ', ') '?AssertDefault, ?AssertMessage, {}'
 	equals $r[2].Synopsis 'Call tests and check errors.'
 
 	# get task objects
@@ -226,13 +228,13 @@ task TestFunctions {
 		'Get-BuildProperty'
 		'Get-BuildSynopsis'
 		'Invoke-BuildExec'
-		'New-BuildJob'
 		'Set-BuildData'
 		'Set-BuildHeader'
 		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'
 		'Write-Warning'
+		'job'
 	)
 	Get-Command -CommandType Function | .{process{
 		if (($list -notcontains $_.Name) -and ($_.Name[0] -ne '*')) {

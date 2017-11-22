@@ -103,11 +103,12 @@ $text = @(
 		foreach($job in $it.Jobs) {
 			++$num
 			if ($job -is [string]) {
+				$job, $safe = if ($job[0] -eq '?') {$job.Substring(1), 1} else {$job}
 				$edge = ' '
 				if ($Number) {
 					$edge += "label=$num "
 				}
-				if ($it.Safe -contains $job) {
+				if ($safe) {
 					$edge += "style=dotted "
 				}
 				'"{0}" -> "{1}" [{2}]' -f $name, $job, $edge
