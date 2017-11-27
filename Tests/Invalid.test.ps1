@@ -153,7 +153,7 @@ task DanglingScriptblock {
 	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
 
 	($r = try {Invoke-Build . $file} catch {$_})
-	assert (($r | Out-String) -like 'Build ABORTED*Dangling scriptblock at *\Invalid.test.ps1:*\Invalid.test.ps1:*')
+	assert (($r | Out-String) -like 'ERROR: Dangling scriptblock at *Build ABORTED*Dangling scriptblock at *\Invalid.test.ps1:*\Invalid.test.ps1:*')
 	equals $log.Count 2
 	equals $log[0] 'Unexpected output: 42.'
 	equals $log[1] 'Unexpected output: bar.'

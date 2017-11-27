@@ -50,12 +50,9 @@
 		Resolve-MSBuild
 		Write-Build
 		Write-Warning [1]
-		Get-BuildFile [2]
 
 	[1] Write-Warning is redefined internally in order to count warnings in
 	tasks, build, and other scripts. But warnings in modules are not counted.
-
-	[2] Exists only as a pattern for wrappers.
 
 	SPECIAL ALIASES
 
@@ -90,8 +87,8 @@
 		- Started - [DateTime], task start time
 
 		In Exit-BuildTask
-	    - Error - error which stopped the task
-	    - Elapsed - [TimeSpan], task duration
+		- Error - error which stopped the task
+		- Elapsed - [TimeSpan], task duration
 
 	The variable $_ may be exposed. In special cases it is used as an input.
 	In other cases build scripts should not assume anything about its value.
@@ -135,13 +132,13 @@
 	- sets $BuildRoot to the script directory or <root>
 	- sets the current PowerShell location to $BuildRoot
 	- imports utility commands
-	    - assert
-	    - equals
-	    - exec
-	    - property
-	    - requires
-	    - use
-	    - Write-Build
+		- assert
+		- equals
+		- exec
+		- property
+		- requires
+		- use
+		- Write-Build
 
 	Some other build commands are also imported. They are available for getting
 	help and not designed for use in normal scripts.
@@ -292,10 +289,26 @@
 
 	examples = @(
 		@{code={
-	# Invoke the default task ('.' or the first added) in the default script
-	# (a single file like *.build.ps1 or .build.ps1 if there are two or more)
+	## How to call Invoke-Build in order to deal with build failures.
+	## Use one of the below techniques or you may miss some failures.
 
-	Invoke-Build
+	## (1/2) If you do not want to catch errors and just want the calling
+	## script to stop on build failures then
+
+	$ErrorActionPreference = 'Stop'
+	Invoke-Build ...
+
+	## (2/2) If you want to catch build errors and proceed further depending
+	## on them then use try/catch, $ErrorActionPreference does not matter:
+
+	try {
+		Invoke-Build ...
+		# Build completed
+	}
+	catch {
+		# Build FAILED, $_ is the error
+	}
+
 		}}
 
 		@{code={
@@ -528,20 +541,20 @@
 
 	# Simple action task
 	task Task4 {
-	    # action
+		# action
 	}
 
 	# Typical complex task: referenced task(s) and one own action
 	task Task5 Task1, Task2, {
-	    # action after referenced tasks
+		# action after referenced tasks
 	}
 
 	# Possible complex task: actions and tasks in any required order
 	task Task6 {
-	    # action before Task1
+		# action before Task1
 	},
 	Task1, {
-	    # action after Task1 and before Task2
+		# action after Task1 and before Task2
 	},
 	Task2
 			}
@@ -921,25 +934,6 @@
 			type = 'String'
 		}
 	)
-}
-
-### Get-BuildFile
-@{
-	command = 'Get-BuildFile'
-	synopsis = 'Gets full path of the default build file.'
-
-	description = @'
-	This function is not designed for build scripts and tasks.
-	It is used by the engine and exposed for related tools.
-'@
-
-	parameters = @{
-		Path = @'
-		A full directory path used to get the default build file.
-'@
-	}
-
-	outputs = @{ type = 'String' }
 }
 
 ### Build-Parallel.ps1

@@ -11,13 +11,17 @@ Set-StrictMode -Version Latest
 
 . ./Shared.ps1
 
-# Synopsis: 2.10.1 Fixed incomplete error on Safe.
+# Synopsis: Fixed incomplete error on Safe.
+# 4.1.0  prints `ERROR: <error> At <position>`, then `At <task>`
+# 2.10.1 prints `At <task>`, then `ERROR: <error> At <position>`
 task IncompleteErrorOnSafe {
 	$file = {
-		task test { throw 42 }
+		task test {
+			throw 42
+		}
 	}
 	($r = Invoke-Build * $file -Safe | Out-String)
-	assert ($r -clike 'Build test*Task /test*At *\Fixed.test.ps1:*ERROR: 42*At *\Fixed.test.ps1:*')
+	assert ($r -clike 'Build test*Task /test*ERROR: 42*At *\Fixed.test.ps1:*At *\Fixed.test.ps1:*')
 }
 
 # Synopsis: #5 Invoke-Build ** -Safe propagates -Safe.

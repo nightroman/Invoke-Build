@@ -24,7 +24,14 @@ param(
 
 dynamicparam {
 
-#.ExternalHelp InvokeBuild-Help.xml
+function *Path($P) {
+	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($P)
+}
+
+function *Die($M, $C=0) {
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
+}
+
 function Get-BuildFile($Path) {
 	do {
 		if (($f = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $f}
@@ -32,14 +39,6 @@ function Get-BuildFile($Path) {
 		if ($f.Length -ge 2) {throw "Ambiguous default script in '$Path'."}
 		if ([System.IO.File]::Exists(($_ = $env:InvokeBuildGetFile)) -and ($_ = & $_ $Path)) {return $_}
 	} while($Path = Split-Path $Path)
-}
-
-function *Path($P) {
-	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($P)
-}
-
-function *Die($M, $C=0) {
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
 }
 
 if ($MyInvocation.InvocationName -eq '.') {return}
@@ -347,6 +346,7 @@ function *Check([Parameter()]$J, $T, $P=@()) {
 
 function *AddError($T) {
 	${*}.Errors.Add([PSCustomObject]@{Error = $_; File = $BuildFile; Task = $T})
+	Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
 }
 
 filter *Help {
@@ -447,10 +447,10 @@ function *Task {
 		}
 		catch {
 			*AddError $Task
-			$Task.Error = $_
 			${*}.Tasks.Add($Task)
-			$Task.Elapsed = [TimeSpan]::Zero
 			Write-Build 14 (*At $Task)
+			$Task.Elapsed = [TimeSpan]::Zero
+			$Task.Error = $_
 			throw
 		}
 	}
@@ -475,7 +475,13 @@ function *Task {
 			}
 
 			if (1 -eq ${*i}[0]) {
-				${*i} = *IO
+				try {
+					${*i} = *IO
+				}
+				catch {
+					*AddError $Task
+					throw
+				}
 				Write-Build 8 ${*i}[1]
 			}
 			if (${*i}[0]) {
@@ -504,6 +510,7 @@ function *Task {
 				}
 			}
 			catch {
+				*AddError $Task
 				$Task.Error = $_
 				throw
 			}
@@ -515,7 +522,6 @@ function *Task {
 		if ($_ = $Task.Error) {
 			*AddError $Task
 			Write-Build 14 (*At $Task)
-			Write-Build 12 "ERROR: $(*Error $_ $_)"
 		}
 		else {
 			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
@@ -527,8 +533,6 @@ function *Task {
 		$Task.Error = $_
 		Write-Build 14 (*At $Task)
 		if (!${*s} -or (*Unsafe ${*n} $BuildTask)) {throw}
-		*AddError $Task
-		Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
 	}
 	finally {
 		${*}.Tasks.Add($Task)
@@ -662,7 +666,6 @@ try {
 		foreach($_ in $BuildTask) {
 			*Task $_ ''
 		}
-		${*}.Task = $null
 	}
 	finally {
 		. *Run ${*}.ExitBuild
@@ -673,14 +676,11 @@ try {
 catch {
 	${*}.B = 2
 	${*}.Error = $_
-	*AddError ${*}.Task
+	if (!${*}.Errors) {*AddError}
 	if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
 		Write-Warning 'Check task positional parameters: a name and comma separated jobs.'
 	}
-	if (${*}.Safe) {
-		Write-Build 12 (*Error "ERROR: $_" $_)
-	}
-	else {
+	if (!${*}.Safe) {
 		if (*My) {$PSCmdlet.ThrowTerminatingError($_)}
 		throw
 	}

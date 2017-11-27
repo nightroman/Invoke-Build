@@ -1,9 +1,22 @@
 
+[#106]: https://github.com/nightroman/Invoke-Build/issues/106
+[#105]: https://github.com/nightroman/Invoke-Build/issues/105
+
 # Invoke-Build Release Notes
 
 **Deprecated**
 
-- `use VisualStudio`: not used much or at all, not working for VS 2017
+- v4.1.0 `(job TaskName -Safe)`. Instead, use `?TaskName`. [#105].
+- v4.0.1 `use VisualStudio`: not used much or at all, not working for VS 2017.
+
+## v4.1.0
+
+- Improve syntax and usability of safe references. [#105]
+    - Introduce `?TaskName` instead of deprecated `(job TaskName -Safe)`.
+    - Support `?TaskName` in the parameter `-Task` of `Invoke-Build`.
+- Redesign error output.
+    - Improve for VSCode, AppVeyor, and redirection. [#106]
+    - If a task fails in `If`, add it to the list of invoked tasks.
 
 ## v4.0.2
 
