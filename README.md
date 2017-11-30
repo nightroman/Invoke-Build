@@ -21,6 +21,8 @@ Invoke-Build v3.0.1+ is cross-platform with PowerShell v6.
 
 Invoke-Build can be effectively used in VSCode and ISE.
 
+Several *PowerShell Team* projects use Invoke-Build.
+
 ## The package
 
 The package includes the engine, helpers, and the generated help:

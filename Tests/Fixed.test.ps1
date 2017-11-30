@@ -336,3 +336,47 @@ task CheckpontSafeSummaryWhatIf {
 
 	Remove-Item z.ps1, z.clixml
 }
+
+# Task with If must be invoked once and recorded once.
+task v4.1.0.ManyCallsToIf {
+	$file = {
+		task Run -If {$toRun} {}
+		task Test @(
+			{$script:toRun = $false}, 'Run'
+			{$script:toRun = $true}, 'Run'
+			{$script:toRun = $true}, 'Run'
+		)
+	}
+
+	Invoke-Build Test $file -Result r
+
+	equals $r.Tasks.Count 2 #! not 3
+	equals $r.Doubles.Count 2 # repeated 'Run'
+	equals $r.Warnings.Count 0 # but no warnings due to script block conditions
+}
+
+# We have such test, see Safe.test.ps1 Survives1, Survives2.
+# But it was almost "fixed" instead of the regression.
+task v4.1.0.FailedSafeTaskMustBeCalledOnce {
+	$file = {
+		task MustBeCalledOnce {throw 42}
+		task CallMustBeCalledOnce1 ?MustBeCalledOnce
+		task CallMustBeCalledOnce2 ?MustBeCalledOnce
+		task Test CallMustBeCalledOnce1, CallMustBeCalledOnce2
+	}
+	Invoke-Build Test $file -Result r
+	equals $r.Tasks.Count 4 #! not 5
+}
+
+# The internal "current task" must be cleaned after the last task.
+# Otherwise, Write-Warning may use it as current for no reason.
+task v4.1.0.CurrentTaskInExitBuild {
+	$file = {
+		task t1 {}
+		Exit-Build {
+			'check the current task'
+			assert ($null -eq ${*}.Task)
+		}
+	}
+	Invoke-Build * $file
+}

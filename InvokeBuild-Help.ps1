@@ -10,32 +10,31 @@
 	synopsis = 'Invoke-Build - Build Automation in PowerShell'
 
 	description = @'
-	The command invokes specified and referenced tasks defined in a PowerShell
-	script. The process is called build and the script is called build script.
+	The command invokes so called tasks defined in a PowerShell script.
+	Let's call this process build and a script with tasks build script.
 
-	A build script defines parameters, variables, tasks, and blocks. Any code
-	is invoked with the current location set to $BuildRoot, normally the build
-	script directory. $ErrorActionPreference is set to 'Stop'.
+	A build script defines parameters, variables, and one or more tasks.
+	Any code is invoked with the current location set to $BuildRoot,
+	the script directory. $ErrorActionPreference is set to 'Stop'.
 
-	To get help for commands dot-source Invoke-Build:
+	To get commands help, dot-source Invoke-Build and then get help:
 
 		PS> . Invoke-Build
 		PS> help task -full
 
-	USING BUILD SCRIPT PARAMETERS
+	SCRIPT PARAMETERS
 
-	Build scripts define parameters using param(). They are used in tasks as
-	$ParameterName for reading and as $script:ParameterName for writing.
+	Build scripts define parameters as usual using the param() block.
+	On calling, specify them for Invoke-Build as if they are its own.
+
+	Known issue #4. Specify script switches after Task and File.
 
 	The following parameter names are reserved for the engine:
-	Task, File, Result, Safe, Summary, WhatIf, Log
-
-	Script parameters are specified for Invoke-Build as if they are its own.
-	Known issue #4. Script switches should be specified after Task and File.
+	Task, File, Result, Safe, Summary, WhatIf
 
 	PUBLIC COMMANDS
 
-	Scripts should use available aliases, function names are for reference.
+	Scripts should use provided aliases (instead of functions)
 
 		task      (Add-BuildTask)
 		exec      (Invoke-BuildExec)
@@ -52,7 +51,7 @@
 		Write-Warning [1]
 
 	[1] Write-Warning is redefined internally in order to count warnings in
-	tasks, build, and other scripts. But warnings in modules are not counted.
+	a build script and nested scripts. Warnings in modules are not counted.
 
 	SPECIAL ALIASES
 
@@ -61,11 +60,8 @@
 
 	These aliases are for the scripts Invoke-Build.ps1 and Build-Parallel.ps1.
 	Use them for calling nested builds, i.e. omit script extensions and paths.
-	With this rule Invoke-Build tools can be kept together with build scripts.
 
 	PUBLIC VARIABLES
-
-	Exposed variables designed for build scripts and tasks:
 
 		$WhatIf    - WhatIf mode, Invoke-Build parameter
 		$BuildRoot - build script location, by default
@@ -80,25 +76,23 @@
 	Outputs, and Jobs and by blocks Enter|Exit-BuildTask, Enter|Exit-BuildJob,
 	Set-BuildHeader.
 
-		$Task properties available for reading:
+		$Task properties:
 
 		- Name - [string], task name
 		- Jobs - [object[]], task jobs
 		- Started - [DateTime], task start time
 
-		In Exit-BuildTask
-		- Error - error which stopped the task
-		- Elapsed - [TimeSpan], task duration
+		And in Exit-BuildTask:
 
-	The variable $_ may be exposed. In special cases it is used as an input.
-	In other cases build scripts should not assume anything about its value.
+		- Error - task error or null
+		- Elapsed - [TimeSpan], task duration
 
 	BUILD BLOCKS
 
-	Scripts may define the following build blocks. They are invoked:
+	Scripts may define special script blocks. They are invoked:
 
-		Enter-Build {} - before all tasks
-		Exit-Build {} - after all tasks
+		Enter-Build {} - before the first task
+		Exit-Build {} - after the last task
 
 		Enter-BuildTask {} - before each task
 		Exit-BuildTask {} - after each task
@@ -106,47 +100,43 @@
 		Enter-BuildJob {} - before each task action
 		Exit-BuildJob {} - after each task action
 
-		Set-BuildHeader {param($path)} - custom task header writer
+		Set-BuildHeader {param($Path)} - to write task headers
 
 	Nested builds do not inherit parent blocks.
-	If Enter-X is called then Exit-X is called.
 	Blocks are not called on WhatIf, except Set-BuildHeader.
+	If Enter-X is called then Exit-X is also called, even on failures.
 
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
-	a good place for heavy initialization, it does not have to care of WhatIf.
-	Also, unlike the top level script code, Enter-Build can output text.
+	suitable for initialization and it can output text unlike the build script.
 
 	Enter-BuildTask, Exit-BuildTask, Enter-BuildJob, and Exit-BuildJob are
 	invoked in the same scope, the parent of task action blocks.
 
-	DOT-SOURCING Invoke-Build
+	DOT-SOURCING
 
-	Build-like environment can be imported to normal scripts:
+	Build features can be dot-sourced by the command:
 
 		. Invoke-Build [<root>]
 
-	When this command is invoked from a script it
+	If it is called interactively then it imports commands for getting help.
+	But if it is used in a usual script then it makes a build-like session:
 
-	- sets $ErrorActionPreference to Stop
-	- sets $BuildFile to the invoked script path
-	- sets $BuildRoot to the script directory or <root>
-	- sets the current PowerShell location to $BuildRoot
-	- imports utility commands
+	- $ErrorActionPreference is set to Stop
+	- $BuildFile is the calling script path
+	- $BuildRoot is its directory or <root>
+	- the current location is $BuildRoot
+	- available commands:
+		- exec
 		- assert
 		- equals
-		- exec
 		- property
 		- requires
 		- use
 		- Write-Build
 
-	Some other build commands are also imported. They are available for getting
-	help and not designed for use in normal scripts.
-
-	PRIVATE FUNCTIONS AND VARIABLES
+	PRIVATE STUFF
 
 	Function and variable names starting with '*' are reserved for the engine.
-	Scripts should avoid using functions and variables with such names.
 '@
 
 	parameters = @{
@@ -157,19 +147,18 @@
 
 		Names with wildcard characters are reserved for special cases.
 
-		SAFE TASKS
+		SAFE REFERENCES
 
-		If a task name is appended with "?" then the task is allowed to fail
-		without stopping the build, i.e. other specified tasks are invoked.
+		If a task 'X' is referenced as '?X' then it is allowed to fail without
+		breaking the build, i.e. other tasks specified after X will be invoked.
 
 		SPECIAL TASKS
 
-		? - Tells to list the tasks with brief information without invoking. It
-		also checks tasks and throws errors on missing or cyclic references.
+		? - Tells to list tasks with brief information and check for errors.
 		Task synopses are defined in preceding comments as # Synopsis: ...
 
-		?? - Tells to collect and get all tasks as an ordered dictionary. It
-		can be used by external tools for analysis, TabExpansion, and etc.
+		?? - Tells to collect and get all tasks as an ordered dictionary.
+		It can be used by external tools for analysis, completion, etc.
 
 		Tasks ? and ?? set $WhatIf to true. Properly designed build scripts
 		should not perform anything significant if $WhatIf is set to true.
@@ -185,7 +174,7 @@
 		??, ** - To get task dictionaries for all test files.
 '@
 		File = @'
-		A build script which defines tasks by the alias 'task' (Add-BuildTask).
+		A build script which adds tasks by the command 'task' (Add-BuildTask).
 
 		If it is not specified then Invoke-Build looks for *.build.ps1 files in
 		the current location. A single file is used as the script. If there are
@@ -199,25 +188,18 @@
 
 		INLINE SCRIPT
 
-		`File` is a script block which is normally used in order to assemble a
+		'File' is a script block which is normally used in order to assemble a
 		build on the fly without creating and using an extra build script file.
 
-		Script parameters are not supported. Use the parent scope variables
-		instead, either directly or with the helpers `property` and `requires`.
+		$BuildFile is the calling script (or null, e.g. in jobs).
+		The default $BuildRoot is its directory (or the current location).
 
-		$BuildRoot is the calling script root (or the current location). If it
-		is not what the build needs as its root directory, then change this
-		variable in the beginning of the inline script block.
-
-		$BuildFile is the calling script (it may be null, e.g. in jobs).
-		This variable is rarely used, just keep in mind the difference.
-
-		Persistent and parallel builds are not supported.
+		Script parameters, parallel, and persistent builds are not supported.
 '@
 		Result = @'
-		Tells to output build information using a variable. It is either a name
-		of variable to be created or any object with the property Value to be
-		assigned (e.g. [ref] or [hashtable]).
+		Tells to write build information. It is either a name of variable to be
+		created in the calling scope or an object with the property Value to be
+		assigned, e.g. a hashtable may be used.
 
 		Result object properties:
 
@@ -235,22 +217,21 @@
 			Error - task error
 			Started - start time
 			Elapsed - task duration
-			InvocationInfo - task location (.ScriptName and .ScriptLineNumber)
+			InvocationInfo - task location (.ScriptName, .ScriptLineNumber)
 
 		Errors is a list of objects:
 
-			Error - original error record
+			Error - original error
 			File - current $BuildFile
-			Task - current $Task or null for non-task errors
+			Task - current $Task or null for other errors
 
 		Warnings is a list of objects:
 
 			Message - warning message
 			File - current $BuildFile
-			Task - current $Task or null for non-task warnings
+			Task - current $Task or null for other warnings
 
-		These data should be used for reading only.
-		Other result and task data should not be used.
+		Do not change these data and do not use not documented members.
 '@
 		Safe = @'
 		Tells to catch a build failure, store an error as the property Error of

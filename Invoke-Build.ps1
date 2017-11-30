@@ -668,6 +668,7 @@ try {
 		}
 	}
 	finally {
+		${*}.Task = $null
 		. *Run ${*}.ExitBuild
 	}
 	${*}.B = 1
