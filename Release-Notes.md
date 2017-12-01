@@ -9,6 +9,21 @@
 - v4.1.0 `(job TaskName -Safe)`. Instead, use `?TaskName`. [#105].
 - v4.0.1 `use VisualStudio`: not used much or at all, not working for VS 2017.
 
+## v4.1.1
+
+Improve `Result` on invalid arguments
+
+- Ensure `Result`'s variable or hashtable `Value` entry is always created.
+- Fail with a proper error if `Result` is not a string or hashtable.
+- On invalid calls ensure at least a surrogate result `Error`.
+
+Amend `Build-Parallel`
+
+- Better errors on invalid builds parameters.
+- Do not count incomplete build results.
+
+Tidy up help.
+
 ## v4.1.0
 
 - Improve syntax and usability of safe references. [#105]

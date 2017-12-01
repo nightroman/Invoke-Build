@@ -122,7 +122,7 @@ task Timeout -If ($BuildRoot -notmatch '[\[\]]') {
 	# Invoke using try..catch because it fails and use log files for outputs.
 	$message = ''
 	try {
-		Build-Parallel -Timeout 500 @(
+		Build-Parallel -Result r -Timeout 500 @(
 			@{File='Sleep.build.ps1'; Milliseconds=10; Log='z.1'}
 			@{File='Sleep.build.ps1'; Milliseconds=2000; Log='z.2'}
 			@{File='Sleep.build.ps1'; Milliseconds=3000; Log='z.3'}
@@ -146,6 +146,9 @@ ERROR: Build timed out.*
 	assert (!(Test-Path z.2) -or (Get-Content z.2)[-1] -eq 'begin - начало')
 	assert (!(Test-Path z.2) -or (Get-Content z.3)[-1] -eq 'begin - начало')
 	Remove-Item z.?
+
+	# v4.1.1 Was 3. We now drop incomplete results.
+	equals $r.Tasks.Count 1
 }
 
 # Error: invalid MaximumBuilds
@@ -172,7 +175,7 @@ task ParallelMissingFile {
 
 # Error: invalid Parameters type on calling Build-Parallel
 task ParallelBadParameters {
-	Build-Parallel @{File='Dynamic.build.ps1'; Parameters='BadParameters'}
+	Build-Parallel @{File='Dynamic.build.ps1'; Parameters=42}
 }
 
 # Test error cases.
@@ -183,7 +186,8 @@ task ParallelErrorCases @(
 	{
 		Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 		Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
-		Test-Error ParallelBadParameters "Failed builds:*Build: *\Dynamic.build.ps1*ERROR: *parameter name 'Parameters'*"
+		Test-Error ParallelBadParameters `
+		"Failed builds:*Build: *\Dynamic.build.ps1*ERROR: Invalid build arguments or script. Error: *parameter name 'Parameters'*"
 	}
 )
 
@@ -247,17 +251,12 @@ task FailHard {
 	equals $build[2].Result.ContainsKey('Value') $false
 
 	# official result
-	# two tasks started
 	$r = $result.Tasks
-	equals $r.Count 2
-	# t1 started but not finished
-	equals $r[0].Name t1
-	equals $r[0].Elapsed
-	equals $r[0].Error
-	# t2 started and failed
-	equals $r[1].Name t2
-	assert ($null -ne $r[1].Elapsed)
-	equals $r[1].Error.FullyQualifiedErrorId '13'
+	# one failed task t2, t1 aborted, t3 not started
+	equals $r.Count 1
+	equals $r[0].Name t2
+	assert ($null -ne $r[0].Elapsed)
+	equals $r[0].Error.FullyQualifiedErrorId '13'
 
 	Remove-Item z.build.ps1
 }

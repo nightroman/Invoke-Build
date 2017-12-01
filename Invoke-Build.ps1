@@ -42,7 +42,7 @@ function Get-BuildFile($Path) {
 }
 
 if ($MyInvocation.InvocationName -eq '.') {return}
-trap {*Die $_ 13}
+trap {*Die $_ 5}
 
 New-Variable * -Description IB ([PSCustomObject]@{
 	All = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
@@ -53,7 +53,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Doubles = @()
 	Started = [DateTime]::Now
 	Elapsed = $null
-	Error = $null
+	Error = 'Invalid arguments.'
 	Task = $null
 	File = $BuildFile = $PSBoundParameters['File']
 	Safe = $PSBoundParameters['Safe']
@@ -77,6 +77,17 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	XBuild = $null
 	XTask = $null
 })
+if ($_ = $PSBoundParameters['Result']) {
+	if ($_ -is [string]) {
+		New-Variable $_ ${*} -Scope 1 -Force
+	}
+	elseif ($_ -is [hashtable]) {
+		${*}.XBuild = $_['XBuild']
+		${*}.XTask = $_['XTask']
+		$_.Value = ${*}
+	}
+	else {throw 'Invalid parameter Result.'}
+}
 $BuildTask = $PSBoundParameters['Task']
 if ($BuildFile -is [scriptblock]) {
 	$BuildFile = $BuildFile.File
@@ -578,18 +589,9 @@ foreach($_ in $PSBoundParameters.Keys) {
 if (${*}.Q = $BuildTask -eq '??' -or $BuildTask -eq '?') {
 	$WhatIf = $true
 }
-if ($Result) {
-	if ($Result -is [string]) {
-		New-Variable $Result ${*} -Scope 1 -Force
-	}
-	else {
-		${*}.XBuild = $Result['XBuild']
-		${*}.XTask = $Result['XTask']
-		$Result.Value = ${*}
-	}
-}
 Remove-Variable Task, File, Result, Safe, Summary
 
+${*}.Error = $null
 try {
 	if ($BuildTask -eq '**') {
 		${*}.A = 0
@@ -679,7 +681,7 @@ catch {
 	${*}.Error = $_
 	if (!${*}.Errors) {*AddError}
 	if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
-		Write-Warning 'Check task positional parameters: a name and comma separated jobs.'
+		Write-Warning 'Check task parameters: Name and comma separated Jobs.'
 	}
 	if (!${*}.Safe) {
 		if (*My) {$PSCmdlet.ThrowTerminatingError($_)}

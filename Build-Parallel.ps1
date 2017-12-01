@@ -41,7 +41,7 @@ if ($Result) {
 # no builds
 if (!$Build) {return}
 
-# engine
+# engine to source and call in jobs
 $ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 try {. $ib .} catch {$PSCmdlet.ThrowTerminatingError($_)}
 
@@ -66,7 +66,8 @@ for ($1 = 0; $1 -lt $Build.Count) {
 	$works += $work
 	$work.Build = $b
 	$work.Done = $false
-	$work.Error = $null
+	$work.Error1 = $null
+	$work.Error2 = $null
 	$work.Title = "($1/$($Build.Count)) $file"
 }
 
@@ -140,16 +141,14 @@ try {
 		$work.Done = $true
 		try {
 			$work.PS.EndInvoke($work.Job)
-			if ($r = $work.Build.Result['Value']) {
-				$work.Error = $r.Error
-			}
+			$work.Error2 = $work.Build.Result.Value.Error
 		}
 		catch {
-			$work.Error = $_
+			$work.Error1 = "Invalid build arguments or script. Error: $_"
 		}
 
 		### abort?
-		if ($work.Error -and $FailHard) {
+		if (($work.Error1 -or $work.Error2) -and $FailHard) {
 			$abort = "Aborted by $($work.Title)"
 			break
 		}
@@ -159,19 +158,29 @@ try {
 	foreach($work in $works) {
 		Write-Build Cyan "Build $($work.Title):"
 
-		### dispose
-		$reason = $null
-		try {
+		### get error and dispose
+		$runtime = $false
+		$_ = try {
 			if ($work.Done) {
-				$reason = $work.Error
+				if ($work.Error1) {
+					$work.Error1
+				}
+				else {
+					$runtime = $true
+					$r = $work.Build.Result.Value
+					$info.Tasks.AddRange($r.Tasks)
+					$info.Errors.AddRange($r.Errors)
+					$info.Warnings.AddRange($r.Warnings)
+					$r.Error
+				}
 			}
 			else {
 				$work.PS.Stop()
-				$reason = $abort
+				$abort
 			}
 		}
 		catch {
-			$reason = $_
+			$_
 		}
 		finally {
 			$work.PS.Dispose()
@@ -181,21 +190,9 @@ try {
 		Write-Log $work
 
 		### result
-		$_ = if ($r = $work.Build.Result['Value']) {
-			$r.Error
-			$info.Tasks.AddRange($r.Tasks)
-			$info.Errors.AddRange($r.Errors)
-			$info.Warnings.AddRange($r.Warnings)
-		}
-		else {
-			"$reason"
-		}
-		if (!$_) {
-			$_ = $reason
-		}
 		if ($_) {
 			Write-Build Cyan "Build $($work.Title) FAILED."
-			$_ = if ($_ -is [System.Management.Automation.ErrorRecord]) {*Error $_ $_} else {"$_"}
+			$_ = if ($_ -is [System.Management.Automation.ErrorRecord] -and $runtime) {*Error $_ $_} else {"$_"}
 			Write-Build Red "ERROR: $_"
 			$failures += @{
 				File = $work.Title

@@ -167,7 +167,6 @@
 
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
-		Other parameters except Result and Safe are ignored.
 
 		Tasks ? and ?? can be combined with **
 		?, ** - To show all test tasks without invoking.
@@ -197,11 +196,11 @@
 		Script parameters, parallel, and persistent builds are not supported.
 '@
 		Result = @'
-		Tells to write build information. It is either a name of variable to be
-		created in the calling scope or an object with the property Value to be
-		assigned, e.g. a hashtable may be used.
+		Tells to make the build result. Normally it is the name of a variable
+		created in the calling scope. Or it is a hashtable which entry Value
+		contains the result.
 
-		Result object properties:
+		Result properties:
 
 			All - all available tasks
 			Error - a terminating build error
@@ -258,12 +257,11 @@
 		@{
 			type = 'Text'
 			description = @'
-		Build process log which includes task starts, ends with durations,
-		warnings, errors, and output of tasks and commands that they invoke.
+		Build log which includes task records and engine messages, warnings,
+		errors, and output from build script tasks and special blocks.
 
-		Output is expected from tasks and blocks. But script scope code should
-		not output anything. Unexpected output causes warnings, in the future
-		it may be treated as an error.
+		The script itself should not output anything. Unexpected script output
+		causes warnings, in the future it may be treated as an error.
 '@
 		}
 	)
@@ -326,29 +324,17 @@
 		}}
 
 		@{code={
-	# Using the build results, e.g. for performance analysis
-
-	# Invoke the build and keep results in the variable Result
-	Invoke-Build -Result Result
-
-	# Show invoked tasks ordered by Elapsed with ScriptName included
-	$Result.Tasks |
-	Sort-Object Elapsed |
-	Format-Table -AutoSize Elapsed, @{
-		Name = 'Task'
-		Expression = {$_.Name + ' @ ' + $_.InvocationInfo.ScriptName}
-	}
-		}}
-
-		@{code={
-	# Using the build results, e.g. for tasks summary
+	# How to use build results, e.g. for summary
 
 	try {
-		# Invoke the build and keep results in the variable Result
+		# Invoke build and get the variable Result
 		Invoke-Build -Result Result
 	}
 	finally {
-		# Show task summary information after the build
+		# Show build error
+		"Build error: $(if ($Result.Error) {$Result.Error} else {'None'})"
+
+		# Show task summary
 		$Result.Tasks | Format-Table Elapsed, Name, Error -AutoSize
 	}
 		}}
@@ -379,24 +365,27 @@
 ### Add-BuildTask
 @{
 	command = 'Add-BuildTask'
-	synopsis = '(task) Defines a build task and adds it to the task list.'
+	synopsis = '(task) Defines and adds a task.'
 
 	description = @'
-	Scripts use its alias 'task'. This is the main feature of build scripts. At
-	least one task must be added. Normally it is used in the build script scope
-	but it can be called anywhere, e.g. imported, created dynamically, and etc.
+	Scripts use its alias 'task'. It is normally used in the build script scope
+	but it can be called from another script or function. Build scripts should
+	have at least one task.
 
-	In fact, this function is literally all that build scripts really need.
-	Other build functions are just helpers, scripts do not have to use them.
+	This command is all that build scripts really need. Tasks are main build
+	blocks. Other build commands are helpers, scripts do not have to use them.
 
-	Task help-comments are special comments preceding task definitions
+	In addition to task parameters, you may use task help comments, synopses,
+	preceding task definitions:
 
 		# Synopsis: ...
 		task ...
 
-	Synopsis lines are used in task information returned by the command
+	Synopses are used in task help information returned by the command
 
 		Invoke-Build ?
+
+	To get a task synopsis during a build, use Get-BuildSynopsis.
 '@
 
 	parameters = @{
@@ -407,28 +396,29 @@
 '@
 		Jobs = @'
 		Specifies the task jobs. Jobs are other task references and own
-		actions. Any number of jobs is allowed. Jobs are invoked in the
-		specified order.
+		actions, script blocks. Any number of jobs is allowed. Jobs are
+		invoked in the specified order.
 
 		Valid jobs are:
 
 			[string] - an existing task name, normal reference
-			[string] "?TaskName" - reference to a task allowed to fail
+			[string] "?Name" - safe reference to a task allowed to fail
 			[scriptblock] - action, a script block invoked for this task
 '@
 		After = @'
-		Tells to add this task to the end of the specified task job lists.
+		Tells to add this task to the end of jobs of the specified tasks.
 
-		Altered tasks are defined as by their names or by the command 'job'.
-		In the latter case options are applied to the added task reference.
+		Altered tasks are defined as normal references (TaskName) or safe
+		references (?TaskName). In the latter case this inserted task may
+		fail without stopping a build.
 
-		Parameters After and Before are used in order to alter task jobs in
-		special cases when direct changes in task source code are not suitable.
+		Parameters After and Before are used in order to alter task jobs
+		in special cases when direct changes in task source code are not
+		suitable. Use Jobs in order to define relations in usual cases.
 '@
 		Before = @'
-		Tells to add this task to job lists of the specified tasks. It is
-		inserted before the first script job, if any, or added to the end.
-		Note that Before tasks are added before After tasks.
+		Tells to insert this task to jobs of the specified tasks.
+		It is inserted before the first action or added to the end.
 
 		See After for details.
 '@
@@ -437,25 +427,25 @@
 		evaluates to false then the task is not invoked. The condition is
 		defined in one of two ways depending on the requirements.
 
-		Using standard Boolean notation (parenthesis) the condition will only
-		be evaluated when the task is loaded into the build engine. A use case
-		for this notation might be evaluating parameters that are passed into
-		the build.
+		Using standard Boolean notation (parenthesis) the condition is checked
+		once when the task is defined. A use case for this notation might be
+		evaluating a script parameter or another sort of global condition.
 
 			Example:
-				task SomeTask -If ($SomeCondition) {...}
+				task Task1 -If ($Param1 -eq ...) {...}
+				task Task2 -If ($PSVersionTable.PSVersion.Major -ge 5) {...}
 
-		Using script block notation (curly braces) the condition will be
-		evaluated dynamically on task invocation. If a task is referenced by
-		several tasks then the condition is evaluated each time until it gets
-		true and the task is invoked. The script block notation is normally
-		used for a condition that may be defined or changed during the build.
+		Using script block notation (curly braces) the condition is evaluated
+		on task invocation. If a task is referenced by several tasks then the
+		condition is evaluated each time until it gets true and the task is
+		invoked. The script block notation is normally used for a condition
+		that may be defined or changed during the build or just expensive.
 
 			Example:
-				task SomeTask -If {$SomeCondition} {...}
+				task SomeTask -If {...} {...}
 
 		On WhatIf:
-		- Boolean conditions are evaluated and treated accordingly.
+		- Boolean conditions are evaluated and treated per the result.
 		- Script block conditions are treated as true without invocation.
 '@}
 		Inputs = @'
@@ -487,15 +477,15 @@
 		Outputs = @'
 		Specifies the output paths of the incremental task, either directly on
 		task creation or as a script block invoked with the task. It is used
-		together with Inputs. See Inputs for more details.
+		together with Inputs. See Inputs for details.
 '@
 		Partial = @'
-		Tells to process the incremental task as partial incremental. It is
-		used together with Inputs and Outputs. See Inputs for details.
+		Tells to process the incremental task as partial incremental.
+		It is used with Inputs and Outputs. See Inputs for details.
 '@
 		Data = @'
 		Any object attached to the task. It is not used by the engine.
-		When the task is invoked the object is available as $Task.Data.
+		When the task is invoked this object is available as $Task.Data.
 '@
 		Done = @'
 		Specifies the command or a script block invoked when the task is done.
@@ -503,7 +493,7 @@
 '@
 		Source = @'
 		Specifies the task source. It is used by wrapper functions in order to
-		provide the actual source for location messages and task help synopsis.
+		provide the actual source for location messages and synopsis comments.
 '@
 	}
 
@@ -552,8 +542,8 @@
 
 	# Synopsis: Complex task with parameters as a hashtable.
 	taskx MakeDocs @{
-		Inputs = {Get-Item *.md}
-		Outputs = {Get-Item *.htm}
+		Inputs = {...}
+		Outputs = {...}
 		Partial = $true
 		Jobs = 'Task1', {
 			#...
@@ -575,6 +565,7 @@
 
 	links = @(
 		@{ text = 'Get-BuildError' }
+		@{ text = 'Get-BuildSynopsis' }
 		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 	)
 }
@@ -582,11 +573,11 @@
 ### Get-BuildError
 @{
 	command = 'Get-BuildError'
-	synopsis = '(error) Gets the specified task error if it has failed.'
+	synopsis = '(error) Gets the specified task error.'
 
 	description = @'
-	Scripts use its alias 'error'. It is used when some tasks are referenced as
-	'?TaskName' in order to get and analyse their errors on allowed failures.
+	Scripts use its alias 'error'. It is used for a task with a safe reference
+	'?TaskName' in order to get and analyse its potential error.
 '@
 
 	parameters = @{
@@ -598,9 +589,7 @@
 	outputs = @(
 		@{
 			type = 'Error'
-			description = @'
-		The error object or null if the task has no errors.
-'@
+			description = 'An error or null if the task has not failed.'
 		}
 	)
 

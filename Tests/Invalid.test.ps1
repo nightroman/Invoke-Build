@@ -133,7 +133,7 @@ task MissingCommaInJobs {
 	($r = try {Invoke-Build . $file} catch {$_})
 	equals $r[-1].FullyQualifiedErrorId 'PositionalParameterNotFound,Add-BuildTask'
 	equals $log.Count 1
-	equals $log[0] 'Check task positional parameters: a name and comma separated jobs.'
+	equals $log[0] 'Check task parameters: Name and comma separated Jobs.'
 }
 
 <#
@@ -157,4 +157,11 @@ task DanglingScriptblock {
 	equals $log.Count 2
 	equals $log[0] 'Unexpected output: 42.'
 	equals $log[1] 'Unexpected output: bar.'
+}
+
+# v4.1.1
+task InvalidParameterResult {
+	($r = try {Invoke-Build -Result 1} catch {$_})
+	equals "$r" 'Invalid parameter Result.'
+	equals $r.FullyQualifiedErrorId Invoke-Build.ps1
 }

@@ -337,8 +337,8 @@ task CheckpontSafeSummaryWhatIf {
 	Remove-Item z.ps1, z.clixml
 }
 
-# Task with If must be invoked once and recorded once.
-task v4.1.0.ManyCallsToIf {
+# v4.1.0 Task with If must be invoked once and recorded once.
+task ManyCallsToIf171201 {
 	$file = {
 		task Run -If {$toRun} {}
 		task Test @(
@@ -355,9 +355,9 @@ task v4.1.0.ManyCallsToIf {
 	equals $r.Warnings.Count 0 # but no warnings due to script block conditions
 }
 
-# We have such test, see Safe.test.ps1 Survives1, Survives2.
+# v4.1.0 We have such test, see Safe.test.ps1 Survives1, Survives2.
 # But it was almost "fixed" instead of the regression.
-task v4.1.0.FailedSafeTaskMustBeCalledOnce {
+task FailedSafeTaskMustBeCalledOnce171201 {
 	$file = {
 		task MustBeCalledOnce {throw 42}
 		task CallMustBeCalledOnce1 ?MustBeCalledOnce
@@ -368,9 +368,9 @@ task v4.1.0.FailedSafeTaskMustBeCalledOnce {
 	equals $r.Tasks.Count 4 #! not 5
 }
 
-# The internal "current task" must be cleaned after the last task.
+# v4.1.0 The internal "current task" must be cleaned after the last task.
 # Otherwise, Write-Warning may use it as current for no reason.
-task v4.1.0.CurrentTaskInExitBuild {
+task CurrentTaskInExitBuild171201 {
 	$file = {
 		task t1 {}
 		Exit-Build {
@@ -379,4 +379,36 @@ task v4.1.0.CurrentTaskInExitBuild {
 		}
 	}
 	Invoke-Build * $file
+}
+
+# v4.1.1
+task EnsureResultVariable171201 {
+	try {
+		Invoke-Build -Result r -File missing
+	}
+	catch {
+		$err = $_
+	}
+
+	assert $err
+	assert ("$err" -like 'Missing script*')
+
+	assert (Get-Variable r -Scope 0)
+	equals $r.Error 'Invalid arguments.'
+}
+
+# v4.1.1
+task EnsureResultHashtable171201 {
+	try {
+		$r = @{}
+		Invoke-Build -Result $r -File missing
+	}
+	catch {
+		$err = $_
+	}
+
+	assert $err
+	assert ("$err" -like 'Missing script*')
+
+	equals $r.Value.Error 'Invalid arguments.'
 }
