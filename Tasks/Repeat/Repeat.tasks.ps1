@@ -77,6 +77,7 @@ function Test-RepeatTask {
 
 # This function is called as `Done`. It saves the current task time.
 function Set-RepeatDone {
+	if ($Task.Error) {return}
 	$RepeatData[$Task.Name] = [DateTime]::Now
 	$RepeatData | Export-Clixml $RepeatClixml
 }

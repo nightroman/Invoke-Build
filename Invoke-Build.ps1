@@ -93,7 +93,6 @@ if ($BuildFile -is [scriptblock]) {
 	$BuildFile = $BuildFile.File
 	return
 }
-
 if ($BuildTask -eq '**') {
 	if (![System.IO.Directory]::Exists(($_ = *Path $BuildFile))) {throw "Missing directory '$_'."}
 	$BuildFile = @(Get-ChildItem -LiteralPath $_ -Filter *.test.ps1 -Recurse)
@@ -213,11 +212,11 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 	if (!($d = $Hash[$f])) {
 		$Hash[$f] = $d = @{}
 		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
-			if ($_.Type -eq 'Comment') {$d[$_.EndLine] = $_.Content}
+			if ($_.Type -eq 15) {$d[$_.EndLine] = $_.Content}
 		}
 	}
-	for($n = $I.ScriptLineNumber; --$n -ge 1 -and ($c = $d[$n])) {
-		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:\s*(.*)$') {return $Matches[1]}
+	for($n = $I.ScriptLineNumber; ($c = $d[--$n])) {
+		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:(.*)') {return $Matches[1].Trim()}
 	}
 }
 
@@ -355,11 +354,6 @@ function *Check([Parameter()]$J, $T, $P=@()) {
 	}}
 }
 
-function *AddError($T) {
-	${*}.Errors.Add([PSCustomObject]@{Error = $_; File = $BuildFile; Task = $T})
-	Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
-}
-
 filter *Help {
 	$r = 1 | Select-Object Name, Jobs, Synopsis
 	$r.Name = $_.Name
@@ -378,6 +372,12 @@ function *Root($A) {
 		}
 	}}
 	foreach($_ in $A.Keys) {if (!$h[$_]) {$_}}
+}
+
+function *Fail($T) {
+	${*}.Errors.Add([PSCustomObject]@{Error = $_; File = $BuildFile; Task = $T})
+	Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
+	if ($T) {$T.Error = $_}
 }
 
 function *IO {
@@ -457,11 +457,10 @@ function *Task {
 			${*x} = & ${*x}
 		}
 		catch {
-			*AddError $Task
+			*Fail $Task
 			${*}.Tasks.Add($Task)
 			Write-Build 14 (*At $Task)
 			$Task.Elapsed = [TimeSpan]::Zero
-			$Task.Error = $_
 			throw
 		}
 	}
@@ -490,7 +489,7 @@ function *Task {
 					${*i} = *IO
 				}
 				catch {
-					*AddError $Task
+					*Fail $Task
 					throw
 				}
 				Write-Build 8 ${*i}[1]
@@ -521,32 +520,31 @@ function *Task {
 				}
 			}
 			catch {
-				*AddError $Task
-				$Task.Error = $_
+				*Fail $Task
 				throw
 			}
 			finally {
 				. *Run ${*}.ExitJob
 			}
 		}
-		$Task.Elapsed = [DateTime]::Now - $Task.Started
 		if ($_ = $Task.Error) {
-			*AddError $Task
+			*Fail $Task
+		}
+	}
+	catch {
+		$Task.Error = $_
+		if (!${*s} -or (*Unsafe ${*n} $BuildTask)) {throw}
+	}
+	finally {
+		$Task.Elapsed = [DateTime]::Now - $Task.Started
+		${*}.Tasks.Add($Task)
+		if ($Task.Error) {
 			Write-Build 14 (*At $Task)
 		}
 		else {
 			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
 		}
 		*Run $Task.Done
-	}
-	catch {
-		$Task.Elapsed = [DateTime]::Now - $Task.Started
-		$Task.Error = $_
-		Write-Build 14 (*At $Task)
-		if (!${*s} -or (*Unsafe ${*n} $BuildTask)) {throw}
-	}
-	finally {
-		${*}.Tasks.Add($Task)
 		. *Run ${*}.ExitTask
 	}
 }
@@ -679,7 +677,7 @@ try {
 catch {
 	${*}.B = 2
 	${*}.Error = $_
-	if (!${*}.Errors) {*AddError}
+	if (!${*}.Errors) {*Fail}
 	if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
 		Write-Warning 'Check task parameters: Name and comma separated Jobs.'
 	}

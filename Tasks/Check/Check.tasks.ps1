@@ -65,6 +65,7 @@ function Test-CheckTask {
 # For the current task it stores its done time.
 # Then it writes all information to the file.
 function Set-CheckDone {
+	if ($Task.Error) {return}
 	$CheckData[$Task.Name] = [DateTime]::Now
 	$CheckData | Export-Clixml $CheckClixml
 }

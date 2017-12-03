@@ -488,8 +488,8 @@
 		When the task is invoked this object is available as $Task.Data.
 '@
 		Done = @'
-		Specifies the command or a script block invoked when the task is done.
-		It is mostly designed for wrapper functions creating special tasks.
+		Specifies the command or a script block which is invoked after the
+		task. Custom handlers should check for $Task.Error if it matters.
 '@
 		Source = @'
 		Specifies the task source. It is used by wrapper functions in order to
