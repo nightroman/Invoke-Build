@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.2.0
+.VERSION 1.2.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -56,7 +56,7 @@ function Get-MSBuild15Path($Bitness) {
 	}
 }
 
-function Get-MSBuild15VSSetup([Switch] $Prerelease, $Bitness) {
+function Get-MSBuild15VSSetup($Bitness, [switch]$Prerelease) {
 	if (!(Get-Module VSSetup -ListAvailable)) {return}
 	Import-Module VSSetup
 
@@ -71,9 +71,13 @@ function Get-MSBuild15VSSetup([Switch] $Prerelease, $Bitness) {
 	if ($vs) {
 		Join-Path @($vs)[0].InstallationPath (Get-MSBuild15Path $Bitness)
 	}
+	elseif (!$Prerelease) {
+		Get-MSBuild15VSSetup -Bitness:$Bitness -Prerelease
+	}
 }
 
-function Get-MSBuild15Guess($Folder, $Bitness) {
+function Get-MSBuild15Guess($Bitness, [switch]$Prerelease) {
+	$Folder = if ($Prerelease) {'Preview'} else {'2017'}
 	if (!($root = ${env:ProgramFiles(x86)})) {$root = $env:ProgramFiles}
 	if (!(Test-Path -LiteralPath "$root\Microsoft Visual Studio\$Folder")) {return}
 
@@ -89,20 +93,17 @@ function Get-MSBuild15Guess($Folder, $Bitness) {
 		if ($r = $paths -like '*\Community\*') {return $r}
 		$paths[0]
 	}
+	elseif (!$Prerelease) {
+		Get-MSBuild15Guess -Bitness:$Bitness -Prerelease
+	}
 }
 
 function Get-MSBuild15($Bitness) {
 	if ($path = Get-MSBuild15VSSetup $Bitness) {
 		$path
 	}
-	elseif ($path = Get-MSBuild15Guess "2017" $Bitness) {
-		$path
-	}
-	elseif ($path = Get-MSBuild15VSSetup -Prerelease $Bitness) {
-		$path
-	}
 	else {
-		Get-MSBuild15Guess "Preview" $Bitness
+		Get-MSBuild15Guess $Bitness
 	}
 }
 
