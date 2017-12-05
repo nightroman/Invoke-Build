@@ -17,4 +17,3 @@
 - [File](File) shows the custom task `file`, an incremental task with simplified syntax, somewhat similar to Rake's `file`.
 - [Repeat](Repeat) shows the custom task `repeat` which is invoked periodically in a build script (schedule) with such tasks.
 - [Retry](Retry) shows the custom task `retry` which retries its action on failures several times depending on parameters.
-- [Test](Test) shows the custom task `test` which is allowed to fail without stopping a build.

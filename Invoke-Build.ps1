@@ -527,9 +527,6 @@ function *Task {
 				. *Run ${*}.ExitJob
 			}
 		}
-		if ($_ = $Task.Error) {
-			*Fail $Task
-		}
 	}
 	catch {
 		$Task.Error = $_

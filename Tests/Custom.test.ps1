@@ -7,13 +7,6 @@
 	Invoke-Build * Custom.test.ps1
 #>
 
-# Synopsis: Test the custom task "test".
-task Test {
-	Invoke-Build * ..\Tasks\Test\Test.build.ps1 -Result r
-	equals $r.Tasks.Count 8
-	equals $r.Errors.Count 4
-}
-
 # Synopsis: Test "check", pass all, then run again.
 task Check1 {
 	$file = '..\Tasks\Check\Check.build.ps1.Check.clixml'
