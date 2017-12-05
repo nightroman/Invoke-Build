@@ -56,11 +56,11 @@ function Get-MSBuild15Path($Bitness) {
 	}
 }
 
-function Get-MSBuild15VSSetup($Bitness) {
+function Get-MSBuild15VSSetup([Switch] $Prerelease, $Bitness) {
 	if (!(Get-Module VSSetup -ListAvailable)) {return}
 	Import-Module VSSetup
 
-	$vs = Get-VSSetupInstance | Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild -Product *
+	$vs = Get-VSSetupInstance -Prerelease:$Prerelease | Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild -Product *
 	if (!$vs) {return}
 
 	$vs = if ($r = $vs | Select-VSSetupInstance -Product Microsoft.VisualStudio.Product.Enterprise) {$r}
@@ -96,6 +96,9 @@ function Get-MSBuild15($Bitness) {
 		$path
 	}
 	elseif ($path = Get-MSBuild15Guess "2017" $Bitness) {
+		$path
+	}
+	elseif ($path = Get-MSBuild15VSSetup -Prerelease $Bitness) {
 		$path
 	}
 	else {
