@@ -604,12 +604,8 @@
 	synopsis = '(assert) Checks for a condition.'
 
 	description = @'
-	Scripts use its alias 'assert'. This command checks for a condition and if
-	it is not true throws an error with the default or a specified message.
-
-	NOTE: Consider to use 'equals X Y' instead of 'assert (X -eq Y)'. It is
-	easier to type, it avoids subtle PowerShell conversions, and its error
-	message is more informative.
+	Scripts use its alias 'assert'. This command checks for a condition and
+	if it is not true throws an error with the default or specified message.
 '@
 
 	parameters = @{
@@ -635,9 +631,6 @@
 	Scripts use its alias 'equals'. This command verifies that two specified
 	objects are equal using [Object]::Equals(). If objects are not equal the
 	command fails with a message showing object values and types.
-
-	NOTE: Comparison of strings is case sensitive. For case insensitive
-	comparison use 'assert (X -eq Y)'.
 '@
 
 	parameters = @{
@@ -716,8 +709,8 @@
 		automatic variable $Task.
 '@
 		Hash = @'
-		Any hashtable to be used as a cache. Build scripts do not have to
-		specify it, it is designed for external tools.
+		A hashtable for caching data. Build scripts do not have to specify it,
+		it is designed for external tools.
 '@
 	}
 
@@ -755,15 +748,13 @@
 	Scripts use its alias 'exec'. It invokes the specified script block which
 	is supposed to call an executable. Then $LastExitCode is checked. If it
 	does not fit to the specified values (0 by default) an error is thrown.
-
-	It is often used with .NET tools, e.g. MSBuild. See Use-BuildAlias.
 '@
 
 	parameters = @{
 		Command = @'
 		Command that invokes an executable which exit code is checked. It must
 		invoke an application directly (.exe) or not (.cmd, .bat), otherwise
-		$LastExitCode is not set or contains an exit code of another command.
+		$LastExitCode is not set and may contain the code of another command.
 '@
 		ExitCode = @{default = '@(0)'; description = @'
 		Valid exit codes (e.g. 0..3 for robocopy).
@@ -834,11 +825,10 @@
 	in order to make framework tools available by names. This is not suitable
 	for using mixed framework tools (in different tasks, scripts, parallel
 	builds). Instead, this function is used for setting tool aliases in the
-	scope where it is called from.
+	scope where it is called.
 
-	This function is often called from a build script and all tasks use script
-	scope aliases. But it can be called from tasks in order to use more tools
-	including other framework or tool directories.
+	This command may be used in the script scope to make aliases for all tasks.
+	But it can be called from tasks in order to use more task specific tools.
 '@
 
 	parameters = @{

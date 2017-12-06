@@ -61,39 +61,40 @@ function Get-MSBuild15VSSetup($Bitness, [switch]$Prerelease) {
 	Import-Module VSSetup
 
 	$vs = Get-VSSetupInstance -Prerelease:$Prerelease | Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild -Product *
-	if (!$vs) {return}
+	if (!$vs) {
+		if (!$Prerelease) {
+			Get-MSBuild15VSSetup -Bitness:$Bitness -Prerelease
+		}
+		return
+	}
 
 	$vs = if ($r = $vs | Select-VSSetupInstance -Product Microsoft.VisualStudio.Product.Enterprise) {$r}
 	elseif ($r = $vs | Select-VSSetupInstance -Product Microsoft.VisualStudio.Product.Professional) {$r}
 	elseif ($r = $vs | Select-VSSetupInstance -Product Microsoft.VisualStudio.Product.Community) {$r}
 	else {$vs}
 
-	if ($vs) {
-		Join-Path @($vs)[0].InstallationPath (Get-MSBuild15Path $Bitness)
-	}
-	elseif (!$Prerelease) {
-		Get-MSBuild15VSSetup -Bitness:$Bitness -Prerelease
-	}
+	Join-Path @($vs)[0].InstallationPath (Get-MSBuild15Path $Bitness)
 }
 
 function Get-MSBuild15Guess($Bitness, [switch]$Prerelease) {
 	$Folder = if ($Prerelease) {'Preview'} else {'2017'}
 	if (!($root = ${env:ProgramFiles(x86)})) {$root = $env:ProgramFiles}
-	if (!(Test-Path -LiteralPath "$root\Microsoft Visual Studio\$Folder")) {return}
 
-	$paths = @(
-		foreach($_ in Resolve-Path "$root\Microsoft Visual Studio\$Folder\*\$(Get-MSBuild15Path $Bitness)" -ErrorAction 0) {
-			$_.ProviderPath
+	if (Test-Path -LiteralPath "$root\Microsoft Visual Studio\$Folder") {
+		$paths = @(
+			foreach($_ in Resolve-Path "$root\Microsoft Visual Studio\$Folder\*\$(Get-MSBuild15Path $Bitness)" -ErrorAction 0) {
+				$_.ProviderPath
+			}
+		)
+		if ($paths) {
+			if ($r = $paths -like '*\Enterprise\*') {return $r}
+			if ($r = $paths -like '*\Professional\*') {return $r}
+			if ($r = $paths -like '*\Community\*') {return $r}
+			return $paths[0]
 		}
-	)
-
-	if ($paths) {
-		if ($r = $paths -like '*\Enterprise\*') {return $r}
-		if ($r = $paths -like '*\Professional\*') {return $r}
-		if ($r = $paths -like '*\Community\*') {return $r}
-		$paths[0]
 	}
-	elseif (!$Prerelease) {
+
+	if (!$Prerelease) {
 		Get-MSBuild15Guess -Bitness:$Bitness -Prerelease
 	}
 }

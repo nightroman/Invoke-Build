@@ -9,6 +9,15 @@
 - v4.1.0 `(job TaskName -Safe)`. Instead, use `?TaskName`. [#105].
 - v4.0.1 `use VisualStudio`: not used much or at all, not working for VS 2017.
 
+## v4.1.2
+
+Add ability to use MSBuild from Visual Studio Preview, #107.
+
+Avoid trailing `\r` in task synopses extracted from block comments.
+
+Amend the role of `Done` in custom tasks. It is always called and works
+as `finally` for a task. Handlers check for `$Task.Error` if it matters.
+
 ## v4.1.1
 
 Improve `Result` on invalid arguments
