@@ -4,10 +4,10 @@
 
 # Invoke-Build Release Notes
 
-**Deprecated**
+Obsolete features:
 
-- v4.1.0 `(job TaskName -Safe)`. Instead, use `?TaskName`. [#105].
-- v4.0.1 `use VisualStudio`: not used much or at all, not working for VS 2017.
+- v4.1.0 `(job TaskName -Safe)` - instead, use `?TaskName` [#105]
+- v4.0.1 `use VisualStudio` - not used much, not designed for VS 2017
 
 ## v4.1.2
 
