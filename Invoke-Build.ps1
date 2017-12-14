@@ -567,7 +567,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 		*SL ($BuildRoot = if ($Task) {*Path $Task} else {Split-Path $_})
 	}
 	Remove-Variable Task, File, Result, Safe, Summary, WhatIf
-	return
+	exit
 }
 
 function Write-Warning([Parameter()]$Message) {
@@ -581,7 +581,7 @@ foreach($_ in $PSBoundParameters.Keys) {
 		${*}.SP[$_] = $PSBoundParameters[$_]
 	}
 }
-if (${*}.Q = $BuildTask -eq '??' -or $BuildTask -eq '?') {
+if (${*}.Q = $BuildTask -eq '?' -or $BuildTask -eq '??') {
 	$WhatIf = $true
 }
 Remove-Variable Task, File, Result, Safe, Summary
@@ -594,7 +594,7 @@ try {
 			Invoke-Build @('*'; $BuildTask -ne '**') $_.FullName -Safe:${*}.Safe
 		}
 		${*}.B = 1
-		return
+		exit
 	}
 
 	function Enter-Build([Parameter()][scriptblock]$Script) {${*}.EnterBuild = $Script}
@@ -624,13 +624,13 @@ try {
 
 	if (${*}.Q) {
 		*Check ${**}.Keys
-		if ($BuildTask -eq '??') {
-			${**}
-		}
-		else {
+		if ($BuildTask -eq '?') {
 			${**}.Values | *Help
 		}
-		return
+		else {
+			${**}
+		}
+		exit
 	}
 
 	if ($BuildTask -eq '*') {
@@ -669,7 +669,7 @@ try {
 		. *Run ${*}.ExitBuild
 	}
 	${*}.B = 1
-	exit 0
+	exit
 }
 catch {
 	${*}.B = 2
@@ -678,10 +678,13 @@ catch {
 	if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
 		Write-Warning 'Check task parameters: Name and comma separated Jobs.'
 	}
-	if (!${*}.Safe) {
-		if (*My) {$PSCmdlet.ThrowTerminatingError($_)}
-		throw
+	if (${*}.Safe) {
+		exit
 	}
+	elseif (*My) {
+		$PSCmdlet.ThrowTerminatingError($_)
+	}
+	throw
 }
 finally {
 	*SL ${*}.CD

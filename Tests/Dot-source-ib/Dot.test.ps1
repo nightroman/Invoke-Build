@@ -25,3 +25,10 @@ task Dot-with-root {
 	equals $PWD.Path $PSHOME
 	equals $BuildRoot $PSHOME
 }
+
+# Dot-sourcing resets $LASTEXITCODE to 0.
+task ExitCodeZero {
+	$global:LASTEXITCODE = 42
+	. Invoke-Build
+	equals $global:LASTEXITCODE 0
+}

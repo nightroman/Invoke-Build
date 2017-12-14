@@ -48,3 +48,26 @@ task Warnings {
 	equals $2.File $BuildFile
 	equals $2.Task.Name t1
 }
+
+task ExitCodeOnSafe {
+	# 0 on build errors in sessions (hence should be 0 in exec).
+	# Formal test, sessions should not use $LASTEXITCODE.
+	$global:LASTEXITCODE = 42
+	Invoke-Build -Safe missing {task t1}
+	equals $global:LASTEXITCODE 0
+
+	# 0 on build errors in exec (redundant test, in theory).
+	# This test covers real scenarios.
+	$global:LASTEXITCODE = 42
+	Invoke-PowerShell -Command Invoke-Build missing $BuildFile -Safe
+	equals $global:LASTEXITCODE 0
+
+	# 1 on argument errors in exec.
+	# This test covers real scenarios.
+	$global:LASTEXITCODE = 42
+	Invoke-PowerShell -Command Invoke-Build missing missing -Safe
+	equals $global:LASTEXITCODE 1
+
+	# On argument errors in sessions $LASTEXITCODE is undefined (old).
+	# This case is not tested, sessions should not use $LASTEXITCODE.
+}
