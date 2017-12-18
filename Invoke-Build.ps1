@@ -112,13 +112,13 @@ if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 	throw 'Invalid script.'
 }
 if ($_.Count) {&{
-	($a = New-Object System.Collections.ObjectModel.Collection[Attribute]).Add((New-Object System.Management.Automation.ParameterAttribute))
 	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
 	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
 	foreach($p in $_.Values) {
 		if ($c -notcontains ($_ = $p.Name)) {
 			if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
-			${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $a))
+			${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $p.Attributes))
+			foreach($a in $p.Attributes) {if ($a -is [System.Management.Automation.ParameterAttribute]) {$a.Position = 0x80000000}}
 		}
 	}
 	${*}.DP

@@ -72,3 +72,39 @@ task DynamicMissingScript {
 	assert ($r -like 'Missing default script.')
 	assert ($r.InvocationInfo.Line -like '*{Invoke-Build}*')
 }
+
+task PreserveAttributes {
+	Set-Content z.ps1 {
+		param(
+			[Parameter(ParameterSetName='set1')]
+			[ValidateSet("debug", "release")]
+			$Config,
+			[Parameter(ParameterSetName='set2')]
+			$Param1,
+			$Param2
+		)
+
+		task t1 {$Config, $Param2}
+		task t2 {$Param1, $Param2}
+	}
+
+	# AmbiguousParameterSet
+	try {Invoke-Build t1 z.ps1 -Result Result} catch {$err = $_}
+	equals $err.FullyQualifiedErrorId 'AmbiguousParameterSet,Invoke-Build.ps1'
+	equals $Result.Error 'Invalid arguments.'
+	equals $Result.Tasks.Count 0
+
+	# ParameterArgumentValidationError
+	try {Invoke-Build t1 z.ps1 -Config bad -Result Result} catch {$err = $_}
+	equals $err.FullyQualifiedErrorId 'ParameterArgumentValidationError,Invoke-Build.ps1'
+	equals $Result.Error 'Invalid arguments.'
+	equals $Result.Tasks.Count 0
+
+	# set1
+	Invoke-Build t1 z.ps1 -Config debug -Param2 value2
+
+	# set2
+	Invoke-Build t2 z.ps1 -Param1 value1 -Param2 value2
+
+	Remove-Item z.ps1
+}

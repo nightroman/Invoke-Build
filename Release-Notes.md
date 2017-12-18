@@ -1,13 +1,16 @@
 
-[#106]: https://github.com/nightroman/Invoke-Build/issues/106
-[#105]: https://github.com/nightroman/Invoke-Build/issues/105
-
 # Invoke-Build Release Notes
 
 Obsolete features:
 
-- v4.1.0 `(job TaskName -Safe)` - instead, use `?TaskName` [#105]
+- v4.1.0 `(job TaskName -Safe)` - instead, use `?TaskName` #105
 - v4.0.1 `use VisualStudio` - not used much, not designed for VS 2017
+
+## v4.2.0
+
+Preserve attributes of build script parameters, [#109](https://github.com/nightroman/Invoke-Build/issues/109).
+
+Amend exit codes on `-Safe` in cmd: 1 on argument errors, 0 otherwise.
 
 ## v4.1.2
 
@@ -35,11 +38,11 @@ Tidy up help.
 
 ## v4.1.0
 
-- Improve syntax and usability of safe references. [#105]
+- Improve syntax and usability of safe references. #105
     - Introduce `?TaskName` instead of deprecated `(job TaskName -Safe)`.
     - Support `?TaskName` in the parameter `-Task` of `Invoke-Build`.
 - Redesign error output.
-    - Improve for VSCode, AppVeyor, and redirection. [#106]
+    - Improve for VSCode, AppVeyor, and redirection. #106
     - If a task fails in `If`, add it to the list of invoked tasks.
 
 ## v4.0.2
@@ -54,10 +57,10 @@ Tidy up help.
 ## v4.0.0
 
 New command `Build-Checkpoint` replaces `Invoke-Build -Checkpoint`. If you use
-persistent builds then change the command and parameters, see [#101](https://github.com/nightroman/Invoke-Build/issues/101).
+persistent builds then change the command and parameters, see #101.
 
 New command `Build-Parallel` replaces `Invoke-Builds` (mind "s"). If you use
-parallel builds then simply rename the command, see [#100](https://github.com/nightroman/Invoke-Build/issues/100).
+parallel builds then simply rename the command, see #100.
 
 ## v3.7.2
 

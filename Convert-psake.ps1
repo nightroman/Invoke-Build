@@ -298,8 +298,6 @@ Add-Line @'
 	The parameters are specified for Invoke-Build on invoking.
 #>
 
-# TODO: [CmdletBinding()] is optional but recommended for strict name checks.
-[CmdletBinding()]
 param(
 )
 '@
