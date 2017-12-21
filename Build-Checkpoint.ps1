@@ -1,6 +1,6 @@
 
 <#
-Copyright 2011-2017 Roman Kuzmin
+Copyright 2011-2018 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the

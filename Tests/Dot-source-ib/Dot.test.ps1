@@ -16,19 +16,3 @@
 task Dot-test {
 	exec {Invoke-PowerShell -NoProfile ./Dot-test.ps1}
 }
-
-# Synopsis: Dot-sourcing with a specified root.
-# Also, dot-sourcing in a build, unusual but possible.
-task Dot-with-root {
-	($r = . Invoke-Build $PSHOME)
-	equals $r
-	equals $PWD.Path $PSHOME
-	equals $BuildRoot $PSHOME
-}
-
-# Dot-sourcing resets $LASTEXITCODE to 0.
-task ExitCodeZero {
-	$global:LASTEXITCODE = 42
-	. Invoke-Build
-	equals $global:LASTEXITCODE 0
-}

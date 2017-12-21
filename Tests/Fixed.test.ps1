@@ -412,12 +412,3 @@ task EnsureResultHashtable171201 {
 
 	equals $r.Value.Error 'Invalid arguments.'
 }
-
-<#
-Synopsis: MultilineSynopsis
-v4.1.1 MultilineSynopsis is returned with \r in the end.
-#>
-task MultilineSynopsis171204 {
-	($r = Get-BuildSynopsis $Task)
-	equals $r MultilineSynopsis
-}

@@ -52,20 +52,6 @@ task InvalidJobType {
 	}
 }
 
-# The task has invalid value in After.
-task InvalidJobValueAfter {
-	Test "Task 'InvalidAfter': Invalid job.*InvalidAfter -After*InvalidArgument*" {
-		task InvalidAfter -After @{}
-	}
-}
-
-# The task has invalid value in Before.
-task InvalidJobValueBefore {
-	Test "Task 'InvalidBefore': Invalid job.*InvalidBefore -Before*InvalidArgument*" {
-		task InvalidBefore -Before @{}
-	}
-}
-
 # Missing task in jobs.
 task TaskNotDefined {
 	Test "Task 'task1': Missing task 'missing'.*At *\z.build.ps1:*InvalidArgument*" {
@@ -164,4 +150,34 @@ task InvalidParameterResult {
 	($r = try {Invoke-Build -Result 1} catch {$_})
 	equals "$r" 'Invalid parameter Result.'
 	equals $r.FullyQualifiedErrorId Invoke-Build.ps1
+}
+
+# Get Mandatory value for the command and parameter (true or false for a single
+# attribute). The command must exist, the parameter may be missing (nothing is
+# returned).
+function Get-Mandatory($CommandName, $ParameterName) {
+	foreach($p in (Get-Command $CommandName).Parameters.Values) {
+		if ($p.Name -eq $ParameterName) {
+			foreach($a in $p.Attributes) {
+				if ($a -is [System.Management.Automation.ParameterAttribute]) {
+					$a.Mandatory
+				}
+			}
+		}
+	}
+}
+
+# Test commands with Mandatory parameters.
+task MandatoryParameters {
+	# test `task` and `Get-Mandatory` itself
+	equals (Get-Mandatory task Name) $true
+	equals (Get-Mandatory task Jobs) $false
+	equals (Get-Mandatory task bar)
+
+	# test other commands
+	equals (Get-Mandatory error Task) $true
+	equals (Get-Mandatory property Name) $true
+	equals (Get-Mandatory Get-BuildSynopsis Task) $true
+	equals (Get-Mandatory exec Command) $true
+	equals (Get-Mandatory use Path) $true
 }

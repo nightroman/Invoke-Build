@@ -4,9 +4,6 @@
 	Acknowledged issues and various facts.
 #>
 
-# Synopsis: Empty task used by other tests.
-task dummy
-
 ### Dynamic switch
 
 <#
@@ -144,21 +141,6 @@ task How-To-Get-Invoke-Build-Directory {
 	# test 3 values are the same
 	equals $IBRoot1 $IBRoot2
 	equals $IBRoot2 $IBRoot3
-}
-
-### Invoke-Build overhead
-
-task Measure-Invoke-Build-Overhead {
-	# invoke this script as a normal script
-	$r1 = Measure-Command {& $BuildFile}
-	$r1.TotalMilliseconds
-
-	# invoke this script as a build script
-	$r2 = Measure-Command {Invoke-Build dummy $BuildFile}
-	$r2.TotalMilliseconds
-
-	# Invoke-Build overhead
-	($r2 - $r1).TotalMilliseconds
 }
 
 <#

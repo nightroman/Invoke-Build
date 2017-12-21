@@ -1,6 +1,6 @@
 
 <#
-Copyright 2011-2017 Roman Kuzmin
+Copyright 2011-2018 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the
@@ -130,8 +130,8 @@ if ($_.Count) {&{
 function Add-BuildTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
 	[Parameter(Position=1)][object[]]$Jobs,
-	[object[]]$After,
-	[object[]]$Before,
+	[string[]]$After,
+	[string[]]$Before,
 	$If=$true,
 	$Inputs,
 	$Outputs,
@@ -191,7 +191,7 @@ B:$(if ($null -ne $B) {" $B [$($B.GetType())]"})
 #.ExternalHelp InvokeBuild-Help.xml
 function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 	if (!($_ = ${*}.All[$Task])) {
-		*Die "Missing task '$Task'." 13
+		*Die "Missing task '$Task'." 5
 	}
 	$_.Error
 }
@@ -210,13 +210,14 @@ function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 	$f = ($I = $Task.InvocationInfo).ScriptName
 	if (!($d = $Hash[$f])) {
-		$Hash[$f] = $d = @{}
-		foreach($_ in [System.Management.Automation.PSParser]::Tokenize((Get-Content -LiteralPath $f), [ref]$null)) {
-			if ($_.Type -eq 15) {$d[$_.EndLine] = $_.Content}
+		$Hash[$f] = $d = @{T = Get-Content -LiteralPath $f; C = @{}}
+		foreach($_ in [System.Management.Automation.PSParser]::Tokenize($d.T, [ref]$null)) {
+			if ($_.Type -eq 15) {$d.C[$_.EndLine] = $_.Content}
 		}
 	}
-	for($n = $I.ScriptLineNumber; ($c = $d[--$n])) {
-		if ($c -match '(?m)^\s*#*\s*Synopsis\s*:(.*)') {return $Matches[1].Trim()}
+	for($n = $I.ScriptLineNumber; --$n -ge 1) {
+		if ($c = $d.C[$n]) {if ($c -match '(?m)^\s*#*\s*Synopsis\s*:(.*)') {return $Matches[1].Trim()}}
+		elseif ($d.T[$n - 1].Trim()) {break}
 	}
 }
 
@@ -251,10 +252,6 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 	$d = switch -regex ($Path) {
 		'^\*|^\d+\.' {Split-Path (Resolve-MSBuild $_)}
 		^Framework {"$env:windir\Microsoft.NET\$_"}
-		^VisualStudio\\ {
-			$x = if ([IntPtr]::Size -eq 8) {'\Wow6432Node'}
-			[Microsoft.Win32.Registry]::GetValue("HKEY_LOCAL_MACHINE\SOFTWARE$x\Microsoft\$_", 'InstallDir', '')
-		}
 		default {*Path $_}
 	}
 	if (![System.IO.Directory]::Exists($d)) {throw "Cannot resolve '$Path'."}
@@ -325,11 +322,10 @@ function *Unsafe($N, $J) {
 }
 
 function *Amend([Parameter()]$X, $J, $B) {
-	trap {*Die (*Error "Task '$n': $_" $X) 5}
 	$n = $X.Name
 	foreach($_ in $J) {
 		$r, $s = *Job $_
-		if (!($t = ${*}.All[$r])) {throw "Missing task '$r'."}
+		if (!($t = ${*}.All[$r])) {*Die (*Error "Task '$n': Missing task '$r'." $X) 5}
 		$j = $t.Jobs
 		$i = $j.Count
 		if ($B) {
@@ -389,7 +385,7 @@ function *IO {
 	${private:*p} = [System.Collections.Generic.List[object]]@()
 	${*i} = foreach($_ in ${*i}) {
 		if ($_ -isnot [System.IO.FileInfo]) {$_ = [System.IO.FileInfo](*Path $_)}
-		if (!$_.Exists) {throw "Missing Inputs item '$_'."}
+		if (!$_.Exists) {throw "Missing input '$_'."}
 		$_
 		${*p}.Add($_.FullName)
 	}
@@ -546,7 +542,6 @@ function *Task {
 	}
 }
 
-function job($Name, [switch]$Safe) {if ($Safe) {"?$Name"} else {$Name}}
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
 Set-Alias error Get-BuildError
@@ -561,13 +556,8 @@ Set-Alias Build-Parallel (Join-Path $_ Build-Parallel.ps1)
 Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
 
 if ($MyInvocation.InvocationName -eq '.') {
-	if ($_ = $MyInvocation.ScriptName) {
-		$ErrorActionPreference = 'Stop'
-		$BuildFile = $_
-		*SL ($BuildRoot = if ($Task) {*Path $Task} else {Split-Path $_})
-	}
 	Remove-Variable Task, File, Result, Safe, Summary, WhatIf
-	exit
+	return
 }
 
 function Write-Warning([Parameter()]$Message) {

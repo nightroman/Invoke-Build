@@ -17,11 +17,6 @@
 	Any code is invoked with the current location set to $BuildRoot,
 	the script directory. $ErrorActionPreference is set to 'Stop'.
 
-	To get commands help, dot-source Invoke-Build and then get help:
-
-		PS> . Invoke-Build
-		PS> help task -full
-
 	SCRIPT PARAMETERS
 
 	Build scripts define parameters as usual using the param() block.
@@ -32,9 +27,9 @@
 	The following parameter names are reserved for the engine:
 	Task, File, Result, Safe, Summary, WhatIf
 
-	PUBLIC COMMANDS
+	COMMANDS AND HELP
 
-	Scripts should use provided aliases (instead of functions)
+	The following commands are available for build scripts:
 
 		task      (Add-BuildTask)
 		exec      (Invoke-BuildExec)
@@ -52,6 +47,11 @@
 
 	[1] Write-Warning is redefined internally in order to count warnings in
 	a build script and nested scripts. Warnings in modules are not counted.
+
+	To get commands help, dot-source Invoke-Build and then call help:
+
+		PS> . Invoke-Build
+		PS> help task -full
 
 	SPECIAL ALIASES
 
@@ -111,28 +111,6 @@
 
 	Enter-BuildTask, Exit-BuildTask, Enter-BuildJob, and Exit-BuildJob are
 	invoked in the same scope, the parent of task action blocks.
-
-	DOT-SOURCING
-
-	Build features can be dot-sourced by the command:
-
-		. Invoke-Build [<root>]
-
-	If it is called interactively then it imports commands for getting help.
-	But if it is used in a usual script then it makes a build-like session:
-
-	- $ErrorActionPreference is set to Stop
-	- $BuildFile is the calling script path
-	- $BuildRoot is its directory or <root>
-	- the current location is $BuildRoot
-	- available commands:
-		- exec
-		- assert
-		- equals
-		- property
-		- requires
-		- use
-		- Write-Build
 
 	PRIVATE STUFF
 

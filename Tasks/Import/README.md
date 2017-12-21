@@ -36,16 +36,24 @@ In a module, to export:
 - In the module *.psm1* define and export an alias to this script.
 
 ```powershell
-    Set-Alias MyModule.tasks $PSScriptRoot/MyModule.tasks.ps1
-    Export-ModuleMember -Alias MyModule.tasks
+Set-Alias MyModule.tasks $PSScriptRoot/MyModule.tasks.ps1
+Export-ModuleMember -Alias MyModule.tasks
 ```
 
-In a build, to import:
+In a build script, to import:
 
 - Import a module.
 - Dot-source its task script using its alias.
 
 ```powershell
-    Import-Module MyModule
-    . MyModule.tasks
+Import-Module MyModule
+. MyModule.tasks
+```
+
+If the exact name `MyModule.tasks` is not known or there are several commands
+then get them from the module by the pattern `*.tasks` and import in a loop:
+
+```powershell
+Import-Module MyModule
+foreach($file in Get-Command *.tasks -Module MyModule) {. $file}
 ```

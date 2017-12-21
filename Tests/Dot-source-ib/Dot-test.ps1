@@ -11,33 +11,21 @@
 Set-StrictMode -Version Latest
 
 # to be changed/tested
-$ErrorActionPreference = 'Continue'
-
-# to be changed/tested
 Set-Location -LiteralPath $HOME
 
-# import tools
+# dot-source tools, test not changed error preference
+$ErrorActionPreference = 'Continue'
 . Invoke-Build
+if ($ErrorActionPreference -ne 'Continue') {throw}
+
+# set error preference to stop
+$ErrorActionPreference = 'Stop'
 
 ### Test assert first of all
 
 # `assert` works and gets the proper position
 ($e = try {assert 0} catch {$_ | Out-String})
 assert ($e -like '*Assertion failed.*try {assert*')
-
-### Test variables and current location
-
-# error preference is Stop
-assert ($ErrorActionPreference -eq 'Stop')
-
-# $BuildFile is set
-assert ($BuildFile -eq $MyInvocation.MyCommand.Definition) "$BuildFile -eq $($MyInvocation.MyCommand.Definition)"
-
-# $BuildRoot is set
-equals $BuildRoot (Split-Path $BuildFile)
-
-# location is set
-equals $BuildRoot (Get-Location).Path
 
 ### Test special aliases and targets
 
@@ -109,8 +97,8 @@ assert ($e -like 'exec : Command { cmd /c exit 13 } exited with code 13.*try {ex
 
 ### property
 
-($r = property BuildFile)
-equals $r $BuildFile
+($r = property true)
+equals $r $true
 
 ($r = property ComputerName)
 equals $r $env:COMPUTERNAME
@@ -133,9 +121,9 @@ use Framework\v4.0.30319 MSBuild
 $r = (Get-Alias MSBuild).Definition
 assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
 
-use $BuildRoot Dot-test.ps1
+use (Split-Path $MyInvocation.MyCommand.Path) Dot-test.ps1
 ($r = (Get-Alias Dot-test.ps1).Definition)
-equals $r $BuildFile
+equals $r $MyInvocation.MyCommand.Path
 
 ($e = try {use Missing MSBuild} catch {$_ | Out-String})
 assert ($e -like 'use : Cannot resolve *try {use *')

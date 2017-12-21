@@ -2,8 +2,7 @@
 <#
 .Synopsis
 	Shows Invoke-Build task trees with brief information.
-	Invoke-Build - Build Automation in PowerShell
-	Copyright (c) 2011-2017 Roman Kuzmin
+	Copyright (c) Roman Kuzmin
 
 .Description
 	This script analyses task references and shows parent tasks and child trees
@@ -80,7 +79,7 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 
 $ErrorActionPreference = 'Stop'
 try {
-	. Invoke-Build .
+	. Invoke-Build
 
 	# get tasks
 	$tasks = Invoke-Build ?? $_File @_Parameters

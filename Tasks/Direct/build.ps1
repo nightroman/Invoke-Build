@@ -29,7 +29,7 @@ param(
 )
 
 # The trick: if it is not called by Invoke-Build then recall and return.
-if ($MyInvocation.ScriptName -notlike '*Invoke-Build.ps1') {
+if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -ne 'Invoke-Build.ps1') {
 	Invoke-Build $Tasks $MyInvocation.MyCommand.Path @PSBoundParameters
 	return
 }

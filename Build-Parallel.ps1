@@ -1,6 +1,6 @@
 
 <#
-Copyright 2011-2017 Roman Kuzmin
+Copyright 2011-2018 Roman Kuzmin
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the
@@ -41,9 +41,10 @@ if ($Result) {
 # no builds
 if (!$Build) {return}
 
-# engine to source and call in jobs
+# get and source the engine
 $ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
-try {. $ib .} catch {$PSCmdlet.ThrowTerminatingError($_)}
+try {. $ib} catch {$PSCmdlet.ThrowTerminatingError($_)}
+$ErrorActionPreference = 'Stop'
 
 ### make works, check scripts
 $works = @()

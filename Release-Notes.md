@@ -1,10 +1,16 @@
 
 # Invoke-Build Release Notes
 
-Obsolete features:
+## v5.0.0
 
-- v4.1.0 `(job TaskName -Safe)` - instead, use `?TaskName` #105
-- v4.0.1 `use VisualStudio` - not used much, not designed for VS 2017
+Allow empty lines between synopsis comments and tasks, [#111](https://github.com/nightroman/Invoke-Build/issues/111).
+
+Remove actions on dot-sourcing, [#112](https://github.com/nightroman/Invoke-Build/issues/112).
+
+Retire obsolete features:
+
+- `(job TaskName -Safe)` - instead, use `?TaskName` [#105](https://github.com/nightroman/Invoke-Build/issues/105)
+- `use VisualStudio` - not used much, not designed for VS 2017
 
 ## v4.2.0
 
