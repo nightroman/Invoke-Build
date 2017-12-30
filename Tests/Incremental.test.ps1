@@ -202,23 +202,55 @@ task TestOutputsFails ?IncrementalOutputsFails, ?PartialOutputsFails, {
 }
 
 # Error: incremental output is empty
-task IncrementalOutputsIsEmpty -Inputs {'.build.ps1'} -Outputs {} {throw}
-task TestIncrementalOutputsIsEmpty ?IncrementalOutputsIsEmpty, {
-	Test-Error IncrementalOutputsIsEmpty 'Outputs must not be empty.*'
+task IncrementalOutputsIsEmpty {
+	$file = {
+		task t1 -Inputs {'.build.ps1'} -Outputs {} {throw}
+	}
+	($r = try {Invoke-Build t1 $file} catch {$_})
+	$e = $r[-1]
+	assert ($e.CategoryInfo.Category -eq 'InvalidArgument')
+	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
+	equals $e.InvocationInfo.ScriptName $BuildFile
+	equals "$e" 'Outputs must not be empty.'
 }
 
 # Error: partial inputs and outputs have different number of items
-task InputsOutputsMismatch -Partial -Inputs {'.build.ps1'} -Outputs {} {throw}
-task TestInputsOutputsMismatch ?InputsOutputsMismatch, {
-	Test-Error InputsOutputsMismatch 'Different Inputs/Outputs counts: 1/0.*'
+task InputsOutputsMismatch {
+	$file = {
+		task t1 -Partial -Inputs {'.build.ps1'} -Outputs {} {throw}
+	}
+	($r = try {Invoke-Build t1 $file} catch {$_})
+	$e = $r[-1]
+	assert ($e.CategoryInfo.Category -eq 'InvalidData')
+	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
+	equals $e.InvocationInfo.ScriptName $BuildFile
+	equals "$e" 'Different Inputs/Outputs counts: 1/0.'
 }
 
-# Error: one of the input items is missing.
-task IncrementalMissingInputs -Inputs {'missing'} -Outputs {} {throw}
-task PartialMissingInputs -Partial -Inputs {'missing'} -Outputs {} {throw}
-task TestMissingInputs ?IncrementalMissingInputs, ?PartialMissingInputs, {
-	Test-Error IncrementalMissingInputs "Missing input '*\missing'.*"
-	Test-Error PartialMissingInputs "Missing input '*\missing'.*"
+# Error: one of the input items is missing (normal).
+task IncrementalMissingInputs {
+	$file = {
+		task t1 -Inputs {'missing'} -Outputs {} {throw}
+	}
+	($r = try {Invoke-Build t1 $file} catch {$_})
+	$e = $r[-1]
+	assert ($e.CategoryInfo.Category -eq 'ObjectNotFound')
+	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
+	equals $e.InvocationInfo.ScriptName $BuildFile
+	assert ("$e" -like "Missing input '*missing'.")
+}
+
+# Error: one of the input items is missing (partial).
+task PartialMissingInputs {
+	$file = {
+		task t1 -Partial -Inputs {'missing'} -Outputs {} {throw}
+	}
+	($r = try {Invoke-Build t1 $file} catch {$_})
+	$e = $r[-1]
+	assert ($e.CategoryInfo.Category -eq 'ObjectNotFound')
+	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
+	equals $e.InvocationInfo.ScriptName $BuildFile
+	assert ("$e" -like "Missing input '*missing'.")
 }
 
 ### #49

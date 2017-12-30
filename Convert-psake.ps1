@@ -81,15 +81,12 @@
 				Not supported.
 
 	TaskSetup -> Enter-BuildTask
-		Use Enter-BuildTask.
 
 	TaskTearDown -> Exit-BuildTask
-		Use Exit-BuildTask. Note that unlike TaskTearDown, Exit-BuildTask is
-		always called if its pair Enter-BuildTask is called.
 
 	FormatTaskName ->
-		Not supported. Enter-BuildTask and Exit-BuildTask may be used for some
-		custom task "headers" and "footers".
+		Set-BuildHeader is used instead, see the repository sample Tasks/Header.
+		Enter-BuildTask and Exit-BuildTask may be used for headers and footers.
 
 	VARIABLES (should be done manually)
 
@@ -100,8 +97,8 @@
 		-> $BuildRoot
 
 	$psake.build_script_file
-		-> $BuildFile, if actually its path is needed in the context
-		-> (Get-Item -LiteralPath $BuildFile), if the item is needed
+		-> (Get-Item -LiteralPath $BuildFile), the exact replacement
+		-> $BuildFile, if its path is actually needed in the context
 
 	$psake.version
 		-> (Get-Module InvokeBuild).Version
@@ -115,7 +112,7 @@
 		special cases use the switch Invoke.
 .Parameter Invoke
 		Tells to invoke the script before conversion. This may be needed if
-		some names or objects are defined dynamically in the script.
+		some names or build items are defined dynamically in the script.
 .Parameter Synopsis
 		Tells to add "# Synopsis:" even for tasks with no Description.
 
@@ -157,24 +154,32 @@ Remove-Variable Source, Invoke, Synopsis
 ### Dot-source with dummy tools
 if (${*Invoke}) {
 	function Invoke-Dummy {}
-	Set-Alias properties Invoke-Dummy
+	Set-Alias exec Invoke-Dummy
+	Set-Alias FormatTaskName Invoke-Dummy
 	Set-Alias framework Invoke-Dummy
 	Set-Alias include Invoke-Dummy
+	Set-Alias properties Invoke-Dummy
+	Set-Alias task Invoke-Dummy
 	Set-Alias TaskSetup Invoke-Dummy
 	Set-Alias TaskTearDown Invoke-Dummy
-	Set-Alias exec Invoke-Dummy
-	Set-Alias task Invoke-Dummy
 	$null = . ${*Source}
 }
 
 ### Redefine tools
 
-Set-Alias properties Write-Property
+Set-Alias FormatTaskName Write-FormatTaskName
 Set-Alias framework Write-Framework
 Set-Alias include Write-Include
+Set-Alias properties Write-Property
+Set-Alias task Write-Task
 Set-Alias TaskSetup Write-TaskSetup
 Set-Alias TaskTearDown Write-TaskTearDown
-Set-Alias task Write-Task
+
+function Write-FormatTaskName([string]$format) {
+	$format = $format.Replace("'", "''")
+	'# TODO: Custom task headers, see the repository Tasks/Header for details.'
+	"Set-BuildHeader { param(`$Path) Write-Build Cyan ('$format' -f `$Path) }"
+}
 
 function Write-Property([scriptblock]$properties) {
 	'# TODO: Move some properties to script param() in order to use as parameters.'
@@ -226,8 +231,8 @@ function Write-Task
 		"# Synopsis: $description"
 	}
 
-	if ($alias) {"# TODO: Alias '$alias' is not supported. Do not use it or define another task: task $alias $($name)"}
-	if ($continueOnError) {"# TODO: ContinueOnError is not supported. Instead, invoke or reference it as '?TaskName'"}
+	if ($alias) {"# TODO: Alias '$alias' is not supported. Do not use it or define another task: task $alias $name"}
+	if ($continueOnError) {"# TODO: ContinueOnError is not supported. Instead, callers use its safe reference as '?$name'"}
 	if ($requiredVariables) {'# TODO: RequiredVariables is not supported. Instead, in the action use: $VarName = property VarName'}
 
 	### task Name
@@ -378,7 +383,7 @@ foreach($statement in $statements) {
 	# out statement
 	$text = $extent.Text
 	if ($statement -is [System.Management.Automation.Language.PipelineAst]) {
-		if ($text -match '^(properties|framework|include|TaskSetup|TaskTearDown|task)\b') {
+		if ($text -match '^(properties|framework|include|task|TaskSetup|TaskTearDown|FormatTaskName)\b') {
 			try {
 				$text = (& ([scriptblock]::Create($text)) | Out-String -Width 1mb).Trim()
 			}

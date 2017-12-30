@@ -287,6 +287,10 @@ function *SL($P=$BuildRoot) {
 	Set-Location -LiteralPath $P -ErrorAction 1
 }
 
+function *Fin([Parameter()]$M, $C=0) {
+	*Die $M $C
+}
+
 function *Run($_) {
 	if ($_ -and !$WhatIf) {
 		*SL
@@ -308,7 +312,7 @@ $(*At $I)
 function *Job($J) {
 	if ($J -is [string]) {if ($J[0] -eq '?') {$J.Substring(1), 1} else {$J}}
 	elseif ($J -is [scriptblock]) {$J}
-	else {throw 'Invalid job.'}
+	else {*Fin 'Invalid job.' 5}
 }
 
 function *Unsafe($N, $J) {
@@ -321,11 +325,11 @@ function *Unsafe($N, $J) {
 	}
 }
 
-function *Amend([Parameter()]$X, $J, $B) {
+function *Amend($X, $J, $B) {
 	$n = $X.Name
 	foreach($_ in $J) {
 		$r, $s = *Job $_
-		if (!($t = ${*}.All[$r])) {*Die (*Error "Task '$n': Missing task '$r'." $X) 5}
+		if (!($t = ${*}.All[$r])) {*Fin (*Error "Task '$n': Missing task '$r'." $X) 5}
 		$j = $t.Jobs
 		$i = $j.Count
 		if ($B) {
@@ -336,15 +340,15 @@ function *Amend([Parameter()]$X, $J, $B) {
 	}
 }
 
-function *Check([Parameter()]$J, $T, $P=@()) {
+function *Check($J, $T, $P=@()) {
 	foreach($_ in $J) { if ($_ -is [string]) {
 		$_, $null = *Job $_
 		if (!($r = ${*}.All[$_])) {
 			$_ = "Missing task '$_'."
-			*Die $(if ($T) {*Error "Task '$($T.Name)': $_" $T} else {$_}) 5
+			*Fin $(if ($T) {*Error "Task '$($T.Name)': $_" $T} else {$_}) 5
 		}
 		if ($P -contains $r) {
-			*Die (*Error "Task '$($T.Name)': Cyclic reference to '$_'." $T) 5
+			*Fin (*Error "Task '$($T.Name)': Cyclic reference to '$_'." $T) 5
 		}
 		*Check $r.Jobs $r ($P + $r)
 	}}
@@ -385,9 +389,9 @@ function *IO {
 	${private:*p} = [System.Collections.Generic.List[object]]@()
 	${*i} = foreach($_ in ${*i}) {
 		if ($_ -isnot [System.IO.FileInfo]) {$_ = [System.IO.FileInfo](*Path $_)}
-		if (!$_.Exists) {throw "Missing input '$_'."}
-		$_
+		if (!$_.Exists) {*Fin "Missing input '$_'." 13}
 		${*p}.Add($_.FullName)
+		$_
 	}
 	if (!${*p}) {return 2, 'Skipping empty input.'}
 
@@ -402,7 +406,7 @@ function *IO {
 				${*o}
 			}
 		)
-		if (${*p}.Count -ne ${*o}.Count) {throw "Different Inputs/Outputs counts: $(${*p}.Count)/$(${*o}.Count)."}
+		if (${*p}.Count -ne ${*o}.Count) {*Fin "Different Inputs/Outputs counts: $(${*p}.Count)/$(${*o}.Count)." 6}
 
 		$k = -1
 		$Task.Inputs = $i = [System.Collections.Generic.List[object]]@()
@@ -421,7 +425,7 @@ function *IO {
 			$Task.Outputs = ${*o} = ${*p} | & ${*o}
 			*SL
 		}
-		if (!${*o}) {throw 'Outputs must not be empty.'}
+		if (!${*o}) {*Fin 'Outputs must not be empty.' 5}
 
 		$Task.Inputs = ${*p}
 		$m = (${*i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
@@ -601,9 +605,9 @@ try {
 	${private:**} = @(. ${*}.File @_)
 	foreach($_ in ${**}) {
 		Write-Warning "Unexpected output: $_."
-		if ($_ -is [scriptblock]) {throw "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)"}
+		if ($_ -is [scriptblock]) {*Fin "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)" 6}
 	}
-	if (!(${**} = ${*}.All).Count) {throw "No tasks in '$BuildFile'."}
+	if (!(${**} = ${*}.All).Count) {*Fin "No tasks in '$BuildFile'." 6}
 
 	foreach($_ in ${**}.Values) {
 		if ($_.Before) {*Amend $_ $_.Before 1}
@@ -634,7 +638,7 @@ try {
 	}
 
 	New-Variable BuildRoot (*Path $BuildRoot) -Option Constant -Force
-	if (![System.IO.Directory]::Exists($BuildRoot)) {throw "Missing build root '$BuildRoot'."}
+	if (![System.IO.Directory]::Exists($BuildRoot)) {*Fin "Missing build root '$BuildRoot'." 13}
 
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	foreach($_ in ${*}.Redefined) {

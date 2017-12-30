@@ -31,6 +31,8 @@ framework "4.0x86"
 
 include ".\psake 'ext'.ps1"
 
+FormatTaskName "-------- '{0}' --------"
+
 function f1($p1, $p2) {
 	$psake.build_script_file.FullName
 	$psake.build_script_file

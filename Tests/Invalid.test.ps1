@@ -32,9 +32,12 @@ task NoTasks {
 	# build
 	$e = 0
 	($r = try {Invoke-Build . {} -Result result} catch {$e = $_})
+	Write-Build Magenta ($e | Out-String)
 
 	# caught error
-	assert ($e.FullyQualifiedErrorId -clike 'No tasks in *')
+	assert ($e.CategoryInfo.Category -eq 'InvalidData')
+	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
+	equals $e.InvocationInfo.ScriptName $BuildFile
 
 	# 2.10.4, was 0 errors
 	assert ($r -clike 'Build ABORTED *\Invalid.test.ps1. 0 tasks, 1 errors, 0 warnings *')

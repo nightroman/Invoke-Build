@@ -64,7 +64,12 @@ task Invalid {
 		task root
 	}
 	($r = try {Invoke-Build root $file} catch {$_})
-	assert ($r[-1].FullyQualifiedErrorId -clike 'Missing build root ''*\:''.,Invoke-Build.ps1')
+
+	$e = $r[-1]
+	assert ($e.CategoryInfo.Category -eq 'ObjectNotFound')
+	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
+	equals $e.InvocationInfo.ScriptName $BuildFile
+	assert ("$e" -clike 'Missing build root ''*\:''.')
 }
 
 task Constant1 {

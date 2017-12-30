@@ -1,9 +1,13 @@
 
-# Define headers as separator, task path, synopsis, and location, e.g. for Ctrl+Click in VSCode
+# Define headers as separator, task path, synopsis, and location, e.g. for Ctrl+Click in VSCode.
+# If you need task start times, use `$Task.Started`.
 Set-BuildHeader {
 	param($Path)
+	# separator line
 	'=' * 79
+	# default header + synopsis
 	Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
+	# task location in a script
 	Write-Build DarkGray "$($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
 }
 
