@@ -302,7 +302,7 @@ function *At($I) {
 	$I.InvocationInfo.PositionMessage.Trim()
 }
 
-function *Error($M, $I) {
+function *Msg($M, $I) {
 @"
 $M
 $(*At $I)
@@ -329,7 +329,7 @@ function *Amend($X, $J, $B) {
 	$n = $X.Name
 	foreach($_ in $J) {
 		$r, $s = *Job $_
-		if (!($t = ${*}.All[$r])) {*Fin (*Error "Task '$n': Missing task '$r'." $X) 5}
+		if (!($t = ${*}.All[$r])) {*Fin (*Msg "Task '$n': Missing task '$r'." $X) 5}
 		$j = $t.Jobs
 		$i = $j.Count
 		if ($B) {
@@ -345,10 +345,10 @@ function *Check($J, $T, $P=@()) {
 		$_, $null = *Job $_
 		if (!($r = ${*}.All[$_])) {
 			$_ = "Missing task '$_'."
-			*Fin $(if ($T) {*Error "Task '$($T.Name)': $_" $T} else {$_}) 5
+			*Fin $(if ($T) {*Msg "Task '$($T.Name)': $_" $T} else {$_}) 5
 		}
 		if ($P -contains $r) {
-			*Fin (*Error "Task '$($T.Name)': Cyclic reference to '$_'." $T) 5
+			*Fin (*Msg "Task '$($T.Name)': Cyclic reference to '$_'." $T) 5
 		}
 		*Check $r.Jobs $r ($P + $r)
 	}}
@@ -374,9 +374,9 @@ function *Root($A) {
 	foreach($_ in $A.Keys) {if (!$h[$_]) {$_}}
 }
 
-function *Fail($T) {
+function *Err($T) {
 	${*}.Errors.Add([PSCustomObject]@{Error = $_; File = $BuildFile; Task = $T})
-	Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
+	Write-Build 12 "ERROR: $(if (*My) {$_} else {*Msg $_ $_})"
 	if ($T) {$T.Error = $_}
 }
 
@@ -457,7 +457,7 @@ function *Task {
 			${*x} = & ${*x}
 		}
 		catch {
-			*Fail $Task
+			*Err $Task
 			${*}.Tasks.Add($Task)
 			Write-Build 14 (*At $Task)
 			$Task.Elapsed = [TimeSpan]::Zero
@@ -489,7 +489,7 @@ function *Task {
 					${*i} = *IO
 				}
 				catch {
-					*Fail $Task
+					*Err $Task
 					throw
 				}
 				Write-Build 8 ${*i}[1]
@@ -520,7 +520,7 @@ function *Task {
 				}
 			}
 			catch {
-				*Fail $Task
+				*Err $Task
 				throw
 			}
 			finally {
@@ -668,7 +668,7 @@ try {
 catch {
 	${*}.B = 2
 	${*}.Error = $_
-	if (!${*}.Errors) {*Fail}
+	if (!${*}.Errors) {*Err}
 	if ($_.FullyQualifiedErrorId -eq 'PositionalParameterNotFound,Add-BuildTask') {
 		Write-Warning 'Check task parameters: Name and comma separated Jobs.'
 	}
@@ -690,7 +690,7 @@ finally {
 			foreach($_ in $t) {
 				'{0,-16} {1} - {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber
 				if ($_ = $_.Error) {
-					Write-Build 12 "ERROR: $(if (*My) {$_} else {*Error $_ $_})"
+					Write-Build 12 "ERROR: $(if (*My) {$_} else {*Msg $_ $_})"
 				}
 			}
 		}

@@ -193,7 +193,7 @@ try {
 		### result
 		if ($_) {
 			Write-Build Cyan "Build $($work.Title) FAILED."
-			$_ = if ($_ -is [System.Management.Automation.ErrorRecord] -and $runtime) {*Error $_ $_} else {"$_"}
+			$_ = if ($_ -is [System.Management.Automation.ErrorRecord] -and $runtime) {*Msg $_ $_} else {"$_"}
 			Write-Build Red "ERROR: $_"
 			$failures += @{
 				File = $work.Title
