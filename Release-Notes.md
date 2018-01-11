@@ -1,6 +1,12 @@
 
 # Invoke-Build Release Notes
 
+## v5.0.1
+
+Tidy up some check failure errors, [#115](https://github.com/nightroman/Invoke-Build/issues/115)
+
+Convert `FormatTaskName` by `Convert-psake`, [#114](https://github.com/nightroman/Invoke-Build/issues/114)
+
 ## v5.0.0
 
 Allow empty lines between synopsis comments and tasks, [#111](https://github.com/nightroman/Invoke-Build/issues/111).

@@ -41,14 +41,6 @@ task Clean {
 	Remove-Item -Force -Recurse
 }
 
-# Synopsis: Warn about not empty git status if .git exists.
-task GitStatus -If (Test-Path .git) {
-	$status = exec { git status -s }
-	if ($status) {
-		Write-Warning "Git status: $($status -join ', ')"
-	}
-}
-
 # Synopsis: Build the PowerShell help file.
 # <https://github.com/nightroman/Helps>
 task Help {

@@ -123,21 +123,22 @@ task Timeout -If ($BuildRoot -notmatch '[\[\]]') {
 	$message = ''
 	try {
 		Build-Parallel -Result r -Timeout 500 @(
-			@{File='Sleep.build.ps1'; Milliseconds=10; Log='z.1'}
-			@{File='Sleep.build.ps1'; Milliseconds=2000; Log='z.2'}
-			@{File='Sleep.build.ps1'; Milliseconds=3000; Log='z.3'}
+			@{File='Shared.tasks.ps1'; Task='Sleep'; SleepMilliseconds=10; Log='z.1'}
+			@{File='Shared.tasks.ps1'; Task='Sleep'; SleepMilliseconds=2000; Log='z.2'}
+			@{File='Shared.tasks.ps1'; Task='Sleep'; SleepMilliseconds=3000; Log='z.3'}
 		)
 	}
 	catch {
 		$message = "$_"
 	}
+	Write-Build Magenta $message
 
 	# Check the error message.
 	assert ($message -like @'
 Failed builds:
-Build: *\Sleep.build.ps1
+Build: *\Shared.tasks.ps1
 ERROR: Build timed out.
-Build: *\Sleep.build.ps1
+Build: *\Shared.tasks.ps1
 ERROR: Build timed out.*
 '@) "[[$message]]"
 
