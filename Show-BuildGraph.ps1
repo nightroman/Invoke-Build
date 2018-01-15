@@ -7,30 +7,30 @@
 .Description
 	Requires:
 	- Graphviz: http://graphviz.org
-	- Graphviz\bin in the environment variable Graphviz or in the path.
-	- Invoke-Build in the script directory, in the path, or as the module.
+	- Graphviz\bin is in the path or defined as $env:Graphviz.
+	- Invoke-Build is in the path or available as the module command.
 
-	The script calls Invoke-Build.ps1 in order to get the tasks (WhatIf mode),
-	builds the DOT file and calls Graphviz's dot.exe in order to visualize it
-	using one of the supported output formats and the associated application.
+	The script calls Invoke-Build in order to get the tasks, builds the DOT
+	and calls Graphviz's dot.exe in order to visualize it using one of the
+	supported output formats and the associated application.
 
 	Tasks with code are shown as boxes, tasks without code are shown as ovals.
 	Safe references are shown with dotted edges, regular calls are shown with
-	solid edges. Call numbers on edges are not shown by default.
+	solid edges. Job numbers are not shown by default.
 
 	EXAMPLES
 
-	# Make and show a PDF for the default build script
+	# Make and show PDF for the default build script
 	Show-BuildGraph
 
-	# Make Build.png with call numbers and top to bottom edges
+	# Make Build.png with job numbers and top to bottom edges
 	Show-BuildGraph -Number -NoShow -Code '' -Output Build.png
 
 .Parameter File
 		See: help Invoke-Build -Parameter File
 .Parameter Output
 		The output file and the format specified by its extension.
-		The default is "$env:TEMP\Graphviz-xxxxxxxx.pdf".
+		The default is "$env:TEMP\name-xxxxxxxx.pdf".
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
 		The default 'graph [rankdir=LR]' tells edges to go from left to right.
@@ -66,13 +66,6 @@ $dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {'dot.exe'}
 $dot = Get-Command $dot -CommandType Application -ErrorAction 0
 if (!$dot) {throw 'Cannot resolve dot.exe'}
 
-# resolve Invoke-Build
-$ib = "$(Split-Path $MyInvocation.MyCommand.Path)/Invoke-Build.ps1"
-if (!(Test-Path -LiteralPath $ib)) {
-	$ib = Get-Command Invoke-Build -ErrorAction 0
-	if (!$ib) {throw 'Cannot resolve Invoke-Build'}
-}
-
 # output
 if ($Output) {
 	if (!($type = [System.IO.Path]::GetExtension($Output))) {throw 'Output must have an extension'}
@@ -80,15 +73,16 @@ if ($Output) {
 	$type = $type.Substring(1).ToLower()
 }
 else {
-	$hash = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
-	$hash = '{0:x8}' -f ($hash.ToUpper().GetHashCode())
-	$Output = "$env:TEMP\Graphviz-$hash.pdf"
+	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
+	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
+	$hash = '{0:x8}' -f ($path.ToUpper().GetHashCode())
+	$Output = "$env:TEMP\$name-$hash.pdf"
 	$type = 'pdf'
 }
 
 # get tasks
 if (!$Parameters) {$Parameters = @{}}
-$all = & $ib ?? $File @Parameters
+$all = Invoke-Build ?? $File @Parameters
 
 # DOT code
 $text = @(

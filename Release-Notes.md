@@ -1,6 +1,8 @@
 
 # Invoke-Build Release Notes
 
+Add *Show-BuildDgml.ps1* and tweak *Show-BuildGraph.ps1*, [#116](https://github.com/nightroman/Invoke-Build/issues/116)
+
 ## v5.0.1
 
 Tidy up some check failure errors, [#115](https://github.com/nightroman/Invoke-Build/issues/115)

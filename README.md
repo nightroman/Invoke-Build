@@ -45,6 +45,7 @@ And some more tools, see the repository:
 
 * *Convert-psake.ps1* - converts psake build scripts
 * *Show-BuildTree.ps1* - shows task trees as text
+* *Show-BuildDgml.ps1* - shows task trees as DGML
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
 
 ## Install as module
