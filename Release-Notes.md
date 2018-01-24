@@ -1,7 +1,8 @@
 
 # Invoke-Build Release Notes
 
-Add *Show-BuildDgml.ps1* and tweak *Show-BuildGraph.ps1*, [#116](https://github.com/nightroman/Invoke-Build/issues/116)
+- 2018-01-24 *Show-BuildDgml.ps1* included task synopses.
+- 2018-01-20 Add *Show-BuildDgml.ps1* and tweak *Show-BuildGraph.ps1*, [#116](https://github.com/nightroman/Invoke-Build/issues/116)
 
 ## v5.0.1
 

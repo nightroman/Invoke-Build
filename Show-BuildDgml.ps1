@@ -67,6 +67,10 @@ if (!$Output) {
 if (!$Parameters) {$Parameters = @{}}
 $all = Invoke-Build ?? $File @Parameters
 
+# synopses
+$docs = @{}
+. Invoke-Build
+
 # make DGML
 $xml = [xml]'<?xml version="1.0" encoding="utf-8"?><DirectedGraph/>'
 $doc = $xml.DocumentElement
@@ -87,6 +91,10 @@ foreach($it in $all.Values) {
 	$name = $it.Name
 	$node = $nodes.AppendChild($xml.CreateElement('Node'))
 	$node.SetAttribute('Id', $name)
+
+	if ($synopsis = Get-BuildSynopsis $it $docs) {
+		$node.SetAttribute('Synopsis', $synopsis)
+	}
 
 	$num = 0
 	$script = ''
