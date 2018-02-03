@@ -47,6 +47,7 @@ And some more tools, see the repository:
 * *Show-BuildTree.ps1* - shows task trees as text
 * *Show-BuildDgml.ps1* - shows task trees as DGML
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
+* *Show-TaskHelp.ps1* - shows task help and some analysis
 
 ## Install as module
 
