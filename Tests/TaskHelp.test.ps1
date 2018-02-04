@@ -81,7 +81,7 @@ task UndocumentedStuff {
 	if ($V3) {
 		equals $r.Parameters.Count 1
 		equals $r.Parameters[0].Name NoTestDiff
-		equals $r.Parameters[0].Type SwitchParameter
+		equals $r.Parameters[0].Type switch
 		equals $r.Parameters[0].Description $null
 		equals $r.Environment.Count 2
 		equals $r.Environment[0] MERGE
@@ -96,4 +96,24 @@ task UndocumentedStuff {
 	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]} -NoCode -NoTree
 	equals $r.Parameters.Count 0
 	equals $r.Environment.Count 0
+}
+
+# Skip variables on the left hand of assignments.
+# Cover missing help `Parameters` in strict mode.
+task SkipAssignment {
+	Set-Content z.ps1 @'
+param(
+	$Param1
+)
+task Test {
+	$Param1 = 1
+	$env:Param2 = 2
+}
+'@
+
+	$r = Show-TaskHelp . z.ps1 -Format {$args[0]}
+	equals $r.Parameters.Count 0
+	equals $r.Environment.Count 0
+
+	Remove-Item z.ps1
 }

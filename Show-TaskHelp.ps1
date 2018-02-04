@@ -78,9 +78,11 @@ if (!$BuildTask -or '.' -eq $BuildTask) {
 $Task = $all[$BuildTask]
 if (!$Task) {*Fin "Missing task '$BuildTask' in '$BuildFile'." 5}
 
-### get help and parameters
+### get script help
 $Help = Get-Help $BuildFile
-$Help = if ($Help.Parameters) {$Help.Parameters.parameter} else {@()}
+$Help = if ($Help.PSObject.Properties['Parameters']) {$Help.Parameters.parameter} else {@()}
+
+### get script parameters
 $CommonParameters = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
 $Parameters = (Get-Command $BuildFile).Parameters
 foreach($name in @($Parameters.Keys)) {
@@ -142,7 +144,10 @@ $VariableExpressionAst = {$args[0] -is [System.Management.Automation.Language.Va
 function Add-BlockParameter($Block) {
 	$variables = $job.Ast.FindAll($VariableExpressionAst, $true)
 	foreach($variable in $variables) {
-		Add-VariablePath $variable.VariablePath.UserPath
+		$parent = $variable.Parent
+		if ($parent -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or $parent.Left -ne $variable) {
+			Add-VariablePath $variable.VariablePath.UserPath
+		}
 	}
 }
 
@@ -226,17 +231,25 @@ $TaskHelp.Environment = @($MapEnvironment.Keys | Sort-Object)
 # make parameter objects
 $TaskHelp.Parameters = @()
 foreach($name in @($MapParameter.Keys | Sort-Object)) {
-	$param = 1 | Select-Object Name, Type, Description
-	$param.Name = $name
-	$parameter = $Parameters[$name]
-	$param.Type = $parameter.ParameterType.Name
-	$param.Description = foreach($_ in $Help) {
+	$param = $Parameters[$name]
+	$r = 1 | Select-Object Name, Type, Description
+	$r.Name = $name
+
+	$type = $param.ParameterType.Name
+	if ($type -eq 'SwitchParameter') {
+		$r.Type = 'switch'
+	}
+	else {
+		$r.Type = $type
+	}
+
+	$r.Description = foreach($_ in $Help) {
 		if ($_.name -eq $name -and $_.PSObject.Properties['description']) {
 			($_.description | Out-String).Trim()
 			break
 		}
 	}
-	$TaskHelp.Parameters += $param
+	$TaskHelp.Parameters += $r
 }
 
 # finish
