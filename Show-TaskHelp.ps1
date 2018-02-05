@@ -5,10 +5,10 @@
 	Copyright (c) Roman Kuzmin
 
 .Description
-	The command shows the specified or default task help information as task
-	name, jobs, synopsis, location, parameters, and environment. By default,
-	it analyses the code and called tasks in order to extract parameters and
-	environment variables in addition to optionally documented in comments.
+	The command shows the specified tasks help information as task names with
+	synopses, jobs with their locations, script parameters and environment. By
+	default, it analyses the code in order to extract variables in addition to
+	optionally documented in comments.
 
 	Synopsis is defined in task comments as # Synopsis: ...
 	Parameters are defined as # Parameters: name1, name2, ...
@@ -17,27 +17,27 @@
 	Parameters names match build parameters and separated by spaces or commas.
 	Parameter descriptions are taken from the build script comment based help.
 
-	Task help members (for custom formatters):
+	Help info members (for custom formatters):
 
-		Task: [string] Task name.
-		Jobs: [string[]] Task jobs, may be empty. Actions are represented as {}.
-		Synopsis: [string] Task synopsis, may be null.
-		Location: [string] Task location as "<file>:<line>".
-		Parameters: [object[]] Task parameters, may be empty.
+		Task: [object[]] Tasks to do.
+			Name: [string] Task name.
+			Synopsis: [string] Task synopsis, may be null.
+		Jobs: [object[]] Jobs to do.
+			Name: [string] Task name.
+			Location: [string] Task location as "<file>:<line>".
+		Parameters: [object[]] Tasks parameters, may be empty.
 			Name: [string] Parameter name.
 			Type: [string] Parameter type.
 			Description: [string] Parameter help, may be null or empty.
-		Environment: [string[]] Task environment variables, may be empty.
+		Environment: [string[]] Tasks environment variables, may be empty.
 
 .Parameter Task
-		Build task name. The default is the usual default task.
+		Build task name(s). The default is the usual default task.
 .Parameter File
 		Build script path. The default is the usual default script.
 .Parameter NoCode
 		Tells to skip code analysis for parameters and environment.
 		It is used as true for PowerShell v2.
-.Parameter NoTree
-		Tells to skip recursive processing of the called task trees.
 .Parameter Format
 		Specifies the custom task help formatter.
 
@@ -46,11 +46,10 @@
 #>
 
 param(
-	[Parameter(Position=0)][string]$Task,
+	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)]$File,
 	$Format = 'Format-TaskHelp',
-	[switch]$NoCode,
-	[switch]$NoTree
+	[switch]$NoCode
 )
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
@@ -75,8 +74,6 @@ $all = Invoke-Build ?? $BuildFile
 if (!$BuildTask -or '.' -eq $BuildTask) {
 	$BuildTask = if ($all['.']) {'.'} else {$all.Item(0).Name}
 }
-$Task = $all[$BuildTask]
-if (!$Task) {*Fin "Missing task '$BuildTask' in '$BuildFile'." 5}
 
 ### get script help
 $Help = Get-Help $BuildFile
@@ -94,8 +91,31 @@ foreach($name in @($Parameters.Keys)) {
 # amend options
 $NoCode = $NoCode -or $PSVersionTable.PSVersion.Major -le 2
 
+# globals
 $Hash = @{}
-function Get-TaskInfo($Task) {
+$BuildJobs = @()
+$MapParameter = @{}
+$MapEnvironment = @{}
+$VariableExpressionAst = {$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}
+
+# collect jobs to do in $BuildJobs
+function Add-TaskJob($Jobs, $Task) {
+	foreach($job in $Jobs) {
+		$job, $null = *Job $job
+		if ($job -is [string]) {
+			$task2 = $all[$job]
+			Add-TaskJob $task2.Jobs $task2
+		}
+		else {
+			if ($BuildJobs -notcontains $Task.Name) {
+				$script:BuildJobs += $Task.Name
+			}
+		}
+	}
+}
+
+# get parameters and environment from comments
+function Get-TaskComment($Task) {
 	$f = ($I = $Task.InvocationInfo).ScriptName
 	if (!($d = $Hash[$f])) {
 		$Hash[$f] = $d = @{T = Get-Content -LiteralPath $f; C = @{}}
@@ -115,9 +135,6 @@ function Get-TaskInfo($Task) {
 	}
 	$r
 }
-
-$MapParameter = @{}
-$MapEnvironment = @{}
 
 function Add-VariablePath($Path) {
 	$index = $Path.IndexOf(':')
@@ -139,8 +156,6 @@ function Add-VariablePath($Path) {
 	}
 }
 
-$VariableExpressionAst = {$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}
-
 function Add-BlockParameter($Block) {
 	$variables = $job.Ast.FindAll($VariableExpressionAst, $true)
 	foreach($variable in $variables) {
@@ -151,55 +166,52 @@ function Add-BlockParameter($Block) {
 	}
 }
 
-function Add-TaskParameter($Task) {
-	$info = Get-TaskInfo $Task
-	foreach($name in $info.Environment) {
-		$MapEnvironment[$name] = 1
-	}
-	foreach($name in $info.Parameters) {
-		if ($Parameters.ContainsKey($name)) {
-			$MapParameter[$name] = 1
-		}
-		else {
-			Write-Warning "Task '$($Task.Name)': unknown parameter '$name'."
-		}
-	}
+function Add-TaskVariable($Jobs) {
+	foreach($job in $Jobs) {
+		$task = $all[$job]
+		$info = Get-TaskComment $task
 
-	if (!$NoCode) {
-		$job = $Task.If
-		if ($job -is [scriptblock]) {
-			Add-BlockParameter $job
+		foreach($name in $info.Environment) {
+			$MapEnvironment[$name] = 1
 		}
-	}
-
-	foreach($job in $Task.Jobs) {
-		$job, $null = *Job $job
-		if ($job -is [string]) {
-			if (!$NoTree) {
-				$task2 = $all[$job]
-				Add-TaskParameter $task2
+		foreach($name in $info.Parameters) {
+			if ($Parameters.ContainsKey($name)) {
+				$MapParameter[$name] = 1
+			}
+			else {
+				Write-Warning "Task '$($task.Name)': unknown parameter '$name'."
 			}
 		}
-		elseif (!$NoCode) {
-			Add-BlockParameter $job
+
+		if (!$NoCode) {
+			$job = $Task.If
+			if ($job -is [scriptblock]) {
+				Add-BlockParameter $job
+			}
+			foreach($job in $task.Jobs) {
+				if ($job -is [scriptblock]) {
+					Add-BlockParameter $job
+				}
+			}
 		}
 	}
 }
 
 function Format-TaskHelp($TaskHelp) {
 	Write-Build White Task:
-	Write-Build Gray ('    {0}' -f $TaskHelp.Task)
-
-	Write-Build White Jobs:
-	Write-Build Gray ('    {0}' -f ($TaskHelp.Jobs -join ', '))
-
-	if ($TaskHelp.Synopsis) {
-		Write-Build White Synopsis:
-		Write-Build Gray ('    {0}' -f $TaskHelp.Synopsis)
+	foreach($r in $TaskHelp.Task) {
+		if ($r.Synopsis) {
+			Write-Build Gray ('    {0} - {1}' -f $r.Name, $r.Synopsis)
+		}
+		else {
+			Write-Build Gray ('    {0}' -f $r.Name)
+		}
 	}
 
-	Write-Build White Location:
-	Write-Build Gray ('    {0}' -f $TaskHelp.Location)
+	Write-Build White Jobs:
+	foreach($r in $TaskHelp.Jobs) {
+		Write-Build Gray ('    {0} - {1}' -f $r.Name, $r.Location)
+	}
 
 	if ($TaskHelp.Parameters) {
 		Write-Build White Parameters:
@@ -217,18 +229,37 @@ function Format-TaskHelp($TaskHelp) {
 	}
 }
 
-### task help
+### .Task
 $TaskHelp = 1 | Select-Object Task, Jobs, Synopsis, Location, Parameters, Environment
-$TaskHelp.Task = $Task.Name
-$TaskHelp.Jobs = @(foreach($job in $Task.Jobs) {if ($job -is [string]) {$job} else {'{}'}})
-$TaskHelp.Synopsis = Get-BuildSynopsis $Task $Hash
-$TaskHelp.Location = '{0}:{1}' -f $Task.InvocationInfo.ScriptName, $Task.InvocationInfo.ScriptLineNumber
+$TaskHelp.Task = @(
+	foreach($job in $BuildTask) {
+		$job, $null = *Job $job
+		$task = $all[$job]
+		if (!$task) {*Fin "Missing task '$job' in '$BuildFile'." 5}
+		$r = 1 | Select-Object Name, Synopsis
+		$r.Name = $task.Name
+		$r.Synopsis = Get-BuildSynopsis $task $Hash
+		$r
+	}
+)
 
-# get parameter and environment names
-Add-TaskParameter $Task
+### .Jobs
+Add-TaskJob $BuildTask
+$TaskHelp.Jobs = @(
+	foreach($name in $BuildJobs) {
+		$task = $all[$name]
+		$r = 1 | Select-Object Name, Location
+		$r.Name = $task.Name
+		$r.Location = '{0}:{1}' -f $task.InvocationInfo.ScriptName, $task.InvocationInfo.ScriptLineNumber
+		$r
+	}
+)
+
+### .Parameters and .Environment
+Add-TaskVariable $BuildJobs
 $TaskHelp.Environment = @($MapEnvironment.Keys | Sort-Object)
 
-# make parameter objects
+# make parameter objects with help
 $TaskHelp.Parameters = @()
 foreach($name in @($MapParameter.Keys | Sort-Object)) {
 	$param = $Parameters[$name]

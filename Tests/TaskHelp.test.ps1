@@ -39,14 +39,18 @@ task Test {
 	Set-Alias Write-Warning log
 	function log($m) {$log.Value += $m}
 
+	# call with the default format
+	Show-TaskHelp . z.ps1
+	equals $log.Value "Task 'Test': unknown parameter 'Missing.'."
+
 	$r = Show-TaskHelp . z.ps1 -Format {$args[0]}
 
-	equals $log.Value "Task 'Test': unknown parameter 'Missing.'."
-	equals $r.Task Test
+	equals $r.Task.Count 1
+	equals $r.Task[0].Name Test
+	equals $r.Task[0].Synopsis Test-synopsis
 	equals $r.Jobs.Count 1
-	equals $r.Jobs[0] '{}'
-	equals $r.Synopsis Test-synopsis
-	assert ($r.Location -match 'z\.ps1:\d+$')
+	equals $r.Jobs[0].Name 'Test'
+	assert ($r.Jobs[0].Location -match 'z\.ps1:\d+$')
 	equals $r.Parameters.Count 3
 	equals $r.Parameters[0].Name Configuration
 	equals $r.Parameters[0].Type Object
@@ -61,9 +65,6 @@ task Test {
 	equals $r.Environment[0] Bar1
 	equals $r.Environment[1] Bar2
 
-	# call with the default format
-	Show-TaskHelp . z.ps1
-
 	Remove-Item z.ps1
 }
 
@@ -74,10 +75,13 @@ task UndocumentedStuff {
 
 	# default call with code and trees
 	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]}
-	equals $r.Task .
-	equals ($r.Jobs -join '|') 'Help|Test|Clean'
-	equals $r.Synopsis 'The default task: make, test, clean.'
-	assert ($r.Location -match '\.build\.ps1:\d+$')
+	equals $r.Task.Count 1
+	equals $r.Task[0].Name .
+	equals $r.Task[0].Synopsis 'The default task: make, test, clean.'
+	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'Help, Test3, Test2, Test6, Clean'
+	foreach($job in $r.Jobs) {
+		assert ($job.Location -match '\.build\.ps1:\d+$')
+	}
 	if ($V3) {
 		equals $r.Parameters.Count 1
 		equals $r.Parameters[0].Name NoTestDiff
@@ -93,7 +97,7 @@ task UndocumentedStuff {
 	}
 
 	# call with no code and trees
-	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]} -NoCode -NoTree
+	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]} -NoCode
 	equals $r.Parameters.Count 0
 	equals $r.Environment.Count 0
 }
@@ -114,6 +118,26 @@ task Test {
 	$r = Show-TaskHelp . z.ps1 -Format {$args[0]}
 	equals $r.Parameters.Count 0
 	equals $r.Environment.Count 0
+
+	Remove-Item z.ps1
+}
+
+# Test two tasks and cover missed own task jobs.
+task TwoTasks {
+	Set-Content z.ps1 @'
+task Build {}
+task Version {}
+task Release Version, {}
+'@
+
+	$r = Show-TaskHelp build, release z.ps1 -Format {$args[0]}
+	equals $r.Task.Count 2
+	equals $r.Task[0].Name Build
+	equals $r.Task[1].Name Release
+	equals $r.Jobs.Count 3
+	equals $r.Jobs[0].Name Build
+	equals $r.Jobs[1].Name Version
+	equals $r.Jobs[2].Name Release
 
 	Remove-Item z.ps1
 }
