@@ -141,3 +141,20 @@ task Release Version, {}
 
 	Remove-Item z.ps1
 }
+
+# Tasks with `If` script must be shown in Jobs, even without actions.
+task ForkWithIf {
+	Set-Content z.ps1 @'
+task t1 -if {} t2
+task t2 {}
+'@
+
+	$r = Show-TaskHelp t1 z.ps1 -Format {$args[0]}
+	equals $r.Task.Count 1
+	equals $r.Task[0].Name t1
+	equals $r.Jobs.Count 2
+	equals $r.Jobs[0].Name t2
+	equals $r.Jobs[1].Name t1
+
+	Remove-Item z.ps1
+}

@@ -75,9 +75,11 @@ if (!$BuildTask -or '.' -eq $BuildTask) {
 	$BuildTask = if ($all['.']) {'.'} else {$all.Item(0).Name}
 }
 
-### get script help
-$Help = Get-Help $BuildFile
-$Help = if ($Help.PSObject.Properties['Parameters']) {$Help.Parameters.parameter} else {@()}
+### get script parameter help
+$Help = @(&{
+	Set-StrictMode -Off
+	if ($r = Get-Help $BuildFile) {if ($r = $r.parameters) {if ($r = $r.parameter) {$r}}}
+})
 
 ### get script parameters
 $CommonParameters = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
@@ -110,6 +112,12 @@ function Add-TaskJob($Jobs, $Task) {
 			if ($BuildJobs -notcontains $Task.Name) {
 				$script:BuildJobs += $Task.Name
 			}
+		}
+	}
+
+	if ($Task -and $Task.If -is [scriptblock]) {
+		if ($BuildJobs -notcontains $Task.Name) {
+			$script:BuildJobs += $Task.Name
 		}
 	}
 }
@@ -156,7 +164,7 @@ function Add-VariablePath($Path) {
 	}
 }
 
-function Add-BlockParameter($Block) {
+function Add-BlockVariable($Block) {
 	$variables = $job.Ast.FindAll($VariableExpressionAst, $true)
 	foreach($variable in $variables) {
 		$parent = $variable.Parent
@@ -186,11 +194,11 @@ function Add-TaskVariable($Jobs) {
 		if (!$NoCode) {
 			$job = $Task.If
 			if ($job -is [scriptblock]) {
-				Add-BlockParameter $job
+				Add-BlockVariable $job
 			}
 			foreach($job in $task.Jobs) {
 				if ($job -is [scriptblock]) {
-					Add-BlockParameter $job
+					Add-BlockVariable $job
 				}
 			}
 		}
