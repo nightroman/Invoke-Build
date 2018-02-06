@@ -1,29 +1,37 @@
 
 # Invoke-Build Release Notes
 
-- 2018-01-24 *Show-BuildDgml.ps1* included task synopses.
-- 2018-01-20 Add *Show-BuildDgml.ps1* and tweak *Show-BuildGraph.ps1*, [#116](https://github.com/nightroman/Invoke-Build/issues/116)
+## v5.1.0
+
+New internal tool, [#117](https://github.com/nightroman/Invoke-Build/issues/117)
+
+- The new tool *Show-TaskHelp.ps1* is included to packages.
+- `Invoke-Build ... -WhatIf` uses the new `Show-TaskHelp`.
+
+New external tool, [#116](https://github.com/nightroman/Invoke-Build/issues/116)
+
+- *Show-BuildDgml.ps1* generates build graphs as DGML for Visual Studio.
 
 ## v5.0.1
 
-Tidy up some check failure errors, [#115](https://github.com/nightroman/Invoke-Build/issues/115)
+Tidy up some check failure errors, #115
 
-Convert `FormatTaskName` by `Convert-psake`, [#114](https://github.com/nightroman/Invoke-Build/issues/114)
+Convert `FormatTaskName` by `Convert-psake`, #114
 
 ## v5.0.0
 
-Allow empty lines between synopsis comments and tasks, [#111](https://github.com/nightroman/Invoke-Build/issues/111).
+Allow empty lines between synopsis comments and tasks, #111.
 
-Remove actions on dot-sourcing, [#112](https://github.com/nightroman/Invoke-Build/issues/112).
+Remove actions on dot-sourcing, #112.
 
 Retire obsolete features:
 
-- `(job TaskName -Safe)` - instead, use `?TaskName` [#105](https://github.com/nightroman/Invoke-Build/issues/105)
+- `(job TaskName -Safe)` - instead, use `?TaskName`, see #105.
 - `use VisualStudio` - not used much, not designed for VS 2017
 
 ## v4.2.0
 
-Preserve attributes of build script parameters, [#109](https://github.com/nightroman/Invoke-Build/issues/109).
+Preserve attributes of build script parameters, #109.
 
 Amend exit codes on `-Safe` in cmd: 1 on argument errors, 0 otherwise.
 

@@ -50,14 +50,6 @@ if (!$WhatIf) {
 	Write-Warning 'Ignore this warning.'
 }
 
-# Synopsis: -WhatIf is used in order to show task scripts without invoking them.
-# Note: -Result can be used in order to get some information as well.
-# But this information is not always the same as without -WhatIf.
-task WhatIf {
-	Invoke-Build . Conditional.build.ps1 -WhatIf -Result Result -Configuration Debug
-	equals $Result.Tasks.Count 1
-}
-
 # Synopsis: "Invoke-Build ?[?]" lists tasks.
 # 1) show tasks with brief information
 # 2) get task as an ordered dictionary
@@ -330,6 +322,5 @@ task . ParamsValues2, ParamsValues1, SharedTask2, {
 },
 # Tasks can be referenced between or after script jobs.
 Tests,
-WhatIf,
 ListTask,
 ShowHelp

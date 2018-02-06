@@ -70,6 +70,7 @@ task Module Version, Markdown, Help, {
 	Invoke-Build.ps1,
 	InvokeBuild-Help.xml,
 	Resolve-MSBuild.ps1,
+	Show-TaskHelp.ps1,
 	README.htm,
 	LICENSE.txt,
 	Release-Notes.htm

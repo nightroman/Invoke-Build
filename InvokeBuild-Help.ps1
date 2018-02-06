@@ -102,8 +102,8 @@
 
 		Set-BuildHeader {param($Path)} - to write task headers
 
+	Blocks are not called on WhatIf.
 	Nested builds do not inherit parent blocks.
-	Blocks are not called on WhatIf, except Set-BuildHeader.
 	If Enter-X is called then Exit-X is also called, even on failures.
 
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
@@ -225,9 +225,12 @@
 		durations, names, locations, and error messages.
 '@
 		WhatIf = @'
-		Tells to show preprocessed tasks and their scripts instead of invoking
-		them. If a script does anything but adding and configuring tasks then
-		it should check for $WhatIf and skip some significant actions.
+		Tells to show tasks and jobs to be invoked and some analysis of used
+		parameters and environment variables. See Show-TaskHelp for details.
+
+		If a script does anything but adding tasks then it should check for
+		$WhatIf and skip the real actions in order to support WhatIf calls.
+		Alternatively, use the Enter-Build block for pre-build actions.
 '@
 	}
 
@@ -421,10 +424,6 @@
 
 			Example:
 				task SomeTask -If {...} {...}
-
-		On WhatIf:
-		- Boolean conditions are evaluated and treated per the result.
-		- Script block conditions are treated as true without invocation.
 '@}
 		Inputs = @'
 		Specifies the input items, tells to process the task as incremental,

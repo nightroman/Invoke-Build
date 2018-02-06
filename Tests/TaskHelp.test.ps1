@@ -39,8 +39,8 @@ task Test {
 	Set-Alias Write-Warning log
 	function log($m) {$log.Value += $m}
 
-	# call with the default format
-	Show-TaskHelp . z.ps1
+	# call by WhatIf
+	Invoke-Build -File z.ps1 -WhatIf
 	equals $log.Value "Task 'Test': unknown parameter 'Missing.'."
 
 	$r = Show-TaskHelp . z.ps1 -Format {$args[0]}
@@ -70,10 +70,10 @@ task Test {
 
 # Use this repo build script, test code and tree processing.
 task UndocumentedStuff {
-	# call with the default format
-	Show-TaskHelp '' ../.build.ps1
+	# call by WhatIf
+	Invoke-Build -File ../.build.ps1 -WhatIf
 
-	# default call with code and trees
+	# default call with code
 	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]}
 	equals $r.Task.Count 1
 	equals $r.Task[0].Name .
@@ -96,7 +96,7 @@ task UndocumentedStuff {
 		equals $r.Environment.Count 0
 	}
 
-	# call with no code and trees
+	# call with no code
 	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]} -NoCode
 	equals $r.Parameters.Count 0
 	equals $r.Environment.Count 0
@@ -115,6 +115,10 @@ task Test {
 }
 '@
 
+	# call by WhatIf
+	Invoke-Build . z.ps1 -WhatIf
+
+	# call and test
 	$r = Show-TaskHelp . z.ps1 -Format {$args[0]}
 	equals $r.Parameters.Count 0
 	equals $r.Environment.Count 0
@@ -130,6 +134,10 @@ task Version {}
 task Release Version, {}
 '@
 
+	# call by WhatIf
+	Invoke-Build build, release z.ps1 -WhatIf
+
+	# call and test
 	$r = Show-TaskHelp build, release z.ps1 -Format {$args[0]}
 	equals $r.Task.Count 2
 	equals $r.Task[0].Name Build
@@ -149,6 +157,10 @@ task t1 -if {} t2
 task t2 {}
 '@
 
+	# call by WhatIf
+	Invoke-Build t1 z.ps1 -WhatIf
+
+	# call and test
 	$r = Show-TaskHelp t1 z.ps1 -Format {$args[0]}
 	equals $r.Task.Count 1
 	equals $r.Task[0].Name t1

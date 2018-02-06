@@ -292,7 +292,7 @@ function *Fin([Parameter()]$M, $C=0) {
 }
 
 function *Run($_) {
-	if ($_ -and !$WhatIf) {
+	if ($_) {
 		*SL
 		. $_ @args
 	}
@@ -451,7 +451,7 @@ function *Task {
 
 	$Task.Started = [DateTime]::Now
 	if (${*}.XTask) {& ${*}.XTask}
-	if ((${private:*x} = $Task.If) -is [scriptblock] -and !$WhatIf) {
+	if ((${private:*x} = $Task.If) -is [scriptblock]) {
 		*SL
 		try {
 			${*x} = & ${*x}
@@ -477,12 +477,7 @@ function *Task {
 				*Task ${*j} ${*p}
 				continue
 			}
-
 			& ${*}.Header ${*p}
-			if ($WhatIf) {
-				${*j}
-				continue
-			}
 
 			if (1 -eq ${*i}[0]) {
 				try {
@@ -556,6 +551,7 @@ Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
 Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
 $_ = Split-Path $_
+Set-Alias Show-TaskHelp (Join-Path $_ Show-TaskHelp.ps1)
 Set-Alias Build-Parallel (Join-Path $_ Build-Parallel.ps1)
 Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
 
@@ -635,6 +631,10 @@ try {
 			$BuildTask = if (${**}['.']) {'.'} else {${**}.Item(0).Name}
 		}
 		*Check $BuildTask
+	}
+	if ($WhatIf) {
+		Show-TaskHelp $BuildTask ${*}.File
+		exit
 	}
 
 	New-Variable BuildRoot (*Path $BuildRoot) -Option Constant -Force

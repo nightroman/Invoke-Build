@@ -31,6 +31,7 @@ The package includes the engine, helpers, and the generated help:
 * *Build-Checkpoint.ps1* - invokes persistent builds using the engine
 * *Build-Parallel.ps1* - invokes parallel builds using the engine
 * *Resolve-MSBuild.ps1* - finds the specified or latest MSBuild
+* *Show-TaskHelp.ps1* - shows task help, used on WhatIf calls
 * *InvokeBuild-Help.xml* - external content for Get-Help
 * *ib.cmd* - Invoke-Build helper for cmd.exe
 
@@ -47,7 +48,6 @@ And some more tools, see the repository:
 * *Show-BuildTree.ps1* - shows task trees as text
 * *Show-BuildDgml.ps1* - shows task trees as DGML
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
-* *Show-TaskHelp.ps1* - shows task help and some analysis
 
 ## Install as module
 
