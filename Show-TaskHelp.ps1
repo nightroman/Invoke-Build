@@ -55,24 +55,30 @@ param(
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 1
 
-$BuildTask = $Task
-$BuildFile = $File
-. Invoke-Build
-
-### resolve file
-if ($BuildFile) {
-	$BuildFile = *Path $BuildFile
-	if (![System.IO.File]::Exists($BuildFile)) {*Fin "Missing file '$BuildFile'." 5}
+if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -eq 'Invoke-Build.ps1') {
+	$all = ${*}.All
+	Remove-Variable Task
 }
 else {
-	$BuildFile = Get-BuildFile (*Path)
-	if (!$BuildFile) {*Fin 'Missing default script.' 5}
-}
+	$BuildTask = $Task
+	$BuildFile = $File
+	. Invoke-Build
 
-### resolve task
-$all = Invoke-Build ?? $BuildFile
-if (!$BuildTask -or '.' -eq $BuildTask) {
-	$BuildTask = if ($all['.']) {'.'} else {$all.Item(0).Name}
+	### resolve file
+	if ($BuildFile) {
+		$BuildFile = *Path $BuildFile
+		if (![System.IO.File]::Exists($BuildFile)) {*Fin "Missing file '$BuildFile'." 5}
+	}
+	else {
+		$BuildFile = Get-BuildFile (*Path)
+		if (!$BuildFile) {*Fin 'Missing default script.' 5}
+	}
+
+	### resolve task
+	$all = Invoke-Build ?? $BuildFile
+	if (!$BuildTask -or '.' -eq $BuildTask) {
+		$BuildTask = if ($all['.']) {'.'} else {$all.Item(0).Name}
+	}
 }
 
 ### get script parameter help

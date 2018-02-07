@@ -633,7 +633,7 @@ try {
 		*Check $BuildTask
 	}
 	if ($WhatIf) {
-		Show-TaskHelp $BuildTask ${*}.File
+		Show-TaskHelp
 		exit
 	}
 
