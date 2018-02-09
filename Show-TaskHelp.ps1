@@ -275,7 +275,7 @@ $TaskHelp.Environment = @($MapEnvironment.Keys | Sort-Object)
 
 # make parameter objects with help
 $TaskHelp.Parameters = @()
-foreach($name in @($MapParameter.Keys | Sort-Object)) {
+foreach($name in $MapParameter.Keys) {
 	$param = $Parameters[$name]
 	$r = 1 | Select-Object Name, Type, Description
 	$r.Name = $name
@@ -296,6 +296,7 @@ foreach($name in @($MapParameter.Keys | Sort-Object)) {
 	}
 	$TaskHelp.Parameters += $r
 }
+$TaskHelp.Parameters = @($TaskHelp.Parameters | Sort-Object {$_.Type -eq 'switch'}, Name)
 
 # finish
 & $Format $TaskHelp

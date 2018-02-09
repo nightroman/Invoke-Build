@@ -1,6 +1,11 @@
 
 # Invoke-Build Release Notes
 
+## v5.1.1
+
+- `Show-TaskHelp` - switches are shown after other parameters.
+- Optimized calls of `Show-TaskHelp` from `Invoke-Build`.
+
 ## v5.1.0
 
 New internal tool, [#117](https://github.com/nightroman/Invoke-Build/issues/117)

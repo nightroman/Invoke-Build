@@ -83,6 +83,7 @@ task UndocumentedStuff {
 		assert ($job.Location -match '\.build\.ps1:\d+$')
 	}
 	if ($V3) {
+		#! fixed .Parameters = 1 object, not array
 		equals $r.Parameters.Count 1
 		equals $r.Parameters[0].Name NoTestDiff
 		equals $r.Parameters[0].Type switch
