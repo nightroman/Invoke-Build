@@ -5,13 +5,14 @@
 	Copyright (c) Roman Kuzmin
 
 .Description
-	Requires:
-	- Graphviz: http://graphviz.org
-	- Graphviz\bin is in the path or defined as $env:Graphviz.
+	Requirements:
 	- Invoke-Build is in the path or available as the module command.
+	- Graphviz (http://graphviz.org) is used as the default engine.
+	  Graphviz\bin is in the path or defined as $env:Graphviz.
+	- viz.js is used as an alternative, see the parameter JS.
 
-	The script calls Invoke-Build in order to get the tasks, builds the DOT
-	and calls Graphviz's dot.exe in order to visualize it using one of the
+	The script calls Invoke-Build in order to get the tasks, writes DOT, and
+	uses either dot.exe or viz.js in order to visualize it using one of the
 	supported output formats and the associated application.
 
 	Tasks with code are shown as boxes, tasks without code are shown as ovals.
@@ -20,8 +21,11 @@
 
 	EXAMPLES
 
-	# Make and show PDF for the default build script
+	# Make and show PDF graph using dot.exe
 	Show-BuildGraph
+
+	# Make and show HTML graph by viz.js
+	Show-BuildGraph -JS *
 
 	# Make Build.png with job numbers and top to bottom edges
 	Show-BuildGraph -Number -NoShow -Code '' -Output Build.png
@@ -30,7 +34,11 @@
 		See: help Invoke-Build -Parameter File
 .Parameter Output
 		The output file and the format specified by its extension.
-		The default is "$env:TEMP\name-xxxxxxxx.pdf".
+		The default is "$env:TEMP\name-xxxxxxxx.ext".
+.Parameter JS
+		Tells to use viz.js and generate an HTML file. If it is * then the
+		online script is used. Otherwise, it specifies the path to viz.js.
+		See https://github.com/mdaines/viz.js
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
 		The default 'graph [rankdir=LR]' tells edges to go from left to right.
@@ -52,6 +60,7 @@ param(
 	[string]$File,
 	[Parameter(Position=1)]
 	[string]$Output,
+	[string]$JS,
 	[string]$Code = 'graph [rankdir=LR]',
 	[hashtable]$Parameters,
 	[switch]$NoShow,
@@ -61,10 +70,22 @@ param(
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
 
-# resolve dot.exe
-$dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {'dot.exe'}
-$dot = Get-Command $dot -CommandType Application -ErrorAction 0
-if (!$dot) {throw 'Cannot resolve dot.exe'}
+# resolve dot.exe or js
+if ($JS) {
+	if ($JS -eq '*') {
+		$JS = 'https://github.com/mdaines/viz.js/releases/download/v1.8.0/viz-lite.js'
+	}
+	else {
+		$JS = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($JS)
+		if (![System.IO.File]::Exists($JS)) {throw "Cannot find '$JS'."}
+		$JS = 'file:///' + $JS.Replace('\', '/')
+	}
+}
+else {
+	$dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {'dot.exe'}
+	$dot = Get-Command $dot -CommandType Application -ErrorAction 0
+	if (!$dot) {throw 'Cannot resolve dot.exe'}
+}
 
 # output
 if ($Output) {
@@ -76,8 +97,14 @@ else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
 	$hash = '{0:x8}' -f ($path.ToUpper().GetHashCode())
-	$Output = "$env:TEMP\$name-$hash.pdf"
-	$type = 'pdf'
+	if ($JS) {
+		$Output = "$env:TEMP\$name-$hash.html"
+		$type = 'html'
+	}
+	else {
+		$Output = "$env:TEMP\$name-$hash.pdf"
+		$type = 'pdf'
+	}
 }
 
 # get tasks
@@ -122,13 +149,37 @@ $text = @(
 	'}'
 )
 
-#! temp file UTF8 no BOM
-$temp = "$env:TEMP\Graphviz.dot"
-[System.IO.File]::WriteAllLines($temp, $text)
+if ($JS) {
+	@"
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Build graph</title>
+</head>
+<body>
+<script src="$JS"></script>
+<script>
+document.body.innerHTML += Viz("$(
+	$text | .{process{
+		$_.Replace('"', '\"') + '\'
+	}} |
+	Out-String -Width ([int]::MaxValue)
+)");
+</script>
+</body>
+</html>
+"@ | Set-Content -LiteralPath $Output -Encoding UTF8
+}
+else {
+	#! temp file UTF8 no BOM
+	$temp = "$env:TEMP\Graphviz.dot"
+	[System.IO.File]::WriteAllLines($temp, $text)
 
-# make
-& $dot "-T$type" -o $Output $temp
-if ($LastExitCode) {return}
+	# make
+	& $dot "-T$type" -o $Output $temp
+	if ($LastExitCode) {return}
+}
 
 # show
 if ($NoShow) {return}

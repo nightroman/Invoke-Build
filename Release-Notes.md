@@ -1,6 +1,8 @@
 
 # Invoke-Build Release Notes
 
+- Support `viz.js` in *Show-BuildGraph.ps1*
+
 ## v5.1.1
 
 - `Show-TaskHelp` - switches are shown after other parameters.
