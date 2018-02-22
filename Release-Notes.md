@@ -1,6 +1,8 @@
 
 # Invoke-Build Release Notes
 
+- *Invoke-TaskFromVSCode.ps1* should save the file on invoking, #118
+- Improve *Invoke-TaskFromVSCode.ps1* error info in some cases
 - Support `viz.js` in *Show-BuildGraph.ps1*
 
 ## v5.1.1

@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.0.5
+.VERSION 1.0.6
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Task, VSCode
@@ -34,8 +34,7 @@ param(
 	[Parameter()]
 	[switch]$Console
 )
-
-trap {$PSCmdlet.ThrowTerminatingError($_)}
+try {
 $ErrorActionPreference = 'Stop'
 
 $private:file = $null
@@ -45,6 +44,11 @@ try {
 }
 catch {}
 if (!$file) {throw 'Cannot get the current file.'}
+
+# save if modified, #118
+if ($psEditor.EditorServicesVersion -ge [version]'1.6') {
+	$file.Save()
+}
 
 $private:_Console = $Console
 Remove-Variable Console
@@ -68,3 +72,5 @@ if ($_Console) {
 else {
 	Invoke-Build $task $path
 }
+
+} catch {if ($_.InvocationInfo.ScriptName -like '*Invoke-TaskFromVSCode.ps1') {$PSCmdlet.ThrowTerminatingError($_)} throw}
