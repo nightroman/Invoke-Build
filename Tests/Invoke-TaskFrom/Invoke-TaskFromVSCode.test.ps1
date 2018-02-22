@@ -1,7 +1,7 @@
 
 <#
 .Synopsis
-	Tests Invoke-TaskFromISE.ps1
+	Tests Invoke-TaskFromVSCode.ps1
 #>
 
 . ./Tools.ps1
@@ -10,6 +10,7 @@
 function Use-Context {
 	$file = New-Object psobject
 	Add-Member -InputObject $file -MemberType NoteProperty -Name Path -Value $TestFilePath
+	Add-Member -InputObject $file -MemberType ScriptMethod -Name Save -Value {}
 
 	$cursor = New-Object psobject
 	Add-Member -InputObject $cursor -MemberType NoteProperty -Name Line -Value 0
@@ -21,6 +22,7 @@ function Use-Context {
 
 	$psEditor = New-Object psobject
 	Add-Member -InputObject $psEditor -MemberType ScriptMethod -Name GetEditorContext -Value {$Context}
+	Add-Member -InputObject $psEditor -MemberType NoteProperty -Name EditorServicesVersion -Value ([version]'1.6.0')
 	Set-Variable -Name psEditor -Value $psEditor -Scope 1
 }
 
