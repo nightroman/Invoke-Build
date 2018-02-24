@@ -376,15 +376,31 @@
 		overrides previously added with the same name.
 '@
 		Jobs = @'
-		Specifies the task jobs. Jobs are other task references and own
-		actions, script blocks. Any number of jobs is allowed. Jobs are
-		invoked in the specified order.
+		Specifies one or more task jobs or a hashtable with actual parameters.
+		Jobs are other task references and own actions, script blocks. Any
+		number of jobs is allowed. Jobs are invoked in the specified order.
 
 		Valid jobs are:
 
 			[string] - an existing task name, normal reference
 			[string] "?Name" - safe reference to a task allowed to fail
 			[scriptblock] - action, a script block invoked for this task
+
+		Special value:
+
+			[hashtable] which contains the actual task parameters in addition
+			to the task name. This task definition is more convenient with
+			complex parameters, often typical for incremental tasks.
+
+			Example:
+				task Name @{
+					Inputs = {...}
+					Outputs = {...}
+					Partial = $true
+					Jobs = {
+						process {...}
+					}
+				}
 '@
 		After = @'
 		Tells to add this task to the end of jobs of the specified tasks.
@@ -514,28 +530,30 @@
 		### Splatting helper
 		@{
 			code={
-	# Helper for tasks with complex parameters composed as hashtables
-	function taskx($Name, $Param) {task $Name @Param -Source $MyInvocation}
-
 	# Synopsis: Complex task with parameters as a hashtable.
-	taskx MakeDocs @{
-		Inputs = {...}
-		Outputs = {...}
-		Partial = $true
-		Jobs = 'Task1', {
-			#...
+	task TestAndAnalyse @{
+		If = !$SkipAnalyse
+		Inputs = {
+			Get-ChildItem . -Recurse -Include *.ps1, *.psm1
+		}
+		Outputs = {
+			'Analyser.log'
+		}
+		Jobs = 'Test', {
+			Invoke-ScriptAnalyzer . > Analyser.log
 		}
 	}
 
 	# Synopsis: Simple task with usual parameters.
-	task Task1 {
-		#...
+	task Test -If (!$SkipTest) {
+		Invoke-Pester
 	}
 			}
 			remarks = @'
 	Tasks with complex parameters are often difficult to compose in a readable
-	way. Use PowerShell splatting or add the above helper `taskx` to a script
-	in order to compose parameters as hashtables.
+	way. In such cases use a hashtable in order to specify task parameters in
+	addition to the task name. Keys and values correspond to parameter names
+	and values.
 '@
 		}
 	)

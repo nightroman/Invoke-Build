@@ -129,7 +129,7 @@ if ($_.Count) {&{
 #.ExternalHelp InvokeBuild-Help.xml
 function Add-BuildTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
-	[Parameter(Position=1)][object[]]$Jobs,
+	[Parameter(Position=1)]$Jobs,
 	[string[]]$After,
 	[string[]]$Before,
 	$If=$true,
@@ -142,6 +142,11 @@ function Add-BuildTask(
 )
 {
 	trap {*Die "Task '$Name': $_" 5}
+	if ($Jobs -is [hashtable]) {
+		if ($PSBoundParameters.Count -ne 2) {throw 'Invalid parameters.'}
+		Add-BuildTask $Name @Jobs -Source:$Source
+		return
+	}
 	if ($Name[0] -eq '?') {throw 'Invalid task name.'}
 	if ($_ = ${*}.All[$Name]) {${*}.Redefined += $_}
 	${*}.All[$Name] = [PSCustomObject]@{
@@ -161,7 +166,7 @@ function Add-BuildTask(
 		InvocationInfo = $Source
 	}
 	if (!$Jobs) {return}
-	$1.AddRange($Jobs)
+	$1.AddRange(@($Jobs))
 	$2 = @()
 	foreach($j in $1) {
 		$r, $null = *Job $j
