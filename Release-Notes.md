@@ -1,7 +1,14 @@
 
 # Invoke-Build Release Notes
 
-- *Invoke-TaskFromVSCode.ps1* should save the file on invoking, #118
+## v5.2.0
+
+- **New:** Alternative syntax of task parameters, kind of inline splatting, [#119](https://github.com/nightroman/Invoke-Build/issues/119)
+- Add "missing output" message to incremental task processing, [#120](https://github.com/nightroman/Invoke-Build/issues/120)
+
+Tools
+
+- *Invoke-TaskFromVSCode.ps1* should save the file on invoking, [#118](https://github.com/nightroman/Invoke-Build/issues/118)
 - Improve *Invoke-TaskFromVSCode.ps1* error info in some cases
 - Support `viz.js` in *Show-BuildGraph.ps1*
 

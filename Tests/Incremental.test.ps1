@@ -286,3 +286,11 @@ task InputsPipedToOutputs @param {
 task TestInputsPipedToOutputs InputsPipedToOutputs, {
 	equals $script:InputsPipedToOutputs InputsPipedToOutputs
 }
+
+### #120
+task MissingOutputMessage {
+	$r = Invoke-Build t1 {
+		task t1 -Inputs $BuildFile -Output Missing {}
+	}
+	assert ($r -like "*Missing output 'Missing'.*")
+}

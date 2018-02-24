@@ -436,9 +436,8 @@ function *IO {
 		$m = (${*i} | .{process{$_.LastWriteTime.Ticks}} | Measure-Object -Maximum).Maximum
 		foreach($_ in ${*o}) {
 			$p = *Path $_
-			if (![System.IO.File]::Exists($p) -or $m -gt [System.IO.File]::GetLastWriteTime($p).Ticks) {
-				return $null, "Out-of-date output '$_'."
-			}
+			if (![System.IO.File]::Exists($p)) {return $null, "Missing output '$_'."}
+			if ($m -gt [System.IO.File]::GetLastWriteTime($p).Ticks) {return $null, "Out-of-date output '$_'."}
 		}
 	}
 	2, 'Skipping up-to-date output.'
