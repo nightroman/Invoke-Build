@@ -38,9 +38,9 @@ The package includes the engine, helpers, and the generated help:
 Extra tools, see PSGallery and the repository:
 
 * *Invoke-Build.ArgumentCompleters.ps1* - completers for v5 native, TabExpansionPlusPlus, TabExpansion2.ps1
-* *Invoke-TaskFromISE.ps1* - invokes a task from a build script opened in ISE
 * *Invoke-TaskFromVSCode.ps1* - invokes a task from a build script opened in VSCode
 * *New-VSCodeTask.ps1* - generates VSCode tasks bound to build script tasks
+* *Invoke-TaskFromISE.ps1* - invokes a task from a script opened in ISE
 
 And some more tools, see the repository:
 
@@ -82,14 +82,10 @@ If you use [scoop](https://github.com/lukesampson/scoop) then invoke
 and you are done, scripts are downloaded and their directory is added to the
 path. You may need to start a new PowerShell session with the updated path.
 
-Otherwise download the directory *"Invoke-Build"* to the current location by
-this PowerShell command:
-
-    Invoke-Expression "& {$((New-Object Net.WebClient).DownloadString('https://github.com/nightroman/PowerShelf/raw/master/Save-NuGetTool.ps1'))} Invoke-Build"
-
-Consider to include the directory with scripts to the path so that script paths
-may be omitted in commands. Alternatively, rename to *InvokeBuild* and copy to
-the PowerShell module directory in order to use as the module.
+Otherwise, download the package manually, rename it to zip, extract its *tools*
+and rename to *InvokeBuild*. Consider to include this directory to the path so
+that script paths may be omitted in commands. Or copy to the PowerShell module
+directory in order to use as the module.
 
 With *cmd.exe* use the helper *ib.cmd*. For similar experience in interactive
 PowerShell use an alias `ib` defined in a PowerShell profile
