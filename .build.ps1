@@ -8,23 +8,23 @@
 	Run tests and compare results with expected
 		- Assert-SameFile.ps1 https://www.powershellgallery.com/packages/Assert-SameFile
 		- Invoke-PowerShell.ps1 https://www.powershellgallery.com/packages/Invoke-PowerShell
-	Make the help file in PowerShell XML format
+	Make help in PowerShell XML format
 		- Helps.ps1 https://www.nuget.org/packages/Helps
-	Convert markdown files to HTML for packages
+	Convert markdown files to HTML
 		- pandoc https://github.com/jgm/pandoc/releases
-	Push the release with a tag to GitHub
+	Push to GitHub with a tag
 		- git
-	Make and push the package to NuGet
+	Make and push the NuGet package
 		- NuGet
 	Clean the project directory
 #>
 
-# Build script parameters are standard parameters
+# Build script parameters
 param(
 	[switch]$NoTestDiff
 )
 
-# Ensure Invoke-Build works in the most strict mode.
+# Ensure IB works in the strict mode.
 Set-StrictMode -Version Latest
 
 # Synopsis: Convert markdown files to HTML.
@@ -48,11 +48,10 @@ task Help {
 	Convert-Helps InvokeBuild-Help.ps1 InvokeBuild-Help.xml
 }
 
-# Synopsis: Set $script:Version.
+# Synopsis: Set $script:Version from Release-Notes.
 task Version {
-	# get the version from Release-Notes
-	($script:Version = .{ switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {return $Matches[1]}} })
-	assert $Version
+	($script:Version = switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}})
+	assert $script:Version
 }
 
 # Synopsis: Make the module folder.
@@ -78,7 +77,7 @@ task Module Version, Markdown, Help, {
 	# make manifest
 	Set-Content "$dir\InvokeBuild.psd1" @"
 @{
-	ModuleVersion = '$Version'
+	ModuleVersion = '$script:Version'
 	ModuleToProcess = 'InvokeBuild.psm1'
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
 	Author = 'Roman Kuzmin'
@@ -118,7 +117,7 @@ more powerful. It is complete, bug free, well covered by tests.
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>Invoke-Build</id>
-		<version>$Version</version>
+		<version>$script:Version</version>
 		<authors>Roman Kuzmin</authors>
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
@@ -144,13 +143,13 @@ task PushRelease Version, {
 	assert (!$changes) "Please, commit changes."
 
 	exec { git push }
-	exec { git tag -a "v$Version" -m "v$Version" }
-	exec { git push origin "v$Version" }
+	exec { git tag -a "v$script:Version" -m "v$script:Version" }
+	exec { git push origin "v$script:Version" }
 }
 
 # Synopsis: Push NuGet package.
 task PushNuGet NuGet, {
-	exec { NuGet push "Invoke-Build.$Version.nupkg" -Source nuget.org }
+	exec { NuGet push "Invoke-Build.$script:Version.nupkg" -Source nuget.org }
 },
 Clean
 
