@@ -109,29 +109,3 @@ task StarsMissingDirectory {
 	($r = try {Invoke-Build ** miss} catch {$_})
 	assert ($r -like "Missing directory '*\Tests\miss'.")
 }
-
-#! Test StarsMissingDirectory first
-task Stars StarsMissingDirectory, {
-	Get-Item [z] | Remove-Item -Force -Recurse
-	$null = mkdir z
-
-	# no .test.ps1 files
-	$r = Invoke-Build **, ? z
-	assert (!$r)
-	$r = Invoke-Build **, ?? z
-	assert (!$r)
-
-	# fast task info, test first and last to be sure that there is not a header or footer
-	$r = Invoke-Build **, ?
-	equals $r[0].Name PreTask1
-	equals $r[0].Jobs '{}'
-	equals $r[-1].Name test-fail
-
-	# full task info
-	$r = Invoke-Build **, ??
-	assert ($r.Count -ge 10) # *.test.ps1 files
-	assert ($r[0] -is [System.Collections.Specialized.OrderedDictionary])
-	assert ($r[-1] -is [System.Collections.Specialized.OrderedDictionary])
-
-	Remove-Item z
-}

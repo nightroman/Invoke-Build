@@ -145,10 +145,6 @@
 
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
-
-		Tasks ? and ?? can be combined with **
-		?, ** - To show all test tasks without invoking.
-		??, ** - To get task dictionaries for all test files.
 '@
 		File = @'
 		A build script which adds tasks by the command 'task' (Add-BuildTask).

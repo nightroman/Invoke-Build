@@ -585,7 +585,7 @@ try {
 	if ($BuildTask -eq '**') {
 		${*}.A = 0
 		foreach($_ in $BuildFile) {
-			Invoke-Build @('*'; $BuildTask -ne '**') $_.FullName -Safe:${*}.Safe
+			Invoke-Build * $_.FullName -Safe:${*}.Safe
 		}
 		${*}.B = 1
 		exit
