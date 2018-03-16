@@ -132,124 +132,170 @@ task alias-of-Resolve-MSBuild {
 	equals "$($r.CommandType)" Alias
 }
 
-task Get-MSBuild15VSSetup -If $VSSetup {
-    . Set-Mock Select-VSSetupInstance {
-        param($Product)
-        if ($Product -eq '*') {
-            $all
-        }
-        else {
-            foreach ($_ in $all) {
-                if ($_.Product -eq $Product) {
-                    $_
-                }
-            }
-        }
+task Get-MSBuild15VSSetup {
+	. Set-Mock Get-Module {1}
+	. Set-Mock Import-Module {}
+    . Set-Mock Get-VSSetupInstance {$it}
+    . Set-Mock Select-VSSetupInstance {$Input}
+
+    function New-It($Product, $InstallationPath, $InstallationVersion) {
+    	$r = New-Object psobject
+    	$r | Add-Member -Type NoteProperty -Name Product -Value $Product
+    	$r | Add-Member -Type NoteProperty -Name InstallationPath -Value $InstallationPath
+    	$r | Add-Member -Type NoteProperty -Name InstallationVersion -Value $InstallationVersion
+    	$r
     }
 
-	$all = @{Product = 'Microsoft.VisualStudio.Product.Enterprise'; InstallationPath = 'Enterprise'}
+	$it = New-It Microsoft.VisualStudio.Product.Enterprise Enterprise
 	($r = Resolve-MSBuild)
 	equals $r "Enterprise\$(Get-MSBuild15Path)"
 
-	$all = @{Product = 'Microsoft.VisualStudio.Product.Professional'; InstallationPath = 'Professional'}
+	$it = New-It Microsoft.VisualStudio.Product.Professional Professional
 	($r = Resolve-MSBuild)
 	equals $r "Professional\$(Get-MSBuild15Path)"
 
-	$all = @{Product = 'Microsoft.VisualStudio.Product.Community'; InstallationPath = 'Community'}
+	$it = New-It Microsoft.VisualStudio.Product.Community Community
 	($r = Resolve-MSBuild)
 	equals $r "Community\$(Get-MSBuild15Path)"
 
-	$all = @{Product = 'Microsoft.VisualStudio.Product.Something'; InstallationPath = 'Something'}
+	$it = New-It Microsoft.VisualStudio.Product.Something Something
 	($r = Resolve-MSBuild)
 	equals $r "Something\$(Get-MSBuild15Path)"
 
-	$all = @(
-		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
-		@{Product = 'Microsoft.VisualStudio.Product.Community'; InstallationPath = 'Community'}
-		@{Product = 'Microsoft.VisualStudio.Product.Enterprise'; InstallationPath = 'Enterprise'}
-		@{Product = 'Microsoft.VisualStudio.Product.Professional'; InstallationPath = 'Professional'}
-		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
+		New-It Microsoft.VisualStudio.Product.Community Community
+		New-It Microsoft.VisualStudio.Product.Enterprise Enterprise
+		New-It Microsoft.VisualStudio.Product.Professional Professional
+		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
 	)
 	($r = Resolve-MSBuild)
 	equals $r "Enterprise\$(Get-MSBuild15Path)"
 
-	$all = @(
-		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
-		@{Product = 'Microsoft.VisualStudio.Product.Community'; InstallationPath = 'Community'}
-		@{Product = 'Microsoft.VisualStudio.Product.Professional'; InstallationPath = 'Professional'}
-		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
+		New-It Microsoft.VisualStudio.Product.Community Community
+		New-It Microsoft.VisualStudio.Product.Professional Professional
+		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
 	)
 	($r = Resolve-MSBuild)
 	equals $r "Professional\$(Get-MSBuild15Path)"
 
-	$all = @(
-		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
-		@{Product = 'Microsoft.VisualStudio.Product.Community'; InstallationPath = 'Community'}
-		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
+		New-It Microsoft.VisualStudio.Product.Community Community
+		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
 	)
 	($r = Resolve-MSBuild)
 	equals $r "Community\$(Get-MSBuild15Path)"
 
-	$all = @(
-		@{Product = 'Microsoft.VisualStudio.Product.BuildTools'; InstallationPath = 'BuildTools'}
-		@{Product = 'Microsoft.VisualStudio.Product.TeamExplorer'; InstallationPath = 'TeamExplorer'}
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
+		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
 	)
 	($r = Resolve-MSBuild)
 	equals $r "BuildTools\$(Get-MSBuild15Path)"
+
+	# -Latest 1 candidate
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools ([version]'15.1')
+		New-It Microsoft.VisualStudio.Product.Community Community ([version]'15.1')
+		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer ([version]'15.2')
+	)
+	($r = Resolve-MSBuild -Latest)
+	equals $r "TeamExplorer\$(Get-MSBuild15Path)"
+
+	# -Latest 2 candidates
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer ([version]'15.2')
+		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools ([version]'15.1')
+		New-It Microsoft.VisualStudio.Product.Community Community ([version]'15.2')
+	)
+	($r = Resolve-MSBuild -Latest)
+	equals $r "Community\$(Get-MSBuild15Path)"
 }
 
 task Get-MSBuild15Guess {
 	. Set-Mock Get-MSBuild15VSSetup {}
 	. Set-Mock Test-Path {$true}
-	. Set-Mock Resolve-Path {$all}
+	. Set-Mock Get-Item {$it}
 
-	$all = @{ProviderPath = '..\Enterprise\..'}
+    function New-It($FullName, $FileVersion) {
+    	$r = New-Object psobject
+    	$r | Add-Member -Type NoteProperty -Name FullName -Value $FullName
+    	if ($FileVersion) {
+    		$info = New-Object psobject
+    		$info | Add-Member -Type NoteProperty -Name FileVersion -Value $FileVersion
+    		$r | Add-Member -Type NoteProperty -Name VersionInfo -Value $info
+    	}
+    	$r
+    }
+
+	$it = New-It ..\Enterprise\..
 	($r = Resolve-MSBuild)
-	equals $r '..\Enterprise\..'
+	equals $r ..\Enterprise\..
 
-	$all = @{ProviderPath = '..\Professional\..'}
+	$it = New-It ..\Professional\..
 	($r = Resolve-MSBuild)
-	equals $r '..\Professional\..'
+	equals $r ..\Professional\..
 
-	$all = @{ProviderPath = '..\Community\..'}
+	$it = New-It ..\Community\..
 	($r = Resolve-MSBuild)
-	equals $r '..\Community\..'
+	equals $r ..\Community\..
 
-	$all = @{ProviderPath = '..\Something\..'}
+	$it = New-It ..\Something\..
 	($r = Resolve-MSBuild)
-	equals $r '..\Something\..'
+	equals $r ..\Something\..
 
-	$all = @(
-		@{ProviderPath = '..\BuildTools\..'}
-		@{ProviderPath = '..\Community\..'}
-		@{ProviderPath = '..\Enterprise\..'}
-		@{ProviderPath = '..\Professional\..'}
-		@{ProviderPath = '..\TeamExplorer\..'}
+	$it = @(
+		New-It ..\BuildTools\..
+		New-It ..\Community\..
+		New-It ..\Enterprise\..
+		New-It ..\Professional\..
+		New-It ..\TeamExplorer\..
 	)
 	($r = Resolve-MSBuild)
-	equals $r '..\Enterprise\..'
+	equals $r ..\Enterprise\..
 
-	$all = @(
-		@{ProviderPath = '..\BuildTools\..'}
-		@{ProviderPath = '..\Community\..'}
-		@{ProviderPath = '..\Professional\..'}
-		@{ProviderPath = '..\TeamExplorer\..'}
+	$it = @(
+		New-It ..\BuildTools\..
+		New-It ..\Community\..
+		New-It ..\Professional\..
+		New-It ..\TeamExplorer\..
 	)
 	($r = Resolve-MSBuild)
-	equals $r '..\Professional\..'
+	equals $r ..\Professional\..
 
-	$all = @(
-		@{ProviderPath = '..\BuildTools\..'}
-		@{ProviderPath = '..\Community\..'}
-		@{ProviderPath = '..\TeamExplorer\..'}
+	$it = @(
+		New-It ..\BuildTools\..
+		New-It ..\Community\..
+		New-It ..\TeamExplorer\..
 	)
 	($r = Resolve-MSBuild)
-	equals $r '..\Community\..'
+	equals $r ..\Community\..
 
-	$all = @(
-		@{ProviderPath = '..\BuildTools\..'}
-		@{ProviderPath = '..\TeamExplorer\..'}
+	$it = @(
+		New-It ..\TeamExplorer\..
+		New-It ..\BuildTools\..
 	)
 	($r = Resolve-MSBuild)
-	equals $r '..\BuildTools\..'
+	equals $r ..\BuildTools\..
+
+	# -Latest 1 candidate
+	$it = @(
+		New-It ..\BuildTools\.. ([version] '15.1')
+		New-It ..\Community\.. ([version] '15.1')
+		New-It ..\TeamExplorer\.. ([version] '15.2')
+	)
+	($r = Resolve-MSBuild -Latest)
+	equals $r ..\TeamExplorer\..
+
+	# -Latest 2 candidates
+	$it = @(
+		New-It ..\TeamExplorer\.. ([version] '15.2')
+		New-It ..\BuildTools\.. ([version] '15.1')
+		New-It ..\Community\.. ([version] '15.2')
+	)
+	($r = Resolve-MSBuild -Latest)
+	equals $r ..\Community\..
 }

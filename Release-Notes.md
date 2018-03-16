@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v5.2.1
+
+- New switch `Latest` of `Resolve-MSBuild`, #122
+
 ## v5.2.0
 
 - **New:** Alternative syntax of task parameters, kind of inline splatting, [#119](https://github.com/nightroman/Invoke-Build/issues/119)
