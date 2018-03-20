@@ -238,6 +238,16 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
+function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
+	if ($Path -match '^[.*/\\]*$') {*Die 'Not allowed paths.' 5}
+	foreach($_ in $Path) {
+		if (Get-Item $_ -Force -ErrorAction 0) {
+			Remove-Item $_ -Force -Recurse
+		}
+	}
+}
+
+#.ExternalHelp InvokeBuild-Help.xml
 function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$Environment, [string[]]$Property) {
 	Remove-Variable Variable, Environment, Property
 	if ($_ = $PSBoundParameters['Variable']) {foreach($_ in $_) {
@@ -550,6 +560,7 @@ Set-Alias equals Assert-BuildEquals
 Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
 Set-Alias property Get-BuildProperty
+Set-Alias remove Remove-BuildItem
 Set-Alias requires Test-BuildAsset
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias

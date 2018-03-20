@@ -26,7 +26,7 @@ task IncompleteErrorOnSafe {
 
 # Synopsis: #5 Invoke-Build ** -Safe propagates -Safe.
 task SafeTests {
-	Get-Item [z] | Remove-Item -Force -Recurse
+	remove z
 	$null = mkdir z
 
 	Set-Content z\1.test.ps1 {
@@ -49,7 +49,7 @@ task SafeTests {
 	assert ('oops-12' -eq $r.Tasks[1].Error)
 	assert ('oops-22' -eq $r.Tasks[3].Error)
 
-	Remove-Item z -Force -Recurse
+	remove z
 }
 
 <#

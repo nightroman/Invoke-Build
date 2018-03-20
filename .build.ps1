@@ -35,10 +35,9 @@ task Markdown {
 	exec { Convert-Markdown Release-Notes }
 }
 
-# Synopsis: Remove generated and temp files.
+# Synopsis: Remove temporary items.
 task Clean {
-	Get-Item z, Tests\z, Tests\z.*, README.htm, Release-Notes.htm, Invoke-Build.*.nupkg -ErrorAction 0 |
-	Remove-Item -Force -Recurse
+	remove z, *\z, *\z.*, README.htm, Release-Notes.htm, Invoke-Build.*.nupkg
 }
 
 # Synopsis: Build the PowerShell help file.
@@ -56,10 +55,11 @@ task Version {
 
 # Synopsis: Make the module folder.
 task Module Version, Markdown, Help, {
-	# mirror the module folder
-	Remove-Item [z] -Force -Recurse
+	remove z
+
+	# copy the module folder
 	$dir = "$BuildRoot\z\InvokeBuild"
-	exec {$null = robocopy.exe InvokeBuild $dir /mir} 1
+	Copy-Item InvokeBuild $dir -Recurse
 
 	# copy files
 	Copy-Item -Destination $dir `

@@ -40,7 +40,7 @@ task Dynamic-Switch-Issue {
 	assert ($r -like "*Missing task 'z.build.ps1'*")
 
 	Pop-Location
-	Remove-Item z -Force -Recurse
+	remove z
 }
 
 ### Lost colors

@@ -214,7 +214,7 @@ task OmittedBuildParameterFile {
 	equals $r[2].Name .
 
 	Pop-Location
-	Remove-Item z -Recurse
+	remove z
 }
 
 # Covers #27, [IB] was not found before loading IB.

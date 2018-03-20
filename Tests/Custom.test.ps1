@@ -10,7 +10,7 @@
 # Synopsis: Test "check", pass all, then run again.
 task Check1 {
 	$file = '..\Tasks\Check\Check.build.ps1.Check.clixml'
-	Remove-Item $file -ErrorAction 0
+	remove $file
 
 	# fake to pass all
 	function Read-Host {}
@@ -28,7 +28,7 @@ task Check1 {
 # Synopsis: Test "check", fail at task.2.2, then run again.
 task Check2 {
 	$file = '..\Tasks\Check\Check.build.ps1.Check.clixml'
-	Remove-Item $file -ErrorAction 0
+	remove $file
 
 	# fake to fail at task.2.2
 	function Read-Host {

@@ -59,7 +59,20 @@ Push-Location function:
 assert (!(Test-Path Write-Warning))
 
 # expected public functions
-$OK = 'Add-BuildTask,Assert-Build,Assert-BuildEquals,Get-BuildError,Get-BuildFile,Get-BuildProperty,Get-BuildSynopsis,Invoke-BuildExec,Test-BuildAsset,Use-BuildAlias,Write-Build'
+$OK = $(
+	'Add-BuildTask'
+	'Assert-Build'
+	'Assert-BuildEquals'
+	'Get-BuildError'
+	'Get-BuildFile'
+	'Get-BuildProperty'
+	'Get-BuildSynopsis'
+	'Invoke-BuildExec'
+	'Remove-BuildItem'
+	'Test-BuildAsset'
+	'Use-BuildAlias'
+	'Write-Build'
+) -join ','
 $KO = (Get-ChildItem *-Build* -Name | Sort-Object) -join ','
 assert ($OK -ceq $KO) "Unexpected functions:
 OK: [$OK]

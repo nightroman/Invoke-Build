@@ -47,7 +47,7 @@ task OmittedPaths {
 	equals $t.label .
  	equals $t.command 'Invoke-Build -Task .'
 
-	Remove-Item .vscode -Force -Recurse
+	remove .vscode
 }
 
 task FullPaths {
@@ -60,7 +60,7 @@ task FullPaths {
  	equals $t.command ("& '{0}' -Task OmittedPaths -File '{1}'" -f $InvokeBuild.Replace('\', '/'), $BuildFile.Replace('\', '/'))
 
 	Test-Json
-	Remove-Item .vscode -Force -Recurse
+	remove .vscode
 }
 
 task RelativePaths {
@@ -72,7 +72,7 @@ task RelativePaths {
  	equals $t.command "& '../Invoke-Build.ps1' -Task OmittedPaths -File './VSCode.test.ps1'"
 
 	Test-Json
-	Remove-Item .vscode -Force -Recurse
+	remove .vscode
 }
 
 task DiscoverEngine {
@@ -84,7 +84,7 @@ task DiscoverEngine {
 	equals $t.label .
  	equals $t.command "& './Invoke-Build.ps1' -Task ."
 
-	Remove-Item .vscode -Force -Recurse
+	remove .vscode
 }
 
 # Other tasks are not real tests

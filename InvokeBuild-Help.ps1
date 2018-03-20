@@ -35,6 +35,7 @@
 		exec      (Invoke-BuildExec)
 		assert    (Assert-Build)
 		equals    (Assert-BuildEquals)
+		remove    (Remove-BuildItem)
 		property  (Get-BuildProperty)
 		requires  (Test-BuildAsset)
 		use       (Use-BuildAlias)
@@ -325,6 +326,7 @@
 		@{ text = 'exec      (Invoke-BuildExec)' }
 		@{ text = 'assert    (Assert-Build)' }
 		@{ text = 'equals    (Assert-BuildEquals)' }
+		@{ text = 'remove    (Remove-BuildItem)' }
 		@{ text = 'property  (Get-BuildProperty)' }
 		@{ text = 'requires  (Test-BuildAsset)' }
 		@{ text = 'use       (Use-BuildAlias)' }
@@ -771,6 +773,41 @@
 
 	links = @(
 		@{ text = 'Use-BuildAlias' }
+	)
+}
+
+### Remove-BuildItem
+@{
+	command = 'Remove-BuildItem'
+	synopsis = '(remove) Removes specified items.'
+
+	description = @'
+	Scripts use its alias 'remove'. This command removes existing items,
+	ignores missing items, and fails if it cannot remove existing items.
+	In other words, `remove X` is similar to
+
+	    Remove-Item X -Force -Recurse -ErrorAction Ignore
+
+	but `remove` writes an error if existing X cannot be removed.
+'@
+
+	parameters = @{
+		Path = @{
+			wildcard = $true
+			description = @'
+		Specifies the items to be removed. Wildcards are allowed.
+		The parameter is mostly the same as Path of Remove-Item.
+		For sanity, paths with only ., *, \, / are not allowed.
+'@
+		}
+	}
+
+	examples = @(
+		@{code={
+	# Remove some temporary items
+
+	remove bin, obj, *.test.log
+		}}
 	)
 }
 

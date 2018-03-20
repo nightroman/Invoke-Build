@@ -5,9 +5,8 @@
 #>
 
 task AmbigiousDefaultScript {
-	Get-Item [z] | Remove-Item -Force -Recurse
-	$null = mkdir z
-	Push-Location z
+	remove z
+	Push-Location (mkdir z)
 
 	1 > z.1.build.ps1
 	1 > z.2.build.ps1
@@ -16,11 +15,11 @@ task AmbigiousDefaultScript {
 	assert ("$r" -like "*Ambiguous default script in '*\z'.")
 
 	Pop-Location
-	Remove-Item z -Force -Recurse
+	remove z
 }
 
 task ParentHasManyCandidates {
-	Get-Item [z] | Remove-Item -Force -Recurse
+	remove z
 	$null = mkdir z\1
 
 	Push-Location z
@@ -35,11 +34,11 @@ task ParentHasManyCandidates {
 
 	assert ($tasks.Contains('AllTestScripts'))
 
-	Remove-Item z -Force -Recurse
+	remove z
 }
 
 task ParentHasOneCandidate {
-	Get-Item [z] | Remove-Item -Force -Recurse
+	remove z
 	$null = mkdir z\1\2
 
 	Set-Content z\test.build.ps1 'task SingleScript'
@@ -56,11 +55,11 @@ task ParentHasOneCandidate {
 
 	assert $tasks.Contains('SingleScript')
 
-	Remove-Item z -Force -Recurse
+	remove z
 }
 
 task InvokeBuildGetFile {
-	Get-Item [z] | Remove-Item -Force -Recurse
+	remove z
 	$null = mkdir z\1
 
 	# register the hook by the environment variable
@@ -81,7 +80,7 @@ task InvokeBuildGetFile {
 	# test: the script returned by the hook is invoked
 	assert $tasks.Contains('InvokeBuildGetFile')
 
-	Remove-Item z -Force -Recurse
+	remove z
 }
 
 task Summary {

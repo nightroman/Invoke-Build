@@ -1,6 +1,12 @@
 
 # Invoke-Build Release Notes
 
+## v5.3.0
+
+Add the robust helper `remove`, the alternative to `Remove-Item`, see [#123](https://github.com/nightroman/Invoke-Build/issues/123)
+
+Tools
+
 - *New-VSCodeTask.ps1* 1.1.6 - Confirm removal of not generated file.
 
 ## v5.2.1
