@@ -1,6 +1,8 @@
 
 # Invoke-Build Release Notes
 
+- *New-VSCodeTask.ps1* 1.1.6 - Confirm removal of not generated file.
+
 ## v5.2.1
 
 - New switch `Latest` of `Resolve-MSBuild`, #122
