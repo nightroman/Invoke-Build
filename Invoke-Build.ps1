@@ -72,7 +72,8 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	ExitTask = $null
 	EnterJob = $null
 	ExitJob = $null
-	Header = {Write-Build 11 "Task $($args[0])"}
+	Header = { Write-Build 11 "Task $($args[0])" }
+	Footer = { Write-Build 8 "Done $($args[0]) $($args[1])" }
 	Data = @{}
 	XBuild = $null
 	XTask = $null
@@ -449,7 +450,7 @@ function *Task {
 	New-Variable Task (${*}.Task = ${*}.All[${*n}]) -Option Constant
 
 	if ($Task.Elapsed) {
-		Write-Build 8 "Done ${*p}"
+		& ${*}.Footer ${*p}
 		return
 	}
 
@@ -538,7 +539,7 @@ function *Task {
 			Write-Build 14 (*At $Task)
 		}
 		else {
-			Write-Build 11 "Done ${*p} $($Task.Elapsed)"
+			& ${*}.Footer ${*p} $Task.Elapsed
 		}
 		*Run $Task.Done
 		. *Run ${*}.ExitTask
@@ -598,6 +599,7 @@ try {
 	function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.EnterJob = $Script}
 	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.ExitJob = $Script}
 	function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
+	function Set-BuildFooter([Parameter()][scriptblock]$Script) { ${*}.Footer = $Script }
 	function Set-BuildData([Parameter()]$Key, $Value) {${*}.Data[$Key] = $Value}
 
 	*SL ($BuildRoot = if ($BuildFile) {Split-Path $BuildFile} else {${*}.CD})

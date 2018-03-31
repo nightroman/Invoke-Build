@@ -74,7 +74,7 @@
 
 	$Task is available for script blocks defined by task parameters If, Inputs,
 	Outputs, and Jobs and by blocks Enter|Exit-BuildTask, Enter|Exit-BuildJob,
-	Set-BuildHeader.
+	Set-BuildHeader, Set-BuildFooter.
 
 		$Task properties:
 
@@ -101,6 +101,7 @@
 		Exit-BuildJob {} - after each task action
 
 		Set-BuildHeader {param($Path)} - to write task headers
+		Set-BuildFooter {param($Path)} - to write task footers
 
 	Blocks are not called on WhatIf.
 	Nested builds do not inherit parent blocks.
@@ -726,6 +727,12 @@
 		$Task.InvocationInfo.ScriptName
 		$Task.InvocationInfo.ScriptLineNumber
 	}
+				
+	Set-BuildFooter {
+		Param ($Path)
+		Write-Build Cyan "Done $Path : $(Get-BuildSynopsis $Task) - Elapsed : $($(Get-BuildSynopsis $Task).Elapsed)"
+	}
+				
 }}
 	)
 }

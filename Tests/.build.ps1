@@ -222,6 +222,7 @@ task TestFunctions {
 		'Invoke-BuildExec'
 		'Set-BuildData'
 		'Set-BuildHeader'
+		'Set-BuildFooter'
 		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'
