@@ -717,11 +717,14 @@
 
 	examples = @(
 		@{code={
-	# Print task path and synopsis
+	# Headers: print task paths as usual and synopses in addition
 	Set-BuildHeader {
 		param($Path)
 		Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
 	}
+
+	# Footers: nothing instead of "Done $($args[0]) $($Task.Elapsed)"
+	Set-BuildFooter {}
 
 	# Synopsis: Show task data useful for headers
 	task Task1 {
@@ -729,12 +732,6 @@
 		$Task.InvocationInfo.ScriptName
 		$Task.InvocationInfo.ScriptLineNumber
 	}
-				
-	Set-BuildFooter {
-		Param ($Path)
-		Write-Build Cyan "Done $Path : $(Get-BuildSynopsis $Task) - Elapsed : $($(Get-BuildSynopsis $Task).Elapsed)"
-	}
-				
 }}
 	)
 }
