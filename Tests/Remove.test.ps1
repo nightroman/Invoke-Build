@@ -36,7 +36,8 @@ task ErrorLockedFile {
 	try {
 		## terminating error
 		($r1 = try {remove z.txt} catch {$_})
-		equals $r1.FullyQualifiedErrorId 'RemoveFileSystemItemIOError,Microsoft.PowerShell.Commands.RemoveItemCommand'
+		equals $r1.FullyQualifiedErrorId Remove-BuildItem
+		assert ("$r1" -like '*\z.txt*')
 
 		## non-terminating error
 		# this will be removed
@@ -44,7 +45,8 @@ task ErrorLockedFile {
 		assert (Test-Path z.2.txt)
 		# call with good and locked files
 		$r = remove z.2.txt, z.txt -ea 2 -ev r2 2>&1
-		$r | Out-String
+		#! just message or IB source leaks to output
+		"$r"
 		# good is removed
 		assert (!(Test-Path z.2.txt))
 		# locked error, two ways of catching
@@ -58,6 +60,8 @@ task ErrorLockedFile {
 }
 
 # Synopsis: Work around Test-Path *\X when X is hidden
+# https://github.com/PowerShell/PowerShell/issues/6473
+# Test-Path with wildcards cannot find anything hidden.
 task HiddenInSubdirectory {
 	# new hidden item in a subdirectory
 	remove z

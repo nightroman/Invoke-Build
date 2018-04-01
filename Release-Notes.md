@@ -1,6 +1,12 @@
 
 # Invoke-Build Release Notes
 
+## v5.4.0
+
+- Add `Set-BuildFooter` in addition to `Set-BuildHeader`, #125
+- Update the sample `Tasks/Header`, use custom footers, too.
+- Tweak `remove` for more useful error location info.
+
 ## v5.3.0
 
 Add the robust helper `remove`, the alternative to `Remove-Item`, see [#123](https://github.com/nightroman/Invoke-Build/issues/123)

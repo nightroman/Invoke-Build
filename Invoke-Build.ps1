@@ -241,10 +241,15 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 #.ExternalHelp InvokeBuild-Help.xml
 function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 	if ($Path -match '^[.*/\\]*$') {*Die 'Not allowed paths.' 5}
-	foreach($_ in $Path) {
-		if (Get-Item $_ -Force -ErrorAction 0) {
-			Remove-Item $_ -Force -Recurse
+	try {
+		foreach($_ in $Path) {
+			if (Get-Item $_ -Force -ErrorAction 0) {
+				Remove-Item $_ -Force -Recurse
+			}
 		}
+	}
+	catch {
+		*Die $_
 	}
 }
 
