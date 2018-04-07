@@ -282,6 +282,12 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
+function Set-BuildFooter([Parameter()][scriptblock]$Script) {${*}.Footer = $Script}
+
+#.ExternalHelp InvokeBuild-Help.xml
+function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
+
+#.ExternalHelp InvokeBuild-Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	$i = $Host.UI.RawUI
 	$_ = $i.ForegroundColor
@@ -614,8 +620,6 @@ try {
 	function Exit-BuildTask([Parameter()][scriptblock]$Script) {${*}.ExitTask = $Script}
 	function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.EnterJob = $Script}
 	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.ExitJob = $Script}
-	function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
-	function Set-BuildFooter([Parameter()][scriptblock]$Script) {${*}.Footer = $Script}
 	function Set-BuildData([Parameter()]$Key, $Value) {${*}.Data[$Key] = $Value}
 
 	*SL ($BuildRoot = if ($BuildFile) {Split-Path $BuildFile} else {${*}.CD})

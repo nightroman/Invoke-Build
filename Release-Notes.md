@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v5.4.1
+
+Add help for `Set-BuildHeader`, `Set-BuildFooter`.
+
 ## v5.4.0
 
 - Add `Set-BuildFooter` in addition to `Set-BuildHeader`, #125

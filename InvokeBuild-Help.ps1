@@ -43,6 +43,8 @@
 
 		Get-BuildSynopsis
 		Resolve-MSBuild
+		Set-BuildFooter
+		Set-BuildHeader
 		Write-Build
 		Write-Warning [1]
 
@@ -322,6 +324,14 @@
 	links = @(
 		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
+		# external
+		@{ text = 'Build-Checkpoint' }
+		@{ text = 'Build-Parallel' }
+		# special
+		@{ text = '' }
+		@{ text = 'For other commands, at first invoke:' }
+		@{ text = 'PS> . Invoke-Build' }
+		@{ text = '' }
 		# aliases
 		@{ text = 'task      (Add-BuildTask)' }
 		@{ text = 'exec      (Invoke-BuildExec)' }
@@ -335,10 +345,9 @@
 		# functions
 		@{ text = 'Get-BuildSynopsis' }
 		@{ text = 'Resolve-MSBuild' }
+		@{ text = 'Set-BuildFooter' }
+		@{ text = 'Set-BuildHeader' }
 		@{ text = 'Write-Build' }
-		# external
-		@{ text = 'Build-Checkpoint' }
-		@{ text = 'Build-Parallel' }
 	)
 }
 
@@ -693,8 +702,9 @@
 	synopsis = 'Gets the task synopsis.'
 
 	description = @'
-	Gets the specified task synopsis if it is available.
-	Task synopsis is defined in preceding comments as # Synopsis: ...
+	Gets the specified task synopsis if it is available. Task synopses are
+	defined in preceding comments as # Synopsis: ... In build scripts this
+	function may be used in Set-BuildHeader for printing task synopses.
 '@
 
 	parameters = @{
@@ -703,36 +713,31 @@
 		automatic variable $Task.
 '@
 		Hash = @'
-		A hashtable for caching data. Build scripts do not have to specify it,
-		it is designed for external tools.
+		A hashtable for caching. Build scripts do not have to specify it, the
+		internal cache is used by default. It is designed for external tools.
 '@
 	}
 
-	outputs = @(
-		@{
-			type = 'String'
-			description = 'Task synopsis line.'
+	outputs = @{
+		type = 'String'
+	}
+
+	examples = @{code={
+		# Headers: print task paths as usual and synopses in addition
+		Set-BuildHeader {
+			param($Path)
+			Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
 		}
-	)
 
-	examples = @(
-		@{code={
-	# Headers: print task paths as usual and synopses in addition
-	Set-BuildHeader {
-		param($Path)
-		Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
-	}
+		# Synopsis: This task prints its own synopsis.
+		task Task1 {
+			'My synopsis : ' + (Get-BuildSynopsis $Task)
+		}
+	}}
 
-	# Footers: nothing instead of "Done $($args[0]) $($Task.Elapsed)"
-	Set-BuildFooter {}
-
-	# Synopsis: Show task data useful for headers
-	task Task1 {
-		$Task.Name
-		$Task.InvocationInfo.ScriptName
-		$Task.InvocationInfo.ScriptLineNumber
-	}
-}}
+	links = @(
+		@{ text = 'Set-BuildFooter' }
+		@{ text = 'Set-BuildHeader' }
 	)
 }
 
@@ -812,6 +817,92 @@
 
 	remove bin, obj, *.test.log
 		}}
+	)
+}
+
+### Set-BuildFooter
+@{
+	command = 'Set-BuildFooter'
+	synopsis = 'Tells how to write task footers.'
+
+	description = @'
+	This build block is used in order to change the default task footer format.
+	Use the automatic variable $Task in order to get the current task data.
+	Use Write-Build in order to write with colors.
+'@
+
+	parameters = @{
+		Script = @'
+		The script like {param($Path) ...} which is used in order to write task
+		footers. The parameter Path includes the parent and current task names.
+
+		In order to omit task footers, set an empty block:
+
+			Set-BuildFooter {}
+'@
+	}
+
+	examples = @{code={
+		# Use the usual footer format but change the color
+		Set-BuildFooter {
+			param($Path)
+			Write-Build DarkGray "Done $Path $($Task.Elapsed)"
+		}
+
+		# Synopsis: Data for footers in addition to $Path and $Task.Elapsed
+		task Task1 {
+			'Task name     : ' + $Task.Name
+			'Start time    : ' + $Task.Started
+			'Location path : ' + $Task.InvocationInfo.ScriptName
+			'Location line : ' + $Task.InvocationInfo.ScriptLineNumber
+		}
+	}}
+
+	links = @(
+		@{ text = 'Get-BuildSynopsis' }
+		@{ text = 'Set-BuildHeader' }
+		@{ text = 'Write-Build' }
+	)
+}
+
+### Set-BuildHeader
+@{
+	command = 'Set-BuildHeader'
+	synopsis = 'Tells how to write task headers.'
+
+	description = @'
+	This build block is used in order to change the default task header format.
+	Use the automatic variable $Task in order to get the current task data.
+	Use Write-Build in order to write with colors.
+'@
+
+	parameters = @{
+		Script = @'
+		The script like {param($Path) ...} which is used in order to write task
+		headers. The parameter Path includes the parent and current task names.
+'@
+	}
+
+	examples = @{code={
+		# Headers: write task paths as usual and synopses in addition
+		Set-BuildHeader {
+			param($Path)
+			Write-Build Cyan "Task $Path --- $(Get-BuildSynopsis $Task)"
+		}
+
+		# Synopsis: Data for headers in addition to $Path and Get-BuildSynopsis
+		task Task1 {
+			'Task name     : ' + $Task.Name
+			'Start time    : ' + $Task.Started
+			'Location path : ' + $Task.InvocationInfo.ScriptName
+			'Location line : ' + $Task.InvocationInfo.ScriptLineNumber
+		}
+	}}
+
+	links = @(
+		@{ text = 'Get-BuildSynopsis' }
+		@{ text = 'Set-BuildFooter' }
+		@{ text = 'Write-Build' }
 	)
 }
 
@@ -921,11 +1012,9 @@
 '@
 	}
 
-	outputs = @(
-		@{
-			type = 'String'
-		}
-	)
+	outputs = @{
+		type = 'String'
+	}
 }
 
 ### Build-Parallel.ps1

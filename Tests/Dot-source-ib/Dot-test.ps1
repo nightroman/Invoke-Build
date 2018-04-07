@@ -69,6 +69,8 @@ $OK = $(
 	'Get-BuildSynopsis'
 	'Invoke-BuildExec'
 	'Remove-BuildItem'
+	'Set-BuildFooter'
+	'Set-BuildHeader'
 	'Test-BuildAsset'
 	'Use-BuildAlias'
 	'Write-Build'

@@ -288,6 +288,8 @@ task ShowHelp {
 		'Invoke-BuildExec'
 		'Remove-BuildItem'
 		'Resolve-MSBuild'
+		'Set-BuildFooter'
+		'Set-BuildHeader'
 		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'
