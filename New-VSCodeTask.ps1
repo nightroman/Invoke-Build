@@ -1,6 +1,6 @@
 
 <#PSScriptInfo
-.VERSION 1.1.6
+.VERSION 1.1.7
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
@@ -153,8 +153,10 @@ if (!(Test-Path .vscode)) {
 	$null = mkdir .vscode
 }
 elseif (Test-Path ./.vscode/tasks.json) {
-	$line1 = switch -file ./.vscode/tasks.json {default {$_; break}}
-	if ($line1 -ne $Header) {Remove-Item ./.vscode/tasks.json -Confirm}
-	if (Test-Path ./.vscode/tasks.json) {return}
+	$line1, $null = Get-Content ./.vscode/tasks.json
+	if ($line1 -ne $Header) {
+		Remove-Item ./.vscode/tasks.json -Confirm
+		if (Test-Path ./.vscode/tasks.json) {return}
+	}
 }
 Set-Content ./.vscode/tasks.json $out.ToString() -Encoding UTF8
