@@ -8,7 +8,6 @@ Add `Tasks` as the first parameter and the command redirecting the call:
 ```powershell
 param(
     [Parameter(Position=1)]
-    [string[]]
     $Tasks,
     #... other script parameters
 )
