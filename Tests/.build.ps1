@@ -256,6 +256,8 @@ task TestVariables {
 		'PSItem'
 		'PWD'
 		'this'
+		# other variables
+		'VSSetupVersionTable'
 	)
 	Get-Variable | .{process{
 		if (($MyKnown -notcontains $_.Name) -and ($_.Name -notlike 'My*')) {
