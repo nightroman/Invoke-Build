@@ -133,7 +133,7 @@ function Add-BuildTask(
 	[Parameter(Position=1)]$Jobs,
 	[string[]]$After,
 	[string[]]$Before,
-	$If=$true,
+	$If=-9,
 	$Inputs,
 	$Outputs,
 	$Data,

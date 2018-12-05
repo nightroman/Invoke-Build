@@ -15,8 +15,8 @@
 	uses either dot.exe or viz.js in order to visualize it using one of the
 	supported output formats and the associated application.
 
-	Tasks with code are shown as boxes, tasks without code are shown as ovals.
-	Safe references are shown with dotted edges, regular calls are shown with
+	Tasks without code are shown as ovals, conditional tasks as diamonds, other
+	tasks as boxes. Safe references are shown as dotted edges, regular calls as
 	solid edges. Job numbers are not shown by default.
 
 	EXAMPLES
@@ -48,8 +48,7 @@
 		Tells to create the output file without showing it.
 		In this case Output is normally specified by a caller.
 .Parameter Number
-		Tells to show task job numbers. Jobs are tasks (numbers are shown on
-		edges) and own scripts (numbers are shown in task boxes after names).
+		Tells to show job numbers on edges connecting tasks.
 
 .Link
 	https://github.com/nightroman/Invoke-Build
@@ -64,13 +63,8 @@ param(
 	[string]$Code = 'graph [rankdir=LR]',
 	[hashtable]$Parameters,
 	[switch]$NoShow,
-	[switch]$Number,
-	[ValidateSet("OrderAndOwned","TaskOrder","OwnedTasks")]
-	[string]$DisplayNumbering
+	[switch]$Number
 )
-if ($DisplayNumbering) {
-	$DisplayNumbers = @{$DisplayNumbering = $True}
-}
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
@@ -129,8 +123,9 @@ $text = @(
 			++$num
 			if ($job -is [string]) {
 				$job, $safe = if ($job[0] -eq '?') {$job.Substring(1), 1} else {$job}
+				$job = $all[$job].Name
 				$edge = ' '
-				if ($Number -or $DisplayNumbers.TaskOrder -or $DisplayNumbers.OrderAndOwned) {
+				if ($Number) {
 					$edge += "label=$num "
 				}
 				if ($safe) {
@@ -143,15 +138,13 @@ $text = @(
 			}
 		}
 		if ($script) {
-			switch ($it.If) {
-				"True" { $GraphvizNode += "shape=box "; break}
-				default { $GraphvizNode += "shape=diamond "; break}
+			if ((-9).Equals($it.If)) {
+				$node = 'shape=box'
 			}
-			
-			if ($Number -or $DisplayNumbers.OwnedTasks -or $DisplayNumbers.OrderAndOwned) {
-				$GraphvizNode += 'label="{0} {1}" ' -f $name, $script
+			else {
+				$node = 'shape=diamond'
 			}
-			'"{0}" [ {1} ]' -f $name, $GraphvizNode
+			'"{0}" [ {1} ]' -f $name, $node
 		}
 	}
 	'}'

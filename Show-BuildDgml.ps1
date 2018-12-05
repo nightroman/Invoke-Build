@@ -102,6 +102,7 @@ foreach($it in $all.Values) {
 		++$num
 		if ($job -is [string]) {
 			$job, $safe = if ($job[0] -eq '?') {$job.Substring(1), 1} else {$job}
+			$job = $all[$job].Name
 			$link = $links.AppendChild($xml.CreateElement('Link'))
 			$link.SetAttribute('Source', $name)
 			$link.SetAttribute('Target', $job)

@@ -412,3 +412,13 @@ task EnsureResultHashtable171201 {
 
 	equals $r.Value.Error 'Invalid arguments.'
 }
+
+# Covers #137, Show-BuildGraph depends on (-9)
+task MinusNineAsDefaultIf {
+	# get tasks
+	$r = Invoke-Build ?? {
+		task t1
+	}
+	$task = $r['t1']
+	equals (-9) $task.If
+}

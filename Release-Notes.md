@@ -1,6 +1,15 @@
 
 # Invoke-Build Release Notes
 
+## v5.4.2
+
+Tiny internal tweak for *Show-BuildGraph.ps1*, #137
+
+*Show-BuildGraph.ps1*, see #136:
+
+- Show conditional tasks as diamonds.
+- Show job numbers only on edges.
+
 ## v5.4.1
 
 Add help for `Set-BuildHeader`, `Set-BuildFooter`.
