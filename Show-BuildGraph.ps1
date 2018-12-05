@@ -64,8 +64,13 @@ param(
 	[string]$Code = 'graph [rankdir=LR]',
 	[hashtable]$Parameters,
 	[switch]$NoShow,
-	[switch]$Number
+	[switch]$Number,
+	[ValidateSet("OrderAndOwned","TaskOrder","OwnedTasks")]
+	[string]$DisplayNumbering
 )
+if ($DisplayNumbering) {
+	$DisplayNumbers = @{$DisplayNumbering = $True}
+}
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
@@ -125,7 +130,7 @@ $text = @(
 			if ($job -is [string]) {
 				$job, $safe = if ($job[0] -eq '?') {$job.Substring(1), 1} else {$job}
 				$edge = ' '
-				if ($Number) {
+				if ($Number -or $DisplayNumbers.TaskOrder -or $DisplayNumbers.OrderAndOwned) {
 					$edge += "label=$num "
 				}
 				if ($safe) {
@@ -138,12 +143,15 @@ $text = @(
 			}
 		}
 		if ($script) {
-			if ($Number) {
-				'"{0}" [ shape=box label="{0} {1}" ]' -f $name, $script
+			switch ($it.If) {
+				"True" { $GraphvizNode += "shape=box "; break}
+				default { $GraphvizNode += "shape=diamond "; break}
 			}
-			else {
-				'"{0}" [ shape=box ]' -f $name
+			
+			if ($Number -or $DisplayNumbers.OwnedTasks -or $DisplayNumbers.OrderAndOwned) {
+				$GraphvizNode += 'label="{0} {1}" ' -f $name, $script
 			}
+			'"{0}" [ {1} ]' -f $name, $GraphvizNode
 		}
 	}
 	'}'
