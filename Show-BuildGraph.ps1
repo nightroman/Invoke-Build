@@ -117,16 +117,17 @@ $text = @(
 	foreach($it in $all.Values) {
 		$name = $it.Name
 		'"{0}"' -f $name
-		$num = 0
-		$script = ''
+
+		$jobNumber = 0
+		$hasScript = $false
 		foreach($job in $it.Jobs) {
-			++$num
+			++$jobNumber
 			if ($job -is [string]) {
 				$job, $safe = if ($job[0] -eq '?') {$job.Substring(1), 1} else {$job}
 				$job = $all[$job].Name
 				$edge = ' '
 				if ($Number) {
-					$edge += "label=$num "
+					$edge += "label=$jobNumber "
 				}
 				if ($safe) {
 					$edge += "style=dotted "
@@ -134,10 +135,11 @@ $text = @(
 				'"{0}" -> "{1}" [{2}]' -f $name, $job, $edge
 			}
 			else {
-				$script += "{$num}"
+				$hasScript = $true
 			}
 		}
-		if ($script) {
+
+		if ($hasScript) {
 			if ((-9).Equals($it.If)) {
 				$node = 'shape=box'
 			}

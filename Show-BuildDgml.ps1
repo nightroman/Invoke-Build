@@ -35,8 +35,7 @@
 		Tells to create the output file without showing it.
 		In this case Output is normally specified by a caller.
 .Parameter Number
-		Tells to show task job numbers. Jobs are tasks (numbers are shown on
-		edges) and own scripts (numbers are shown in task boxes after names).
+		Tells to show job numbers on edges connecting tasks.
 
 .Link
 	https://github.com/nightroman/Invoke-Build
@@ -96,10 +95,10 @@ foreach($it in $all.Values) {
 		$node.SetAttribute('Synopsis', $synopsis)
 	}
 
-	$num = 0
-	$script = ''
+	$jobNumber = 0
+	$hasScript = $false
 	foreach($job in $it.Jobs) {
-		++$num
+		++$jobNumber
 		if ($job -is [string]) {
 			$job, $safe = if ($job[0] -eq '?') {$job.Substring(1), 1} else {$job}
 			$job = $all[$job].Name
@@ -107,22 +106,19 @@ foreach($it in $all.Values) {
 			$link.SetAttribute('Source', $name)
 			$link.SetAttribute('Target', $job)
 			if ($Number) {
-				$link.SetAttribute('Label', $num)
+				$link.SetAttribute('Label', $jobNumber)
 			}
 			if ($safe) {
 				$link.SetAttribute('StrokeDashArray', '2 2')
 			}
 		}
 		else {
-			$script += "{$num}"
+			$hasScript = $true
 		}
 	}
 
-	if ($script) {
+	if ($hasScript) {
 		$node.SetAttribute('Category', 'Script')
-		if ($Number) {
-			$node.SetAttribute('Label', "$name $script")
-		}
 	}
 	else {
 		$node.SetAttribute('Category', 'Calls')
