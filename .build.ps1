@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Build script (https://github.com/nightroman/Invoke-Build)
@@ -82,7 +81,7 @@ task Module Version, Markdown, Help, {
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
 	Author = 'Roman Kuzmin'
 	CompanyName = 'Roman Kuzmin'
-	Copyright = '(c) 2011-2018 Roman Kuzmin'
+	Copyright = '(c) Roman Kuzmin'
 	Description = 'Build and test automation in PowerShell'
 	PowerShellVersion = '2.0'
 	AliasesToExport = 'Invoke-Build', 'Build-Checkpoint', 'Build-Parallel'
@@ -122,7 +121,7 @@ more powerful. It is complete, bug free, well covered by tests.
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
 		<iconUrl>https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png</iconUrl>
-		<licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+		<license type="expression">Apache-2.0</license>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>
 		<description>$text</description>
