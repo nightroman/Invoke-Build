@@ -1,6 +1,8 @@
 
 # Invoke-Build Release Notes
 
+- New *Build-JustTask.ps1* invokes tasks without references.
+
 ## v5.4.2
 
 Tiny internal tweak for *Show-BuildGraph.ps1*, #137

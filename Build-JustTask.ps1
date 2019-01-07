@@ -7,8 +7,8 @@
 	The script invokes Invoke-Build with the usual parameters, with at least
 	one task specified explicitly. The specified tasks are invoked without
 	their referenced tasks. This unusual scenario may be useful in special
-	cases like debugging and troubleshooting of a particular failed task
-	when its referenced tasks are completed and may be safely skipped.
+	cases like debugging or development of a particular task when its
+	referenced tasks are completed and may be safely skipped.
 
 	Not every task may be correctly invoked in this way. If referenced tasks
 	configure the build environment and variables then they must be invoked.
@@ -29,7 +29,7 @@ try {
 			$Task = ${*data}.Task
 			foreach($_ in ${*}.All.Values) {
 				if ($Task -notcontains $_.Name) {
-					$_.Elapsed = [TimeSpan]::Zero
+					$_.If = 0
 				}
 			}
 		}
