@@ -38,7 +38,7 @@
 .Parameter JS
 		Tells to use viz.js and generate an HTML file. If it is * then the
 		online script is used. Otherwise, it specifies the path to the
-		directory containing viz javascript files (viz.js and lite.render.js).
+		directory containing viz.js and lite.render.js.
 		See https://github.com/mdaines/viz.js
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
@@ -73,15 +73,17 @@ $ErrorActionPreference = 'Stop'
 # resolve dot.exe or js
 if ($JS) {
 	$vizjs = @('viz.js', 'lite.render.js')
-	$jsUrl = @()
 	if ($JS -eq '*') {
-		$jsUrl = $vizjs | % { 'https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/' + $_ }
+		$jsUrl = foreach($_ in $vizjs) {
+			"https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/$_"
+		}
 	}
 	else {
 		$JS = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($JS)
-		foreach ($jsFile in ($vizjs | % { Join-Path $JS $_ })) {
-			if (!(Test-Path $jsFile)) { throw "Cannot find '$jsFile'." }
-			$jsUrl += 'file:///' +  $jsFile.Replace('\', '/')
+		$jsUrl = foreach($_ in $vizjs) {
+			$_ = Join-Path $JS $_
+			if (!(Test-Path -LiteralPath $_)) {throw "Cannot find '$_'."}
+			'file:///' + $_.Replace('\', '/')
 		}
 	}
 }
@@ -166,14 +168,11 @@ if ($JS) {
 <title>Build graph</title>
 </head>
 <body>
-$($jsUrl | % { "<script src=`"$_`"></script>" })
+$($jsUrl | .{process{"<script src=`"$_`"></script>"}} | Out-String -Width ([int]::MaxValue))
 <script>
 var viz = new Viz();
 viz.renderSVGElement("$(
-	$text | .{process{
-		$_.Replace('"', '\"') + '\'
-	}} |
-	Out-String -Width ([int]::MaxValue)
+	$text | .{process{$_.Replace('"', '\"') + '\'}} | Out-String -Width ([int]::MaxValue)
 )")
 .then(function(element) {
 	document.body.appendChild(element);

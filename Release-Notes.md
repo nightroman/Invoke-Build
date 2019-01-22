@@ -2,6 +2,7 @@
 # Invoke-Build Release Notes
 
 - New *Build-JustTask.ps1* invokes tasks without references.
+- *Show-BuildGraph.ps1* uses the latest viz.js, see #139.
 
 ## v5.4.2
 
