@@ -37,7 +37,8 @@
 		The default is "$env:TEMP\name-xxxxxxxx.ext".
 .Parameter JS
 		Tells to use viz.js and generate an HTML file. If it is * then the
-		online script is used. Otherwise, it specifies the path to viz.js.
+		online script is used. Otherwise, it specifies the path to the
+		directory containing viz javascript files (viz.js and lite.render.js).
 		See https://github.com/mdaines/viz.js
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
@@ -71,13 +72,17 @@ $ErrorActionPreference = 'Stop'
 
 # resolve dot.exe or js
 if ($JS) {
+	$vizjs = @('viz.js', 'lite.render.js')
+	$jsUrl = @()
 	if ($JS -eq '*') {
-		$JS = 'https://github.com/mdaines/viz.js/releases/download/v1.8.0/viz-lite.js'
+		$jsUrl = $vizjs | % { 'https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/' + $_ }
 	}
 	else {
 		$JS = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($JS)
-		if (![System.IO.File]::Exists($JS)) {throw "Cannot find '$JS'."}
-		$JS = 'file:///' + $JS.Replace('\', '/')
+		foreach ($jsFile in ($vizjs | % { Join-Path $JS $_ })) {
+			if (!(Test-Path $jsFile)) { throw "Cannot find '$jsFile'." }
+			$jsUrl += 'file:///' +  $jsFile.Replace('\', '/')
+		}
 	}
 }
 else {
@@ -161,14 +166,22 @@ if ($JS) {
 <title>Build graph</title>
 </head>
 <body>
-<script src="$JS"></script>
+$($jsUrl | % { "<script src=`"$_`"></script>" })
 <script>
-document.body.innerHTML += Viz("$(
+var viz = new Viz();
+viz.renderSVGElement("$(
 	$text | .{process{
 		$_.Replace('"', '\"') + '\'
 	}} |
 	Out-String -Width ([int]::MaxValue)
-)");
+)")
+.then(function(element) {
+	document.body.appendChild(element);
+})
+.catch(error => {
+	viz = new Viz();
+	console.error(error);
+});
 </script>
 </body>
 </html>
