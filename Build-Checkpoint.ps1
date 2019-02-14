@@ -61,7 +61,7 @@ ${*checkpoint}.XBuild = {
 	}
 }
 
-${*checkpoint}.XTask = {
+${*checkpoint}.XCheck = {
 	Export-Clixml ${*checkpoint}.Checkpoint -InputObject @{
 		User = *Run ${*}.Data['Checkpoint.Export']
 		Task = $BuildTask
@@ -74,7 +74,13 @@ ${*checkpoint}.XTask = {
 			}
 			$r
 		)
-		Done = @(foreach($t in ${*}.All.Values) {if ($t.Elapsed) {$t.Name}})
+		Done = @(
+			foreach($t in ${*}.All.Values) {
+				if ($t.Elapsed -and !$t.Error) {
+					$t.Name
+				}
+			}
+		)
 	}
 }
 

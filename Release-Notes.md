@@ -1,6 +1,12 @@
 
 # Invoke-Build Release Notes
 
+## v5.4.3
+
+Save checkpoints after each task and before the first, #140.
+
+Tools
+
 - New *Build-JustTask.ps1* invokes tasks without references.
 - *Show-BuildGraph.ps1* uses the latest viz.js, see #139.
 

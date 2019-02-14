@@ -422,3 +422,43 @@ task MinusNineAsDefaultIf {
 	$task = $r['t1']
 	equals (-9) $task.If
 }
+
+# Issue #140: Persistent builds don't seem to work
+task CheckpointIssue140 {
+	Set-Content z.build.ps1 {
+		task B A, {
+			'Invoking task B...'
+		    if ($env:_190214_025531 -eq 'Fail') {throw '_190214_025531'}
+		}
+		task A {
+		    'Invoking task A...'
+		}
+	}
+
+	# run persistent build, A works, B fails
+	$fail = $null
+	try {
+		$env:_190214_025531 = 'Fail'
+		Build-Checkpoint z.clixml -Build @{File = 'z.build.ps1'; Result = 'Result'}
+	}
+	catch {
+		$fail = $_
+	}
+	equals $fail.FullyQualifiedErrorId _190214_025531
+	$A = $Result.All['A']
+	assert ($A.Elapsed -ne $null)
+	equals $A.Error $null
+	$B = $Result.All['B']
+	equals $B.Error.FullyQualifiedErrorId _190214_025531
+
+	# resume persistent build, A skips, B works
+	$env:_190214_025531 = $null
+	Build-Checkpoint z.clixml -Resume @{Result = 'Result'}
+	$A = $Result.All['A']
+	assert ($A.Elapsed -eq [TimeSpan]::Zero)
+	$B = $Result.All['B']
+	assert ($B.Elapsed -ne [TimeSpan]::Zero)
+
+	# clean
+	remove z.build.ps1, z.clixml
+}

@@ -75,7 +75,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Footer = {Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}
 	Data = @{}
 	XBuild = $null
-	XTask = $null
+	XCheck = $null
 })
 if ($_ = $PSBoundParameters['Result']) {
 	if ($_ -is [string]) {
@@ -83,7 +83,7 @@ if ($_ = $PSBoundParameters['Result']) {
 	}
 	elseif ($_ -is [hashtable]) {
 		${*}.XBuild = $_['XBuild']
-		${*}.XTask = $_['XTask']
+		${*}.XCheck = $_['XCheck']
 		$_.Value = ${*}
 	}
 	else {throw 'Invalid parameter Result.'}
@@ -475,7 +475,6 @@ function *Task {
 	}
 
 	$Task.Started = [DateTime]::Now
-	if (${*}.XTask) {& ${*}.XTask}
 	if ((${private:*x} = $Task.If) -is [scriptblock]) {
 		*SL
 		try {
@@ -559,6 +558,7 @@ function *Task {
 			Write-Build 14 (*At $Task)
 		}
 		else {
+			if (${*}.XCheck) {& ${*}.XCheck}
 			& ${*}.Footer ${*p}
 		}
 		*Run $Task.Done
@@ -679,6 +679,7 @@ try {
 	try {
 		. *Run ${*}.EnterBuild
 		if (${*}.XBuild) {. ${*}.XBuild}
+		if (${*}.XCheck) {& ${*}.XCheck}
 		foreach($_ in $BuildTask) {
 			*Task $_ ''
 		}
