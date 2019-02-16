@@ -4,6 +4,7 @@
 **Techniques**
 
 - [Direct](Direct) How to make build scripts invokable directly.
+- [Dynamic](Dynamic) How to use a dynamic script with dynamic tasks.
 - [Header](Header) How to define custom task headers and footers.
 - [Import](Import) How to share and import tasks from external task scripts including exported by modules.
 - [Inline](Inline) How to assemble a whole build inline as a script block without creating an extra script.
