@@ -462,3 +462,9 @@ task CheckpointIssue140 {
 	# clean
 	remove z.build.ps1, z.clixml
 }
+
+# Issue #142: Warning refers to child task instead of current.
+task RestoreCurrentTask142 RestoreCurrentTask142Child, {
+	equals RestoreCurrentTask142 ${*}.Task.Name
+}
+task RestoreCurrentTask142Child {}

@@ -498,7 +498,12 @@ function *Task {
 		. *Run ${*}.EnterTask
 		foreach(${private:*j} in $Task.Jobs) {
 			if (${*j} -is [string]) {
-				*Task ${*j} ${*p}
+				try {
+					*Task ${*j} ${*p}
+				}
+				finally {
+					${*}.Task = $Task
+				}
 				continue
 			}
 			& ${*}.Header ${*p}

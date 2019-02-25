@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v5.4.4
+
+Fix wrong task info in warning records, #142.
+
 ## v5.4.3
 
 Save checkpoints after each task and before the first, #140.
