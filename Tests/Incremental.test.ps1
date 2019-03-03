@@ -294,3 +294,29 @@ task MissingOutputMessage {
 	}
 	assert ($r -like "*Missing output 'Missing'.*")
 }
+
+### #143 Suggested technique: Inputs makes data for Outputs.
+# Two tests ensure Inputs is called before Outputs.
+task InputsMakesDataForOutputsFull @{
+	Inputs = {
+		($Task.Data = $BuildFile)
+	}
+	Outputs = {
+		$Task.Data
+	}
+	Jobs = {
+		throw 'unexpected'
+	}
+}
+task InputsMakesDataForOutputsPartial @{
+	Partial = $true
+	Inputs = {
+		($Task.Data = $BuildFile)
+	}
+	Outputs = {
+		$Task.Data
+	}
+	Jobs = {
+		throw 'unexpected'
+	}
+}

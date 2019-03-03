@@ -429,6 +429,7 @@ task CheckpointIssue140 {
 		task B A, {
 			'Invoking task B...'
 		    if ($env:_190214_025531 -eq 'Fail') {throw '_190214_025531'}
+		    Start-Sleep -Milliseconds 1 #! ensure Elapsed -ne [TimeSpan]::Zero
 		}
 		task A {
 		    'Invoking task A...'
