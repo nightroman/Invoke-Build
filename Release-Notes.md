@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v5.4.5
+
+Amend help about Write-Build, #144.
+
 ## v5.4.4
 
 Fix wrong task info in warning records, #142.

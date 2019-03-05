@@ -998,18 +998,24 @@
 	synopsis = 'Writes text using colors if they are supported.'
 
 	description = @'
-	This function is used in order to output colored text, e.g. to a console.
-	Unlike Write-Host it is suitable for redirected output, e.g. to a file.
-	If the current host does not support colors then just text is written.
+	This function is used in order to output colored text in a console or other
+	hosts with colors. Unlike Write-Host it is suitable for redirected output,
+	e.g. to a file. If a host does not have colors then just text is written.
+
+	Write-Build is designed for use in tasks and build blocks. Do not use it in
+	functions and scripts with returned results. Write-Host may be used in some
+	cases instead, with known limitations.
 '@
 
 	parameters = @{
-		Color = @'
-		[System.ConsoleColor] value or its string representation.
-'@
-		Text = @'
-		Text to be printed using colors if they are supported.
-'@
+		Color = @{
+			required = $true
+			description = '[System.ConsoleColor] value or its string representation.'
+		}
+		Text = @{
+			required = $true
+			description = 'Text written using colors if they are supported.'
+		}
 	}
 
 	outputs = @{
