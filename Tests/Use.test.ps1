@@ -17,6 +17,9 @@
 
 . ./Shared.ps1
 $Is64 = [IntPtr]::Size -eq 8
+if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
+$VS2017 = Test-Path "$ProgramFiles\Microsoft Visual Studio\2017"
+$VS2019 = Test-Path "$ProgramFiles\Microsoft Visual Studio\2019"
 
 # Use the current framework at the script level (used by CurrentFramework).
 use ([System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) MSBuild.exe
@@ -132,8 +135,6 @@ task Version.14.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions
 }
 
 # VS 2017 ~ v15
-if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
-$VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
 task Version.15.0 -If $VS2017 {
 	use 15.0 MSBuild.exe
 	($version = exec { MSBuild.exe /version /nologo })
@@ -153,7 +154,27 @@ task Version.15.0 -If $VS2017 {
 	assert ($r -like '*\15.0\bin\MSBuild.exe')
 }
 
-task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, Version.15.0, {
+# VS 2019 ~ v16
+task Version.16.0 -If $VS2019 {
+	use 16.0 MSBuild.exe
+	($version = exec { MSBuild.exe /version /nologo })
+	assert ($version -like '16.*')
+	$script:LatestVersion = $version
+
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r -like '*\Current\bin\amd64\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\Current\bin\MSBuild.exe')
+	}
+
+	use 16.0x86 MSBuild.exe
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	assert ($r -like '*\Current\bin\MSBuild.exe')
+}
+
+task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, Version.15.0, Version.16.0, {
 	use * MSBuild.exe
 	($r1 = Test-MSBuild (Get-Alias MSBuild.exe))
 	($version = exec { MSBuild.exe /version /nologo })

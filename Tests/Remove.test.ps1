@@ -98,16 +98,16 @@ task Verbose {
 
 	# with Verbose
 	$log = [System.Collections.Generic.List[object]]@()
-	1 > z.1.txt
-	remove z.1*, z.2* -Verbose
+	$Issue147 = 1
+	remove variable:Issue147*, Issue147 -Verbose
 	$log
 	equals 2 $log.Count
-	equals 'remove: removing z.1*' $log[0]
-	equals 'remove: skipping z.2*' $log[1]
+	equals 'remove: removing variable:Issue147*' $log[0]
+	equals 'remove: skipping Issue147' $log[1]
 
 	# without Verbose
 	$log = [System.Collections.Generic.List[object]]@()
-	1 > z.1.txt
-	remove z.1*, z.2*
+	$Issue147 = 1
+	remove variable:Issue147*, Issue147
 	equals 0 $log.Count
 }

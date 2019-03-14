@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests of Resolve-MSBuild.ps1
@@ -11,16 +10,22 @@
 
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
 $VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
+$VS2019 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019"
 $VSSetup = Get-Module VSSetup -ListAvailable
 $Is64 = [IntPtr]::Size -eq 8
 
 # from Resolve-MSBuild
-function Get-MSBuild15Path($Bitness) {
+function Get-MSBuild15Path {
+	[CmdletBinding()] param(
+		[string]$Version,
+		[string]$Bitness
+	)
+
 	if ([System.IntPtr]::Size -eq 4 -or $Bitness -eq 'x86') {
-		'MSBuild\15.0\Bin\MSBuild.exe'
+		"MSBuild\$Version\Bin\MSBuild.exe"
 	}
 	else {
-		'MSBuild\15.0\Bin\amd64\MSBuild.exe'
+		"MSBuild\$Version\Bin\amd64\MSBuild.exe"
 	}
 }
 
@@ -35,6 +40,17 @@ task test15VSSetup -If $VS2017 {
 	assert ($r -like '*\15.0\Bin\MSBuild.exe')
 }
 
+task test15VSSetup2019 -If $VS2019 {
+	if (!$VSSetup) {Write-Warning 'VSSetup is not installed'}
+	$r = Resolve-MSBuild 16.0
+	Test-MSBuild $r
+	assert ($r -like '*\Current\*')
+
+	$r = Resolve-MSBuild 16.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\Current\Bin\MSBuild.exe')
+}
+
 task test15Guess -If $VS2017 {
 	. Set-Mock Get-MSBuild15VSSetup {}
 
@@ -45,6 +61,18 @@ task test15Guess -If $VS2017 {
 	$r = Resolve-MSBuild 15.0x86
 	Test-MSBuild $r
 	assert ($r -like '*\15.0\Bin\MSBuild.exe')
+}
+
+task test15Guess2019 -If $VS2019 {
+	. Set-Mock Get-MSBuild15VSSetup {}
+
+	$r = Resolve-MSBuild 16.0
+	Test-MSBuild $r
+	assert ($r -like '*\Current\*')
+
+	$r = Resolve-MSBuild 16.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\Current\Bin\MSBuild.exe')
 }
 
 task test14 {
@@ -72,19 +100,19 @@ task test40 {
 	assert ($r -like '*\Microsoft.NET\Framework\v4.0.*\MSBuild.exe')
 }
 
-task testAll15 -If $VS2017 {
+task testAll15 -If ($VS2017 -or $VS2019) {
 	$r = Resolve-MSBuild
 	Test-MSBuild $r
 	if ($Is64) {
-		assert ($r -like '*\15.0\bin\amd64\MSBuild.exe')
+		assert ($r -like '*\Current\bin\amd64\MSBuild.exe' -or $r -like '*\15.0\bin\amd64\MSBuild.exe')
 	}
 	else {
-		assert ($r -like '*\15.0\bin\MSBuild.exe')
+		assert ($r -like '*\Current\bin\MSBuild.exe' -or $r -like '*\15.0\bin\MSBuild.exe')
 	}
 
 	$r = Resolve-MSBuild *x86
 	Test-MSBuild $r
-	assert ($r -like '*\15.0\bin\MSBuild.exe')
+	assert ($r -like '*\Current\bin\MSBuild.exe' -or $r -like '*\15.0\bin\MSBuild.exe')
 	equals $r (Resolve-MSBuild x86) # same but *
 }
 
@@ -138,7 +166,7 @@ task Get-MSBuild15VSSetup {
     . Set-Mock Get-VSSetupInstance {$it}
     . Set-Mock Select-VSSetupInstance {$Input}
 
-    function New-It($Product, $InstallationPath, $InstallationVersion) {
+    function New-It($Product, $InstallationPath, [version]$InstallationVersion='15.0') {
     	$r = New-Object psobject
     	$r | Add-Member -Type NoteProperty -Name Product -Value $Product
     	$r | Add-Member -Type NoteProperty -Name InstallationPath -Value $InstallationPath
@@ -146,73 +174,81 @@ task Get-MSBuild15VSSetup {
     	$r
     }
 
-	$it = New-It Microsoft.VisualStudio.Product.Enterprise Enterprise
+	$it = New-It Microsoft.VisualStudio.Product.Enterprise \2017\Enterprise
 	($r = Resolve-MSBuild)
-	equals $r "Enterprise\$(Get-MSBuild15Path)"
+	equals $r "\2017\Enterprise\$(Get-MSBuild15Path 15.0)"
 
-	$it = New-It Microsoft.VisualStudio.Product.Professional Professional
+	$it = New-It Microsoft.VisualStudio.Product.Professional \2017\Professional
 	($r = Resolve-MSBuild)
-	equals $r "Professional\$(Get-MSBuild15Path)"
+	equals $r "\2017\Professional\$(Get-MSBuild15Path 15.0)"
 
-	$it = New-It Microsoft.VisualStudio.Product.Community Community
+	$it = New-It Microsoft.VisualStudio.Product.Community \2017\Community
 	($r = Resolve-MSBuild)
-	equals $r "Community\$(Get-MSBuild15Path)"
+	equals $r "\2017\Community\$(Get-MSBuild15Path 15.0)"
 
-	$it = New-It Microsoft.VisualStudio.Product.Something Something
+	$it = New-It Microsoft.VisualStudio.Product.Something \2017\Something
 	($r = Resolve-MSBuild)
-	equals $r "Something\$(Get-MSBuild15Path)"
-
-	$it = @(
-		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
-		New-It Microsoft.VisualStudio.Product.Community Community
-		New-It Microsoft.VisualStudio.Product.Enterprise Enterprise
-		New-It Microsoft.VisualStudio.Product.Professional Professional
-		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
-	)
-	($r = Resolve-MSBuild)
-	equals $r "Enterprise\$(Get-MSBuild15Path)"
+	equals $r "\2017\Something\$(Get-MSBuild15Path 15.0)"
 
 	$it = @(
-		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
-		New-It Microsoft.VisualStudio.Product.Community Community
-		New-It Microsoft.VisualStudio.Product.Professional Professional
-		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
+		New-It Microsoft.VisualStudio.Product.BuildTools \2017\BuildTools
+		New-It Microsoft.VisualStudio.Product.Community \2017\Community
+		New-It Microsoft.VisualStudio.Product.Enterprise \2017\Enterprise
+		New-It Microsoft.VisualStudio.Product.Professional \2017\Professional
+		New-It Microsoft.VisualStudio.Product.TeamExplorer \2017\TeamExplorer
 	)
 	($r = Resolve-MSBuild)
-	equals $r "Professional\$(Get-MSBuild15Path)"
+	equals $r "\2017\Enterprise\$(Get-MSBuild15Path 15.0)"
 
 	$it = @(
-		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
-		New-It Microsoft.VisualStudio.Product.Community Community
-		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
+		New-It Microsoft.VisualStudio.Product.BuildTools \2017\BuildTools
+		New-It Microsoft.VisualStudio.Product.Community \2017\Community
+		New-It Microsoft.VisualStudio.Product.Professional \2017\Professional
+		New-It Microsoft.VisualStudio.Product.TeamExplorer \2017\TeamExplorer
 	)
 	($r = Resolve-MSBuild)
-	equals $r "Community\$(Get-MSBuild15Path)"
+	equals $r "\2017\Professional\$(Get-MSBuild15Path 15.0)"
 
 	$it = @(
-		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools
-		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer
+		New-It Microsoft.VisualStudio.Product.BuildTools \2017\BuildTools
+		New-It Microsoft.VisualStudio.Product.Community \2017\Community
+		New-It Microsoft.VisualStudio.Product.TeamExplorer \2017\TeamExplorer
 	)
 	($r = Resolve-MSBuild)
-	equals $r "BuildTools\$(Get-MSBuild15Path)"
+	equals $r "\2017\Community\$(Get-MSBuild15Path 15.0)"
+
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.BuildTools \2017\BuildTools
+		New-It Microsoft.VisualStudio.Product.TeamExplorer \2017\TeamExplorer
+	)
+	($r = Resolve-MSBuild)
+	equals $r "\2017\BuildTools\$(Get-MSBuild15Path 15.0)"
 
 	# -Latest 1 candidate
 	$it = @(
-		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools ([version]'15.1')
-		New-It Microsoft.VisualStudio.Product.Community Community ([version]'15.1')
-		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer ([version]'15.2')
+		New-It Microsoft.VisualStudio.Product.BuildTools \2017\BuildTools 15.1
+		New-It Microsoft.VisualStudio.Product.Community \2017\Community 15.1
+		New-It Microsoft.VisualStudio.Product.TeamExplorer \2017\TeamExplorer 15.2
 	)
 	($r = Resolve-MSBuild -Latest)
-	equals $r "TeamExplorer\$(Get-MSBuild15Path)"
+	equals $r "\2017\TeamExplorer\$(Get-MSBuild15Path 15.0)"
 
 	# -Latest 2 candidates
 	$it = @(
-		New-It Microsoft.VisualStudio.Product.TeamExplorer TeamExplorer ([version]'15.2')
-		New-It Microsoft.VisualStudio.Product.BuildTools BuildTools ([version]'15.1')
-		New-It Microsoft.VisualStudio.Product.Community Community ([version]'15.2')
+		New-It Microsoft.VisualStudio.Product.TeamExplorer \2017\TeamExplorer 15.2
+		New-It Microsoft.VisualStudio.Product.BuildTools \2017\BuildTools 15.1
+		New-It Microsoft.VisualStudio.Product.Community \2017\Community 15.2
 	)
 	($r = Resolve-MSBuild -Latest)
-	equals $r "Community\$(Get-MSBuild15Path)"
+	equals $r "\2017\Community\$(Get-MSBuild15Path 15.0)"
+
+    # VS2019 if version=* then get latest among same products
+	$it = @(
+		New-It Microsoft.VisualStudio.Product.Enterprise \2019\Enterprise 16.0
+		New-It Microsoft.VisualStudio.Product.Enterprise \2017\Enterprise 15.0
+	)
+	($r = Resolve-MSBuild)
+	equals $r "\2019\Enterprise\$(Get-MSBuild15Path Current)"
 }
 
 task Get-MSBuild15Guess {
@@ -220,14 +256,12 @@ task Get-MSBuild15Guess {
 	. Set-Mock Test-Path {$true}
 	. Set-Mock Get-Item {$it}
 
-    function New-It($FullName, $FileVersion) {
+    function New-It($FullName, [version]$FileVersion='15.0') {
     	$r = New-Object psobject
     	$r | Add-Member -Type NoteProperty -Name FullName -Value $FullName
-    	if ($FileVersion) {
-    		$info = New-Object psobject
-    		$info | Add-Member -Type NoteProperty -Name FileVersion -Value $FileVersion
-    		$r | Add-Member -Type NoteProperty -Name VersionInfo -Value $info
-    	}
+		$info = New-Object psobject
+		$info | Add-Member -Type NoteProperty -Name FileVersion -Value $FileVersion
+		$r | Add-Member -Type NoteProperty -Name VersionInfo -Value $info
     	$r
     }
 
@@ -283,19 +317,27 @@ task Get-MSBuild15Guess {
 
 	# -Latest 1 candidate
 	$it = @(
-		New-It ..\BuildTools\.. ([version] '15.1')
-		New-It ..\Community\.. ([version] '15.1')
-		New-It ..\TeamExplorer\.. ([version] '15.2')
+		New-It ..\BuildTools\.. 15.1
+		New-It ..\Community\.. 15.1
+		New-It ..\TeamExplorer\.. 15.2
 	)
 	($r = Resolve-MSBuild -Latest)
 	equals $r ..\TeamExplorer\..
 
 	# -Latest 2 candidates
 	$it = @(
-		New-It ..\TeamExplorer\.. ([version] '15.2')
-		New-It ..\BuildTools\.. ([version] '15.1')
-		New-It ..\Community\.. ([version] '15.2')
+		New-It ..\TeamExplorer\.. 15.2
+		New-It ..\BuildTools\.. 15.1
+		New-It ..\Community\.. 15.2
 	)
 	($r = Resolve-MSBuild -Latest)
 	equals $r ..\Community\..
+
+    # VS2019 if version=* then get latest among same products
+	$it = @(
+		New-It ..\2019\Enterprise\.. 16.0
+		New-It ..\2017\Enterprise\.. 15.0
+	)
+	($r = Resolve-MSBuild)
+	equals $r ..\2019\Enterprise\..
 }

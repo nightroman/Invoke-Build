@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v5.5.0
+
+Support MSBuild 16.0 of VS 2019, #146.
+
 ## v5.4.6
 
 Support `remove -Verbose`, #147.

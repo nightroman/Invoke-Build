@@ -1,6 +1,5 @@
-
 <#PSScriptInfo
-.VERSION 1.3.0
+.VERSION 1.4.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -15,15 +14,14 @@
 
 .Description
 	The script finds the path to the specified or latest version of MSBuild.
-	It is designed for MSBuild 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
+	It is designed for MSBuild 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
 
-	For MSBuild 15.0 the command uses VSSetup module from PSGallery.
-	If it is not installed then some default locations are checked.
-	VSSetup module is required for not default installations.
+	For MSBuild 15+ the command uses the module VSSetup, see PSGallery.
+	If VSSetup is not installed then the default locations are used.
+	VSSetup is required for not default installations.
 
-	MSBuild 15.0 resolution: the latest version (if requested by -Latest), then
-	Enterprise, Professional, Community, BuildTools, other products. If this is
-	not suitable then use VSSetup module and choose differently.
+	MSBuild 15+ resolution: the latest major version (or absolute if -Latest),
+	then Enterprise, Professional, Community, BuildTools, other products.
 
 	For MSBuild 2.0-14.0 the information is taken from the registry.
 
@@ -31,18 +29,18 @@
 		Specifies the required MSBuild version. If it is omitted, empty, or *
 		then the command finds and returns the latest installed version path.
 		The optional suffix x86 tells to use 32-bit MSBuild.
-		Known versions: 15.0, 14.0, 12.0, 4.0, 3.5, 2.0
+		Known versions: 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0
 .Parameter Latest
-		Tells to select the latest (minor) version if there are 2+ products
-		with the same (major) version. For example, 15.0 actually gets 15.x
-		and Latest tells to choose the version before the product.
+		Tells to select the latest minor version if there are 2+ products with
+		the same major version. Note that major versions have higher precedence
+		than products regardless of -Latest.
 
 .Outputs
 	The full path to MSBuild.exe
 
 .Example
-	Resolve-MSBuild 15.0
-	Gets location of MSBuild installed with Visual Studio 2017.
+	Resolve-MSBuild 16.0
+	Gets location of MSBuild installed with Visual Studio 2019.
 
 .Link
 	https://www.powershellgallery.com/packages/VSSetup
@@ -55,92 +53,142 @@ param(
 	[switch]$Latest
 )
 
-function Get-MSBuild15Path($Bitness) {
+function Get-MSBuild15Path {
+	[CmdletBinding()] param(
+		[string]$Version,
+		[string]$Bitness
+	)
+
 	if ([System.IntPtr]::Size -eq 4 -or $Bitness -eq 'x86') {
-		'MSBuild\15.0\Bin\MSBuild.exe'
+		"MSBuild\$Version\Bin\MSBuild.exe"
 	}
 	else {
-		'MSBuild\15.0\Bin\amd64\MSBuild.exe'
+		"MSBuild\$Version\Bin\amd64\MSBuild.exe"
 	}
 }
 
-function Get-MSBuild15VSSetup($Bitness, [switch]$Latest, [switch]$Prerelease) {
+function Get-MSBuild15VSSetup {
+	[CmdletBinding()] param(
+		[string]$Version,
+		[string]$Bitness,
+		[switch]$Latest,
+		[switch]$Prerelease
+	)
+
 	if (!(Get-Module VSSetup)) {
 		if (!(Get-Module VSSetup -ListAvailable)) {return}
 		Import-Module VSSetup
 	}
 
 	$items = @(
+		$v = switch($Version) {
+			'16.0' {'[16.0,17.0)'}
+			'15.0' {'[15.0,16.0)'}
+			default {'[15.0,)'}
+		}
 		Get-VSSetupInstance -Prerelease:$Prerelease |
-		Select-VSSetupInstance -Version 15.0 -Require Microsoft.Component.MSBuild -Product *
+		Select-VSSetupInstance -Version $v -Require Microsoft.Component.MSBuild -Product *
 	)
 	if (!$items) {
 		if (!$Prerelease) {
-			Get-MSBuild15VSSetup -Bitness:$Bitness -Latest:$Latest -Prerelease
+			Get-MSBuild15VSSetup $Version $Bitness -Latest:$Latest -Prerelease
 		}
 		return
 	}
 
 	if ($items.Count -ge 2) {
+		$byVersion = if ($Latest) {{$_.InstallationVersion}} else {{$_.InstallationVersion.Major}}
 		$byProduct = {
-			if ($_.Product -eq 'Microsoft.VisualStudio.Product.Enterprise') {4}
-			elseif ($_.Product -eq 'Microsoft.VisualStudio.Product.Professional') {3}
-			elseif ($_.Product -eq 'Microsoft.VisualStudio.Product.Community') {2}
-			elseif ($_.Product -eq 'Microsoft.VisualStudio.Product.BuildTools') {1}
-			else {0}
+			switch ($_.Product) {
+				Microsoft.VisualStudio.Product.Enterprise {4}
+				Microsoft.VisualStudio.Product.Professional {3}
+				Microsoft.VisualStudio.Product.Community {2}
+				Microsoft.VisualStudio.Product.BuildTools {1}
+				default {0}
+			}
 		}
-		if ($Latest) {
-			$items = $items | Sort-Object InstallationVersion, $byProduct
-		}
-		else {
-			$items = $items | Sort-Object $byProduct
-		}
+		$items = $items | Sort-Object $byVersion, $byProduct
 	}
 
-	Join-Path ($items[-1].InstallationPath) (Get-MSBuild15Path $Bitness)
+	$item = $items[-1]
+	if ($item.InstallationVersion.Major -eq 15) {
+		$Version = '15.0'
+	}
+	else {
+		$Version = 'Current'
+	}
+	Join-Path $item.InstallationPath (Get-MSBuild15Path $Version $Bitness)
 }
 
-function Get-MSBuild15Guess($Bitness, [switch]$Latest, [switch]$Prerelease) {
-	$Folder = if ($Prerelease) {'Preview'} else {'2017'}
+function Get-MSBuild15Guess {
+	[CmdletBinding()] param(
+		[string]$Version,
+		[string]$Bitness,
+		[switch]$Latest,
+		[switch]$Prerelease
+	)
+
 	if (!($root = ${env:ProgramFiles(x86)})) {$root = $env:ProgramFiles}
 
-	$items = @(Get-Item "$root\Microsoft Visual Studio\$Folder\*\$(Get-MSBuild15Path $Bitness)" -ErrorAction 0)
+	$folders = $(
+		if ($Prerelease) {'Preview'}
+		elseif ($Version -eq '*') {'2019', '2017'}
+		elseif ($Version -eq '16.0') {'2019'}
+		else {'2017'}
+	)
+	$items = @(
+		foreach($folder in $folders) {
+			Get-Item -ErrorAction 0 @(
+				"$root\Microsoft Visual Studio\$folder\*\$(Get-MSBuild15Path Current $Bitness)"
+				"$root\Microsoft Visual Studio\$folder\*\$(Get-MSBuild15Path $Version $Bitness)"
+			)
+		}
+	)
 	if (!$items) {
 		if (!$Prerelease) {
-			Get-MSBuild15Guess -Bitness:$Bitness -Latest:$Latest -Prerelease
+			Get-MSBuild15Guess $Version $Bitness -Latest:$Latest -Prerelease
 		}
 		return
 	}
 
 	if ($items.Count -ge 2) {
+		$byVersion = if ($Latest) {{[version]$_.VersionInfo.FileVersion}} else {{([version]$_.VersionInfo.FileVersion).Major}}
 		$byProduct = {
-			if ($_.FullName -like '*\Enterprise\*') {4}
-			elseif ($_.FullName -like '*\Professional\*') {3}
-			elseif ($_.FullName -like '*\Community\*') {2}
-			elseif ($_.FullName -like '*\BuildTools\*') {1}
-			else {0}
+			switch -Wildcard ($_.FullName) {
+				*\Enterprise\* {4}
+				*\Professional\* {3}
+				*\Community\* {2}
+				*\BuildTools\* {1}
+				default {0}
+			}
 		}
-		if ($Latest) {
-			$items = $items | Sort-Object {$_.VersionInfo.FileVersion}, $byProduct
-		}
-		else {
-			$items = $items | Sort-Object $byProduct
-		}
+		$items = $items | Sort-Object $byVersion, $byProduct
 	}
 
 	$items[-1].FullName
 }
 
-function Get-MSBuild15($Bitness, [switch]$Latest) {
-	if ($path = Get-MSBuild15VSSetup $Bitness -Latest:$Latest) {
+function Get-MSBuild15 {
+	[CmdletBinding()] param(
+		[string]$Version,
+		[string]$Bitness,
+		[switch]$Latest
+	)
+
+	if ($path = Get-MSBuild15VSSetup $Version $Bitness -Latest:$Latest) {
 		$path
 	}
 	else {
-		Get-MSBuild15Guess $Bitness -Latest:$Latest
+		Get-MSBuild15Guess $Version $Bitness -Latest:$Latest
 	}
 }
 
-function Get-MSBuildOldVersion($Version, $Bitness) {
+function Get-MSBuildOldVersion {
+	[CmdletBinding()] param(
+		[string]$Version,
+		[string]$Bitness
+	)
+
 	if ([System.IntPtr]::Size -eq 8 -and $Bitness -eq 'x86') {
 		$key = "HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\MSBuild\ToolsVersions\$Version"
 	}
@@ -153,7 +201,11 @@ function Get-MSBuildOldVersion($Version, $Bitness) {
 	}
 }
 
-function Get-MSBuildOldLatest($Bitness) {
+function Get-MSBuildOldLatest {
+	[CmdletBinding()] param(
+		[string]$Bitness
+	)
+
 	$rp = @(Get-ChildItem HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions | Sort-Object {[Version]$_.PSChildName})
 	if ($rp) {
 		Get-MSBuildOldVersion $rp[-1].PSChildName $Bitness
@@ -170,13 +222,14 @@ try {
 		$Bitness = ''
 	}
 
+	$v16 = [Version]'16.0'
 	$v15 = [Version]'15.0'
 	$vMax = [Version]'9999.0'
 	if (!$Version) {$Version = '*'}
 	$vRequired = if ($Version -eq '*') {$vMax} else {[Version]$Version}
 
-	if ($vRequired -eq $v15) {
-		if ($path = Get-MSBuild15 $Bitness -Latest:$Latest) {
+	if ($vRequired -eq $v16 -or $vRequired -eq $v15) {
+		if ($path = Get-MSBuild15 $Version $Bitness -Latest:$Latest) {
 			return $path
 		}
 	}
@@ -186,7 +239,7 @@ try {
 		}
 	}
 	elseif ($vRequired -eq $vMax) {
-		if ($path = Get-MSBuild15 $Bitness -Latest:$Latest) {
+		if ($path = Get-MSBuild15 * $Bitness -Latest:$Latest) {
 			return $path
 		}
 		if ($path = Get-MSBuildOldLatest $Bitness) {
