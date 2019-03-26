@@ -793,11 +793,9 @@
 	description = @'
 	Scripts use its alias 'remove'. This command removes existing items,
 	ignores missing items, and fails if it cannot remove existing items.
-	In other words, `remove X` is similar to
 
-	    Remove-Item X -Force -Recurse -ErrorAction Ignore
-
-	but `remove` writes an error if existing X cannot be removed.
+	Use the switch Verbose in order to output messages about removing
+	existing and skipping missing items or patterns specified by Path.
 '@
 
 	parameters = @{

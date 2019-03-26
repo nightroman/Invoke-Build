@@ -1,9 +1,13 @@
 
 # Invoke-Build Release Notes
 
+## v5.4.6
+
+Support `remove -Verbose`, #147.
+
 ## v5.4.5
 
-Amend help about Write-Build, #144.
+Amend help about `Write-Build`, #144.
 
 ## v5.4.4
 

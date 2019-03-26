@@ -7,6 +7,8 @@
 	Invoke-Build * Remove.test.ps1
 #>
 
+. ./Shared.ps1
+
 # Synopsis: Errors on invalid arguments.
 task InvalidArgument {
 	($r = try {remove ''} catch {$_})
@@ -85,4 +87,27 @@ task HiddenInSubdirectory {
 	equals $r $false
 
 	remove z
+}
+
+# Support -Verbose, #147
+task Verbose {
+	. Set-Mock Write-Verbose {
+		param($Message, [switch]$Verbose)
+		$log.Add($Message)
+	}
+
+	# with Verbose
+	$log = [System.Collections.Generic.List[object]]@()
+	1 > z.1.txt
+	remove z.1*, z.2* -Verbose
+	$log
+	equals 2 $log.Count
+	equals 'remove: removing z.1*' $log[0]
+	equals 'remove: skipping z.2*' $log[1]
+
+	# without Verbose
+	$log = [System.Collections.Generic.List[object]]@()
+	1 > z.1.txt
+	remove z.1*, z.2*
+	equals 0 $log.Count
 }

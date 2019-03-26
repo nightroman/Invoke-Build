@@ -240,11 +240,14 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 #.ExternalHelp InvokeBuild-Help.xml
 function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 	if ($Path -match '^[.*/\\]*$') {*Die 'Not allowed paths.' 5}
+	$v = $PSBoundParameters['Verbose']
 	try {
 		foreach($_ in $Path) {
 			if (Get-Item $_ -Force -ErrorAction 0) {
+				if ($v) {Write-Verbose "remove: removing $_" -Verbose}
 				Remove-Item $_ -Force -Recurse
 			}
+			elseif ($v) {Write-Verbose "remove: skipping $_" -Verbose}
 		}
 	}
 	catch {
