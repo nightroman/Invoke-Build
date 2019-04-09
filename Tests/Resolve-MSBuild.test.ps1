@@ -38,6 +38,10 @@ task test15VSSetup -If $VS2017 {
 	$r = Resolve-MSBuild 15.0x86
 	Test-MSBuild $r
 	assert ($r -like '*\15.0\Bin\MSBuild.exe')
+
+	# with spaces, #148
+	$r2 = Resolve-MSBuild '  15.0  x86  '
+	equals $r $r2
 }
 
 task test15VSSetup2019 -If $VS2019 {
@@ -49,6 +53,10 @@ task test15VSSetup2019 -If $VS2019 {
 	$r = Resolve-MSBuild 16.0x86
 	Test-MSBuild $r
 	assert ($r -like '*\Current\Bin\MSBuild.exe')
+
+	# with spaces, #148
+	$r2 = Resolve-MSBuild '  16.0  x86  '
+	equals $r $r2
 }
 
 task test15Guess -If $VS2017 {

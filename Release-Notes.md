@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v5.5.1
+
+`Resolve-MSBuild` - allow some spaces in versions #148
+
 ## v5.5.0
 
 Support MSBuild 16.0 of VS 2019, #146.

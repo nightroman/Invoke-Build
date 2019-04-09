@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.4.0
+.VERSION 1.4.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -39,8 +39,8 @@
 	The full path to MSBuild.exe
 
 .Example
-	Resolve-MSBuild 16.0
-	Gets location of MSBuild installed with Visual Studio 2019.
+	Resolve-MSBuild 16.0x86
+	Gets the location of 32-bit MSBuild of Visual Studio 2019.
 
 .Link
 	https://www.powershellgallery.com/packages/VSSetup
@@ -214,13 +214,14 @@ function Get-MSBuildOldLatest {
 
 $ErrorActionPreference = 1
 try {
-	if ($Version -match '^(.*?)(x86)$') {
+	if ($Version -match '^(.*?)x86\s*$') {
 		$Version = $matches[1]
-		$Bitness = $matches[2]
+		$Bitness = 'x86'
 	}
 	else {
 		$Bitness = ''
 	}
+	$Version = $Version.Trim()
 
 	$v16 = [Version]'16.0'
 	$v15 = [Version]'15.0'
