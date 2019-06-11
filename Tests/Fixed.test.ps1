@@ -469,3 +469,27 @@ task RestoreCurrentTask142 RestoreCurrentTask142Child, {
 	equals RestoreCurrentTask142 ${*}.Task.Name
 }
 task RestoreCurrentTask142Child {}
+
+# Issue #150: Preserve checkpoints on successful builds.
+task PreserveCheckpoint {
+	# good build
+	Set-Content z.build.ps1 {
+		task Issue150 {}
+	}
+
+	# build and preserve checkpoint
+	Build-Checkpoint z.PreserveCheckpoint.clixml @{ File = 'z.build.ps1' } -Preserve
+
+	# checkpoint has the done task
+	$r = Import-Clixml z.PreserveCheckpoint.clixml
+	equals $r.Done.Count 1
+	equals $r.Done[0] Issue150
+
+	# build checkpoint normally
+	Build-Checkpoint z.PreserveCheckpoint.clixml @{ File = 'z.build.ps1' }
+
+	# checkpoint is removed
+	assert (!(Test-Path z.PreserveCheckpoint.clixml))
+
+	Remove-Item z.build.ps1
+}

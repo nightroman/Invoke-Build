@@ -1149,12 +1149,14 @@
 	parameters = @{
 		Checkpoint = @'
 		Specifies the checkpoint file (clixml). The checkpoint file is removed
-		after successful builds. If a build fails and it is not going to be
-		resumed then delete the checkpoint file manually.
+		after successful builds unless the switch Preserve is specified.
 '@
 		Build = @'
 		Specifies the build and script parameters. WhatIf is not supported.
 		On Resume tasks, script path, and script parameters are ignored.
+'@
+		Preserve = @'
+		Tells to preserve the checkpoint file on successful builds.
 '@
 		Resume = @'
 		Tells to resume the build from the existing checkpoint file.

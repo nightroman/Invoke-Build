@@ -15,6 +15,7 @@ specific language governing permissions and limitations under the License.
 param(
 	[Parameter(Position=0, Mandatory=1)][string]$Checkpoint,
 	[Parameter(Position=1)][hashtable]$Build,
+	[switch]$Preserve,
 	[switch]$Resume
 )
 
@@ -28,6 +29,7 @@ if ($Build['WhatIf']) {throw 'WhatIf is not supported.'}
 
 ${*checkpoint} = @{
 	Checkpoint = $Checkpoint
+	Preserve = $Preserve
 	Result = $Build['Result']
 	Data = $null
 }
@@ -85,12 +87,12 @@ ${*checkpoint}.XCheck = {
 }
 
 $_ = $Build
-Remove-Variable Checkpoint, Build, Resume
+Remove-Variable Checkpoint, Build, Preserve, Resume
 
 Set-Alias Invoke-Build (Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1)
 Invoke-Build @_ -Result ${*checkpoint}
 
-if (!${*checkpoint}.Value.Error) {
+if (!${*checkpoint}.Value.Error -and !${*checkpoint}.Preserve) {
 	[System.IO.File]::Delete(${*checkpoint}.Checkpoint)
 }
 }

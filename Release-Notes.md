@@ -1,6 +1,10 @@
 
 # Invoke-Build Release Notes
 
+## v5.5.2
+
+Add the switch `Preserve` to `Build-Checkpoint` #150
+
 ## v5.5.1
 
 `Resolve-MSBuild` - allow some spaces in versions #148
