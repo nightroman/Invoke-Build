@@ -493,3 +493,25 @@ task PreserveCheckpoint {
 
 	Remove-Item z.build.ps1
 }
+
+# Issue #152. Also test the bootstrapping scenario.
+# This used to fail on the second call of z.ps1.
+task DoNotMakeScriptParametersNamed {
+	# self-invoking build script
+	Set-Content z.ps1 {
+		param(
+			[Parameter()]$Tasks
+		)
+		if ($MyInvocation.ScriptName -notlike "*Invoke-Build.ps1") {
+			Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
+			return
+		}
+		task Test {}
+	}
+
+	# invoke the script twice with the task name
+	./z.ps1 Test
+	./z.ps1 Test
+
+	remove z.ps1
+}

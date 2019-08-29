@@ -118,7 +118,6 @@ if ($_.Count) {&{
 		if ($c -notcontains ($_ = $p.Name)) {
 			if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
 			${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $p.Attributes))
-			foreach($a in $p.Attributes) {if ($a -is [System.Management.Automation.ParameterAttribute]) {$a.Position = 0x80000000}}
 		}
 	}
 	${*}.DP
