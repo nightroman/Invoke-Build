@@ -212,6 +212,20 @@ function Get-MSBuildOldLatest {
 	}
 }
 
+function Get-MSBuildAny {
+	[CmdletBinding()] param(
+		[string]$Bitness,
+		[switch]$Latest
+	)
+
+    if ($path = Get-MSBuild15 * $Bitness -Latest:$Latest) {
+        return $path
+    }
+    if ($path = Get-MSBuildOldLatest $Bitness) {
+        return $path
+    }
+}
+
 $ErrorActionPreference = 1
 try {
 	if ($Version -match '^(.*?)x86\s*$') {
@@ -240,12 +254,9 @@ try {
 		}
 	}
 	elseif ($vRequired -eq $vMax) {
-		if ($path = Get-MSBuild15 * $Bitness -Latest:$Latest) {
-			return $path
-		}
-		if ($path = Get-MSBuildOldLatest $Bitness) {
-			return $path
-		}
+        if ($path = Get-MSBuildAny $Bitness -Latest:$Latest) {
+            return $path
+        }
 	}
 
 	throw 'The specified version is not found.'
