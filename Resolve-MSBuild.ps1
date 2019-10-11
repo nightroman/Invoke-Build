@@ -47,9 +47,10 @@
 #>
 
 [OutputType([string])]
-[CmdletBinding()]
+[CmdletBinding(DefaultParameterSetName='SpecificVersion')]
 param(
-	[string]$Version,
+	[Parameter(ParameterSetName='SpecificVersion')][string]$Version,
+	[Parameter(ParameterSetName='MinimumVersion')][string]$MinimumVersion,
 	[switch]$Latest
 )
 
@@ -232,6 +233,10 @@ try {
 		$Version = $matches[1]
 		$Bitness = 'x86'
 	}
+	elseif ($MinimumVersion -match '^(.*?)x86\s*$') {
+		$MinimumVersion = $matches[1]
+		$Bitness = 'x86'
+	}
 	else {
 		$Bitness = ''
 	}
@@ -255,6 +260,13 @@ try {
 	}
 	elseif ($vRequired -eq $vMax) {
         if ($path = Get-MSBuildAny $Bitness -Latest:$Latest) {
+            if ($MinimumVersion) {
+                $msbuildver = [Version] (& $path -version -nologo)
+                $minver = [Version] $MinimumVersion
+                if ($msbuildver -lt $minver) {
+                    throw "MSBuild version $minver or later was requested, but the latest MSBuild available is version $msbuildver"
+                }
+            }
             return $path
         }
 	}
