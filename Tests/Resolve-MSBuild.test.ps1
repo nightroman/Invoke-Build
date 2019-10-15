@@ -171,16 +171,18 @@ task alias-of-Resolve-MSBuild {
 task Get-MSBuild15VSSetup {
 	. Set-Mock Get-Module {1}
 	. Set-Mock Import-Module {}
-    . Set-Mock Get-VSSetupInstance {$it}
-    . Set-Mock Select-VSSetupInstance {$Input}
+	. Set-Mock Get-VSSetupInstance {$it}
+	. Set-Mock Select-VSSetupInstance {$Input}
 
-    function New-It($Product, $InstallationPath, [version]$InstallationVersion='15.0') {
-    	$r = New-Object psobject
-    	$r | Add-Member -Type NoteProperty -Name Product -Value $Product
-    	$r | Add-Member -Type NoteProperty -Name InstallationPath -Value $InstallationPath
-    	$r | Add-Member -Type NoteProperty -Name InstallationVersion -Value $InstallationVersion
-    	$r
-    }
+	function New-It($Product, $InstallationPath, [version]$InstallationVersion='15.0') {
+		$productIns = New-Object psobject
+		$productIns | Add-Member -Type NoteProperty -Name Id -Value $Product
+		$r = New-Object psobject
+		$r | Add-Member -Type NoteProperty -Name Product -Value $productIns
+		$r | Add-Member -Type NoteProperty -Name InstallationPath -Value $InstallationPath
+		$r | Add-Member -Type NoteProperty -Name InstallationVersion -Value $InstallationVersion
+		$r
+	}
 
 	$it = New-It Microsoft.VisualStudio.Product.Enterprise \2017\Enterprise
 	($r = Resolve-MSBuild)
