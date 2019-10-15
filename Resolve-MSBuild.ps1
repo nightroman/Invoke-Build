@@ -47,10 +47,9 @@
 #>
 
 [OutputType([string])]
-[CmdletBinding(DefaultParameterSetName='SpecificVersion')]
 param(
-	[Parameter(ParameterSetName='SpecificVersion')][string]$Version,
-	[Parameter(ParameterSetName='MinimumVersion')][string]$MinimumVersion,
+	[string]$Version,
+	[string]$MinimumVersion,
 	[switch]$Latest
 )
 
@@ -250,11 +249,25 @@ try {
 
 	if ($vRequired -eq $v16 -or $vRequired -eq $v15) {
 		if ($path = Get-MSBuild15 $Version $Bitness -Latest:$Latest) {
+            if ($MinimumVersion) {
+                $msbuildver = [Version] (& $path -version -nologo)
+                $minver = [Version] $MinimumVersion
+                if ($msbuildver -lt $minver) {
+                    throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
+                }
+            }
 			return $path
 		}
 	}
 	elseif ($vRequired -lt $v15) {
 		if ($path = Get-MSBuildOldVersion $Version $Bitness) {
+            if ($MinimumVersion) {
+                $msbuildver = [Version] (& $path -version -nologo)
+                $minver = [Version] $MinimumVersion
+                if ($msbuildver -lt $minver) {
+                    throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
+                }
+            }
 			return $path
 		}
 	}
