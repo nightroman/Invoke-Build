@@ -42,6 +42,14 @@
 	Resolve-MSBuild 16.0x86
 	Gets the location of 32-bit MSBuild of Visual Studio 2019.
 
+.Example
+    Resolve-MSBuild -MinimumVersion 15.0x86 -Latest
+    Gets the location of the latest 32-bit MSBuild available, and asserts that its version is at least 15.0.
+
+.Example
+    Resolve-MSBuild -MinimumVersion 16.3.1 -Latest
+    Gets the location of the latest 64-bit MSBuild available, and asserts that its version is at least 16.3.1.
+
 .Link
 	https://www.powershellgallery.com/packages/VSSetup
 #>
