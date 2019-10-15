@@ -99,7 +99,7 @@ function Get-MSBuild15VSSetup {
 	if ($items.Count -ge 2) {
 		$byVersion = if ($Latest) {{$_.InstallationVersion}} else {{$_.InstallationVersion.Major}}
 		$byProduct = {
-			switch ($_.Product) {
+			switch ($_.Product.Id) {
 				Microsoft.VisualStudio.Product.Enterprise {4}
 				Microsoft.VisualStudio.Product.Professional {3}
 				Microsoft.VisualStudio.Product.Community {2}
