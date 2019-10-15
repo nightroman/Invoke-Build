@@ -55,6 +55,7 @@
 #>
 
 [OutputType([string])]
+[CmdletBinding()]
 param(
 	[string]$Version,
 	[string]$MinimumVersion,
