@@ -26,10 +26,16 @@
 	For MSBuild 2.0-14.0 the information is taken from the registry.
 
 .Parameter Version
-		Specifies the required MSBuild version. If it is omitted, empty, or *
+		Specifies the required MSBuild major version. If it is omitted, empty, or *,
 		then the command finds and returns the latest installed version path.
-		The optional suffix x86 tells to use 32-bit MSBuild.
+		The optional suffix x86 tells Resolve-MSBuild to use 32-bit MSBuild.
 		Known versions: 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0
+.Parameter MinimumVersion
+		Specifies the minimum MSBuild version. If this is specified without -Version,
+		then the latest version of MSBuild available is returned, so long as its version
+		is at least the specified minimum version. If -Version is specified as well, the
+		version of MSBuild returned is restricted to the major version passed to -Version.
+		The optional suffix x86 tells Resolve-MSBuild to use 32-bit MSBuild.
 .Parameter Latest
 		Tells to select the latest minor version if there are 2+ products with
 		the same major version. Note that major versions have higher precedence
