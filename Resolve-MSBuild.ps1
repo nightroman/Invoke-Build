@@ -43,12 +43,12 @@
 	Gets the location of 32-bit MSBuild of Visual Studio 2019.
 
 .Example
-    Resolve-MSBuild -MinimumVersion 15.0x86 -Latest
-    Gets the location of the latest 32-bit MSBuild available, and asserts that its version is at least 15.0.
+	Resolve-MSBuild -MinimumVersion 15.0x86 -Latest
+	Gets the location of the latest 32-bit MSBuild available, and asserts that its version is at least 15.0.
 
 .Example
-    Resolve-MSBuild -MinimumVersion 16.3.1 -Latest
-    Gets the location of the latest 64-bit MSBuild available, and asserts that its version is at least 16.3.1.
+	Resolve-MSBuild -MinimumVersion 16.3.1 -Latest
+	Gets the location of the latest 64-bit MSBuild available, and asserts that its version is at least 16.3.1.
 
 .Link
 	https://www.powershellgallery.com/packages/VSSetup
@@ -227,12 +227,12 @@ function Get-MSBuildAny {
 		[switch]$Latest
 	)
 
-    if ($path = Get-MSBuild15 * $Bitness -Latest:$Latest) {
-        return $path
-    }
-    if ($path = Get-MSBuildOldLatest $Bitness) {
-        return $path
-    }
+	if ($path = Get-MSBuild15 * $Bitness -Latest:$Latest) {
+		return $path
+	}
+	if ($path = Get-MSBuildOldLatest $Bitness) {
+		return $path
+	}
 }
 
 $ErrorActionPreference = 1
@@ -258,39 +258,39 @@ try {
 
 	if ($vRequired -eq $v16 -or $vRequired -eq $v15) {
 		if ($path = Get-MSBuild15 $Version $Bitness -Latest:$Latest) {
-            if ($MinimumVersion) {
-                $msbuildver = [Version] (& $path -version -nologo)
-                $minver = [Version] $MinimumVersion
-                if ($msbuildver -lt $minver) {
-                    throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
-                }
-            }
+			if ($MinimumVersion) {
+				$msbuildver = [Version] (& $path -version -nologo)
+				$minver = [Version] $MinimumVersion
+				if ($msbuildver -lt $minver) {
+					throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
+				}
+			}
 			return $path
 		}
 	}
 	elseif ($vRequired -lt $v15) {
 		if ($path = Get-MSBuildOldVersion $Version $Bitness) {
-            if ($MinimumVersion) {
-                $msbuildver = [Version] (& $path -version -nologo)
-                $minver = [Version] $MinimumVersion
-                if ($msbuildver -lt $minver) {
-                    throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
-                }
-            }
+			if ($MinimumVersion) {
+				$msbuildver = [Version] (& $path -version -nologo)
+				$minver = [Version] $MinimumVersion
+				if ($msbuildver -lt $minver) {
+					throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
+				}
+			}
 			return $path
 		}
 	}
 	elseif ($vRequired -eq $vMax) {
-        if ($path = Get-MSBuildAny $Bitness -Latest:$Latest) {
-            if ($MinimumVersion) {
-                $msbuildver = [Version] (& $path -version -nologo)
-                $minver = [Version] $MinimumVersion
-                if ($msbuildver -lt $minver) {
-                    throw "MSBuild version $minver or later was requested, but the latest MSBuild available is version $msbuildver"
-                }
-            }
-            return $path
-        }
+		if ($path = Get-MSBuildAny $Bitness -Latest:$Latest) {
+			if ($MinimumVersion) {
+				$msbuildver = [Version] (& $path -version -nologo)
+				$minver = [Version] $MinimumVersion
+				if ($msbuildver -lt $minver) {
+					throw "MSBuild version $minver or later was requested, but the latest MSBuild available is version $msbuildver"
+				}
+			}
+			return $path
+		}
 	}
 
 	throw 'The specified version is not found.'
