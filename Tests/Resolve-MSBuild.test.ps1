@@ -367,3 +367,32 @@ task Get-MSBuild15Guess {
 	($r = Resolve-MSBuild)
 	equals $r ..\2019\Enterprise\..
 }
+
+task MinimumVersionBad {
+	$r = try { Resolve-MSBuild -MinimumVersion 9999.0 } catch { $_ }
+	"$r"
+	assert ("$r" -match '^Cannot resolve MSBuild \* : MSBuild resolved version \d+\.\d+\.\d+\.\d+ is less than required minimum 9999\.0\.$')
+}
+
+task MinimumVersionGood {
+	# default latest and its version
+	($MSBuild = Resolve-MSBuild)
+	$ver = [Version](& $MSBuild -version -nologo)
+
+	# ditto with -MinimumVersion
+	$r1 = Resolve-MSBuild -MinimumVersion $ver
+	equals $r1 $MSBuild
+
+	# x86 latest and its version
+	($MSBuild = Resolve-MSBuild x86)
+	$ver = [Version](& $MSBuild -version -nologo)
+
+	# ditto with -MinimumVersion
+	$r2 = Resolve-MSBuild x86 $ver
+	equals $r2 $MSBuild
+
+	# on x64 results are different
+	if ($Is64) {
+		assert ($r1 -ne $r2)
+	}
+}

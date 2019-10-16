@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.5.5
+
+Add parameter `MinimumVersion` to `Resolve-MSBuild` #154
+
 ## v5.5.4
 
 Fix sorting by product in `Resolve-MSBuild` #153

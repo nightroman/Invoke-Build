@@ -110,6 +110,10 @@ PowerShell v2.0+ scripts. It is similar to psake but arguably easier to use and
 more powerful. It is complete, bug free, well covered by tests.
 '@
 
+	# icon
+	$null = mkdir z\images
+	Copy-Item ib.png z\images
+
 	# manifest
 	Set-Content z\Package.nuspec @"
 <?xml version="1.0"?>
@@ -120,7 +124,7 @@ more powerful. It is complete, bug free, well covered by tests.
 		<authors>Roman Kuzmin</authors>
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
-		<iconUrl>https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png</iconUrl>
+		<icon>images\ib.png</icon>
 		<license type="expression">Apache-2.0</license>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>
@@ -149,6 +153,13 @@ task PushRelease Version, {
 # Synopsis: Push NuGet package.
 task PushNuGet NuGet, {
 	exec { NuGet push "Invoke-Build.$script:Version.nupkg" -Source nuget.org }
+},
+Clean
+
+# Synopsis: Push PSGallery package.
+task PushPSGallery Module, {
+	$NuGetApiKey = Read-Host NuGetApiKey
+	Publish-Module -Path z/InvokeBuild -NuGetApiKey $NuGetApiKey
 },
 Clean
 
