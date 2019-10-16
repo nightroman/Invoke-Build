@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.5.4
+
+Fix sorting by product in `Resolve-MSBuild` #153
+
 ## v5.5.3
 
 Do not make script parameters named, fix #152

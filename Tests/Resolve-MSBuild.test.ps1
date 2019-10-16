@@ -11,6 +11,7 @@
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
 $VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
 $VS2019 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019"
+$MSBuild14 = Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0'
 $VSSetup = Get-Module VSSetup -ListAvailable
 $Is64 = [IntPtr]::Size -eq 8
 
@@ -83,7 +84,7 @@ task test15Guess2019 -If $VS2019 {
 	assert ($r -like '*\Current\Bin\MSBuild.exe')
 }
 
-task test14 {
+task test14 -If $MSBuild14 {
 	$r = Resolve-MSBuild 14.0
 	Test-MSBuild $r
 	assert ($r -like '*\14.0\*')
@@ -129,16 +130,31 @@ task testAll14 {
 
 	$r = Resolve-MSBuild
 	Test-MSBuild $r
-	if ($Is64) {
-		assert ($r -like '*\14.0\bin\amd64\MSBuild.exe')
+	if ($MSBuild14) {
+		if ($Is64) {
+			assert ($r -like '*\14.0\bin\amd64\MSBuild.exe')
+		}
+		else {
+			assert ($r -like '*\14.0\bin\MSBuild.exe')
+		}
 	}
 	else {
-		assert ($r -like '*\14.0\bin\MSBuild.exe')
+		if ($Is64) {
+			assert ($r -like '*\Microsoft.NET\Framework64\v4.0.*\MSBuild.exe')
+		}
+		else {
+			assert ($r -like '*\Microsoft.NET\Framework\v4.0.*\MSBuild.exe')
+		}
 	}
 
 	$r = Resolve-MSBuild *x86
 	Test-MSBuild $r
-	assert ($r -like '*\14.0\bin\MSBuild.exe')
+	if ($MSBuild14) {
+		assert ($r -like '*\14.0\bin\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\v4.0.*\MSBuild.exe')
+	}
 	equals $r (Resolve-MSBuild x86) # same but *
 }
 
