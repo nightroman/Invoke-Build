@@ -26,10 +26,16 @@
 	For MSBuild 2.0-14.0 the information is taken from the registry.
 
 .Parameter Version
-		Specifies the required MSBuild version. If it is omitted, empty, or *
+		Specifies the required MSBuild major version. If it is omitted, empty, or *,
 		then the command finds and returns the latest installed version path.
-		The optional suffix x86 tells to use 32-bit MSBuild.
+		The optional suffix x86 tells Resolve-MSBuild to use 32-bit MSBuild.
 		Known versions: 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0
+.Parameter MinimumVersion
+		Specifies the minimum MSBuild version. If this is specified without -Version,
+		then the latest version of MSBuild available is returned, so long as its version
+		is at least the specified minimum version. If -Version is specified as well, the
+		version of MSBuild returned is restricted to the major version passed to -Version.
+		The optional suffix x86 tells Resolve-MSBuild to use 32-bit MSBuild.
 .Parameter Latest
 		Tells to select the latest minor version if there are 2+ products with
 		the same major version. Note that major versions have higher precedence
@@ -42,6 +48,14 @@
 	Resolve-MSBuild 16.0x86
 	Gets the location of 32-bit MSBuild of Visual Studio 2019.
 
+.Example
+	Resolve-MSBuild -MinimumVersion 15.0x86 -Latest
+	Gets the location of the latest 32-bit MSBuild available, and asserts that its version is at least 15.0.
+
+.Example
+	Resolve-MSBuild -MinimumVersion 16.3.1 -Latest
+	Gets the location of the latest 64-bit MSBuild available, and asserts that its version is at least 16.3.1.
+
 .Link
 	https://www.powershellgallery.com/packages/VSSetup
 #>
@@ -50,6 +64,7 @@
 [CmdletBinding()]
 param(
 	[string]$Version,
+	[string]$MinimumVersion,
 	[switch]$Latest
 )
 
@@ -212,10 +227,28 @@ function Get-MSBuildOldLatest {
 	}
 }
 
+function Get-MSBuildAny {
+	[CmdletBinding()] param(
+		[string]$Bitness,
+		[switch]$Latest
+	)
+
+	if ($path = Get-MSBuild15 * $Bitness -Latest:$Latest) {
+		return $path
+	}
+	if ($path = Get-MSBuildOldLatest $Bitness) {
+		return $path
+	}
+}
+
 $ErrorActionPreference = 1
 try {
 	if ($Version -match '^(.*?)x86\s*$') {
 		$Version = $matches[1]
+		$Bitness = 'x86'
+	}
+	elseif ($MinimumVersion -match '^(.*?)x86\s*$') {
+		$MinimumVersion = $matches[1]
 		$Bitness = 'x86'
 	}
 	else {
@@ -231,19 +264,37 @@ try {
 
 	if ($vRequired -eq $v16 -or $vRequired -eq $v15) {
 		if ($path = Get-MSBuild15 $Version $Bitness -Latest:$Latest) {
+			if ($MinimumVersion) {
+				$msbuildver = [Version] (& $path -version -nologo)
+				$minver = [Version] $MinimumVersion
+				if ($msbuildver -lt $minver) {
+					throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
+				}
+			}
 			return $path
 		}
 	}
 	elseif ($vRequired -lt $v15) {
 		if ($path = Get-MSBuildOldVersion $Version $Bitness) {
+			if ($MinimumVersion) {
+				$msbuildver = [Version] (& $path -version -nologo)
+				$minver = [Version] $MinimumVersion
+				if ($msbuildver -lt $minver) {
+					throw "MSBuild version $minver or later was requested, but the latest MSBuild $($vRequired.ToString(1)) available is version $msbuildver"
+				}
+			}
 			return $path
 		}
 	}
 	elseif ($vRequired -eq $vMax) {
-		if ($path = Get-MSBuild15 * $Bitness -Latest:$Latest) {
-			return $path
-		}
-		if ($path = Get-MSBuildOldLatest $Bitness) {
+		if ($path = Get-MSBuildAny $Bitness -Latest:$Latest) {
+			if ($MinimumVersion) {
+				$msbuildver = [Version] (& $path -version -nologo)
+				$minver = [Version] $MinimumVersion
+				if ($msbuildver -lt $minver) {
+					throw "MSBuild version $minver or later was requested, but the latest MSBuild available is version $msbuildver"
+				}
+			}
 			return $path
 		}
 	}
