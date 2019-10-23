@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Examples of Use-BuildAlias (use).
@@ -16,6 +15,7 @@
 #>
 
 . ./Shared.ps1
+
 $Is64 = [IntPtr]::Size -eq 8
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
 $VS2017 = Test-Path "$ProgramFiles\Microsoft Visual Studio\2017"
@@ -209,30 +209,40 @@ task ResolvedPath {
 
 # Error: missing version.
 task MissingVersion {
-	($r = try {<##> use 3.14 MSBuild} catch {$_})
-	assert (($r | Out-String) -like '*Cannot resolve MSBuild 3.14 :*<##>*FullyQualifiedErrorId : Use-BuildAlias*')
+	($r = try {use 3.14 MSBuild} catch {$_})
+	equals "$r" 'Cannot resolve MSBuild 3.14 : The specified version is not found.'
+	equals $r.InvocationInfo.ScriptName $BuildFile
+	equals $r.FullyQualifiedErrorId Use-BuildAlias
 }
 
 # Error: invalid framework.
 task InvalidFramework {
-	($r = try {<##> use 'Framework\<>' MSBuild} catch {$_})
-	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''Framework\\<>''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
+	($r = try {use 'Framework\<>' MSBuild} catch {$_})
+	equals "$r" "Cannot resolve 'Framework\<>'."
+	equals $r.InvocationInfo.ScriptName $BuildFile
+	equals $r.FullyQualifiedErrorId Use-BuildAlias
 }
 
 # Error: missing framework.
 task MissingFramework {
-	($r = try {<##> use Framework\MissingFramework MSBuild} catch {$_})
-	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''Framework\\MissingFramework''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
+	($r = try {use Framework\MissingFramework MSBuild} catch {$_})
+	equals "$r" "Cannot resolve 'Framework\MissingFramework'."
+	equals $r.InvocationInfo.ScriptName $BuildFile
+	equals $r.FullyQualifiedErrorId Use-BuildAlias
 }
 
 # Error: invalid directory.
 task InvalidDirectory {
-	($r = try {<##> use '\<>' MyScript} catch {$_})
-	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''\\<>''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
+	($r = try {use '\<>' MyScript} catch {$_})
+	equals "$r" "Cannot resolve '\<>'."
+	equals $r.InvocationInfo.ScriptName $BuildFile
+	equals $r.FullyQualifiedErrorId Use-BuildAlias
 }
 
 # Error: missing directory.
 task MissingDirectory {
-	($r = try {<##> use MissingDirectory MyScript} catch {$_})
-	assert (($r | Out-String) -match '(?s)^use : Cannot resolve ''MissingDirectory''.*<##>.*FullyQualifiedErrorId : Use-BuildAlias')
+	($r = try {use MissingDirectory MyScript} catch {$_})
+	equals "$r" "Cannot resolve 'MissingDirectory'."
+	equals $r.InvocationInfo.ScriptName $BuildFile
+	equals $r.FullyQualifiedErrorId Use-BuildAlias
 }

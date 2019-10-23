@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests build events.
@@ -94,11 +93,13 @@ task HelpTaskAndEvents {
 task InvalidEvents {
 	# invalid parameter type
 	($r = try {<##> Enter-Build 42} catch {$_})
-	assert (($r | Out-String) -like '*<##>*FullyQualifiedErrorId : ParameterArgumentTransformationError,Enter-Build*')
+	assert ($r.InvocationInfo.Line.Contains('<##>'))
+	equals $r.FullyQualifiedErrorId 'ParameterArgumentTransformationError,Enter-Build'
 
 	# invalid parameter number
 	($r = try {<##> Enter-Build {} 42} catch {$_})
-	assert (($r | Out-String) -like '*<##>*FullyQualifiedErrorId : PositionalParameterNotFound,Enter-Build*')
+	assert ($r.InvocationInfo.Line.Contains('<##>'))
+	equals $r.FullyQualifiedErrorId 'PositionalParameterNotFound,Enter-Build'
 }
 
 # If a task fails then its $Task.Error is available in Exit-BuildJob.

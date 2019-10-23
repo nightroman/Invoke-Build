@@ -160,23 +160,27 @@ task testAll14 {
 
 task missingOld {
 	($r = try {Resolve-MSBuild 1.0} catch {$_})
-	assert (($r | Out-String) -like '*Cannot resolve MSBuild 1.0 :*Resolve-MSBuild.test.ps1:*')
+	equals "$r" 'Cannot resolve MSBuild 1.0 : The specified version is not found.'
+	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
 task missingNew {
 	($r = try {Resolve-MSBuild 15.1} catch {$_})
-	assert (($r | Out-String) -like '*Cannot resolve MSBuild 15.1 :*Resolve-MSBuild.test.ps1:*')
+	equals "$r" 'Cannot resolve MSBuild 15.1 : The specified version is not found.'
+	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
 task missing15 {
 	. Set-Mock Get-MSBuild15 {}
 	($r = try {Resolve-MSBuild 15.0} catch {$_})
-	assert (($r | Out-String) -like '*Cannot resolve MSBuild 15.0 : *Resolve-MSBuild.test.ps1:*')
+	equals "$r" 'Cannot resolve MSBuild 15.0 : The specified version is not found.'
+	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
 task invalidVersion {
 	($r = try {Resolve-MSBuild invalid} catch {$_})
-	assert (($r | Out-String) -like '*Cannot resolve MSBuild invalid :*"invalid"*Resolve-MSBuild.test.ps1:*')
+	assert ("$r" -like 'Cannot resolve MSBuild invalid :*"invalid"*')
+	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
 task alias-of-Resolve-MSBuild {

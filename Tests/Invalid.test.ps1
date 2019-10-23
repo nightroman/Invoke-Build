@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests invalid scripts and tasks.
@@ -141,8 +140,14 @@ task DanglingScriptblock {
 	$log = [System.Collections.Generic.List[object]]@()
 	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
 
-	($r = try {Invoke-Build . $file} catch {$_})
-	assert (($r | Out-String) -like 'ERROR: Dangling scriptblock at *Build ABORTED*Dangling scriptblock at *\Invalid.test.ps1:*\Invalid.test.ps1:*')
+	$err = ''
+	($r = try {Invoke-Build . $file} catch {$err = $_})
+	assert (($r | Out-String) -like 'ERROR: Dangling scriptblock at *\Invalid.test.ps1:*Build ABORTED *\Invalid.test.ps1. 0 tasks*')
+
+	$err
+	assert ("$err" -like 'Dangling scriptblock at *\Invalid.test.ps1:*')
+	equals $err.InvocationInfo.ScriptName $BuildFile
+
 	equals $log.Count 2
 	equals $log[0] 'Unexpected output: 42.'
 	equals $log[1] 'Unexpected output: bar.'

@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests dot-sourcing of Invoke-Build.
@@ -24,8 +23,9 @@ $ErrorActionPreference = 'Stop'
 ### Test assert first of all
 
 # `assert` works and gets the proper position
-($e = try {assert 0} catch {$_ | Out-String})
-assert ($e -like '*Assertion failed.*try {assert*')
+($r = try {assert 0} catch {$_})
+equals "$r" 'Assertion failed.'
+assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
 
 ### Test special aliases and targets
 
@@ -106,9 +106,10 @@ equals $LASTEXITCODE 42
 equals $r 'Code42'
 
 # exec 13 fails
-($e = try {exec { cmd /c exit 13 }} catch {$_ | Out-String})
+($r = try {exec { cmd /c exit 13 }} catch {$_})
 equals $LASTEXITCODE 13
-assert ($e -like 'exec : Command { cmd /c exit 13 } exited with code 13.*try {exec *')
+equals "$r" 'Command { cmd /c exit 13 } exited with code 13.'
+assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
 
 ### property
 
@@ -121,8 +122,9 @@ equals $r $env:COMPUTERNAME
 ($r = property MissingVariable DefaultValue)
 equals $r 'DefaultValue'
 
-($e = try {property MissingVariable} catch {$_ | Out-String})
-assert ($e -like 'property : Missing property *try {property *')
+($r = try {property MissingVariable} catch {$_})
+equals "$r" "Missing property 'MissingVariable'."
+assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
 
 ### use
 
@@ -140,8 +142,9 @@ use (Split-Path $MyInvocation.MyCommand.Path) Dot-test.ps1
 ($r = (Get-Alias Dot-test.ps1).Definition)
 equals $r $MyInvocation.MyCommand.Path
 
-($e = try {use Missing MSBuild} catch {$_ | Out-String})
-assert ($e -like 'use : Cannot resolve *try {use *')
+($r = try {use Missing MSBuild} catch {$_})
+equals "$r" "Cannot resolve 'Missing'."
+assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
 
 ### misc
 

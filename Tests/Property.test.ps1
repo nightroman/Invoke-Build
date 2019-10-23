@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests of Get-BuildProperty (property).
@@ -32,7 +31,10 @@ equals $MissingNullProperty 42
 # Error: missing property
 task MissingProperty {
 	($r = try {property _111126_181750} catch {$_})
-	assert (($r | Out-String) -like "*Missing property '_111126_181750'.*At *\Property.test.ps1:*ObjectNotFound*")
+	equals "$r" "Missing property '_111126_181750'."
+	equals $r.InvocationInfo.ScriptName $BuildFile
+	equals $r.FullyQualifiedErrorId Get-BuildProperty
+	assert ($r.CategoryInfo.Category -eq 'ObjectNotFound')
 }
 
 # v3.3.4 (#60): Treat '' as not defined.

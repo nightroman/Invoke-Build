@@ -176,6 +176,9 @@ task Loop {
 # Synopsis: Test and check expected output.
 # Requires PowerShelf/Assert-SameFile.ps1
 task Test3 {
+	#! v7 may use different view
+	$script:ErrorView = 'NormalView'
+
 	# invoke tests, get output and result
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
 	if ($NoTestDiff) {return}

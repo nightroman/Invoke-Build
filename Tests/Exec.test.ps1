@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Examples and tests of `exec`.
@@ -21,13 +20,13 @@ task ExecWorksCode42 {
 
 task ExecFailsCode13 {
 	($r = try {exec { cmd /c exit 13 }} catch {$_})
-	assert (($r | Out-String) -like 'exec : Command { cmd /c exit 13 } exited with code 13.*At *\Exec.test.ps1:*')
+	equals "$r" 'Command { cmd /c exit 13 } exited with code 13.'
+	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
 task ExecFailsBadCommand {
 	($r = try {exec { throw 'throw in ExecFailsBadCommand' }} catch {$_})
-	#! v2/v5
-	assert (($r | Out-String) -like '*throw in ExecFailsBadCommand*At *\Exec.test.ps1:*')
+	assert ($r.InvocationInfo.Line.Contains('throw in ExecFailsBadCommand'))
 }
 
 # Issue #54.

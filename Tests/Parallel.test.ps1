@@ -1,5 +1,4 @@
-﻿
-<#
+﻿<#
 .Synopsis
 	Tests parallel builds called by Build-Parallel
 
@@ -163,7 +162,12 @@ task ParallelMissingEngine {
 	$script = "$env:TEMP\Build-Parallel.ps1"
 	Copy-Item ..\Build-Parallel.ps1 $script -Force
 
-	($r = Invoke-PowerShell -NoProfile -Command "& '$script' @{bar=1}" | Out-String)
+	$command = @"
+`$global:ErrorView = 'NormalView'
+& '$script' @{bar=1}
+"@
+
+	($r = Invoke-PowerShell -NoProfile -Command $command | Out-String)
 
 	[System.IO.File]::Delete($script)
 	assert ($r -like "*'$env:TEMP\Invoke-Build.ps1'*@{bar=1}*CommandNotFoundException*")
