@@ -150,6 +150,7 @@ function Get-MSBuild15Guess {
 		elseif ($Version -eq '16.0') {'2019'}
 		else {'2017'}
 	)
+	
 	$items = @(
 		foreach($folder in $folders) {
 			Get-Item -ErrorAction 0 @(
@@ -158,11 +159,33 @@ function Get-MSBuild15Guess {
 			)
 		}
 	)
+	
 	if (!$items) {
-		if (!$Prerelease) {
-			Get-MSBuild15Guess $Version $Bitness -Latest:$Latest -Prerelease
+		$vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+		[string[]] $additionalArgs = @()
+		$find = $("**$($Bitness)\MSBuild.exe")
+
+		if ($Prerelease) {
+			$additionalArgs += '-prerelease'
 		}
-		return
+		
+		$installs = (& $vswhere -all -sort -find $find @additionalArgs)
+		$items = @(
+			foreach($install in $installs) {
+				foreach ($folder in $folders) {
+					if ($install -like @("*$($folder)*")) {
+						Get-Item -ErrorAction 0 $install
+					}
+				}
+			}
+		)
+		if ($items.Count -eq 0) {
+			if (!$Prerelease) {
+				Get-MSBuild15Guess $Version $Bitness -Latest:$Latest -Prerelease
+			}
+			
+			return;
+		}
 	}
 
 	if ($items.Count -ge 2) {
