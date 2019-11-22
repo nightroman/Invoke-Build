@@ -1,4 +1,3 @@
-
 #Requires -Version 3.0
 
 <#
@@ -129,7 +128,7 @@
 	This command uses some options.
 
 .Link
-	https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-psake
+	https://github.com/nightroman/Invoke-Build/wiki/Convert~psake
 #>
 
 param(

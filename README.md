@@ -45,7 +45,7 @@ Extra tools, see PSGallery and the repository:
 And some more tools, see the repository:
 
 * *Build-JustTask.ps1* - invokes tasks without references
-* *Convert-psake.ps1* - converts psake build scripts
+* *Convert-psake.ps1* - converts psake build scripts, see [wiki](https://github.com/nightroman/Invoke-Build/wiki/Convert~psake)
 * *Show-BuildTree.ps1* - shows task trees as text
 * *Show-BuildDgml.ps1* - shows task trees as DGML
 * *Show-BuildGraph.ps1* - shows task trees by Graphviz
