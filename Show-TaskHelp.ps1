@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Shows Invoke-Build task help information.
@@ -171,7 +170,7 @@ function Add-VariablePath($Path) {
 }
 
 function Add-BlockVariable($Block) {
-	$variables = $job.Ast.FindAll($VariableExpressionAst, $true)
+	$variables = $Block.Ast.FindAll($VariableExpressionAst, $true)
 	foreach($variable in $variables) {
 		$parent = $variable.Parent
 		if ($parent -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or $parent.Left -ne $variable) {
@@ -198,11 +197,7 @@ function Add-TaskVariable($Jobs) {
 		}
 
 		if (!$NoCode) {
-			$job = $Task.If
-			if ($job -is [scriptblock]) {
-				Add-BlockVariable $job
-			}
-			foreach($job in $task.Jobs) {
+			foreach($job in @($Task.If; $Task.Inputs; $Task.Outputs; $task.Jobs)) {
 				if ($job -is [scriptblock]) {
 					Add-BlockVariable $job
 				}

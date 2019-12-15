@@ -1,12 +1,9 @@
-
 <#
 .Synopsis
-	Tests Show-TaskHelp.ps1
-
-.Example
-	Invoke-Build * TaskHelp.test.ps1
+	Tests Show-TaskHelp.ps1 (Invoke-Build -WhatIf)
 #>
 
+# Variable info is v3 only.
 $V3 = $PSVersionTable.PSVersion.Major -ge 3
 
 # This script was the first on testing and it caught a few issues.
@@ -106,15 +103,13 @@ task UndocumentedStuff {
 # Skip variables on the left hand of assignments.
 # Cover missing help `Parameters` in strict mode.
 task SkipAssignment {
-	Set-Content z.ps1 @'
-param(
-	$Param1
-)
-task Test {
-	$Param1 = 1
-	$env:Param2 = 2
-}
-'@
+	Set-Content z.ps1 {
+		param($Param1)
+		task Test {
+			$Param1 = 1
+			$env:Param2 = 2
+		}
+	}
 
 	# call by WhatIf
 	Invoke-Build . z.ps1 -WhatIf
@@ -129,11 +124,11 @@ task Test {
 
 # Test two tasks and cover missed own task jobs.
 task TwoTasks {
-	Set-Content z.ps1 @'
-task Build {}
-task Version {}
-task Release Version, {}
-'@
+	Set-Content z.ps1 {
+		task Build {}
+		task Version {}
+		task Release Version, {}
+	}
 
 	# call by WhatIf
 	Invoke-Build build, release z.ps1 -WhatIf
@@ -153,10 +148,10 @@ task Release Version, {}
 
 # Tasks with `If` script must be shown in Jobs, even without actions.
 task ForkWithIf {
-	Set-Content z.ps1 @'
-task t1 -if {} t2
-task t2 {}
-'@
+	Set-Content z.ps1 {
+		task t1 -if {} t2
+		task t2 {}
+	}
 
 	# call by WhatIf
 	Invoke-Build t1 z.ps1 -WhatIf
@@ -168,6 +163,28 @@ task t2 {}
 	equals $r.Jobs.Count 2
 	equals $r.Jobs[0].Name t2
 	equals $r.Jobs[1].Name t1
+
+	Remove-Item z.ps1
+}
+
+# Cover -If, -Inputs, -Outputs in addition to -Jobs.
+task IfInputsOutputs {
+	Set-Content z.ps1 {
+		param($If, $Inputs, $Outputs)
+		task t1 -If {$If} -Inputs {$Inputs} -Outputs {$Outputs} {}
+	}
+
+	# call by WhatIf
+	Invoke-Build t1 z.ps1 -WhatIf
+
+	# call and test
+	$r = Show-TaskHelp t1 z.ps1 -Format {$args[0]}
+	if ($V3) {
+		equals $r.Parameters.Count 3
+		equals $r.Parameters[0].Name If
+		equals $r.Parameters[1].Name Inputs
+		equals $r.Parameters[2].Name Outputs
+	}
 
 	Remove-Item z.ps1
 }

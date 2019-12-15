@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.5.6
+
+`Show-TaskHelp.ps1` - process `Inputs` and `Outputs` as well as `If` and `Jobs`.
+
 ## v5.5.5
 
 Add parameter `MinimumVersion` to `Resolve-MSBuild` #154
