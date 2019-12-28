@@ -33,12 +33,11 @@ if ($PSVersionTable.PSVersion.Major -lt 7) { #! https://github.com/PowerShell/Po
 task Markdown {
 	function Convert-Markdown($Name) {pandoc.exe --standalone --from=gfm "--output=$Name.htm" "--metadata=pagetitle=$Name" "$Name.md"}
 	exec { Convert-Markdown README }
-	exec { Convert-Markdown Release-Notes }
 }
 
 # Synopsis: Remove temporary items.
 task Clean {
-	remove z, *\z, *\z.*, README.htm, Release-Notes.htm, Invoke-Build.*.nupkg
+	remove z, *\z, *\z.*, README.htm, Invoke-Build.*.nupkg, Tests\New-VSCodeTask\.vscode\tasks.json
 }
 
 # Synopsis: Build the PowerShell help file.
@@ -63,17 +62,17 @@ task Module Version, Markdown, Help, {
 	Copy-Item InvokeBuild $dir -Recurse
 
 	# copy files
-	Copy-Item -Destination $dir `
-	ib.cmd,
-	Build-Checkpoint.ps1,
-	Build-Parallel.ps1,
-	Invoke-Build.ps1,
-	InvokeBuild-Help.xml,
-	Resolve-MSBuild.ps1,
-	Show-TaskHelp.ps1,
-	README.htm,
-	LICENSE.txt,
-	Release-Notes.htm
+	Copy-Item -Destination $dir $(
+		'ib.cmd'
+		'Build-Checkpoint.ps1'
+		'Build-Parallel.ps1'
+		'Invoke-Build.ps1'
+		'InvokeBuild-Help.xml'
+		'Resolve-MSBuild.ps1'
+		'Show-TaskHelp.ps1'
+		'README.htm'
+		'LICENSE.txt'
+	)
 
 	# make manifest
 	Set-Content "$dir\InvokeBuild.psd1" @"

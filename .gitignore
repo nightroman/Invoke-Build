@@ -1,8 +1,8 @@
-.vscode
+/.vscode
 *.clixml
 *.htm
 *.log
 *.nupkg
-*.zip
 *-Help.xml
+tasks.json
 z

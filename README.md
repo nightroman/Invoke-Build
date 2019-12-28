@@ -128,6 +128,7 @@ In order to get help for internal commands:
 : Samples, patterns, and various techniques.
 - [Design Notes](https://github.com/nightroman/Invoke-Build/wiki/Design-Notes)
 : Technical details for contributors.
+- [Release Notes](https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md)
 
 Questions, suggestions, and reports are welcome as project issues.
 Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)

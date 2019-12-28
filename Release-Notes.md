@@ -1,5 +1,12 @@
 # Invoke-Build Release Notes
 
+**New-VSCodeTask.ps1**
+
+- merges custom *.vscode/tasks-merge.json* with generated
+- new parameter `Merge` specifies the custom merge path
+- new parameter `Shell` specifies the custom shell path
+- new parameter `WhereTask` filters build tasks
+
 ## v5.5.6
 
 `Show-TaskHelp.ps1` - process `Inputs` and `Outputs` as well as `If` and `Jobs`.
