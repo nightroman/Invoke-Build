@@ -24,9 +24,7 @@ param(
 )
 
 # Ensure IB works in the strict mode.
-if ($PSVersionTable.PSVersion.Major -lt 7) { #! https://github.com/PowerShell/PowerShell/issues/11371
-	Set-StrictMode -Version Latest
-}
+Set-StrictMode -Version Latest
 
 # Synopsis: Convert markdown files to HTML.
 # <http://johnmacfarlane.net/pandoc/>
