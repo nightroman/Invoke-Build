@@ -59,18 +59,25 @@ task Module Version, Markdown, Help, {
 	$dir = "$BuildRoot\z\InvokeBuild"
 	Copy-Item InvokeBuild $dir -Recurse
 
-	# copy files
+	# copy files without Invoke-Build.ps1
 	Copy-Item -Destination $dir $(
 		'ib.cmd'
 		'Build-Checkpoint.ps1'
 		'Build-Parallel.ps1'
-		'Invoke-Build.ps1'
 		'InvokeBuild-Help.xml'
 		'Resolve-MSBuild.ps1'
 		'Show-TaskHelp.ps1'
 		'README.htm'
 		'LICENSE.txt'
 	)
+
+	# copy Invoke-Build.ps1 with version comment
+	$line, $text = Get-Content Invoke-Build.ps1
+	equals $line '<#'
+	$(
+		"<# Invoke-Build $script:Version"
+		$text
+	) | Set-Content $dir\Invoke-Build.ps1
 
 	# make manifest
 	Set-Content "$dir\InvokeBuild.psd1" @"
@@ -110,8 +117,7 @@ more powerful. It is complete, bug free, well covered by tests.
 '@
 
 	# icon
-	$null = mkdir z\images
-	Copy-Item ib.png z\images
+	Copy-Item ib.png z
 
 	# manifest
 	Set-Content z\Package.nuspec @"
@@ -123,7 +129,7 @@ more powerful. It is complete, bug free, well covered by tests.
 		<authors>Roman Kuzmin</authors>
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
-		<icon>images\ib.png</icon>
+		<icon>ib.png</icon>
 		<license type="expression">Apache-2.0</license>
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>

@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.5.7
+
+Add version to Invoke-Build.ps1 header comment.
+
 **New-VSCodeTask.ps1**
 
 - merges custom *.vscode/tasks-merge.json* with generated
