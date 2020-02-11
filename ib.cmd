@@ -7,13 +7,14 @@
 if "%1"=="?" goto list
 if "%1"=="/?" goto help
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0Invoke-Build.ps1' %*"
+rem Dot-source Invoke-Build first, so that it will be available in script block closures (#160)
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ". '%~dp0Invoke-Build.ps1'; Invoke-Build %*"
 exit /B %errorlevel%
 
 :list
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0Invoke-Build.ps1' %* | Format-Table -AutoSize"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ". '%~dp0Invoke-Build.ps1'; Invoke-Build %* | Format-Table -AutoSize"
 exit /B 0
 
 :help
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "help -Full '%~dp0Invoke-Build.ps1'"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Get-Help -Full '%~dp0Invoke-Build.ps1'"
 exit /B 0
