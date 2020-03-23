@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Example/test build script with a few use cases and tutorial comments.
@@ -275,6 +274,11 @@ task TestVariables {
 	}}
 }
 
+# Synopsis: ..\Tasks\StdErr
+task StdErr {
+	Invoke-Build ** ..\Tasks\StdErr
+}
+
 # Synopsis: Show full help.
 task ShowHelp {
 	@(
@@ -315,7 +319,8 @@ TestExitCode,
 TestSelfAlias,
 TestStartJob,
 TestFunctions,
-TestVariables
+TestVariables,
+StdErr
 
 # Synopsis: This is the default task due to its name, by the convention.
 # This task calls all the samples and the main test task.

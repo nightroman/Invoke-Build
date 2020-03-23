@@ -10,6 +10,7 @@
 - [Inline](Inline) How to assemble a whole build inline as a script block without creating an extra script.
 - [Paket](Paket) Build script with automatic bootstrapping using `paket`.
 - [Param](Param) How to create tasks which perform similar actions with some differences defined by parameters.
+- [StdErr](StdErr) Dealing with standard error output issues
 
 **Custom tasks**
 

@@ -750,6 +750,11 @@
 	Scripts use its alias 'exec'. It invokes the specified script block which
 	is supposed to call an executable. Then $LastExitCode is checked. If it
 	does not fit to the specified values (0 by default) an error is thrown.
+
+	If you have any issues with standard error output of the invoked app, try
+	using `exec` with -ErrorAction Continue, SilentlyContinue, or Ignore. This
+	does not affect failures of `exec`, they still depend on the app exit code.
+	But this may work around some known PowerShell issues with standard errors.
 '@
 
 	parameters = @{

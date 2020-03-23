@@ -121,6 +121,8 @@ task NoMerge {
 	# help task is not changed
 	$r = Get-Task $data ?
 	equals $r.presentation $null
+
+	Remove-Item .vscode\tasks.json
 }
 
 # Synopsis: With merge (here just use default).
@@ -135,6 +137,8 @@ task WithMerge {
 	# help task is changed
 	$r = Get-Task $data ?
 	equals $r.presentation.focus $true
+
+	Remove-Item .vscode\tasks.json
 }
 
 # Synopsis: Merge file with no tasks.

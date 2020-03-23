@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.5.8
+
+Add the workaround notes to `exec` help.
+
 ## v5.5.7
 
 Add version to Invoke-Build.ps1 header comment.
