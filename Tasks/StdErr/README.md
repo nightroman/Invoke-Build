@@ -7,7 +7,8 @@ arguably unnecessarily. These errors become terminating if the error action
 preference is `Stop`. Note that Invoke-Build sets this preference to `Stop`.
 
 As a result, without workarounds, builds may terminate unexpectedly on invoking
-apps having standard error output.
+apps having standard error output. Another known issue is missing redirected
+error output, see [#161].
 
 ### Workaround 1: relax the current error preference
 
@@ -56,4 +57,6 @@ The script [.test.ps1](.test.ps1) tests the expected behaviour of these tasks.
 
 ### See also
 
-- https://github.com/nightroman/Invoke-Build/issues/161
+- [#161]
+
+[#161]: https://github.com/nightroman/Invoke-Build/issues/161
