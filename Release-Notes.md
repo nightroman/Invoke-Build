@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.5.9
+
+Add `ib.sh` to the package, #162.
+
 ## v5.5.8
 
 Add the workaround notes to `exec` help.

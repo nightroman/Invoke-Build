@@ -62,6 +62,7 @@ task Module Version, Markdown, Help, {
 	# copy files without Invoke-Build.ps1
 	Copy-Item -Destination $dir $(
 		'ib.cmd'
+		'ib.sh'
 		'Build-Checkpoint.ps1'
 		'Build-Parallel.ps1'
 		'InvokeBuild-Help.xml'
