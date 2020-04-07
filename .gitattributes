@@ -1,0 +1,2 @@
+# prevent converting LF to CRLF for *.sh
+*.sh text eol=lf
