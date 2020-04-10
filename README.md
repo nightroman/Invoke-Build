@@ -33,7 +33,7 @@ The package includes the engine, helpers, and the generated help:
 * *Resolve-MSBuild.ps1* - finds the specified or latest MSBuild
 * *Show-TaskHelp.ps1* - shows task help, used on WhatIf calls
 * *InvokeBuild-Help.xml* - external content for Get-Help
-* *ib.cmd* - Invoke-Build helper for cmd.exe
+* *ib.cmd*, *ib.sh* - cmd and bash helpers
 
 Extra tools, see PSGallery and the repository:
 

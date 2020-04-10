@@ -1,8 +1,14 @@
-
 <#
 .Synopsis
 	Functions shared between build scripts.
 #>
+
+$IsUnix = $PSVersionTable['Platform'] -eq 'Unix'
+$Separator = if ($IsUnix) {'/'} else {'\'}
+
+function Replace-NL($text) {
+	$text.Replace("`r`n", "`n")
+}
 
 <#
 Formats the error safely. Out-String may not work in strict mode:

@@ -15,6 +15,7 @@
 #>
 
 . ./Shared.ps1
+if ($IsUnix) {return task unix}
 
 $Is64 = [IntPtr]::Size -eq 8
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}

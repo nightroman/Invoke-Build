@@ -7,6 +7,7 @@
 #>
 
 . ./Shared.ps1
+if ($IsUnix) {return task unix}
 
 if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
 $VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"

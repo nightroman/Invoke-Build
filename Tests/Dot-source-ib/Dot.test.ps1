@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests dot-sourcing of Invoke-Build.

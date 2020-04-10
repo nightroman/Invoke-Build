@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests dynamic parameters.
@@ -64,7 +63,7 @@ task DynamicMissingScript {
 
 	# missing custom
 	($r = try {Invoke-Build . missing.ps1} catch {$_})
-	assert ($r -like "Missing script '*\missing.ps1'.")
+	assert ($r -cmatch '^Missing script ''.*[\\/]missing\.ps1''\.$')
 	assert ($r.InvocationInfo.Line -like '*{Invoke-Build . missing.ps1}*')
 
 	# missing default

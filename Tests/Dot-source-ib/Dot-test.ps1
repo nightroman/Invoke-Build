@@ -7,6 +7,7 @@
 	supposed to be invoked by PowerShell.exe, i.e. not from a build script.
 #>
 
+. ../Shared.ps1
 Set-StrictMode -Version Latest
 
 # to be changed/tested
@@ -25,7 +26,7 @@ $ErrorActionPreference = 'Stop'
 # `assert` works and gets the proper position
 ($r = try {assert 0} catch {$_})
 equals "$r" 'Assertion failed.'
-assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
+assert ($r.InvocationInfo.ScriptName -like '*Dot-test.ps1')
 
 ### Test special aliases and targets
 
@@ -96,55 +97,62 @@ Pop-Location
 ### exec
 
 # exec 0
-($r = exec { cmd /c echo Code0 })
+($r = exec { 'Code0'; $global:LASTEXITCODE = 0 })
 equals $LASTEXITCODE 0
 equals $r 'Code0'
 
 # exec 42 works
-($r = exec { cmd /c 'echo Code42&& exit 42' } (40..50))
+($r = exec { 'Code42'; $global:LASTEXITCODE = 42 } (40..50))
 equals $LASTEXITCODE 42
 equals $r 'Code42'
 
 # exec 13 fails
-($r = try {exec { cmd /c exit 13 }} catch {$_})
+($r = try { exec { $global:LASTEXITCODE = 13 } } catch {$_})
 equals $LASTEXITCODE 13
-equals "$r" 'Command { cmd /c exit 13 } exited with code 13.'
-assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
+equals "$r" 'Command { $global:LASTEXITCODE = 13 } exited with code 13.'
+assert ($r.InvocationInfo.ScriptName -like '*Dot-test.ps1')
 
 ### property
 
 ($r = property true)
 equals $r $true
 
-($r = property ComputerName)
-equals $r $env:COMPUTERNAME
+if ($IsUnix) {
+	($r = property USER)
+	equals $r $env:USER
+}
+else {
+	($r = property ComputerName)
+	equals $r $env:COMPUTERNAME
+}
 
 ($r = property MissingVariable DefaultValue)
 equals $r 'DefaultValue'
 
 ($r = try {property MissingVariable} catch {$_})
 equals "$r" "Missing property 'MissingVariable'."
-assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
+assert ($r.InvocationInfo.ScriptName -like '*Dot-test.ps1')
 
 ### use
+if (!$IsUnix) {
+	#! Mind \\Framework(64)?\\ and do not log, avoid diff.
 
-#! Mind \\Framework(64)?\\ and do not log, avoid diff.
+	use 4.0 MSBuild
+	$r = (Get-Alias MSBuild).Definition
+	assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.*\MSBuild')
 
-use 4.0 MSBuild
-$r = (Get-Alias MSBuild).Definition
-assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.*\MSBuild')
+	use Framework\v4.0.30319 MSBuild
+	$r = (Get-Alias MSBuild).Definition
+	assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
 
-use Framework\v4.0.30319 MSBuild
-$r = (Get-Alias MSBuild).Definition
-assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
+	use (Split-Path $MyInvocation.MyCommand.Path) Dot-test.ps1
+	($r = (Get-Alias Dot-test.ps1).Definition)
+	equals $r $MyInvocation.MyCommand.Path
 
-use (Split-Path $MyInvocation.MyCommand.Path) Dot-test.ps1
-($r = (Get-Alias Dot-test.ps1).Definition)
-equals $r $MyInvocation.MyCommand.Path
-
-($r = try {use Missing MSBuild} catch {$_})
-equals "$r" "Cannot resolve 'Missing'."
-assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
+	($r = try {use Missing MSBuild} catch {$_})
+	equals "$r" "Cannot resolve 'Missing'."
+	assert ($r.InvocationInfo.ScriptName -like '*\Dot-test.ps1')
+}
 
 ### misc
 

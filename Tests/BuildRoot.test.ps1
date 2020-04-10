@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests the custom $BuildRoot, see https://github.com/nightroman/Invoke-Build/issues/95
@@ -69,7 +68,7 @@ task Invalid {
 	assert ($e.CategoryInfo.Category -eq 'ObjectNotFound')
 	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
 	equals $e.InvocationInfo.ScriptName $BuildFile
-	assert ("$e" -clike 'Missing build root ''*\:''.')
+	assert ("$e" -match 'Missing build root ''.*?[\\/]:''.')
 }
 
 task Constant1 {

@@ -95,7 +95,7 @@ if ($BuildFile -is [scriptblock]) {
 }
 if ($BuildTask -eq '**') {
 	if (![System.IO.Directory]::Exists(($_ = *Path $BuildFile))) {throw "Missing directory '$_'."}
-	$BuildFile = @(Get-ChildItem -LiteralPath $_ -Filter *.test.ps1 -Recurse)
+	$BuildFile = @(Get-ChildItem -LiteralPath $_ -Filter *.test.ps1 -Recurse -Force)
 	return
 }
 

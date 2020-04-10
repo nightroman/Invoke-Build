@@ -1,10 +1,9 @@
-
 <#
 .Synopsis
 	Tests incremental and partial incremental tasks.
 #>
 
-. .\Shared.ps1
+. ./Shared.ps1
 
 Exit-Build {
 	#! LiteralPath does not work in [ ] test.
@@ -14,7 +13,7 @@ Exit-Build {
 ### Make a few temporary old and new files
 function New-OldFile($Name) {
 	$null > $Name
-	[System.IO.File]::SetLastWriteTime("$BuildRoot\$Name", '2000-01-01')
+	[System.IO.File]::SetLastWriteTime("$BuildRoot/$Name", '2000-01-01')
 }
 # old files
 $old1 = 'z.old1.tmp'
@@ -61,7 +60,7 @@ $FullIncrementalOneMissing = 0
 task FullIncrementalOneMissing -Inputs {'Incremental.test.ps1'} -Outputs 'missing' {
 	++$script:FullIncrementalOneMissing
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot\Incremental.test.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}Incremental.test.ps1"
 	equals $Outputs 'missing'
 }
 task TestFullIncrementalOneMissing FullIncrementalOneMissing, {
@@ -74,7 +73,7 @@ $PartIncrementalOneMissing = 0
 task PartIncrementalOneMissing -Partial -Inputs {'Incremental.test.ps1'} -Outputs {'missing'} {
 	++$script:PartIncrementalOneMissing
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot\Incremental.test.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}Incremental.test.ps1"
 	equals $Outputs.Count 1
 	equals $Outputs[0] 'missing'
 }
@@ -88,7 +87,7 @@ $FullIncrementalOneOutOfDate = 0
 task FullIncrementalOneOutOfDate -Inputs {'Incremental.test.ps1'} -Outputs $old1 {
 	++$script:FullIncrementalOneOutOfDate
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot\Incremental.test.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}Incremental.test.ps1"
 	equals $Outputs $old1
 }
 task TestFullIncrementalOneOutOfDate FullIncrementalOneOutOfDate, {
@@ -101,7 +100,7 @@ $PartIncrementalOneOutOfDate = 0
 task PartIncrementalOneOutOfDate -Partial -Inputs {'Incremental.test.ps1'} -Outputs {$old1} {
 	++$script:PartIncrementalOneOutOfDate
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot\Incremental.test.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}Incremental.test.ps1"
 	equals $Outputs.Count 1
 	equals $Outputs[0] $old1
 }
@@ -125,8 +124,8 @@ $FullIncrementalTwoMissing = 0
 task FullIncrementalTwoMissing -Inputs {'Incremental.test.ps1'; '.build.ps1'} -Outputs 'missing', $new2 {
 	++$script:FullIncrementalTwoMissing
 	equals $Inputs.Count 2
-	equals $Inputs[0] "$BuildRoot\Incremental.test.ps1"
-	equals $Inputs[1] "$BuildRoot\.build.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}Incremental.test.ps1"
+	equals $Inputs[1] "$BuildRoot${Separator}.build.ps1"
 	equals $Outputs.Count 2
 	equals $Outputs[0] 'missing'
 	equals $Outputs[1] $new2
@@ -141,7 +140,7 @@ $PartIncrementalTwoMissing = 0
 task PartIncrementalTwoMissing -Partial -Inputs Incremental.test.ps1, .build.ps1 -Outputs {$new1, 'missing'} {
 	++$script:PartIncrementalTwoMissing
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot\.build.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}.build.ps1"
 	equals $Outputs.Count 1
 	equals $Outputs[0] 'missing'
 }
@@ -155,8 +154,8 @@ $FullIncrementalTwoOutOfDate = 0
 task FullIncrementalTwoOutOfDate -Inputs {'Incremental.test.ps1'; '.build.ps1'} -Outputs $new1, $old2 {
 	++$script:FullIncrementalTwoOutOfDate
 	equals $Inputs.Count 2
-	equals $Inputs[0] "$BuildRoot\Incremental.test.ps1"
-	equals $Inputs[1] "$BuildRoot\.build.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}Incremental.test.ps1"
+	equals $Inputs[1] "$BuildRoot${Separator}.build.ps1"
 	equals $Outputs.Count 2
 	equals $Outputs[0] $new1
 	equals $Outputs[1] $old2
@@ -175,10 +174,10 @@ task PartIncrementalTwoOutOfDate -Partial -Inputs {
 } {process{
 	++$script:PartIncrementalTwoOutOfDate
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot\.build.ps1"
+	equals $Inputs[0] "$BuildRoot${Separator}.build.ps1"
 	equals $Outputs.Count 1
 	equals $Outputs[0] $old2
-	assert($_ -eq "$BuildRoot\.build.ps1")
+	assert($_ -eq "$BuildRoot${Separator}.build.ps1")
 	assert($2 -eq $old2)
 }}
 task TestPartIncrementalTwoOutOfDate PartIncrementalTwoOutOfDate, {
@@ -189,16 +188,16 @@ task TestPartIncrementalTwoOutOfDate PartIncrementalTwoOutOfDate, {
 task IncrementalInputsFails -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
 task PartialInputsFails -Partial -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
 task TestInputsFails ?IncrementalInputsFails, ?PartialInputsFails, {
-	Test-Error IncrementalInputsFails "Throw in input.*At *\Incremental.test.ps1:*"
-	Test-Error PartialInputsFails "Throw in input.*At *\Incremental.test.ps1:*"
+	Test-Error IncrementalInputsFails "Throw in input.*At *${Separator}Incremental.test.ps1:*"
+	Test-Error PartialInputsFails "Throw in input.*At *${Separator}Incremental.test.ps1:*"
 }
 
 # The outputs script fails.
 task IncrementalOutputsFails -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
 task PartialOutputsFails -Partial -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
 task TestOutputsFails ?IncrementalOutputsFails, ?PartialOutputsFails, {
-	Test-Error IncrementalOutputsFails "Throw in output.*At *\Incremental.test.ps1:*"
-	Test-Error PartialOutputsFails "Throw in output.*At *\Incremental.test.ps1:*"
+	Test-Error IncrementalOutputsFails "Throw in output.*At *${Separator}Incremental.test.ps1:*"
+	Test-Error PartialOutputsFails "Throw in output.*At *${Separator}Incremental.test.ps1:*"
 }
 
 # Error: incremental output is empty
@@ -277,11 +276,11 @@ $param = @{
 task InputsPipedToOutputs @param {
 	$script:InputsPipedToOutputs = 'InputsPipedToOutputs'
 	equals $Inputs.Count 2
-	assert ($Inputs[0] -like '*\Tests\z.new1.tmp')
-	assert ($Inputs[1] -like '*\Tests\z.new2.tmp')
+	assert ($Inputs[0] -like "*${Separator}Tests${Separator}z.new1.tmp")
+	assert ($Inputs[1] -like "*${Separator}Tests${Separator}z.new2.tmp")
 	equals $Outputs.Count 2
-	assert ($Outputs[0] -like '*\Tests\z.new1.txt')
-	assert ($Outputs[1] -like '*\Tests\z.new2.txt')
+	assert ($Outputs[0] -like "*${Separator}Tests${Separator}z.new1.txt")
+	assert ($Outputs[1] -like "*${Separator}Tests${Separator}z.new2.txt")
 }
 task TestInputsPipedToOutputs InputsPipedToOutputs, {
 	equals $script:InputsPipedToOutputs InputsPipedToOutputs

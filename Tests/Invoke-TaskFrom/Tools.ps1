@@ -1,10 +1,9 @@
-
 <#
 .Synopsis
 	Used by Invoke-TaskFromISE.test.ps1 and Invoke-TaskFromVSCode.test.ps1
 #>
 
-$TestFilePath = "$BuildRoot\InvokeFrom.build.ps1"
+$TestFilePath = Join-Path $BuildRoot InvokeFrom.build.ps1
 $Content = Get-Content $TestFilePath
 
 function Find-Line($Text) {

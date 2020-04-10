@@ -1,8 +1,10 @@
-
 <#
 .Synopsis
 	Tests Invoke-TaskFromISE.ps1
 #>
+
+. ../Shared.ps1
+if ($IsUnix) {return task unix}
 
 . .\Tools.ps1
 

@@ -6,7 +6,7 @@
 	Invoke-Build * Parallel.test.ps1
 #>
 
-. .\Shared.ps1
+. ./Shared.ps1
 
 # The build engine defines aliases Invoke-Build and Build-Parallel
 task Alias {
@@ -90,11 +90,11 @@ task Many {
 
 	# But their copies have amended and new data, for example, File were
 	# resolved to full paths and Result entries were added.
-	assert ($build[0].File -like '*\Dynamic.build.ps1')
+	assert ($build[0].File -like "*${Separator}Dynamic.build.ps1")
 	assert ($build[0].Result.Value)
 
 	# The call itself failed.
-	assert ($message -like "Failed builds:*Build: *\Safe.test.ps1*ERROR: Error1*At *\Safe.test.ps1:*")
+	assert ($message -like "Failed builds:*Build: *${Separator}Safe.test.ps1*ERROR: Error1*At *${Separator}Safe.test.ps1:*")
 
 	# Check each build error; note that three builds succeeded because the
 	# parallel build engine lets all builds to work, even if some fail.
@@ -133,13 +133,13 @@ task Timeout -If ($BuildRoot -notmatch '[\[\]]') {
 	Write-Build Magenta $message
 
 	# Check the error message.
-	assert ($message -like @'
+	assert ((Replace-NL $message) -like (Replace-NL @'
 Failed builds:
-Build: *\Shared.tasks.ps1
+Build: *Shared.tasks.ps1
 ERROR: Build timed out.
-Build: *\Shared.tasks.ps1
+Build: *Shared.tasks.ps1
 ERROR: Build timed out.*
-'@) "[[$message]]"
+'@))
 
 	# Check the log files: the first is complete, the others are not.
 	assert ((Get-Content z.1)[-1] -like 'Build succeeded. 1 tasks, 0 errors, 0 warnings *')
@@ -159,18 +159,19 @@ task ParallelBadMaximumBuilds {
 # Error: Invoke-Build.ps1 is not in the same directory.
 # Covers #27, *Die was not found before loading IB.
 task ParallelMissingEngine {
-	$script = "$env:TEMP\Build-Parallel.ps1"
-	Copy-Item ..\Build-Parallel.ps1 $script -Force
+	remove z
+	$null = mkdir z
+	Copy-Item ../Build-Parallel.ps1 z
 
 	$command = @"
 `$global:ErrorView = 'NormalView'
-& '$script' @{bar=1}
+& 'z/Build-Parallel.ps1' @{bar=1}
 "@
 
 	($r = Invoke-PowerShell -NoProfile -Command $command | Out-String)
 
-	[System.IO.File]::Delete($script)
-	assert ($r -like "*'$env:TEMP\Invoke-Build.ps1'*@{bar=1}*CommandNotFoundException*")
+	assert ($r -like "*Invoke-Build.ps1'*@{bar=1}*CommandNotFoundException*")
+	remove z
 }
 
 # Error: missing script
@@ -189,20 +190,20 @@ task ParallelErrorCases @(
 	'?ParallelBadMaximumBuilds'
 	'?ParallelBadParameters'
 	{
-		Test-Error ParallelMissingFile "Missing script '*\MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
+		Test-Error ParallelMissingFile "Missing script '*MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
 		Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
 		Test-Error ParallelBadParameters `
-		"Failed builds:*Build: *\Dynamic.build.ps1*ERROR: Invalid build arguments or script. Error: *parameter name 'Parameters'*"
+		"Failed builds:*Build: *Dynamic.build.ps1*ERROR: Invalid build arguments or script. Error: *parameter name 'Parameters'*"
 	}
 )
 
 # v2.0.1 - It is fine to omit the key File in build parameters.
 task OmittedBuildParameterFile {
-	# new temp directory
-	$null = mkdir z -Force
+	remove z
+	$null = mkdir z
 
 	# new build script; its default task calls two parallel builds in the same script
-	Set-Content z\.build.ps1 {
+	Set-Content z/.build.ps1 {
 		task t1 { 'out 1' }
 		task t2 { 'out 2'; Start-Sleep 1 }
 		task . { Build-Parallel @{Task='t1'}, @{Task='t2'} }

@@ -1,4 +1,5 @@
 
+if ($PSVersionTable['Platform'] -eq 'Unix') {return task unix}
 $Version = $PSVersionTable.PSVersion.Major
 
 task TestProblem {

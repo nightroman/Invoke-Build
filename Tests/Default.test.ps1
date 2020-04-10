@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests default build scripts resolution.
@@ -6,13 +5,14 @@
 
 task AmbigiousDefaultScript {
 	remove z
-	Push-Location (mkdir z)
+	$null = mkdir z
+	Push-Location z
 
 	1 > z.1.build.ps1
 	1 > z.2.build.ps1
 
 	($r = try {Invoke-Build} catch {$_})
-	assert ("$r" -like "*Ambiguous default script in '*\z'.")
+	assert ("$r" -match "^Ambiguous default script in '.*?[\\/]z'.$")
 
 	Pop-Location
 	remove z
@@ -20,7 +20,8 @@ task AmbigiousDefaultScript {
 
 task ParentHasManyCandidates {
 	remove z
-	$null = mkdir z\1
+	$null = mkdir z
+	$null = mkdir z/1
 
 	Push-Location z
 	$tasks = Invoke-Build ??
@@ -28,7 +29,7 @@ task ParentHasManyCandidates {
 
 	assert ($tasks.Contains('AllTestScripts'))
 
-	Push-Location z\1
+	Push-Location z/1
 	$tasks = Invoke-Build ??
 	Pop-Location
 
@@ -39,17 +40,19 @@ task ParentHasManyCandidates {
 
 task ParentHasOneCandidate {
 	remove z
-	$null = mkdir z\1\2
+	$null = mkdir z
+	$null = mkdir z/1
+	$null = mkdir z/1/2
 
-	Set-Content z\test.build.ps1 'task SingleScript'
+	Set-Content z/test.build.ps1 'task SingleScript'
 
-	Push-Location z\1
+	Push-Location z/1
 	$tasks = Invoke-Build ??
 	Pop-Location
 
 	assert $tasks.Contains('SingleScript')
 
-	Push-Location z\1\2
+	Push-Location z/1/2
 	$tasks = Invoke-Build ??
 	Pop-Location
 
@@ -60,11 +63,12 @@ task ParentHasOneCandidate {
 
 task InvokeBuildGetFile {
 	remove z
-	$null = mkdir z\1
+	$null = mkdir z
+	$null = mkdir z/1
 
 	# register the hook by the environment variable
 	$saved = $env:InvokeBuildGetFile
-	$env:InvokeBuildGetFile = "$BuildRoot\z\1\InvokeBuildGetFile.ps1"
+	$env:InvokeBuildGetFile = "$BuildRoot/z/1/InvokeBuildGetFile.ps1"
 
 	# make the hook script which gets this script as a build file
 	Set-Content -LiteralPath $env:InvokeBuildGetFile "'$BuildFile'"
@@ -90,7 +94,7 @@ task Summary {
 		task . task1
 	}
 	($r = Invoke-Build . z.ps1 -Summary | Out-String)
-	assert ($r -clike '*Build summary:*00:00:00* task1 *\z.ps1:2*00:00:00* . *\z.ps1:3*')
+	assert ($r -cmatch '(?s)Build summary:.*00:00:00.* task1 .*[\\/]z\.ps1:2.*00:00:00.* \. .*[\\/]z\.ps1:3')
 
 	# build fails
 	Set-Content z.ps1 {
@@ -98,7 +102,7 @@ task Summary {
 		task . ?task1
 	}
 	($r = Invoke-Build . z.ps1 -Summary | Out-String)
-	assert ($r -clike '*Build summary:*00:00:00* task1 *\z.ps1:2*Demo error in task1.*00:00:00* . *\z.ps1:3*')
+	assert ($r -cmatch '(?s)Build summary:.*00:00:00.* task1 .*[\\/]z\.ps1:2.*Demo error in task1.*00:00:00.* \. .*[\\/]z\.ps1:3')
 
 	Remove-Item z.ps1
 }
@@ -106,5 +110,5 @@ task Summary {
 #! Fixed differences of PS v2/v3
 task StarsMissingDirectory {
 	($r = try {Invoke-Build ** miss} catch {$_})
-	assert ($r -like "Missing directory '*\Tests\miss'.")
+	assert ($r -cmatch "^Missing directory '.*[\\/]Tests[\\/]miss'.$")
 }

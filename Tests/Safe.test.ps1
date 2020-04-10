@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Test safe jobs.
@@ -126,7 +125,7 @@ task AlmostSurvives AlmostSurvives1, ?AlmostSurvives2
 
 # Trigger tasks and check for expected results.
 task TestAlmostSurvives ?AlmostSurvives, {
-	Test-Error AlmostSurvives "Error4*At *\Safe.test.ps1*'Error4'*OperationStopped*"
+	Test-Error AlmostSurvives "Error4*At *Safe.test.ps1*'Error4'*OperationStopped*"
 }
 
 ### DependsOnFailedDirectlyAndIndirectly

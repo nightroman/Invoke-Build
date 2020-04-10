@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests 'remove'.
@@ -32,14 +31,15 @@ task InvalidArgument {
 }
 
 # Synopsis: Errors on locked items.
-task ErrorLockedFile {
+# Unix: "locked" file is removed.
+task ErrorLockedFile -If (!$IsUnix) {
 	# create a locked file
-	$writer = [IO.File]::CreateText("$BuildRoot\z.txt")
+	$writer = [IO.File]::CreateText("$BuildRoot/z.txt")
 	try {
 		## terminating error
 		($r1 = try {remove z.txt} catch {$_})
 		equals $r1.FullyQualifiedErrorId Remove-BuildItem
-		assert ("$r1" -like '*\z.txt*')
+		assert ("$r1" -match '[\\/]z\.txt')
 
 		## non-terminating error
 		# this will be removed
@@ -64,7 +64,8 @@ task ErrorLockedFile {
 # Synopsis: Work around Test-Path *\X when X is hidden
 # https://github.com/PowerShell/PowerShell/issues/6473
 # Test-Path with wildcards cannot find anything hidden.
-task HiddenInSubdirectory {
+# Unix: No .Attributes.
+task HiddenInSubdirectory -If (!$IsUnix) {
 	# new hidden item in a subdirectory
 	remove z
 	$item = mkdir z\hidden

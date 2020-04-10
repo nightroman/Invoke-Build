@@ -11,14 +11,23 @@
 
 param(
 	$Param1 = (property BuildFile),
-	$Param2 = (property UserName)
+	$Param2 = (property UserName missing),
+	$Param3 = (property USER missing)
 )
 
-equals $Param1 $BuildFile
-equals $Param2 $env:USERNAME
+. ./Shared.ps1
 
+equals $Param1 $BuildFile
 equals (property BuildFile) $BuildFile
-equals (property UserName) $env:USERNAME
+
+if ($IsUnix) {
+	equals $Param3 $env:USER
+	equals (property USER) $env:USER
+}
+else {
+	equals $Param2 $env:USERNAME
+	equals (property UserName) $env:USERNAME
+}
 
 $MissingProperty = property MissingProperty 42
 equals $MissingProperty 42

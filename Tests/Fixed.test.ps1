@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Assorted tests, fixed issues..
@@ -21,7 +20,7 @@ task IncompleteErrorOnSafe {
 		}
 	}
 	($r = Invoke-Build * $file -Safe | Out-String)
-	assert ($r -clike 'Build test*Task /test*ERROR: 42*At *\Fixed.test.ps1:*At *\Fixed.test.ps1:*')
+	assert ($r -cmatch '(?s)^Build test.*Task /test.*ERROR: 42.*At .*[\\/]Fixed\.test\.ps1:.*At .*[\\/]Fixed\.test\.ps1:')
 }
 
 # Synopsis: #5 Invoke-Build ** -Safe propagates -Safe.
@@ -29,13 +28,13 @@ task SafeTests {
 	remove z
 	$null = mkdir z
 
-	Set-Content z\1.test.ps1 {
+	Set-Content z/1.test.ps1 {
 		task task11 { 'works-11' }
 		task task12 { throw 'oops-12' }
 		task task23 { throw 'unexpected' }
 	}
 
-	Set-Content z\2.test.ps1 {
+	Set-Content z/2.test.ps1 {
 		task task21 { 'works-21' }
 		task task22 { throw 'oops-22' }
 		task task23 { throw 'unexpected' }

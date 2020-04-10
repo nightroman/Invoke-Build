@@ -1,4 +1,7 @@
 
+. ../Shared.ps1
+if ($IsUnix) {return task unix}
+
 $Version = $PSVersionTable.PSVersion.Major
 
 task TabExpansion2.v5 -If ($Version -ge 5) {
