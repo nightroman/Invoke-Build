@@ -220,7 +220,7 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 		}
 	}
 	for($n = $I.ScriptLineNumber; --$n -ge 1) {
-		if ($c = $d.C[$n]) {if ($c -match '(?m)^\s*#*\s*Synopsis\s*:(.*)') {return $Matches[1].Trim()}}
+		if ($c = $d.C[$n]) {if ($c -match '(?m)^\s*(?:#*\s*Synopsis\s*:|\.Synopsis\s*^)(.*)') {return $Matches[1].Trim()}}
 		elseif ($d.T[$n - 1].Trim()) {break}
 	}
 }

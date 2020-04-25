@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.5.11
+
+Support PowerShell doc comment format for task synopsis #165
+
 ## v5.5.10
 
 `Invoke-Build **` includes hidden test files.

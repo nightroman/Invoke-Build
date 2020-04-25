@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Test Get-BuildSynopsis
@@ -7,20 +6,20 @@
 	Invoke-Build * Synopsis.test.ps1
 #>
 
-# This task has no synopsis.
-task NoSinopsis {
-	($r = Get-BuildSynopsis $Task)
-	equals $r
-}
-
 # Synopsis: Simple synopsis.
-task SimpleSinopsis {
+task SimpleSynopsis {
 	($r = Get-BuildSynopsis $Task)
 	equals $r 'Simple synopsis.'
 }
 
+# This task has no synopsis.
+task NoSynopsis {
+	($r = Get-BuildSynopsis $Task)
+	equals $r
+}
+
 ##   Synopsis   ::Funny formatted.
-task FunnySinopsis {
+task FunnySynopsis {
 	($r = Get-BuildSynopsis $Task)
 	equals $r ':Funny formatted.'
 }
@@ -43,4 +42,16 @@ task MultilineSynopsis {
 task SkipEmptyLines {
 	($r = Get-BuildSynopsis $Task)
 	equals $r 'Comments with empty lines.'
+}
+
+<#
+.Synopsis
+	PS style synopsis.
+	This is not synopsis.
+.Description
+	Issue #165, feature request.
+#>
+task StandardSynopsis {
+	($r = Get-BuildSynopsis $Task)
+	equals $r 'PS style synopsis.'
 }

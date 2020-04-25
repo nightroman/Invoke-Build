@@ -1,5 +1,4 @@
-﻿
-<#
+﻿<#
 .Synopsis
 	Help script (https://github.com/nightroman/Helps)
 #>
@@ -137,7 +136,16 @@
 		SPECIAL TASKS
 
 		? - Tells to list tasks with brief information and check for errors.
-		Task synopses are defined in preceding comments as # Synopsis: ...
+		Task synopses are defined in preceding comments as
+
+			# Synopsis: ...
+
+		or
+
+			<#
+			.Synopsis
+			...
+			#>
 
 		?? - Tells to collect and get all tasks as an ordered dictionary.
 		It can be used by external tools for analysis, completion, etc.
@@ -702,9 +710,20 @@
 	synopsis = 'Gets the task synopsis.'
 
 	description = @'
-	Gets the specified task synopsis if it is available. Task synopses are
-	defined in preceding comments as # Synopsis: ... In build scripts this
-	function may be used in Set-BuildHeader for printing task synopses.
+	Gets the specified task synopsis if it is available.
+
+	Task synopses are defined in preceding comments as
+
+		# Synopsis: ...
+
+	or
+
+		<#
+		.Synopsis
+		...
+		#>
+
+	This function may be used in Set-BuildHeader for printing task synopses.
 '@
 
 	parameters = @{
