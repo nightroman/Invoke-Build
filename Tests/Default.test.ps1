@@ -3,19 +3,19 @@
 	Tests default build scripts resolution.
 #>
 
-task AmbigiousDefaultScript {
+task TwoCandidates {
 	remove z
 	$null = mkdir z
 	Push-Location z
 
-	1 > z.1.build.ps1
-	1 > z.2.build.ps1
-
-	($r = try {Invoke-Build} catch {$_})
-	assert ("$r" -match "^Ambiguous default script in '.*?[\\/]z'.$")
+	Set-Content 1.build.ps1 'task t1'
+	Set-Content 2.build.ps1 'task t2'
+	$tasks = Invoke-Build ??
 
 	Pop-Location
 	remove z
+
+	assert ($tasks.Contains('t1'))
 }
 
 task ParentHasManyCandidates {

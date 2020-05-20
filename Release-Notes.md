@@ -1,5 +1,11 @@
 # Invoke-Build Release Notes
 
+## v5.6.0
+
+Changed the default script resolution rule, see [#166](https://github.com/nightroman/Invoke-Build/issues/166).
+
+This change is potentially breaking but the chances are low.
+
 ## v5.5.11
 
 Support PowerShell doc comment format for task synopsis #165

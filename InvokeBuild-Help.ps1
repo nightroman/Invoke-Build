@@ -161,13 +161,12 @@
 		File = @'
 		A build script which adds tasks by the command 'task' (Add-BuildTask).
 
-		If it is not specified then Invoke-Build looks for *.build.ps1 files in
-		the current location. A single file is used as the script. If there are
-		more files then .build.ps1 is used if it exists, otherwise build fails.
+		If the file is omitted then Invoke-Build looks for *.build.ps1 files in
+		the current location and takes the first in Sort-Object order.
 
-		If the build file is not found then a script defined by the environment
-		variable InvokeBuildGetFile is called with the path as an argument. For
-		this location it may return the full path of a special build script.
+		If the file is not found then a command set by the environment variable
+		InvokeBuildGetFile is invoked with the directory path as an argument.
+		This command may return the full path of a special build script.
 
 		If the file is still not found then parent directories are searched.
 

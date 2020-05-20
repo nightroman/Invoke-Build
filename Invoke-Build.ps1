@@ -34,9 +34,8 @@ function *Die($M, $C=0) {
 function Get-BuildFile($Path) {
 	do {
 		if (($f = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $f}
-		if ($_ = $f -match '[\\/]\.build\.ps1$') {return $_}
-		if ($f.Length -ge 2) {throw "Ambiguous default script in '$Path'."}
-		if ([System.IO.File]::Exists(($_ = $env:InvokeBuildGetFile)) -and ($_ = & $_ $Path)) {return $_}
+		if ($f) {return $($f | Sort-Object)[0]}
+		if (($c = $env:InvokeBuildGetFile) -and ($f = & $c $Path)) {return $f}
 	} while($Path = Split-Path $Path)
 }
 

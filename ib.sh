@@ -8,7 +8,7 @@
 
 if [ $# -gt 0 ]
 then
-    pwsh -NoProfile -ExecutionPolicy Bypass -command "Invoke-Build $@"
+    pwsh -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Build $@"
 else
-    pwsh -NoProfile -ExecutionPolicy Bypass -command "Invoke-Build"
+    pwsh -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Build"
 fi
