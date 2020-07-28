@@ -120,7 +120,7 @@ task NoMerge {
 
 	# help task is not changed
 	$r = Get-Task $data ?
-	equals $r.presentation $null
+	equals $r.runOptions $null
 
 	Remove-Item .vscode\tasks.json
 }
@@ -136,7 +136,7 @@ task WithMerge {
 
 	# help task is changed
 	$r = Get-Task $data ?
-	equals $r.presentation.focus $true
+	equals $r.runOptions.reevaluateOnRerun $true
 
 	Remove-Item .vscode\tasks.json
 }

@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.3.0
+.VERSION 1.3.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
@@ -152,8 +152,12 @@ foreach($task1 in $tasks1) {
 	$task2 = [ordered]@{
 		label = $name
 		type = 'shell'
-		problemMatcher = '$msCompile'
 		command = '{0} -Task {1}{2}' -f $argIB, $name, $argFile
+		problemMatcher = '$msCompile'
+		presentation = [ordered]@{
+			echo = $false
+			showReuseMessage = $false
+		}
 	}
 	if ($name -eq $dot) {
 		$task2.group = [ordered]@{
@@ -168,18 +172,22 @@ foreach($task1 in $tasks1) {
 $task2 = [ordered]@{
 	label = '?'
 	type = 'shell'
-	problemMatcher = '$msCompile'
 	command = '{0} -Task ?{1}' -f $argIB, $argFile
+	problemMatcher = '$msCompile'
+	presentation = [ordered]@{
+		echo = $false
+		showReuseMessage = $false
+	}
 }
 $tasks2.Add($task2)
 
 ### merge tasks
 if ($Merge -and (Test-Path -LiteralPath $Merge)) {&{
 	# read and replace line comments with empty lines, to preserve line numbers
-	$text = Get-Content -LiteralPath $Merge | .{process{if ($_ -match '^\s*//') {''} else {$_}}} | Out-String -Width 9999
+	$lines = Get-Content -LiteralPath $Merge | .{process{if ($_ -match '^\s*//') {''} else {$_}}}
 	Set-StrictMode -Off
 	try {
-		$json = ConvertFrom-Json $text
+		$json = $lines | ConvertFrom-Json
 		if (!($mergeTasks = $json.tasks)) {
 			throw "Missing required property 'tasks'."
 		}

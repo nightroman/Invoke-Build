@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+*New-VSCodeTask.ps1* 1.3.1 - suppress echo and reuse messages in terminal
+
 ## v5.6.0
 
 Changed the default script resolution rule, see [#166](https://github.com/nightroman/Invoke-Build/issues/166).
