@@ -594,7 +594,7 @@ if ($MyInvocation.InvocationName -eq '.') {
 
 function Write-Warning([Parameter()]$Message) {
 	$PSCmdlet.WriteWarning($Message)
-	${*}.Warnings.Add([PSCustomObject]@{Message = $Message; File = $BuildFile; Task = ${*}.Task})
+	${*}.Warnings.Add([PSCustomObject]@{Message = $Message; File = $BuildFile; Task = ${*}.Task; InvocationInfo=$MyInvocation})
 }
 
 $ErrorActionPreference = 'Stop'
@@ -728,7 +728,8 @@ finally {
 		}
 		if ($w = ${*}.Warnings) {
 			foreach($_ in $w) {
-				"WARNING: $($_.Message)$(if ($_.Task) {" Task: $($_.Task.Name)."}) File: $($_.File)."
+				"WARNING: $(if ($_.Task) {"/$($_.Task.Name) "})$($_.InvocationInfo.ScriptName):$($_.InvocationInfo.ScriptLineNumber)"
+				Write-Build 14 $_.Message
 			}
 		}
 		if ($_ = ${*}.P) {

@@ -1,6 +1,10 @@
 # Invoke-Build Release Notes
 
-*New-VSCodeTask.ps1* 1.3.1 - suppress echo and reuse messages in terminal
+## v5.6.1
+
+Add `InvocationInfo` to `Write-Warning` records and use in post build text.
+
+*New-VSCodeTask.ps1* 1.3.1 - suppress echo and reuse messages in terminal.
 
 ## v5.6.0
 
