@@ -5,14 +5,24 @@ $Version = $PSVersionTable.PSVersion.Major
 task TestProblem {
 	try {
 		Invoke-Build Problem 2> z.log
-		throw
+		throw 'done'
 	}
 	catch {
-		equals "$_" 'standard error '
+		if ($Version -ge 7) {
+			equals "$_" done
+		}
+		else {
+			equals "$_" 'standard error '
+		}
 	}
 
 	$r = Get-Content z.log
-	equals $r $null
+	if ($Version -ge 7) {
+		equals $r 'standard error '
+	}
+	else {
+		equals $r $null
+	}
 
 	Remove-Item z.log
 }
