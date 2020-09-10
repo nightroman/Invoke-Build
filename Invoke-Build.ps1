@@ -140,6 +140,7 @@ function Add-BuildTask(
 )
 {
 	trap {*Die "Task '$Name': $_" 5}
+	if (${*}.A -eq 0) {throw 'Cannot add tasks.'}
 	if ($Jobs -is [hashtable]) {
 		if ($PSBoundParameters.Count -ne 2) {throw 'Invalid parameters.'}
 		Add-BuildTask $Name @Jobs -Source:$Source

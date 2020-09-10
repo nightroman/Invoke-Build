@@ -189,3 +189,32 @@ task MandatoryParameters {
 	equals (Get-Mandatory exec Command) $true
 	equals (Get-Mandatory use Path) $true
 }
+
+# https://github.com/nightroman/Invoke-Build/issues/171
+task DoNotAddTasksAfterLoading {
+	try {
+		Invoke-Build t1 {
+			Enter-Build {
+				task bad
+			}
+			task t1
+		}
+		throw
+	}
+	catch {
+		equals "$_" "Task 'bad': Cannot add tasks."
+	}
+}
+
+# Task names cannot start with `?`.
+task InvalidTaskName {
+	try {
+		Invoke-Build . {
+			task ?bad
+		}
+		throw
+	}
+	catch {
+		equals "$_" "Task '?bad': Invalid task name."
+	}
+}

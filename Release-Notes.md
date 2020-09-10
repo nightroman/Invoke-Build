@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.6.2
+
+Fail on adding tasks after loading build scripts, [#171](https://github.com/nightroman/Invoke-Build/issues/171).
+
 ## v5.6.1
 
 Add `InvocationInfo` to `Write-Warning` records and use in post build text.
@@ -8,7 +12,7 @@ Add `InvocationInfo` to `Write-Warning` records and use in post build text.
 
 ## v5.6.0
 
-Changed the default script resolution rule, see [#166](https://github.com/nightroman/Invoke-Build/issues/166).
+Changed the default script resolution rule, see #166.
 
 This change is potentially breaking but the chances are low.
 
