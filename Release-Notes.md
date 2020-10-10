@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+Created [Invoke-Build.template](https://github.com/nightroman/Invoke-Build.template)
+
 ## v5.6.2
 
 Fail on adding tasks after loading build scripts, [#171](https://github.com/nightroman/Invoke-Build/issues/171).
