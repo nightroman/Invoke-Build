@@ -1,74 +1,62 @@
+# Build script with automatic bootstrapping
 
-[paket]: https://fsprojects.github.io/Paket
-[PSDepend]: https://github.com/RamblingCookieMonster/PSDepend
+The sample script *Project.build.ps1* shows how to use automatic bootstrapping.
+The script is designed as directly invokable by PowerShell and it does not
+require `Invoke-Build` installed. `Invoke-Build` is restored using `paket`.
 
-## Directly invokable build script with automatic bootstrapping
+The `paket` tool is used as one possible way of getting packages. Instead or in
+addition, we could use `PSDepend`, `NuGet.exe`, `Install-Module`, etc.
 
-This sample shows how to add some automatic bootstrapping to a build script.
-We use `paket` for getting packages. Instead or in addition, we could use
-[PSDepend], `NuGet.exe`, `Install-Module`, etc.
+Such a script is designed for scenarios like:
 
-After cloning the project, in a PowerShell prompt call
+1. Get a project (clone a repository).
+1. Invoke *Project.build.ps1* with required tasks and parameters.
 
-```powershell
-Set-Location <project directory>
-./Project.build.ps1 Build
-```
+## Directories and files
 
-Note that *Project.build.ps1* is called directly, not by Invoke-Build, because
-at this point it may not exist. This command downloads the packages and calls
-the local Invoke-Build with the specified task.
+**The files before bootstrapping**
 
-### Points of interest
-
-- Packages are downloaded locally, nothing is installed or changed outside
-  except the global package cache.
-- If *paket.lock* is included then it ensures particular package versions.
-  This is important for projects sensitive to package changes.
-- `paket` does not add versions to downloaded package names.
-  Build tasks and scripts may rely on relative paths to items in *packages*.
-- *Project.build.ps1* is a build script for direct calls by PowerShell or by
-  Invoke-Build. The first way calls `paket install` when needed and invokes
-  local Invoke-Build. The second is for global Invoke-Build, it calls tasks
-  as usual assuming already installed packages.
-
-### The directory structure before bootstrapping
-
-- *Project.build.ps1*
-    - Build script decorated for direct calls and bootstrapping.
-      It also contains normal build tasks required by the project.
+- *.config/dotnet-tools.json*
+    - dotnet tool manifest, with `paket` in this sample.
 - *paket.dependencies*
-    - Project dependencies for `paket`. This file contains Invoke-Build
-      needed for running tasks and other dependencies, none in this sample.
-- *.gitignore*
-    - Excludes downloaded packages and files from git.
-- *.paket*
-    - Package installer, quite small, if this matters.
-
-### Extra files and directories after bootstrapping
-
-- *packages*
-- *paket-files*
-    - Packages and files downloaded by `paket`.
-      These directories should be added to `.gitignore`.
+    - Project dependencies for `paket` including `Invoke-Build`.
+      `Invoke-Build` is restored locally in *packages*.
+- *Project.build.ps1*
+    - Build script designed for direct calls and bootstrapping.
+      It also contains the usual tasks required by the project.
 - *paket.lock*
     - Lock file generated on `paket install`. It is recommended for source
       control if the project is potentially sensitive to package versions.
+      NB In this sample, it is not included but created on bootstrapping.
 
-### Is it possible to get PowerShell modules by paket?
+**Extra files after bootstrapping**
 
-Yes. But they are downloaded to *packages* and the build script should assume
-and import modules from there. This ceremony has some advantages. It does not
-pollute module directories and avoids module version collisions.
+- *packages*
+    - Packages restored by `paket` and stored locally.
+    In this sample, it is `Invoke-Build`.
+- *paket-files*
+    - Files generated or restored by `paket.
 
-### Is it possible to customize package/module management?
+These directories are usually added to `.gitignore`.
+
+## How to get PowerShell modules by paket
+
+Module entries in *paket.dependencies* should normally use PSGallery source.
+Module packages should be downloaded to *packages* (`storage: packages`).
+The build script should be designed to import modules from *packages*.
+
+This looks like a ceremony but it has some advantages. This scenario does not
+pollute the usual PowerShell module directories and avoids possible module
+version issues.
+
+## How to customize package/module management
 
 If `paket` and its *paket.dependencies* is not enough, e.g. you want to install
-modules by `Install-Module`, then look at the "install packages" block in
+modules by `Install-Module`, then look at the "bootstrapping" block in
 *Project.build.ps1* and add required checks and commands.
 
-In fact, just for Invoke-Build bootstrapping instead of `paket` we can use
-this trivial PowerShell code:
+For example, just for the `InvokeBuild` module bootstrapping instead of `paket`
+we could use this trivial PowerShell code:
 
 ```powershell
 if (!(Get-Module InvokeBuild -ListAvailable)) {
@@ -78,13 +66,22 @@ if (!(Get-Module InvokeBuild -ListAvailable)) {
 }
 ```
 
-### Mind the primitive package readiness check
+## Steps from scratch
 
-*Project.build.ps1* triggers `paket install` if it cannot find the expected
-*Invoke-Build.ps1* in *packages*. This trivial approach is good enough for
-bootstrapping but it is not suitable for package updates. Package updates
-are performed by the included `paket`.
+To create the dotnet tool manifest *.config/dotnet-tools.json*, invoke:
 
-Alternatively, you may remove *packages* and bootstrap everything again. This
-is not necessarily expensive because recently installed packages are normally
-taken from the cache, not downloaded again.
+    dotnet new tool-manifest
+
+To install paket and add its record to the manifest, invoke:
+
+    dotnet tool install paket
+
+To create the paket file *paket.dependencies*, invoke:
+
+    dotnet paket init
+
+Add Invoke-Build line to *paket.dependencies*:
+
+    nuget Invoke-Build storage: packages
+
+Add the sample build script *Project.build.ps1*.

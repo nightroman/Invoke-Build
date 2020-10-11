@@ -1,8 +1,6 @@
-source https://www.nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 
-# Build engine
-nuget Invoke-Build
+storage: none
+framework: netcoreapp3.1, netstandard2.0, netstandard2.1
 
-# Other packages or files
-
-github nightroman/Invoke-Build Tasks/Ask/Ask.tasks.ps1
+nuget Invoke-Build storage: packages
