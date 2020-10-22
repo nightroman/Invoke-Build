@@ -1,6 +1,5 @@
-
 <#PSScriptInfo
-.VERSION 1.0.2
+.VERSION 1.0.3
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .GUID 78b68f80-80c5-4cc1-9ded-e2ae165a9cbd
@@ -20,11 +19,6 @@
 
 	* PowerShell v5 native Register-ArgumentCompleter
 	Simply invoke Invoke-Build.ArgumentCompleters.ps1, e.g. in a profile.
-
-	* TabExpansionPlusPlus https://github.com/lzybkr/TabExpansionPlusPlus
-	Put Invoke-Build.ArgumentCompleters.ps1 to the TabExpansionPlusPlus module
-	directory in order to be loaded automatically. Or invoke it after importing
-	the module, e.g. in a profile.
 
 	* TabExpansion2.ps1 https://www.powershellgallery.com/packages/TabExpansion2
 	Put Invoke-Build.ArgumentCompleters.ps1 to the path in order to be loaded

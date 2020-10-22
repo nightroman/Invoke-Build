@@ -37,7 +37,7 @@ The package includes the engine, helpers, and the generated help:
 
 Extra tools, see PSGallery and the repository:
 
-* *Invoke-Build.ArgumentCompleters.ps1* - completers for v5 native, TabExpansionPlusPlus, TabExpansion2.ps1
+* *Invoke-Build.ArgumentCompleters.ps1* - completers for v5 native, TabExpansion2.ps1
 * *Invoke-TaskFromVSCode.ps1* - invokes a task from a build script opened in VSCode
 * *New-VSCodeTask.ps1* - generates VSCode tasks bound to build script tasks
 * *Invoke-TaskFromISE.ps1* - invokes a task from a script opened in ISE
