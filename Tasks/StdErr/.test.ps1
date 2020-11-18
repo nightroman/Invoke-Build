@@ -2,18 +2,28 @@
 if ($PSVersionTable['Platform'] -eq 'Unix') {return task unix}
 $Version = $PSVersionTable.PSVersion.Major
 
-# Fixed in 7.1.0-preview.6, regressed in 7.1.0-rc.1
+# Fixed in 7.1.0-preview.6, regressed in 7.1.0-rc.1, fixed in 7.2.0-preview.1
 task TestProblem {
 	try {
 		Invoke-Build Problem 2> z.log
 		throw 'done'
 	}
 	catch {
-		equals "$_" 'standard error '
+		if ($Version -ge 7) {
+			equals "$_" done
+		}
+		else {
+			equals "$_" 'standard error '
+		}
 	}
 
 	$r = Get-Content z.log
-	equals $r $null
+	if ($Version -ge 7) {
+		equals $r 'standard error '
+	}
+	else {
+		equals $r $null
+	}
 
 	Remove-Item z.log
 }
