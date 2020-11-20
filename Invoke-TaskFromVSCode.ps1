@@ -1,6 +1,5 @@
-
 <#PSScriptInfo
-.VERSION 1.0.6
+.VERSION 1.0.7
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Task, VSCode
@@ -58,7 +57,7 @@ if ($path -notlike '*.ps1') {throw "The current file must be '*.ps1'."}
 
 $private:task = '.'
 $private:line = $context.CursorPosition.Line
-foreach($private:t in (Invoke-Build ?? $path).Values) {
+foreach($private:t in (Invoke-Build ?? $path).get_Values()) {
 	if ($t.InvocationInfo.ScriptName -ne $path) {continue}
 	if ($t.InvocationInfo.ScriptLineNumber -gt $line) {break}
 	$task = $t.Name

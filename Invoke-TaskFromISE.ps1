@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.3
+.VERSION 1.0.4
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, ISE
@@ -77,7 +77,7 @@ if (!$file.IsSaved) {
 $private:task = '.'
 $private:editor = $file.Editor
 $private:line = $editor.CaretLine
-foreach($private:t in (& $ib ?? $path).Values) {
+foreach($private:t in (& $ib ?? $path).get_Values()) {
 	if ($t.InvocationInfo.ScriptName -ne $path) {continue}
 	if ($t.InvocationInfo.ScriptLineNumber -gt $line) {break}
 	$task = $t.Name

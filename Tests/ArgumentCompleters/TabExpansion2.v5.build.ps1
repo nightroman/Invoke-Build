@@ -12,7 +12,7 @@ function Invoke-Complete([Parameter()]$line_, $caret_=$line_.Length) {
 task CompleteTask {
 	Set-Location ..\..
 	($r = Invoke-Complete 'Invoke-Build Ma')
-	equals $r Markdown
+	equals $r markdown
 }
 
 task CompleteFile {

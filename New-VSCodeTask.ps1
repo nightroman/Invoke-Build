@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.3.1
+.VERSION 1.3.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke, Task, Invoke-Build, VSCode
@@ -104,10 +104,10 @@ $dot = if ($all['.']) {'.'} else {$all.Item(0).Name}
 
 # get inputs tasks, optionally filtered
 if ($WhereTask) {
-	$tasks1 = @($all.Values | Where-Object $WhereTask)
+	$tasks1 = @($all.get_Values() | Where-Object $WhereTask)
 }
 else {
-	$tasks1 = $all.Values
+	$tasks1 = $all.get_Values()
 }
 
 ### result task data

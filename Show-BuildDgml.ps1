@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Shows Invoke-Build task graph using DGML.
@@ -55,7 +54,10 @@ trap {$PSCmdlet.ThrowTerminatingError($_)}
 $ErrorActionPreference = 'Stop'
 
 # output
-if (!$Output) {
+if ($Output) {
+	$Output = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Output)
+}
+else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
 	$hash = '{0:x8}' -f ($path.ToUpper().GetHashCode())
@@ -86,7 +88,7 @@ $styles.InnerXml = @'
   <Setter Property="NodeRadius" Value="2" />
 </Style>
 '@
-foreach($it in $all.Values) {
+foreach($it in $all.get_Values()) {
 	$name = $it.Name
 	$node = $nodes.AppendChild($xml.CreateElement('Node'))
 	$node.SetAttribute('Id', $name)

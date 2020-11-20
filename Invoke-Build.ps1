@@ -110,10 +110,10 @@ if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 	& $BuildFile
 	throw 'Invalid script.'
 }
-if ($_.Count) {&{
+if ($_.get_Count()) {&{
 	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
 	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
-	foreach($p in $_.Values) {
+	foreach($p in $_.get_Values()) {
 		if ($c -notcontains ($_ = $p.Name)) {
 			if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
 			${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $p.Attributes))
@@ -142,7 +142,7 @@ function Add-BuildTask(
 	trap {*Die "Task '$Name': $_" 5}
 	if (${*}.A -eq 0) {throw 'Cannot add tasks.'}
 	if ($Jobs -is [hashtable]) {
-		if ($PSBoundParameters.Count -ne 2) {throw 'Invalid parameters.'}
+		if ($PSBoundParameters.get_Count() -ne 2) {throw 'Invalid parameters.'}
 		Add-BuildTask $Name @Jobs -Source:$Source
 		return
 	}
@@ -391,15 +391,15 @@ filter *Help {
 }
 
 function *Root($A) {
-	*Check $A.Keys
+	*Check $A.get_Keys()
 	$h = @{}
-	foreach($_ in $A.Values) {foreach($_ in $_.Jobs) {
+	foreach($_ in $A.get_Values()) {foreach($_ in $_.Jobs) {
 		if ($_ -is [string]) {
 			$_, $null = *Job $_
 			$h[$_] = 1
 		}
 	}}
-	foreach($_ in $A.Keys) {if (!$h[$_]) {$_}}
+	foreach($_ in $A.get_Keys()) {if (!$h[$_]) {$_}}
 }
 
 function *Err($T) {
@@ -599,7 +599,7 @@ function Write-Warning([Parameter()]$Message) {
 }
 
 $ErrorActionPreference = 'Stop'
-foreach($_ in $PSBoundParameters.Keys) {
+foreach($_ in $PSBoundParameters.get_Keys()) {
 	if (${*}.DP.ContainsKey($_)) {
 		${*}.SP[$_] = $PSBoundParameters[$_]
 	}
@@ -635,19 +635,19 @@ try {
 		Write-Warning "Unexpected output: $_."
 		if ($_ -is [scriptblock]) {*Fin "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)" 6}
 	}
-	if (!(${**} = ${*}.All).Count) {*Fin "No tasks in '$BuildFile'." 6}
+	if (!(${**} = ${*}.All).get_Count()) {*Fin "No tasks in '$BuildFile'." 6}
 
-	foreach($_ in ${**}.Values) {
+	foreach($_ in ${**}.get_Values()) {
 		if ($_.Before) {*Amend $_ $_.Before 1}
 	}
-	foreach($_ in ${**}.Values) {
+	foreach($_ in ${**}.get_Values()) {
 		if ($_.After) {*Amend $_ $_.After}
 	}
 
 	if (${*}.Q) {
-		*Check ${**}.Keys
+		*Check ${**}.get_Keys()
 		if ($BuildTask -eq '?') {
-			${**}.Values | *Help
+			${**}.get_Values() | *Help
 		}
 		else {
 			${**}

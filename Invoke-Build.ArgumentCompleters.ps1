@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.3
+.VERSION 1.0.4
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .GUID 78b68f80-80c5-4cc1-9ded-e2ae165a9cbd
@@ -29,7 +29,7 @@
 Register-ArgumentCompleter -CommandName Invoke-Build.ps1 -ParameterName Task -ScriptBlock {
 	param($commandName, $parameterName, $wordToComplete, $commandAst, $boundParameters)
 
-	(Invoke-Build -Task ?? -File ($boundParameters['File'])).Keys -like "$wordToComplete*" | .{process{
+	(Invoke-Build -Task ?? -File ($boundParameters['File'])).get_Keys() -like "$wordToComplete*" | .{process{
 		New-Object System.Management.Automation.CompletionResult $_, $_, 'ParameterValue', $_
 	}}
 }

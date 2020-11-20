@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Shows Invoke-Build task trees with brief information.
@@ -55,10 +54,10 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	$info = $tab + $Task.Name
 
 	# upstream
-	if ($references.Count) {
+	if ($references.get_Count()) {
 		$reference = $references[$Task]
-		if ($reference.Count) {
-			$info += ' (' + (($reference.Keys | Sort-Object) -join ', ') + ')'
+		if ($reference.get_Count()) {
+			$info += ' (' + (($reference.get_Keys() | Sort-Object) -join ', ') + ')'
 		}
 	}
 
@@ -87,18 +86,18 @@ try {
 	# references
 	$references = @{}
 	if ($_Upstream) {
-		foreach($it in $tasks.Values) {
+		foreach($it in $tasks.get_Values()) {
 			$references[$it] = @{}
 		}
-		foreach($it in $tasks.Values) {foreach($job in $it.Jobs) {if ($job -is [string]) {
+		foreach($it in $tasks.get_Values()) {foreach($job in $it.Jobs) {if ($job -is [string]) {
 			$references[$tasks[$job]][$it.Name] = 0
 		}}}
 	}
 
 	# resolve task
 	if ($_Task -eq '*') {
-		$_Task = :task foreach($_ in $tasks.Keys) {
-			foreach($task in $tasks.Values) {
+		$_Task = :task foreach($_ in $tasks.get_Keys()) {
+			foreach($task in $tasks.get_Values()) {
 				if ($task.Jobs -contains $_ -or $task.Jobs -contains "?$_") {
 					continue task
 				}

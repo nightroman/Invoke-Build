@@ -27,7 +27,7 @@ try {
 		Task = $Task
 		XBuild = {
 			$Task = ${*data}.Task
-			foreach($_ in ${*}.All.Values) {
+			foreach($_ in ${*}.All.get_Values()) {
 				if ($Task -notcontains $_.Name) {
 					$_.If = 0
 				}

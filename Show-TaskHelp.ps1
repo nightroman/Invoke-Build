@@ -89,7 +89,7 @@ $Help = @(&{
 ### get script parameters
 $CommonParameters = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
 $Parameters = (Get-Command $BuildFile).Parameters
-foreach($name in @($Parameters.Keys)) {
+foreach($name in @($Parameters.get_Keys())) {
 	if ($CommonParameters -contains $name) {
 		$null = $Parameters.Remove($name)
 	}
@@ -266,11 +266,11 @@ $TaskHelp.Jobs = @(
 
 ### .Parameters and .Environment
 Add-TaskVariable $BuildJobs
-$TaskHelp.Environment = @($MapEnvironment.Keys | Sort-Object)
+$TaskHelp.Environment = @($MapEnvironment.get_Keys() | Sort-Object)
 
 # make parameter objects with help
 $TaskHelp.Parameters = @()
-foreach($name in $MapParameter.Keys) {
+foreach($name in $MapParameter.get_Keys()) {
 	$param = $Parameters[$name]
 	$r = 1 | Select-Object Name, Type, Description
 	$r.Name = $name

@@ -28,31 +28,31 @@ Set-StrictMode -Version Latest
 
 # Synopsis: Convert markdown files to HTML.
 # <http://johnmacfarlane.net/pandoc/>
-task Markdown {
+task markdown {
 	function Convert-Markdown($Name) {pandoc.exe --standalone --from=gfm "--output=$Name.htm" "--metadata=pagetitle=$Name" "$Name.md"}
 	exec { Convert-Markdown README }
 }
 
 # Synopsis: Remove temporary items.
-task Clean {
+task clean {
 	remove z, *\z, *\z.*, README.htm, Invoke-Build.*.nupkg, Tests\New-VSCodeTask\.vscode\tasks.json
 }
 
 # Synopsis: Build the PowerShell help file.
 # <https://github.com/nightroman/Helps>
-task Help {
+task help {
 	. Helps.ps1
 	Convert-Helps InvokeBuild-Help.ps1 InvokeBuild-Help.xml
 }
 
 # Synopsis: Set $script:Version from Release-Notes.
-task Version {
+task version {
 	($script:Version = switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}})
 	assert $script:Version
 }
 
 # Synopsis: Make the module folder.
-task Module Version, Markdown, Help, {
+task module version, markdown, help, {
 	remove z
 
 	# copy the module folder
@@ -106,7 +106,7 @@ task Module Version, Markdown, Help, {
 }
 
 # Synopsis: Make the NuGet package.
-task NuGet Module, {
+task nuget module, {
 	# rename the folder
 	Rename-Item z\InvokeBuild tools
 
@@ -143,11 +143,11 @@ more powerful. It is complete, bug free, well covered by tests.
 "@
 
 	# package
-	exec { NuGet pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
+	exec { nuget pack z\Package.nuspec -NoDefaultExcludes -NoPackageAnalysis }
 }
 
 # Synopsis: Push with a version tag.
-task PushRelease Version, {
+task pushRelease version, {
 	$changes = exec { git status --short }
 	assert (!$changes) "Please, commit changes."
 
@@ -157,20 +157,21 @@ task PushRelease Version, {
 }
 
 # Synopsis: Push NuGet package.
-task PushNuGet NuGet, {
-	exec { NuGet push "Invoke-Build.$script:Version.nupkg" -Source nuget.org }
+task pushNuGet nuget, {
+	$NuGetApiKey = Read-Host NuGetApiKey
+	exec { nuget push "Invoke-Build.$script:Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
 },
-Clean
+clean
 
 # Synopsis: Push PSGallery package.
-task PushPSGallery Module, {
+task pushPSGallery module, {
 	$NuGetApiKey = Read-Host NuGetApiKey
 	Publish-Module -Path z/InvokeBuild -NuGetApiKey $NuGetApiKey
 },
-Clean
+clean
 
 # Synopsis: Calls tests infinitely. NOTE: normal scripts do not use ${*}.
-task Loop {
+task loop {
 	for() {
 		${*}.Tasks.Clear()
 		${*}.Errors.Clear()
@@ -181,7 +182,7 @@ task Loop {
 
 # Synopsis: Test and check expected output.
 # Requires PowerShelf/Assert-SameFile.ps1
-task Test3 {
+task test3 {
 	#! v7 may use different view
 	$script:ErrorView = 'NormalView'
 
@@ -201,19 +202,19 @@ task Test3 {
 }
 
 # Synopsis: Test with PowerShell v2.
-task Test2 {
+task test2 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
 	exec {powershell.exe -Version 2 -NoProfile -Command Invoke-Build Test3 $diff}
 }
 
 # Synopsis: Test with PowerShell v6.
-task Test6 -If $env:powershell6 {
+task test6 -If $env:powershell6 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
 	exec {& $env:powershell6 -NoProfile -Command Invoke-Build Test3 $diff}
 }
 
 # Synopsis: Test v3+ and v2.
-task Test Test3, Test2, Test6
+task test test3, test2, test6
 
 # Synopsis: The default task: make, test, clean.
-task . Help, Test, Clean
+task . help, test, clean

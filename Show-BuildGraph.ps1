@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Shows Invoke-Build task graph using Graphviz.
@@ -121,7 +120,7 @@ $all = Invoke-Build ?? $File @Parameters
 $text = @(
 	'digraph Tasks {'
 	$Code
-	foreach($it in $all.Values) {
+	foreach($it in $all.get_Values()) {
 		$name = $it.Name
 		'"{0}"' -f $name
 

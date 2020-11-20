@@ -39,7 +39,7 @@ if ($Resume) {
 	if (![System.IO.File]::Exists($Checkpoint)) {throw "Missing checkpoint '$Checkpoint'."}
 	${*checkpoint}.Data = try {Import-Clixml $Checkpoint} catch {throw 'Invalid checkpoint file?'}
 
-	foreach($_ in @($Build.Keys)) {
+	foreach($_ in @($Build.get_Keys())) {
 		if ($_ -ne 'Safe' -and $_ -ne 'Summary') {
 			$Build.Remove($_)
 		}
@@ -71,13 +71,13 @@ ${*checkpoint}.XCheck = {
 		Prm1 = ${*}.SP
 		Prm2 = $(
 			$r = @{}
-			foreach($_ in ${*}.DP.Keys) {
+			foreach($_ in ${*}.DP.get_Keys()) {
 				$r[$_] = Get-Variable -Name $_ -Scope Script -ValueOnly
 			}
 			$r
 		)
 		Done = @(
-			foreach($t in ${*}.All.Values) {
+			foreach($t in ${*}.All.get_Values()) {
 				if ($t.Elapsed -and !$t.Error) {
 					$t.Name
 				}
