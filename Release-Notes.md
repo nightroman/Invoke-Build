@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.6.4
+
+Tweak use of dynamic parameters.
+
 ## v5.6.3
 
 Fixed potential issues with tasks and parameters named `Count`, `Keys`, `Values`, [#173](https://github.com/nightroman/Invoke-Build/issues/173).

@@ -599,9 +599,9 @@ function Write-Warning([Parameter()]$Message) {
 }
 
 $ErrorActionPreference = 'Stop'
-foreach($_ in $PSBoundParameters.get_Keys()) {
-	if (${*}.DP.ContainsKey($_)) {
-		${*}.SP[$_] = $PSBoundParameters[$_]
+foreach($_ in ${*}.DP.get_Values()) {
+	if ($_.IsSet) {
+		${*}.SP[$_.Name] = $_.Value
 	}
 }
 if (${*}.Q = $BuildTask -eq '?' -or $BuildTask -eq '??') {
