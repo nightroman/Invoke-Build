@@ -5,6 +5,7 @@
 # - Invoke-Build.ArgumentCompleters.ps1
 
 $Version = $PSVersionTable.PSVersion.Major
+$IsUnix = $PSVersionTable['Platform'] -eq 'Unix'
 
 # used to fail
 task parameters {
@@ -69,7 +70,7 @@ task Show-BuildDgml {
 }
 
 # used to show just `values`
-task Show-BuildGraph {
+task Show-BuildGraph -If (!$IsUnix) {
 	Show-BuildGraph.ps1 -NoShow -Output z.dot
 	$r = Get-Content z.dot | Out-String
 	assert ($r.Contains('"." -> count'))

@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.5.0
+.VERSION 1.5.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -150,14 +150,15 @@ function Get-MSBuild15Guess {
 		elseif ($Version -eq '16.0') {'2019'}
 		else {'2017'}
 	)
-	$items = @(
-		foreach($folder in $folders) {
-			Get-Item -ErrorAction 0 @(
-				"$root\Microsoft Visual Studio\$folder\*\$(Get-MSBuild15Path Current $Bitness)"
-				"$root\Microsoft Visual Studio\$folder\*\$(Get-MSBuild15Path $Version $Bitness)"
-			)
+	foreach($folder in $folders) {
+		$items = @(Get-Item -ErrorAction 0 @(
+			"$root\Microsoft Visual Studio\$folder\*\$(Get-MSBuild15Path Current $Bitness)"
+			"$root\Microsoft Visual Studio\$folder\*\$(Get-MSBuild15Path $Version $Bitness)"
+		))
+		if ($items) {
+			break
 		}
-	)
+	}
 	if (!$items) {
 		if (!$Prerelease) {
 			Get-MSBuild15Guess $Version $Bitness -Latest:$Latest -Prerelease

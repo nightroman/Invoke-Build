@@ -75,7 +75,7 @@ task UndocumentedStuff {
 	equals $r.Task.Count 1
 	equals $r.Task[0].Name .
 	equals $r.Task[0].Synopsis 'The default task: make, test, clean.'
-	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'help, test3, test2, test6, clean'
+	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'help, test3, test6, clean'
 	foreach($job in $r.Jobs) {
 		assert ($job.Location -match '\.build\.ps1:\d+$')
 	}

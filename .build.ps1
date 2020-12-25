@@ -183,6 +183,8 @@ task loop {
 # Synopsis: Test and check expected output.
 # Requires PowerShelf/Assert-SameFile.ps1
 task test3 {
+	assert ($PSVersionTable['Platform'] -ne 'Unix') 'WSL: cd Tests; ib'
+
 	#! v7 may use different view
 	$script:ErrorView = 'NormalView'
 
@@ -201,20 +203,14 @@ task test3 {
 	Remove-Item $resultPath
 }
 
-# Synopsis: Test with PowerShell v2.
-task test2 {
-	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec {powershell.exe -Version 2 -NoProfile -Command Invoke-Build Test3 $diff}
-}
-
 # Synopsis: Test with PowerShell v6.
 task test6 -If $env:powershell6 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec {& $env:powershell6 -NoProfile -Command Invoke-Build Test3 $diff}
+	exec {& $env:powershell6 -NoProfile -Command Invoke-Build test3 $diff}
 }
 
-# Synopsis: Test v3+ and v2.
-task test test3, test2, test6
+# Synopsis: Test versions.
+task test test3, test6
 
 # Synopsis: The default task: make, test, clean.
 task . help, test, clean

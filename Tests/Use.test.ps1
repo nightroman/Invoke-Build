@@ -49,12 +49,6 @@ task Version.2.0 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\
 	assert ($r -like '*\Framework\v2.0.*\MSBuild.exe')
 }
 
-task Framework.2.0.50727 -If (Test-Path 'v2.0.50727') {
-	use Framework\v2.0.50727 MSBuild
-	($version = exec { MSBuild /version /nologo })
-	assert ($version -like '2.0.*')
-}
-
 task Version.3.5 -If (Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\3.5') {
 	use 3.5 MSBuild.exe
 	($version = exec { MSBuild.exe /version /nologo })

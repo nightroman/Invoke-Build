@@ -1,12 +1,16 @@
 # Invoke-Build Release Notes
 
+## v5.6.5
+
+`Resolve-MSBuild` `Get-MSBuild15Guess` - stop search as soon as items found.
+
 ## v5.6.4
 
 Tweak use of dynamic parameters.
 
 ## v5.6.3
 
-Fixed potential issues with tasks and parameters named `Count`, `Keys`, `Values`, [#173](https://github.com/nightroman/Invoke-Build/issues/173).
+Fixed potential issues with tasks and parameters named `Count`, `Keys`, `Values`, #173.
 
 Created [Invoke-Build.template](https://github.com/nightroman/Invoke-Build.template)
 
