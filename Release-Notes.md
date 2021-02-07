@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.7.0
+
+Add the switch `Echo` to `exec`.
+
 ## v5.6.5
 
 `Resolve-MSBuild` `Get-MSBuild15Guess` - stop search as soon as items found.

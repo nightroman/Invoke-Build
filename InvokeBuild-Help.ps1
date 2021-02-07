@@ -784,6 +784,10 @@
 		ExitCode = @{default = '@(0)'; description = @'
 		Valid exit codes (e.g. 0..3 for robocopy).
 '@}
+		Echo = @'
+		Tells to write the command and its used variable values.
+		WARNING: With echo you may expose sensitive information.
+'@
 	}
 
 	outputs = @(

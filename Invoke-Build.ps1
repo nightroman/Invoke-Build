@@ -226,15 +226,39 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
-function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0) {
+function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0, [switch]$Echo) {
 	${private:*c} = $Command
 	${private:*x} = $ExitCode
-	Remove-Variable Command, ExitCode
+	${private:*e} = $Echo
+	Remove-Variable Command, ExitCode, Echo
+	if (${*e}) {
+		Write-Build 3 (Show-BuildExec ${*c})
+	}
 	& ${*c}
 	if (${*x} -notcontains $global:LastExitCode) {
 		*Die "Command {${*c}} exited with code $global:LastExitCode." 8
 	}
 }
+
+function Show-BuildExec {($(
+	${private:*c}, $null = $args
+	${private:*t} = "${*c}".Replace("`t", '    ')
+	if (${*t} -match '((?:\r\n|[\r\n])\s+)\S') {
+		'exec {'
+		${*t}.Replace($matches[1], "$([Environment]::NewLine)    ").Trim() -replace '(?s)^', '    '
+		'}'
+	}
+	else {
+		"exec { $(${*t}.Trim()) }"
+	}
+	foreach(${private:*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
+		${private:*p} = ${*v}.Parent
+		if (${*p} -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or ${*p}.Left -ne ${*v}) {
+			${*t} = ${*v}.ToString() -replace '^@', '$'
+			"$(${*t}) = $([scriptblock]::Create(${*t}).InvokeReturnAsIs())"
+		}
+	}
+) | Out-String).Trim()}
 
 #.ExternalHelp InvokeBuild-Help.xml
 function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {

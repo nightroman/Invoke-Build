@@ -69,7 +69,7 @@ task module version, markdown, help, {
 		'Resolve-MSBuild.ps1'
 		'Show-TaskHelp.ps1'
 		'README.htm'
-		'LICENSE.txt'
+		'LICENSE'
 	)
 
 	# copy Invoke-Build.ps1 with version comment

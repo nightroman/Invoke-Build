@@ -72,6 +72,7 @@ $OK = $(
 	'Remove-BuildItem'
 	'Set-BuildFooter'
 	'Set-BuildHeader'
+	'Show-BuildExec'
 	'Test-BuildAsset'
 	'Use-BuildAlias'
 	'Write-Build'

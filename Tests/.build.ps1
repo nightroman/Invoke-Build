@@ -223,6 +223,7 @@ task TestFunctions {
 		'Set-BuildData'
 		'Set-BuildHeader'
 		'Set-BuildFooter'
+		'Show-BuildExec'
 		'Test-BuildAsset'
 		'Use-BuildAlias'
 		'Write-Build'

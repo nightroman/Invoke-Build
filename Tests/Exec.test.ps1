@@ -82,3 +82,30 @@ task ExecShouldUseGlobalLastExitCode {
 		equals "$r" 'Command { cmd /c exit 42 } exited with code 42.'
 	}
 }
+
+# Issue #176
+task Echo {
+	# different kind variables
+	$env:SOME_VAR = 'SOME_VAR'
+	$script:foo = 'foo'
+	$bar = 'bar'
+
+	# 1 line
+	($r = exec -echo {  cmd /c echo $script:foo $env:SOME_VAR  } | Out-String)
+	$r = $r -replace '\r\n', '|'
+	equals $r 'exec { cmd /c echo $script:foo $env:SOME_VAR }|$script:foo = foo|$env:SOME_VAR = SOME_VAR|foo SOME_VAR|'
+
+	# 2+ lines
+	($r = exec -echo {
+		# bar
+		cmd /c echo $bar $env:SOME_VAR
+	} | Out-String)
+	$r = $r -replace '\r\n', '|'
+	equals $r 'exec {|    # bar|    cmd /c echo $bar $env:SOME_VAR|}|$bar = bar|$env:SOME_VAR = SOME_VAR|bar SOME_VAR|'
+
+	# splatting
+	$param = 'foo', 'bar', 42, 3.14, 'more'
+	($r = exec { cmd /c echo @param } -echo | Out-String)
+	$r = $r -replace '\r\n', '|'
+	equals $r 'exec { cmd /c echo @param }|$param = foo bar 42 3.14 more|foo bar 42 3.14 more|'
+}
