@@ -1,7 +1,6 @@
+# Samples, patterns, techniques
 
-## Samples, patterns, techniques
-
-**Techniques**
+## Techniques
 
 - [Direct](Direct) How to make build scripts invokable directly.
 - [Dynamic](Dynamic) How to use a dynamic script with dynamic tasks.
@@ -10,9 +9,10 @@
 - [Inline](Inline) How to assemble a whole build inline as a script block without creating an extra script.
 - [Paket](Paket) Build script with automatic bootstrapping using `paket`.
 - [Param](Param) How to create tasks which perform similar actions with some differences defined by parameters.
-- [StdErr](StdErr) Dealing with standard error output issues
+- [StdErr](StdErr) Dealing with standard error output issues.
+- [SubTasks](SubTasks) Sub tasks in child scripts technique.
 
-**Custom tasks**
+## Custom tasks
 
 - [Ask](Ask) shows the custom task `ask` which asks for the confirmation.
 - [Check](Check) shows the custom task `check` which is invoked once even if a build script (check list) is invoked repeatedly.
