@@ -209,6 +209,20 @@ task test6 -If $env:powershell6 {
 	exec {& $env:powershell6 -NoProfile -Command Invoke-Build test3 $diff}
 }
 
+# Synopsis: Test with GitHub action.
+task GHA {
+	if ($env:GITHUB_ACTION) {
+		if (!($env:Path.Contains($BuildRoot))) {
+			$env:Path = "$BuildRoot;$env:Path"
+		}
+		if (!(Test-Path Invoke-PowerShell.ps1)) {
+			Save-Script Invoke-PowerShell -Path . -Force
+		}
+	}
+	$PSVersionTable.PSVersion.ToString()
+	Invoke-Build . Tests/.build.ps1
+}
+
 # Synopsis: Test versions.
 task test test3, test6
 

@@ -158,7 +158,7 @@ task ParallelBadMaximumBuilds {
 
 # Error: Invoke-Build.ps1 is not in the same directory.
 # Covers #27, *Die was not found before loading IB.
-task ParallelMissingEngine {
+task ParallelMissingEngine -If (!$env:GITHUB_ACTION) {
 	remove z
 	$null = mkdir z
 	Copy-Item ../Build-Parallel.ps1 z
@@ -169,7 +169,6 @@ task ParallelMissingEngine {
 "@
 
 	($r = Invoke-PowerShell -NoProfile -Command $command | Out-String)
-
 	assert ($r -like "*Invoke-Build.ps1'*@{bar=1}*CommandNotFoundException*")
 	remove z
 }

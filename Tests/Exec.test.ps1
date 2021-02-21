@@ -7,6 +7,7 @@
 #>
 
 . ./Shared.ps1
+$Major = $PSVersionTable.PSVersion.Major
 
 task ExecWorksCode0 {
 	$r = exec {
@@ -84,7 +85,7 @@ task ExecShouldUseGlobalLastExitCode {
 }
 
 # Issue #176
-task Echo {
+task Echo -If ($Major -ge 3) {
 	# different kind variables
 	$env:SOME_VAR = 'SOME_VAR'
 	$script:foo = 'foo'

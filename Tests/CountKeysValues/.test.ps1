@@ -70,7 +70,7 @@ task Show-BuildDgml {
 }
 
 # used to show just `values`
-task Show-BuildGraph -If (!$IsUnix) {
+task Show-BuildGraph -If (!$IsUnix -and !$env:GITHUB_ACTION) {
 	Show-BuildGraph.ps1 -NoShow -Output z.dot
 	$r = Get-Content z.dot | Out-String
 	assert ($r.Contains('"." -> count'))
