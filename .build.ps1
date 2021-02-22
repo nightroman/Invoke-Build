@@ -182,7 +182,7 @@ task loop {
 
 # Synopsis: Test and check expected output.
 # Requires PowerShelf/Assert-SameFile.ps1
-task test3 {
+task test5 {
 	assert ($PSVersionTable['Platform'] -ne 'Unix') 'WSL: cd Tests; ib'
 
 	#! v7 may use different view
@@ -204,27 +204,18 @@ task test3 {
 }
 
 # Synopsis: Test with PowerShell v6.
-task test6 -If $env:powershell6 {
+task test7 -If $env:pwsh {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec {& $env:powershell6 -NoProfile -Command Invoke-Build test3 $diff}
+	exec {& $env:pwsh -NoProfile -Command Invoke-Build test5 $diff}
 }
 
-# Synopsis: Test with GitHub action.
-task GHA {
-	if ($env:GITHUB_ACTION) {
-		if (!($env:Path.Contains($BuildRoot))) {
-			$env:Path = "$BuildRoot;$env:Path"
-		}
-		if (!(Test-Path Invoke-PowerShell.ps1)) {
-			Save-Script Invoke-PowerShell -Path . -Force
-		}
-	}
-	$PSVersionTable.PSVersion.ToString()
-	Invoke-Build . Tests/.build.ps1
+# Synopsis: Gets dependencies (call by v5+).
+task boot {
+	Save-Script Invoke-PowerShell -Path . -Force
 }
 
 # Synopsis: Test versions.
-task test test3, test6
+task test test5, test7
 
 # Synopsis: The default task: make, test, clean.
 task . help, test, clean

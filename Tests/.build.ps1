@@ -43,10 +43,23 @@ equals (Split-Path $MyPath) $BuildRoot
 # scripts should be dot-sourced.
 .\Shared.tasks.ps1
 
-# $WhatIf is used in order to skip some code in cases like getting tasks.
-if (!$WhatIf) {
-	# Warnings are shown together with errors in the build summary.
+# This block is called before the first task.
+Enter-Build {
+	# show the current version
+	"PowerShell version: $($PSVersionTable.PSVersion)"
+
+	# configure test environment
+	if ($env:GITHUB_ACTION) {
+		# add root to the path
+		$env:Path = "$(Split-Path $BuildRoot);$env:Path"
+	}
+
+	# Warnings are shown as usual and also after tasks.
 	Write-Warning 'Ignore this warning.'
+}
+
+Set-BuildHeader {
+	Write-Build 11 "Task $($args[0]) *".PadRight(79, '*')
 }
 
 # Synopsis: "Invoke-Build ?[?]" lists tasks.

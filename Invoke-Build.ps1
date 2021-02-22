@@ -42,6 +42,7 @@ function Get-BuildFile($Path) {
 if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
+$_ = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
 New-Variable * -Description IB ([PSCustomObject]@{
 	All = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Tasks = [System.Collections.Generic.List[object]]@()
@@ -59,7 +60,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	CD = *Path
 	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
 	SP = @{}
-	P = $(if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}})
+	P = $_
 	A = 1
 	B = 0
 	Q = 0
@@ -70,8 +71,8 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	ExitTask = $null
 	EnterJob = $null
 	ExitJob = $null
-	Header = {Write-Build 11 "Task $($args[0])"}
-	Footer = {Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}
+	Header = if ($_) {$_.Header} else {{Write-Build 11 "Task $($args[0])"}}
+	Footer = if ($_) {$_.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
 	Data = @{}
 	XBuild = $null
 	XCheck = $null
@@ -324,12 +325,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 		$i.ForegroundColor = $_
 	}
 }
-if ($env:APPVEYOR) {
-	function Write-Build([ConsoleColor]$Color, [string]$Text) {Write-Host $Text -ForegroundColor $Color}
-}
-else {
-	try {$null = Write-Build 0} catch {function Write-Build($Color, [string]$Text) {$Text}}
-}
+try {$null = Write-Build 0} catch {function Write-Build($Color, [string]$Text) {$Text}}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName

@@ -229,7 +229,7 @@ task ParallelEmptyRun {
 }
 
 # Covers #93 with the new switch FailHard.
-task FailHard {
+task FailHard -If (!$env:GITHUB_ACTION) {
 	# task script
 	Set-Content z.build.ps1 {
 		task t1 { Start-Sleep 100 }

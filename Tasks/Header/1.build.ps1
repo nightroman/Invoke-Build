@@ -26,3 +26,8 @@ task Task1 Task2, {
 task Task2 {
 	'some output 2'
 }
+
+# Synopsis: Calls the child build.
+task CallChild {
+	Invoke-Build * 2.build.ps1
+}

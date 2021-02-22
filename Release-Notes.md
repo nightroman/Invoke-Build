@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.7.1
+
+Inherit build headers and footers from parent builds.
+
 ## v5.7.0
 
 Add the switch `Echo` to `exec`.

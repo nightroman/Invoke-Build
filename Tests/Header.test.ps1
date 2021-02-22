@@ -1,10 +1,6 @@
-
 <#
 .Synopsis
 	Tests the sample Tasks/Header
-
-.Example
-	Invoke-Build * Header.test.ps1
 #>
 
 # Define headers as task path, synopsis, and location, e.g. for Ctrl+Click in VSCode
@@ -16,13 +12,20 @@ Set-BuildHeader {
 
 # Synopsis: Run the sample and test its output.
 task Sample {
-	($r = Invoke-Build . ../Tasks/Header/Header.build.ps1)
+	# invoke all, including child
+	($r = Invoke-Build * ../Tasks/Header/1.build.ps1)
+
 	# test custom headers (added synopsis)
 	assert ($r -contains 'Task /Task1/Task2 : Some task description 2.')
 	assert ($r -contains 'Task /Task1 : Some task description 1.')
+
 	# test custom footers (added comma)
 	assert ($r -like 'Done /Task1/Task2,*')
 	assert ($r -like 'Done /Task1,*')
+
+	# child build inherits headers and footers
+	assert ($r -contains 'Task /ChildTask1 : Child task description 1.')
+	assert ($r -like 'Done /ChildTask1,*')
 }
 
 # Synopsis: Test synopsis.
