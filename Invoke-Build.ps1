@@ -227,17 +227,18 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
-function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0, [switch]$Echo) {
+function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0, [string]$ErrorMessage, [switch]$Echo) {
 	${private:*c} = $Command
 	${private:*x} = $ExitCode
+	${private:*m} = $ErrorMessage
 	${private:*e} = $Echo
-	Remove-Variable Command, ExitCode, Echo
+	Remove-Variable Command, ExitCode, ErrorMessage, Echo
 	if (${*e}) {
 		Write-Build 3 (Show-BuildExec ${*c})
 	}
 	& ${*c}
 	if (${*x} -notcontains $global:LastExitCode) {
-		*Die "Command {${*c}} exited with code $global:LastExitCode." 8
+		*Die "$(if (${*m}) {"${*m} "})Command exited with code $global:LastExitCode. {${*c}}" 8
 	}
 }
 

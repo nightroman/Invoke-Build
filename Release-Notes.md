@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.7.2
+
+Add the `ErrorMessage` parameter to `exec`, #178.
+
 ## v5.7.1
 
 Inherit build headers and footers from parent builds.

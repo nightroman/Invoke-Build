@@ -294,7 +294,7 @@ task StdErr {
 }
 
 # Synopsis: Show full help.
-task ShowHelp {
+task ShowHelp -If (!$env:GITHUB_ACTION) {
 	@(
 		'Invoke-Build'
 		'Build-Checkpoint'

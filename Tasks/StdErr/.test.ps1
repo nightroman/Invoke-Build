@@ -53,7 +53,7 @@ task TestWorkaround2 {
 		throw
 	}
 	catch {
-		equals "$_" 'Command {./error2.cmd} exited with code 42.'
+		equals "$_" 'Command exited with code 42. {./error2.cmd}'
 	}
 
 	$r = Get-Content z.log

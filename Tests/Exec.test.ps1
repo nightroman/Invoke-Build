@@ -47,10 +47,10 @@ task ExecFailsCode13 {
 	$r
 
 	if ($IsUnix) {
-		equals "$r" 'Command { bash -c "exit 13" } exited with code 13.'
+		equals "$r" 'Command exited with code 13. { bash -c "exit 13" }'
 	}
 	else {
-		equals "$r" 'Command { cmd /c exit 13 } exited with code 13.'
+		equals "$r" 'Command exited with code 13. { cmd /c exit 13 }'
 	}
 	equals $r.InvocationInfo.ScriptName $BuildFile
 }
@@ -77,14 +77,14 @@ task ExecShouldUseGlobalLastExitCode {
 	$r
 
 	if ($IsUnix) {
-		equals "$r" 'Command { bash -c "exit 42" } exited with code 42.'
+		equals "$r" 'Command exited with code 42. { bash -c "exit 42" }'
 	}
 	else {
-		equals "$r" 'Command { cmd /c exit 42 } exited with code 42.'
+		equals "$r" 'Command exited with code 42. { cmd /c exit 42 }'
 	}
 }
 
-# Issue #176
+# New switch Echo, #176
 task Echo -If ($Major -ge 3) {
 	# different kind variables
 	$env:SOME_VAR = 'SOME_VAR'
@@ -109,4 +109,15 @@ task Echo -If ($Major -ge 3) {
 	($r = exec { cmd /c echo @param } -echo | Out-String)
 	$r = $r -replace '\r\n', '|'
 	equals $r 'exec { cmd /c echo @param }|$param = foo bar 42 3.14 more|foo bar 42 3.14 more|'
+}
+
+# New parameter ErrorMessage, #178
+task ErrorMessage {
+	$r = Invoke-Build ?_210227_7s {
+		task _210227_7s {
+			exec { $global:LastExitCode = 42 } -ErrorMessage 'Demo ErrorMessage.'
+		}
+	}
+	$r
+	assert ($r[2] -like 'ERROR: Demo ErrorMessage. Command exited with code 42. { $global:LastExitCode = 42 }*')
 }

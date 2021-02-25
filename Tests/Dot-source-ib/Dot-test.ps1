@@ -110,7 +110,7 @@ equals $r 'Code42'
 # exec 13 fails
 ($r = try { exec { $global:LASTEXITCODE = 13 } } catch {$_})
 equals $LASTEXITCODE 13
-equals "$r" 'Command { $global:LASTEXITCODE = 13 } exited with code 13.'
+equals "$r" 'Command exited with code 13. { $global:LASTEXITCODE = 13 }'
 assert ($r.InvocationInfo.ScriptName -like '*Dot-test.ps1')
 
 ### property
