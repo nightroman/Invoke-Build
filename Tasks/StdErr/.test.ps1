@@ -33,12 +33,13 @@ task TestWorkaround {
 	Invoke-Build Workaround 2> z.log
 
 	($r = Get-Content z.log)
+	# latest
 	if ($Version -ge ${7.2.0}) {
 		equals $r 'standard error '
 	}
+	# GHA
 	elseif ($Version -ge ${7.1.2}) {
-		# weird GHA result
-		equals $r ([char]'s')
+		equals $r 'standard error '
 	}
 	else {
 		equals $r[0] './error1.cmd : standard error '
@@ -57,7 +58,12 @@ task TestWorkaround2 {
 	}
 
 	($r = Get-Content z.log)
+	# latest
 	if ($Version -ge ${7.2.0}) {
+		equals $r 'standard error '
+	}
+	# GHA
+	elseif ($Version -ge ${7.1.2}) {
 		equals $r 'standard error '
 	}
 	else {
