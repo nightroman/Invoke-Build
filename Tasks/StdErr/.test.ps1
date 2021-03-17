@@ -2,6 +2,7 @@
 if ($PSVersionTable['Platform'] -eq 'Unix') {return task unix}
 $Version = [version]$PSVersionTable.PSVersion
 ${7.2.0} = [version]'7.2.0'
+${7.1.2} = [version]'7.1.2'
 
 task TestProblem {
 	try {
@@ -31,9 +32,13 @@ task TestProblem {
 task TestWorkaround {
 	Invoke-Build Workaround 2> z.log
 
-	$r = Get-Content z.log
+	($r = Get-Content z.log)
 	if ($Version -ge ${7.2.0}) {
 		equals $r 'standard error '
+	}
+	elseif ($Version -ge ${7.1.2}) {
+		# weird GHA result
+		equals $r ([char]'s')
 	}
 	else {
 		equals $r[0] './error1.cmd : standard error '
@@ -51,7 +56,7 @@ task TestWorkaround2 {
 		equals "$_" 'Command exited with code 42. {./error2.cmd}'
 	}
 
-	$r = Get-Content z.log
+	($r = Get-Content z.log)
 	if ($Version -ge ${7.2.0}) {
 		equals $r 'standard error '
 	}
