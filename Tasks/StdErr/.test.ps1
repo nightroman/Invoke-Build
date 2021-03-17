@@ -1,20 +1,17 @@
 
 if ($PSVersionTable['Platform'] -eq 'Unix') {return task unix}
-$Version = $PSVersionTable.PSVersion.Major
+$Version = [version]$PSVersionTable.PSVersion
+${7.2.0} = [version]'7.2.0'
+${7.1.2} = [version]'7.1.2'
 
-# Fixed in 7.1.0-preview.6
-# Regressed in 7.1.0-rc.1
-# Fixed in 7.2.0-preview.1
-# Regressed in 7.2.0-preview.3
 task TestProblem {
 	try {
 		Invoke-Build Problem 2> z.log
 		throw 'done'
 	}
 	catch {
-		if ($Version -ge 7) {
-			#equals "$_" done # expected
-			equals "$_" 'standard error '
+		if ($Version -ge ${7.2.0}) {
+			equals "$_" done # expected
 		}
 		else {
 			equals "$_" 'standard error '
@@ -22,9 +19,8 @@ task TestProblem {
 	}
 
 	$r = Get-Content z.log
-	if ($Version -ge 7) {
-		#equals $r 'standard error ' # expected
-		equals $r $null
+	if ($Version -ge ${7.2.0}) {
+		equals $r 'standard error ' # expected
 	}
 	else {
 		equals $r $null
@@ -36,8 +32,13 @@ task TestProblem {
 task TestWorkaround {
 	Invoke-Build Workaround 2> z.log
 
-	$r = Get-Content z.log
-	if ($Version -ge 7) {
+	($r = Get-Content z.log)
+	# latest
+	if ($Version -ge ${7.2.0}) {
+		equals $r 'standard error '
+	}
+	# GHA
+	elseif ($Version -ge ${7.1.2}) {
 		equals $r 'standard error '
 	}
 	else {
@@ -56,8 +57,13 @@ task TestWorkaround2 {
 		equals "$_" 'Command exited with code 42. {./error2.cmd}'
 	}
 
-	$r = Get-Content z.log
-	if ($Version -ge 7) {
+	($r = Get-Content z.log)
+	# latest
+	if ($Version -ge ${7.2.0}) {
+		equals $r 'standard error '
+	}
+	# GHA
+	elseif ($Version -ge ${7.1.2}) {
 		equals $r 'standard error '
 	}
 	else {
