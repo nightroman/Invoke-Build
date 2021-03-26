@@ -253,6 +253,7 @@ function Show-BuildExec {($(
 	else {
 		"exec { $(${*t}.Trim()) }"
 	}
+	"`$pwd = $pwd"
 	foreach(${private:*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
 		${private:*p} = ${*v}.Parent
 		if (${*p} -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or ${*p}.Left -ne ${*v}) {

@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.7.3
+
+Add `$pwd` information to `exec -echo`, #179.
+
 ## v5.7.2
 
 Add the `ErrorMessage` parameter to `exec`, #178.
