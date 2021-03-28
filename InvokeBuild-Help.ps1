@@ -1057,9 +1057,11 @@
 	synopsis = 'Invokes parallel builds by Invoke-Build'
 
 	description = @'
-	This script invokes build scripts simultaneously using Invoke-Build.ps1
-	which has to be in the same directory. Number of simultaneous builds is
-	limited by the number of processors by default.
+	This script invokes several build scripts simultaneously by Invoke-Build.
+	Number of parallel builds is set to the number of processors by default.
+
+	NOTE: Avoid using Build-Parallel in scenarios with PowerShell classes.
+	Known issues: https://github.com/nightroman/Invoke-Build/issues/180
 '@
 
 	parameters = @{
