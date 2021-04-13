@@ -19,8 +19,9 @@ task CompleteFile {
 	Set-Location ..\..
 	($r = Invoke-Complete 'Invoke-Build Test i')
 
-	$folder, $files = $r
-	equals $folder InvokeBuild
+	$folder1, $folder2, $files = $r
+	equals $folder1 ib
+	equals $folder2 InvokeBuild
 
 	assert ($files.Count -ge 5)
 	foreach($$ in $files) {

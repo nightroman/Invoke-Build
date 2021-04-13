@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+Published [nuget.org/packages/ib](https://www.nuget.org/packages/ib/), the dotnet tool.
+
 ## v5.7.3
 
 Add `$pwd` information to `exec -echo`, #179.

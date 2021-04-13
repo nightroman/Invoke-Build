@@ -1,0 +1,10 @@
+*.nupkg
+*.user
+.vs
+bin
+obj
+Debug
+Release
+Properties
+content
+z

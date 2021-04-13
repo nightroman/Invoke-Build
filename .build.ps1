@@ -33,9 +33,10 @@ task markdown {
 	exec { Convert-Markdown README }
 }
 
-# Synopsis: Remove temporary items.
+# Synopsis: Remove temp files.
 task clean {
 	remove z, *\z, *\z.*, README.htm, Invoke-Build.*.nupkg, Tests\New-VSCodeTask\.vscode\tasks.json
+	Invoke-Build clean .\ib\ib.build.ps1
 }
 
 # Synopsis: Build the PowerShell help file.
@@ -61,8 +62,6 @@ task module version, markdown, help, {
 
 	# copy files without Invoke-Build.ps1
 	Copy-Item -Destination $dir $(
-		'ib.cmd'
-		'ib.sh'
 		'Build-Checkpoint.ps1'
 		'Build-Parallel.ps1'
 		'InvokeBuild-Help.xml'
@@ -135,7 +134,7 @@ more powerful. It is complete, bug free, well covered by tests.
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>
 		<description>$text</description>
-		<tags>PowerShell Build Test Automation</tags>
+		<tags>PowerShell Build Automation</tags>
 		<releaseNotes>https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md</releaseNotes>
 		<developmentDependency>true</developmentDependency>
 	</metadata>

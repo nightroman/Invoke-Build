@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackAsTool>true</PackAsTool>
+    <VersionPrefix>0.0.0</VersionPrefix>
+    <ToolCommandName>ib</ToolCommandName>
+    <Description>Invoke-Build as dotnet tool ib</Description>
+    <PackageProjectUrl>https://github.com/nightroman/Invoke-Build</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>Roman Kuzmin</Copyright>
+    <Authors>Roman Kuzmin</Authors>
+    <RollForward>LatestMajor</RollForward>
+    <PackageIcon>ib.png</PackageIcon>
+    <PackageTags>PowerShell Build Automation</PackageTags>
+    <PackageReleaseNotes>https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="content\InvokeBuild\*">
+      <Pack>true</Pack>
+      <PackagePath>content\InvokeBuild\</PackagePath>
+    </Content>
+    <Content Include="..\ib.png">
+      <Pack>true</Pack>
+      <PackagePath>.\</PackagePath>
+    </Content>
+  </ItemGroup>
+</Project>

@@ -27,48 +27,42 @@ Several *PowerShell Team* projects use Invoke-Build.
 
 The package includes the engine, helpers, and the generated help:
 
-* *Invoke-Build.ps1* - invokes build scripts, this is the build engine
-* *Build-Checkpoint.ps1* - invokes persistent builds using the engine
-* *Build-Parallel.ps1* - invokes parallel builds using the engine
-* *Resolve-MSBuild.ps1* - finds the specified or latest MSBuild
-* *Show-TaskHelp.ps1* - shows task help, used on WhatIf calls
+* [Invoke-Build.ps1](Invoke-Build.ps1) - invokes build scripts, this is the build engine
+* [Build-Checkpoint.ps1](Build-Checkpoint.ps1) - invokes persistent builds using the engine
+* [Build-Parallel.ps1](Build-Parallel.ps1) - invokes parallel builds using the engine
+* [Resolve-MSBuild.ps1](Resolve-MSBuild.ps1) - finds the specified or latest MSBuild
+* [Show-TaskHelp.ps1](Show-TaskHelp.ps1) - shows task help, used on WhatIf calls
 * *InvokeBuild-Help.xml* - external content for Get-Help
-* *ib.cmd*, *ib.sh* - cmd and bash helpers
 
 Extra tools, see PSGallery and the repository:
 
-* *Invoke-Build.ArgumentCompleters.ps1* - completers for v5 native, TabExpansion2.ps1
-* *Invoke-TaskFromVSCode.ps1* - invokes a task from a build script opened in VSCode
-* *New-VSCodeTask.ps1* - generates VSCode tasks bound to build script tasks
-* *Invoke-TaskFromISE.ps1* - invokes a task from a script opened in ISE
+* [Invoke-Build.ArgumentCompleters.ps1](Invoke-Build.ArgumentCompleters.ps1) - completers for v5 native, TabExpansion2.ps1
+* [Invoke-TaskFromVSCode.ps1](Invoke-TaskFromVSCode.ps1) - invokes a task from a build script opened in VSCode
+* [New-VSCodeTask.ps1](New-VSCodeTask.ps1) - generates VSCode tasks bound to build script tasks
+* [Invoke-TaskFromISE.ps1](Invoke-TaskFromISE.ps1) - invokes a task from a script opened in ISE
 
 And some more tools, see the repository:
 
-* *Build-JustTask.ps1* - invokes tasks without references
-* *Convert-psake.ps1* - converts psake build scripts, see [wiki](https://github.com/nightroman/Invoke-Build/wiki/Convert~psake)
-* *Show-BuildTree.ps1* - shows task trees as text
-* *Show-BuildDgml.ps1* - shows task trees as DGML
-* *Show-BuildGraph.ps1* - shows task trees by Graphviz
+* [Build-JustTask.ps1](Build-JustTask.ps1) - invokes tasks without references
+* [Convert-psake.ps1](Convert-psake.ps1) - converts psake build scripts, see [wiki](https://github.com/nightroman/Invoke-Build/wiki/Convert~psake)
+* [Show-BuildTree.ps1](Show-BuildTree.ps1) - shows task trees as text
+* [Show-BuildDgml.ps1](Show-BuildDgml.ps1) - shows task trees as DGML
+* [Show-BuildGraph.ps1](Show-BuildGraph.ps1) - shows task trees by Graphviz
+* [ib.cmd](ib.cmd), [ib.sh](ib.sh) - cmd and bash helpers
 
 ## Install as module
 
 Invoke-Build is distributed as the module [InvokeBuild](https://www.powershellgallery.com/packages/InvokeBuild).
-In PowerShell 5.0 or with PowerShellGet you can install it by this command
+You can install it by one of these commands:
 
+    Install-Module InvokeBuild -Scope CurrentUser
     Install-Module InvokeBuild
 
-To install the module with Chocolatey, run the following command.
-NOTE: This package is maintained by its owner, see package info.
+To install the module with Chocolatey, run the following command:
 
     choco install invoke-build
 
-Module commands: `Invoke-Build`, `Build-Checkpoint`, `Build-Parallel`.
-Import the module in order to make them available:
-
-    Import-Module InvokeBuild
-
-You can also call the module scripts directly. Consider to include the module
-directory to the path. In this scenario you do not have to import the module.
+> NOTE: The Chocolatey package is maintained by its owner.
 
 ## Install as scripts
 
@@ -84,24 +78,33 @@ and you are done, scripts are downloaded and their directory is added to the
 path. You may need to start a new PowerShell session with the updated path.
 
 Otherwise, download the package manually, rename it to zip, extract its *tools*
-and rename to *InvokeBuild*. Consider to include this directory to the path so
+and rename to *InvokeBuild*. Consider including this directory to the path so
 that script paths may be omitted in commands. Or copy to the PowerShell module
 directory in order to use as the module.
 
-With *cmd.exe* use the helper *ib.cmd*. For similar experience in interactive
-PowerShell use an alias `ib` defined in a PowerShell profile
+## Install as dotnet tool
 
-    Set-Alias ib <path>\Invoke-Build.ps1
+[nuget.org/packages/ib](https://www.nuget.org/packages/ib/) provides Invoke-Build
+as the dotnet tool `ib` which may be installed as global or local.
 
-`<path>\` may be omitted if the script is in the path.
+To install the global tool:
+
+    dotnet tool install --global ib
+
+To install the local tool:
+
+    dotnet new tool-manifest # once on setting up a repo with tools
+    dotnet tool install --local ib
+
+> See [ib/README](ib/README.md) for more details about `ib` commands.
 
 ## Getting help
 
-If you are using the module (see [#2899]) or the script is not in the path
-then use the full path to *Invoke-Build.ps1* instead of *Invoke-Build* in
-the below commands, see `(Get-Alias Invoke-Build).Definition`
-
 [#2899]: https://github.com/PowerShell/PowerShell/issues/2899
+
+If you are using the module (known issue [#2899]) or the script is not in the
+path then use the full path to *Invoke-Build.ps1* instead of *Invoke-Build* in
+the below commands:
 
 In order to get help for the engine, invoke:
 
@@ -137,5 +140,5 @@ Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 
 ## Credits
 
-- The project was inspired by [*psake*](https://github.com/psake/psake), see [Comparison with psake](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-psake).
-- Some concepts came from [*MSBuild*](https://github.com/Microsoft/msbuild), see [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild).
+- The project was inspired by [psake](https://github.com/psake/psake), see [Comparison with psake](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-psake).
+- Some concepts came from [MSBuild](https://github.com/Microsoft/msbuild), see [Comparison with MSBuild](https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild).

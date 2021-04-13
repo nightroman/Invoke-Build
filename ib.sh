@@ -2,7 +2,7 @@
 
 # Link to this from /usr/local/bin to be able to call invoke-build directly from bash.
 # Example:
-# ln -s ~/.local/share/powershell/Modules/InvokeBuild/5.5.3/ib.sh /usr/local/bin/ib
+# ln -s .../ib.sh /usr/local/bin/ib
 # chmod +x /usr/local/bin/ib
 # ib task1, task2
 
