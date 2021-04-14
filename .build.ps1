@@ -134,7 +134,7 @@ more powerful. It is complete, bug free, well covered by tests.
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<summary>$text</summary>
 		<description>$text</description>
-		<tags>PowerShell Build Automation</tags>
+		<tags>Build Automation PowerShell</tags>
 		<releaseNotes>https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md</releaseNotes>
 		<developmentDependency>true</developmentDependency>
 	</metadata>

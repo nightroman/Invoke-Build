@@ -1,4 +1,4 @@
-:: ib.cmd - Invoke-Build helper for cmd.exe
+:: Invoke-Build helper for cmd.exe
 
 @echo off
 

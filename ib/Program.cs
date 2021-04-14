@@ -76,7 +76,7 @@ class Program
             var app = options.UsePwsh || Environment.OSVersion.Platform != PlatformID.Win32NT ? "pwsh" : "powershell";
 
             var root = Path.GetDirectoryName(typeof(Program).Assembly.Location);
-            var ib = Path.Combine(root, "../../../content/InvokeBuild/Invoke-Build.ps1");
+            var ib = Path.Combine(root, "../../../InvokeBuild/Invoke-Build.ps1");
             ib = Path.GetFullPath(ib);
             ib = EscapeArgument(ib);
 
