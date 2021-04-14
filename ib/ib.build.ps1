@@ -8,7 +8,7 @@ param(
 	[string]$Configuration = 'Release'
 )
 
-$VersionPatch = 1
+$VersionPatch = 0
 
 # Synopsis: Remove files.
 task clean {

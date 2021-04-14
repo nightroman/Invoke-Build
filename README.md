@@ -17,7 +17,7 @@ In addition to basic task processing the engine supports
 - Batch invocation of tests composed as tasks.
 - Ability to define new classes of tasks.
 
-Invoke-Build v3.0.1+ is cross-platform with PowerShell v6.
+Invoke-Build v3.0.1+ is cross-platform with PowerShell Core.
 
 Invoke-Build can be effectively used in VSCode and ISE.
 
@@ -25,14 +25,15 @@ Several *PowerShell Team* projects use Invoke-Build.
 
 ## The package
 
-The package includes the engine, helpers, and the generated help:
+The package includes the engine, helpers, and help:
 
 * [Invoke-Build.ps1](Invoke-Build.ps1) - invokes build scripts, this is the build engine
 * [Build-Checkpoint.ps1](Build-Checkpoint.ps1) - invokes persistent builds using the engine
 * [Build-Parallel.ps1](Build-Parallel.ps1) - invokes parallel builds using the engine
 * [Resolve-MSBuild.ps1](Resolve-MSBuild.ps1) - finds the specified or latest MSBuild
 * [Show-TaskHelp.ps1](Show-TaskHelp.ps1) - shows task help, used on WhatIf calls
-* *InvokeBuild-Help.xml* - external content for Get-Help
+* *about_InvokeBuild.help.txt* - module help file
+* *InvokeBuild-Help.xml* - content for Get-Help
 
 Extra tools, see PSGallery and the repository:
 
@@ -43,16 +44,16 @@ Extra tools, see PSGallery and the repository:
 
 And some more tools, see the repository:
 
+* [ib.cmd](ib.cmd), [ib.sh](ib.sh) - cmd and bash helpers
 * [Build-JustTask.ps1](Build-JustTask.ps1) - invokes tasks without references
 * [Convert-psake.ps1](Convert-psake.ps1) - converts psake build scripts, see [wiki](https://github.com/nightroman/Invoke-Build/wiki/Convert~psake)
 * [Show-BuildTree.ps1](Show-BuildTree.ps1) - shows task trees as text
 * [Show-BuildDgml.ps1](Show-BuildDgml.ps1) - shows task trees as DGML
 * [Show-BuildGraph.ps1](Show-BuildGraph.ps1) - shows task trees by Graphviz
-* [ib.cmd](ib.cmd), [ib.sh](ib.sh) - cmd and bash helpers
 
 ## Install as module
 
-Invoke-Build is distributed as the module [InvokeBuild](https://www.powershellgallery.com/packages/InvokeBuild).
+Invoke-Build is published as PSGallery module [InvokeBuild](https://www.powershellgallery.com/packages/InvokeBuild).
 You can install it by one of these commands:
 
     Install-Module InvokeBuild -Scope CurrentUser
@@ -66,11 +67,9 @@ To install the module with Chocolatey, run the following command:
 
 ## Install as scripts
 
-Invoke-Build is also distributed as the NuGet package [Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
-This package includes the module files, so it can be used as the module, too,
-either copy it to the standard module folder or import its `InvokeBuild.psd1`.
+Invoke-Build is also published as [nuget.org/packages/Invoke-Build](https://www.nuget.org/packages/Invoke-Build).
 
-If you use [scoop](https://github.com/lukesampson/scoop) then invoke
+If you use [scoop](https://github.com/lukesampson/scoop) then invoke:
 
     scoop install invoke-build
 
@@ -78,9 +77,9 @@ and you are done, scripts are downloaded and their directory is added to the
 path. You may need to start a new PowerShell session with the updated path.
 
 Otherwise, download the package manually, rename it to zip, extract its *tools*
-and rename to *InvokeBuild*. Consider including this directory to the path so
-that script paths may be omitted in commands. Or copy to the PowerShell module
-directory in order to use as the module.
+and rename to *InvokeBuild*. Consider including this directory to the path for
+invoking scripts by names. Or copy to the PowerShell module directory in order
+to use it as the module.
 
 ## Install as dotnet tool
 

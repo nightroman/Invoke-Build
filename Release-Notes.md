@@ -1,6 +1,6 @@
 # Invoke-Build Release Notes
 
-## next
+## v5.8.0
 
 Published [nuget.org/packages/ib](https://www.nuget.org/packages/ib/), the dotnet tool `ib`.
 
