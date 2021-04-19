@@ -10,6 +10,10 @@ Invoke-Build does not have to be installed separately, the tool contains it.
 But with just the tool you may miss some PowerShell features like argument
 completers, live error analysis, debugging, etc.
 
+On the other hand, the tool is more convenient than the PowerShell module in
+shell invocation scenarios, for example in build event commands in various
+MSBuild project files.
+
 To install the global tool:
 
     dotnet tool install --global ib
