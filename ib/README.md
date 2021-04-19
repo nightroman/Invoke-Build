@@ -49,8 +49,9 @@ Alternatively, you may use the following helper scripts:
 - [ib.cmd](../ib.cmd)
 - [ib.sh](../ib.sh)
 
-Unlike with the tool `ib`, Invoke-Build has to be installed, either as a module
-in the standard location or as scripts with its directory added to the path.
+Unlike with the tool `ib`, Invoke-Build has to be installed, either as the
+module in a standard location or as scripts with the directory added to the
+path.
 
 ## PowerShell alias ib
 
