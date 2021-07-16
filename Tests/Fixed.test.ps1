@@ -539,3 +539,13 @@ task PositionalParameters {
 
 	remove z.build.ps1
 }
+
+# Issue #183, introduce $OriginalLocation, where the build starts.
+task OriginalLocation {
+	Set-Location $HOME
+	Invoke-Build t1 {
+		task t1 {
+			assert $OriginalLocation $HOME
+		}
+	}
+}

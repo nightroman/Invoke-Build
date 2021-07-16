@@ -57,7 +57,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	File = $BuildFile = $PSBoundParameters['File']
 	Safe = $PSBoundParameters['Safe']
 	Summary = $PSBoundParameters['Summary']
-	CD = *Path
+	CD = $OriginalLocation = *Path
 	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
 	SP = @{}
 	P = $_

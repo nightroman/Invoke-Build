@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.8.1
+
+Added the variable `$OriginalLocation`, where the build starts, #183.
+
 ## v5.8.0
 
 Published [nuget.org/packages/ib](https://www.nuget.org/packages/ib/), the dotnet tool `ib`.

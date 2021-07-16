@@ -276,10 +276,11 @@ task TestVariables {
 		if (($MyKnown -notcontains $_.Name) -and ($_.Name -notlike 'My*')) {
 			switch($_.Name) {
 				# exposed by Invoke-Build
-				'*' { '* - internal build data' }
+				'OriginalLocation' { 'OriginalLocation - where build starts - ' + $OriginalLocation }
 				'BuildFile' { 'BuildFile - build script path - ' + $BuildFile }
 				'BuildRoot' { 'BuildRoot - build script root - ' + $BuildRoot }
 				'BuildTask' { 'BuildTask - initial task list - ' + $BuildTask }
+				'*' { '* - internal build data' }
 				'Task' { 'Task - the current task' }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
 				default { Write-Warning "Unknown variable '$_'." }

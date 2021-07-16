@@ -65,11 +65,12 @@
 
 	PUBLIC VARIABLES
 
-		$WhatIf    - WhatIf mode, Invoke-Build parameter
+		$OriginalLocation - where the build is invoked
+		$WhatIf - WhatIf mode, Invoke-Build parameter
 		$BuildRoot - build script location, by default
 		$BuildFile - build script path
 		$BuildTask - initial tasks
-		$Task      - current task
+		$Task - current task
 
 	$BuildRoot may be changed by scripts on loading in order to set a custom
 	build root directory. Other variables should not be changed.
