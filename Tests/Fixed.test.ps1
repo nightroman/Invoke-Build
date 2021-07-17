@@ -545,7 +545,7 @@ task OriginalLocation {
 	Set-Location $HOME
 	Invoke-Build t1 {
 		task t1 {
-			assert $OriginalLocation $HOME
+			equals $OriginalLocation $HOME
 		}
 	}
 }
