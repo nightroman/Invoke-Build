@@ -2,6 +2,7 @@
 
 ## Techniques
 
+- [Attributes](Attributes) How to use custom attributes with task actions.
 - [Direct](Direct) How to make build scripts invokable directly.
 - [Dynamic](Dynamic) How to use a dynamic script with dynamic tasks.
 - [Header](Header) How to define custom task headers and footers.

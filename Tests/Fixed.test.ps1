@@ -549,3 +549,13 @@ task OriginalLocation {
 		}
 	}
 }
+
+# Issue #185, pass the job in *-BuildJob
+task JobAttributes {
+	$log = @{log = ''}
+	function Write-Host($text) {
+		$log.log += $text
+	}
+	Invoke-Build task1 ../Tasks/Attributes/Attributes.build.ps1
+	equals $log.log init1init2kill1kill2
+}
