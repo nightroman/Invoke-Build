@@ -100,8 +100,8 @@
 		Enter-BuildTask {} - before each task
 		Exit-BuildTask {} - after each task
 
-		Enter-BuildJob {} - before each task action
-		Exit-BuildJob {} - after each task action
+		Enter-BuildJob {param($Job)} - before each task action
+		Exit-BuildJob {param($Job)} - after each task action
 
 		Set-BuildHeader {param($Path)} - to write task headers
 		Set-BuildFooter {param($Path)} - to write task footers

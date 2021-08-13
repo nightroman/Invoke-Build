@@ -547,7 +547,7 @@ function *Task {
 			}
 
 			try {
-				. *Run ${*}.EnterJob
+				. *Run ${*}.EnterJob ${*j}
 				*SL
 				if (0 -eq ${*i}[0]) {
 					& ${*j}
@@ -572,7 +572,7 @@ function *Task {
 				throw
 			}
 			finally {
-				. *Run ${*}.ExitJob
+				. *Run ${*}.ExitJob ${*j}
 			}
 		}
 	}

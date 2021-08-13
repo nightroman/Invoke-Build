@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.8.2
+
+`Enter-BuildJob` and `Exit-BuildJob` are called with the job script block as the first argument.
+
 ## v5.8.1
 
 Added the variable `$OriginalLocation`, where the build starts, #183.
