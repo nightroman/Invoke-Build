@@ -25,7 +25,6 @@ class UsesFoo2 : System.Attribute {
 
 # It is called before invoking task jobs.
 Enter-BuildJob {
-	param($Job)
 	foreach($attribute in $Job.Attributes) {
 		$attribute.Init()
 	}

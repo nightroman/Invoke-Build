@@ -71,6 +71,7 @@
 		$BuildFile - build script path
 		$BuildTask - initial tasks
 		$Task - current task
+		$Job - current job
 
 	$BuildRoot may be changed by scripts on loading in order to set a custom
 	build root directory. Other variables should not be changed.
@@ -100,8 +101,8 @@
 		Enter-BuildTask {} - before each task
 		Exit-BuildTask {} - after each task
 
-		Enter-BuildJob {param($Job)} - before each task action
-		Exit-BuildJob {param($Job)} - after each task action
+		Enter-BuildJob {} - before each task action
+		Exit-BuildJob {} - after each task action
 
 		Set-BuildHeader {param($Path)} - to write task headers
 		Set-BuildFooter {param($Path)} - to write task footers

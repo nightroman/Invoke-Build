@@ -551,7 +551,7 @@ task OriginalLocation {
 }
 
 # Issue #185, pass the job in *-BuildJob
-task JobAttributes {
+task JobAttributes -if ($PSVersionTable.PSVersion.Major -ge 5) {
 	$log = @{log = ''}
 	function Write-Host($text) {
 		$log.log += $text

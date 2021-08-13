@@ -281,6 +281,7 @@ task TestVariables {
 				'BuildRoot' { 'BuildRoot - build script root - ' + $BuildRoot }
 				'BuildTask' { 'BuildTask - initial task list - ' + $BuildTask }
 				'*' { '* - internal build data' }
+				'Job' { 'Job - the current job' }
 				'Task' { 'Task - the current task' }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
 				default { Write-Warning "Unknown variable '$_'." }

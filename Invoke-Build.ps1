@@ -520,10 +520,10 @@ function *Task {
 	${private:*i} = , [int]($null -ne $Task.Inputs)
 	try {
 		. *Run ${*}.EnterTask
-		foreach(${private:*j} in $Task.Jobs) {
-			if (${*j} -is [string]) {
+		foreach($Job in $Task.Jobs) {
+			if ($Job -is [string]) {
 				try {
-					*Task ${*j} ${*p}
+					*Task $Job ${*p}
 				}
 				finally {
 					${*}.Task = $Task
@@ -547,10 +547,10 @@ function *Task {
 			}
 
 			try {
-				. *Run ${*}.EnterJob ${*j}
+				. *Run ${*}.EnterJob
 				*SL
 				if (0 -eq ${*i}[0]) {
-					& ${*j}
+					& $Job
 				}
 				else {
 					$Inputs = $Task.Inputs
@@ -560,10 +560,10 @@ function *Task {
 						$Inputs | .{process{
 							$2 = $Outputs[${*x}++]
 							$_
-						}} | & ${*j}
+						}} | & $Job
 					}
 					else {
-						$Inputs | & ${*j}
+						$Inputs | & $Job
 					}
 				}
 			}
@@ -572,7 +572,7 @@ function *Task {
 				throw
 			}
 			finally {
-				. *Run ${*}.ExitJob ${*j}
+				. *Run ${*}.ExitJob
 			}
 		}
 	}

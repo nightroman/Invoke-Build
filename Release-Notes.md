@@ -1,8 +1,12 @@
 # Invoke-Build Release Notes
 
+## v5.8.3
+
+Use `$Job` variable instead of argument, #185.
+
 ## v5.8.2
 
-`Enter-BuildJob` and `Exit-BuildJob` are called with the job script block as the first argument.
+`Enter-BuildJob` and `Exit-BuildJob` are called with the job script block as the first argument, #185.
 
 ## v5.8.1
 
