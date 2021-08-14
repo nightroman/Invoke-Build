@@ -520,16 +520,17 @@ function *Task {
 	${private:*i} = , [int]($null -ne $Task.Inputs)
 	try {
 		. *Run ${*}.EnterTask
-		foreach($Job in $Task.Jobs) {
-			if ($Job -is [string]) {
+		foreach($_ in $Task.Jobs) {
+			if ($_ -is [string]) {
 				try {
-					*Task $Job ${*p}
+					*Task $_ ${*p}
 				}
 				finally {
 					${*}.Task = $Task
 				}
 				continue
 			}
+			New-Variable Job $_ -Option ReadOnly -Force
 			& ${*}.Header ${*p}
 
 			if (1 -eq ${*i}[0]) {

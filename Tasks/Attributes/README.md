@@ -1,5 +1,7 @@
+This technique requires PowerShell v5+ and Invoke-Build v5.8.4+.
+
 The script [Attributes.build.ps1](Attributes.build.ps1) defines custom
-attributes with actions (`Init` and `Kill`) and uses these attributes
+attributes with methods `Init` and `Kill` and uses these attributes
 for a task action job.
 
 Then build blocks `Enter-BuildJob` and `Exit-BuildJob` retrieve job attributes

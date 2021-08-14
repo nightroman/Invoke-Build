@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.8.4
+
+Make the variable `$Job` read only, #185.
+
 ## v5.8.3
 
 Use `$Job` variable instead of argument, #185.
