@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.8.5
+
+Support MSBuild 17.0 (VS 2022).
+
 ## v5.8.4
 
 Make the variable `$Job` read only, #185.

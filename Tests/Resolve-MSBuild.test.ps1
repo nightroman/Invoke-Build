@@ -9,9 +9,11 @@
 . ./Shared.ps1
 if ($IsUnix) {return task unix}
 
-if (!($ProgramFiles = ${env:ProgramFiles(x86)})) {$ProgramFiles = $env:ProgramFiles}
-$VS2017 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017"
-$VS2019 = Test-Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019"
+$Program64 = $env:ProgramFiles
+if (!($Program86 = ${env:ProgramFiles(x86)})) {$Program86 = $Program64}
+$VS2017 = Test-Path "$Program86\Microsoft Visual Studio\2017"
+$VS2019 = Test-Path "$Program86\Microsoft Visual Studio\2019"
+$VS2022 = Test-Path "$Program64\Microsoft Visual Studio\2022"
 $MSBuild14 = Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0'
 $VSSetup = Get-Module VSSetup -ListAvailable
 $Is64 = [IntPtr]::Size -eq 8
@@ -61,6 +63,21 @@ task test15VSSetup2019 -If $VS2019 {
 	equals $r $r2
 }
 
+task test15VSSetup2022 -If $VS2022 {
+	if (!$VSSetup) {Write-Warning 'VSSetup is not installed'}
+	$r = Resolve-MSBuild 17.0
+	Test-MSBuild $r
+	assert ($r -like '*\Current\*')
+
+	$r = Resolve-MSBuild 17.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\Current\Bin\MSBuild.exe')
+
+	# with spaces, #148
+	$r2 = Resolve-MSBuild '  17.0  x86  '
+	equals $r $r2
+}
+
 task test15Guess -If $VS2017 {
 	. Set-Mock Get-MSBuild15VSSetup {}
 
@@ -81,6 +98,18 @@ task test15Guess2019 -If $VS2019 {
 	assert ($r -like '*\Current\*')
 
 	$r = Resolve-MSBuild 16.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\Current\Bin\MSBuild.exe')
+}
+
+task test15Guess2022 -If $VS2022 {
+	. Set-Mock Get-MSBuild15VSSetup {}
+
+	$r = Resolve-MSBuild 17.0
+	Test-MSBuild $r
+	assert ($r -like '*\Current\*')
+
+	$r = Resolve-MSBuild 17.0x86
 	Test-MSBuild $r
 	assert ($r -like '*\Current\Bin\MSBuild.exe')
 }
