@@ -28,7 +28,7 @@ task content -If (!(test-path content)) {
 }
 
 # Synopsis: Make NuGet package.
-task pack version, content, {
+task nuget version, content, {
 	$env:NoWarn = 'NU5110,NU5111'
 	exec { dotnet pack -c $Configuration -p:VersionPrefix=$Version -o z }
 }
@@ -49,4 +49,4 @@ task test {
 }
 
 # Synopsis: Default task.
-task . uninstall, pack, install, test, clean
+task . uninstall, nuget, install, test, clean

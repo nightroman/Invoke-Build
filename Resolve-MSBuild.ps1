@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.6.0
+.VERSION 1.6.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -153,11 +153,13 @@ function Get-MSBuild15Guess {
 		}
 		elseif ($Version -eq '*') {
 			"$Program64\Microsoft Visual Studio\2022"
+			"$Program86\Microsoft Visual Studio\2022"
 			"$Program86\Microsoft Visual Studio\2019"
 			"$Program86\Microsoft Visual Studio\2017"
 		}
 		elseif ($Version -eq '17.0') {
 			"$Program64\Microsoft Visual Studio\2022"
+			"$Program86\Microsoft Visual Studio\2022"
 		}
 		elseif ($Version -eq '16.0') {
 			"$Program86\Microsoft Visual Studio\2019"

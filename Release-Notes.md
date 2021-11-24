@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.8.6
+
+Fix `Resolve-MSBuild.ps1` BuildTools 2022, #188.
+
 ## v5.8.5
 
 Support MSBuild 17.0 (VS 2022).
