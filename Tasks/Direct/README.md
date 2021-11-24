@@ -5,6 +5,7 @@ If this is inconvenient then decorate a script to make it directly invokable.
 Add `Tasks` as the first parameter and the command redirecting the call:
 
 ```powershell
+[CmdletBinding()]
 param(
     [Parameter(Position=0)]
     [string[]]$Tasks,
@@ -43,6 +44,10 @@ Invoke-Build <tasks> [<parameters>]
 Note that `Invoke-Build` parameters are not available on direct calls, i.e. you
 cannot specify `Safe`, `Summary`, `WhatIf`, etc. When they are needed use the
 usual call by `Invoke-Build`.
+
+Note that the attribute `CmdletBinding` is recommended, to avoid ignoring
+misspelled or not supported parameters, e.g. mentioned `WhatIf` and etc.
+and invoking with potentially unexpected results.
 
 See the script [my.build.ps1](my.build.ps1) for a working example.
 
