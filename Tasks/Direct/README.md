@@ -1,11 +1,10 @@
-## Directly invokable build scripts
+# Directly invokable build scripts
 
 Build scripts are normally invoked by the engine `Invoke-Build`, not directly.
 If this is inconvenient then decorate a script to make it directly invokable.
 Add `Tasks` as the first parameter and the command redirecting the call:
 
 ```powershell
-[CmdletBinding()]
 param(
     [Parameter(Position=0)]
     [string[]]$Tasks,
@@ -45,11 +44,17 @@ Note that `Invoke-Build` parameters are not available on direct calls, i.e. you
 cannot specify `Safe`, `Summary`, `WhatIf`, etc. When they are needed use the
 usual call by `Invoke-Build`.
 
-Note that the attribute `CmdletBinding` is recommended, to avoid ignoring
-misspelled or not supported parameters, e.g. mentioned `WhatIf` and etc.
-and invoking with potentially unexpected results.
-
 See the script [my.build.ps1](my.build.ps1) for a working example.
 
 See also the sample [Paket](../Paket) where a directly invokable build script
 is designed for automatic bootstrapping with `Invoke-Build` downloaded as well.
+
+## Note
+
+Make the parameter `Tasks` positional (`[Parameter(Position=0)]`) and keep other parameters named.
+This maintains similarity of parameters used by direct invocation and `Invoke-Build`.
+Task names are often specified with the parameter name omitted (`Tasks` or `Task`).
+Other parameters are usually named.
+
+Also, using the `Parameter` attribute automatically applies `CmdletBinding`.
+As a result, misspelled or not supported parameters cause invocation errors.

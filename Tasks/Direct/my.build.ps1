@@ -29,7 +29,6 @@
 	Ditto by Invoke-Build (script name must be *.build.ps1)
 #>
 
-[CmdletBinding()]
 param(
 	[Parameter(Position=0)]
 	[string[]]$Tasks,
