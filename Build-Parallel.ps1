@@ -17,7 +17,8 @@ param(
 	$Result,
 	[int]$Timeout=[int]::MaxValue,
 	[int]$MaximumBuilds=[Environment]::ProcessorCount,
-	[switch]$FailHard
+	[switch]$FailHard,
+	[string[]]$ShowParameter
 )
 
 # info, result
@@ -69,6 +70,11 @@ for ($1 = 0; $1 -lt $Build.Count) {
 	$work.Error1 = $null
 	$work.Error2 = $null
 	$work.Title = "($1/$($Build.Count)) $file"
+	if ($ShowParameter) {
+		foreach($p in $ShowParameter) {
+			$work.Title += " $($p)='$($b[$p])'"
+		}
+	}
 }
 
 ### prepare logs and make shells

@@ -12,30 +12,29 @@ $VersionPatch = 0
 
 # Synopsis: Remove files.
 task clean {
-	remove bin, obj, z, InvokeBuild, ../z, ../README.htm
+	Invoke-Build clean ../.build.ps1
 }
 
 # Synopsis: Set $script:Version.
-task Version {
+task version {
 	$r = switch -Regex -File ../Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}}
 	($script:Version = "$r.$VersionPatch")
 }
 
 # Synopsis: Set $script:Version.
-task content -If (!(test-path content)) {
+task content -If (!(Test-Path content)) {
 	Invoke-Build module ..\.build.ps1
-	exec { robocopy ..\z\InvokeBuild InvokeBuild } (0..3)
 }
 
 # Synopsis: Make NuGet package.
 task nuget version, content, {
 	$env:NoWarn = 'NU5110,NU5111'
-	exec { dotnet pack -c $Configuration -p:VersionPrefix=$Version -o z }
+	exec { dotnet pack -c $Configuration -p:VersionPrefix=$Version -o . }
 }
 
 # Synopsis: Install the tool from package.
 task install {
-	exec { dotnet tool install --add-source z -g ib }
+	exec { dotnet tool install --add-source . -g ib }
 }
 
 # Synopsis: Uninstall the tool.

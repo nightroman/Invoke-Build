@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="InvokeBuild\*">
+    <Content Include="..\z\InvokeBuild\*">
       <Pack>true</Pack>
       <PackagePath>InvokeBuild\</PackagePath>
     </Content>

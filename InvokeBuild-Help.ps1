@@ -1101,6 +1101,9 @@
 		FailHard = @'
 		Tells to abort all builds if any build fails.
 '@
+		ShowParameter = @'
+		Tells to show the specified parameter values in build titles.
+'@
 	}
 
 	outputs = @{

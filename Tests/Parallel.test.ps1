@@ -74,7 +74,7 @@ task Many {
 	# Get the results using the variable name.
 	$message = ''
 	try {
-		Build-Parallel -Build $build -Result Result
+		Build-Parallel -Build $build -ShowParameter Task -Result Result
 	}
 	catch {
 		$message = "$_"

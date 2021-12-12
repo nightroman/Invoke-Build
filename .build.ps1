@@ -36,7 +36,7 @@ task markdown {
 # Synopsis: Remove temp files.
 task clean {
 	remove z, *\z, *\z.*, README.htm, Invoke-Build.*.nupkg, Tests\New-VSCodeTask\.vscode\tasks.json
-	Invoke-Build clean .\ib\ib.build.ps1
+	remove ib\bin, ib\obj, ib\ib.*.nupkg
 }
 
 # Synopsis: Build the PowerShell help file.

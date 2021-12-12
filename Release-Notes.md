@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.8.7
+
+Add parameter `ShowParameter` to `Build-Parallel`, #189.
+
 ## v5.8.6
 
 Fix `Resolve-MSBuild.ps1` BuildTools 2022, #188.
