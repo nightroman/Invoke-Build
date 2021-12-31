@@ -42,7 +42,7 @@ function Get-BuildFile($Path) {
 if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
-$_ = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
+$st = if ($st = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($st.Description -eq 'IB') {$st.Value}}
 New-Variable * -Description IB ([PSCustomObject]@{
 	All = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Tasks = [System.Collections.Generic.List[object]]@()
@@ -60,7 +60,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	CD = $OriginalLocation = *Path
 	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
 	SP = @{}
-	P = $_
+	P = $st
 	A = 1
 	B = 0
 	Q = 0
@@ -71,8 +71,8 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	ExitTask = $null
 	EnterJob = $null
 	ExitJob = $null
-	Header = if ($_) {$_.Header} else {{Write-Build 11 "Task $($args[0])"}}
-	Footer = if ($_) {$_.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
+	Header = if ($st) {$st.Header} else {{Write-Build 11 "Task $($args[0])"}}
+	Footer = if ($st) {$st.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
 	Data = @{}
 	XBuild = $null
 	XCheck = $null
