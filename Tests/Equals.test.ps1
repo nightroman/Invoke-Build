@@ -51,23 +51,23 @@ task Refs {
 task NullX {
 	($r = try {equals $null x} catch {$_})
 	equals $r.FullyQualifiedErrorId Assert-BuildEquals
-	equals "$r" "Objects are not equal:`r`nA:`r`nB: x [string]"
+	assert ("$r" -match '^Objects are not equal:\r?\nA:\r?\nB: x \[string\]$')
 }
 
 task XNull {
 	($r = try {equals x $null} catch {$_})
 	equals $r.FullyQualifiedErrorId Assert-BuildEquals
-	equals "$r" "Objects are not equal:`r`nA: x [string]`r`nB:"
+	assert ("$r" -match '^Objects are not equal:\r?\nA: x \[string\]\r?\nB:$')
 }
 
 task IntString {
 	($r = try {equals 1 '1'} catch {$_})
 	equals $r.FullyQualifiedErrorId Assert-BuildEquals
-	equals "$r" "Objects are not equal:`r`nA: 1 [int]`r`nB: 1 [string]"
+	assert ("$r" -match '^Objects are not equal:\r?\nA: 1 \[int\]\r?\nB: 1 \[string\]$')
 }
 
 task CaseSensitive {
 	($r = try {equals ps PS} catch {$_})
 	equals $r.FullyQualifiedErrorId Assert-BuildEquals
-	equals "$r" "Objects are not equal:`r`nA: ps [string]`r`nB: PS [string]"
+	assert ("$r" -match '^Objects are not equal:\r?\nA: ps \[string\]\r?\nB: PS \[string\]$')
 }

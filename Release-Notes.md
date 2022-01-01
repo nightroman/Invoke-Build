@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.8.8
+
+Work around potential strict mode issues, #190.
+
 ## v5.8.7
 
 Add parameter `ShowParameter` to `Build-Parallel`, #189.

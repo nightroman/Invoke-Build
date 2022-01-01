@@ -42,7 +42,8 @@ function Get-BuildFile($Path) {
 if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
-$_ = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
+$p = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
+$c, $r = $null
 New-Variable * -Description IB ([PSCustomObject]@{
 	All = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Tasks = [System.Collections.Generic.List[object]]@()
@@ -60,7 +61,7 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	CD = $OriginalLocation = *Path
 	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
 	SP = @{}
-	P = $_
+	P = $p
 	A = 1
 	B = 0
 	Q = 0
@@ -71,8 +72,8 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	ExitTask = $null
 	EnterJob = $null
 	ExitJob = $null
-	Header = if ($_) {$_.Header} else {{Write-Build 11 "Task $($args[0])"}}
-	Footer = if ($_) {$_.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
+	Header = if ($p) {$p.Header} else {{Write-Build 11 "Task $($args[0])"}}
+	Footer = if ($p) {$p.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
 	Data = @{}
 	XBuild = $null
 	XCheck = $null
@@ -111,7 +112,7 @@ if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 	& $BuildFile
 	throw 'Invalid script.'
 }
-if ($_.get_Count()) {&{
+if ($_.get_Count()) {
 	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
 	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
 	foreach($p in $_.get_Values()) {
@@ -121,7 +122,7 @@ if ($_.get_Count()) {&{
 		}
 	}
 	${*}.DP
-}}
+}
 
 } end {
 
@@ -630,7 +631,7 @@ foreach($_ in ${*}.DP.get_Values()) {
 if (${*}.Q = $BuildTask -eq '?' -or $BuildTask -eq '??') {
 	$WhatIf = $true
 }
-Remove-Variable Task, File, Result, Safe, Summary
+Remove-Variable Task, File, Result, Safe, Summary, p, c, r
 
 ${*}.Error = $null
 try {
