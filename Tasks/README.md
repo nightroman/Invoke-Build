@@ -20,3 +20,8 @@
 - [File](File) shows the custom task `file`, an incremental task with simplified syntax, somewhat similar to Rake's `file`.
 - [Repeat](Repeat) shows the custom task `repeat` which is invoked periodically in a build script (schedule) with such tasks.
 - [Retry](Retry) shows the custom task `retry` which retries its action on failures several times depending on parameters.
+
+## Known issues
+
+- [Problematic `:` in dynamic `-Param:Value`](Bugs/DynamicParamColon/README.md)
+- [Dynamic switch parameter issue](Bugs/DynamicParamSwitch/README.md)
