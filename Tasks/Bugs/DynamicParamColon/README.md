@@ -42,4 +42,4 @@ Invoke-Build clean, build -Configuration:Release
 
 ## See also
 
-- [DynamicParamSwitch](../DynamicParamSwitch/README.md)
+- [DynamicParamSwitch](../DynamicParamSwitch)

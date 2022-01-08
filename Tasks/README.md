@@ -23,5 +23,5 @@
 
 ## Known issues
 
-- [Problematic `:` in dynamic `-Param:Value`](Bugs/DynamicParamColon/README.md)
-- [Dynamic switch parameter issue](Bugs/DynamicParamSwitch/README.md)
+- [Problematic `:` in dynamic `-Param:Value`](Bugs/DynamicParamColon)
+- [Dynamic switch parameter issue](Bugs/DynamicParamSwitch)

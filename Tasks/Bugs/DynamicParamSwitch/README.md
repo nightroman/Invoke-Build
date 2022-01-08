@@ -28,7 +28,7 @@ Example: [Test-2-ok.ps1](Test-2-ok.ps1)
 Invoke-Build -Extra -Task clean, build
 ```
 
-(1) Use named parameters before dynamic switches.
+(2) Use named parameters before dynamic switches.
 Example: [Test-3-ok.ps1](Test-3-ok.ps1)
 
 ```powershell
@@ -37,4 +37,4 @@ Invoke-Build clean, build -Extra
 
 ## See also
 
-- [DynamicParamColon](../DynamicParamColon/README.md)
+- [DynamicParamColon](../DynamicParamColon)
