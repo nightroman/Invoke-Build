@@ -26,9 +26,9 @@ try {
 	${*data} = @{
 		Task = $Task
 		XBuild = {
-			$Task = ${*data}.Task
+			$tasks = ${*data}.Task
 			foreach($_ in ${*}.All.get_Values()) {
-				if ($Task -notcontains $_.Name) {
+				if ($tasks -notcontains $_.Name) {
 					$_.If = 0
 				}
 			}

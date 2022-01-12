@@ -124,11 +124,6 @@ task AllTestScripts {
 	assert ($Result.Tasks.Count -gt 0)
 }
 
-# Synopsis: Test persistent builds.
-task Checkpoint {
-	Invoke-Build test Checkpoint.build.ps1
-}
-
 # Synopsis: Test conditional tasks.
 # It also shows how to invoke build scripts with parameters.
 task Conditional {
@@ -221,6 +216,7 @@ task TestFunctions {
 		'Add-BuildTask'
 		'Assert-Build'
 		'Assert-BuildEquals'
+		'Confirm-Build'
 		'Enter-Build'
 		'Enter-BuildJob'
 		'Enter-BuildTask'
@@ -284,7 +280,11 @@ task TestVariables {
 				'Job' { 'Job - the current job' }
 				'Task' { 'Task - the current task' }
 				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
-				default { Write-Warning "Unknown variable '$_'." }
+				# release script
+				'*checkpoint' {}
+				'NuGetApiKey' {}
+				'PSGalleryApiKey' {}
+				default { Write-Warning "Unknown variable '$_'" }
 			}
 		}
 	}}
@@ -327,7 +327,6 @@ task Tests `
 Dummy1,
 Dummy2,
 AllTestScripts,
-Checkpoint,
 Conditional,
 Dynamic,
 TestDefaultParameter,

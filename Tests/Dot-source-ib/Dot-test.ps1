@@ -64,6 +64,7 @@ $OK = $(
 	'Add-BuildTask'
 	'Assert-Build'
 	'Assert-BuildEquals'
+	'Confirm-Build'
 	'Get-BuildError'
 	'Get-BuildFile'
 	'Get-BuildProperty'

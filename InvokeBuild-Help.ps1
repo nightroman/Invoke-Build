@@ -40,6 +40,7 @@
 		use       (Use-BuildAlias)
 		error     (Get-BuildError)
 
+		Confirm-Build
 		Get-BuildSynopsis
 		Resolve-MSBuild
 		Set-BuildFooter
@@ -90,6 +91,9 @@
 
 		- Error - task error or null
 		- Elapsed - [TimeSpan], task duration
+
+	$Task is also defined in the script scope. It has the only property Name
+	which is set to $BuildFile, the build script path.
 
 	BUILD BLOCKS
 
@@ -1022,6 +1026,39 @@
 	)
 }
 
+### Confirm-Build
+@{
+	command = 'Confirm-Build'
+	synopsis = 'Prompts to confirm an operation.'
+
+	description = @'
+	This function prints the prompt and options: [Y] Yes [N] No [S] Suspend.
+	Choose Y to continue or N to skip. [S] enters the nested prompt, you may
+	invoke some commands end then `exit`.
+
+	Confirm-Build must not be called during non interactive builds. Scripts
+	should take care of this. For example, add the switch $Quiet and define
+	Confirm-Build as "Yes to All":
+
+		if ($Quiet) {function Confirm-Build {$true}}
+'@
+
+	parameters = @{
+		Query = @'
+The confirmation query.
+If it is omitted or empty, "Continue with this operation?" is used.
+'@
+		Caption = @'
+The confirmation caption.
+If it is omitted, the current task or script name is used.
+'@
+	}
+
+	outputs = @{
+		type = 'Boolean'
+	}
+}
+
 ### Write-Build
 @{
 	command = 'Write-Build'
@@ -1142,8 +1179,8 @@
 	description = @'
 	This command invokes the build specified by the hashtable Build so that it
 	writes checkpoints to the file specified by Checkpoint. If the build fails
-	then it may be resumed later, use the switch Resume in addition to the
-	original Checkpoint parameter. The build is resumed at the failed task.
+	then it may be resumed later, use the switch Resume or Auto in addition to
+	Checkpoint. The build resumes at the stopped task.
 
 	Not every build may be persistent, right away or at all:
 
@@ -1156,7 +1193,7 @@
 
 	By default, the command saves and restores build tasks, script path, and
 	all parameters declared by the build script, not just specified by Build.
-	Tip: consider to declare some script variables as artificial parameters
+	Tip: consider declaring some script variables as artificial parameters
 	in order to make them persistent.
 
 	If this is not enough for saving and restoring the build state then use
@@ -1190,13 +1227,20 @@
 '@
 		Build = @'
 		Specifies the build and script parameters. WhatIf is not supported.
-		On Resume tasks, script path, and script parameters are ignored.
+
+		When the build resumes by Resume or Auto, fields Task, File, and script
+		parameters are ignored. Fields Result, Safe, Summary are still used.
 '@
 		Preserve = @'
 		Tells to preserve the checkpoint file on successful builds.
 '@
 		Resume = @'
 		Tells to resume the build from the existing checkpoint file.
+		With Auto, this switch is ignored.
+'@
+		Auto = @'
+		Tells to start a new build if the checkpoint file is not found or
+		resume the build from the found checkpoint file.
 '@
 	}
 	outputs = @{

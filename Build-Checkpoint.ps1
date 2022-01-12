@@ -16,7 +16,8 @@ param(
 	[Parameter(Position=0, Mandatory=1)][string]$Checkpoint,
 	[Parameter(Position=1)][hashtable]$Build,
 	[switch]$Preserve,
-	[switch]$Resume
+	[switch]$Resume,
+	[switch]$Auto
 )
 
 try {
@@ -34,6 +35,10 @@ ${*checkpoint} = @{
 	Data = $null
 }
 $Build.Remove('Result')
+
+if ($Auto) {
+	$Resume = [System.IO.File]::Exists($Checkpoint)
+}
 
 if ($Resume) {
 	if (![System.IO.File]::Exists($Checkpoint)) {throw "Missing checkpoint '$Checkpoint'."}
@@ -87,7 +92,7 @@ ${*checkpoint}.XCheck = {
 }
 
 $_ = $Build
-Remove-Variable Checkpoint, Build, Preserve, Resume
+Remove-Variable Checkpoint, Build, Preserve, Resume, Auto
 
 Set-Alias Invoke-Build (Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1)
 Invoke-Build @_ -Result ${*checkpoint}

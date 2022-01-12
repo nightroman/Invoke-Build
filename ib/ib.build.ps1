@@ -8,7 +8,7 @@ param(
 	[string]$Configuration = 'Release'
 )
 
-$VersionPatch = 0
+Set-StrictMode -Version Latest
 
 # Synopsis: Remove files.
 task clean {
@@ -17,11 +17,10 @@ task clean {
 
 # Synopsis: Set $script:Version.
 task version {
-	$r = switch -Regex -File ../Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}}
-	($script:Version = "$r.$VersionPatch")
+	($script:Version = switch -Regex -File ../Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}})
 }
 
-# Synopsis: Set $script:Version.
+# Synopsis: Copy module files.
 task content -If (!(Test-Path content)) {
 	Invoke-Build module ..\.build.ps1
 }
@@ -30,6 +29,12 @@ task content -If (!(Test-Path content)) {
 task nuget version, content, {
 	$env:NoWarn = 'NU5110,NU5111'
 	exec { dotnet pack -c $Configuration -p:VersionPrefix=$Version -o . }
+}
+
+# Synopsis: Push NuGet package.
+task pushNuGet nuget, {
+	if (!($NuGetApiKey = property NuGetApiKey '')) { $NuGetApiKey = Read-Host NuGetApiKey }
+	exec { nuget push "ib.$Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
 }
 
 # Synopsis: Install the tool from package.

@@ -317,6 +317,11 @@ function Set-BuildFooter([Parameter()][scriptblock]$Script) {${*}.Footer = $Scri
 function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
 
 #.ExternalHelp InvokeBuild-Help.xml
+function Confirm-Build([Parameter()][string]$Query, [string]$Caption=$Task.Name) {
+	$PSCmdlet.ShouldContinue($Query, $Caption)
+}
+
+#.ExternalHelp InvokeBuild-Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	$i = $Host.UI.RawUI
 	$_ = $i.ForegroundColor
@@ -653,6 +658,7 @@ try {
 	function Set-BuildData([Parameter()]$Key, $Value) {${*}.Data[$Key] = $Value}
 
 	*SL ($BuildRoot = if ($BuildFile) {Split-Path $BuildFile} else {${*}.CD})
+	New-Variable Task @{Name = $BuildFile} -Option Constant
 	$_ = ${*}.SP
 	${private:**} = @(. ${*}.File @_)
 	foreach($_ in ${**}) {

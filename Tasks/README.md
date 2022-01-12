@@ -3,6 +3,7 @@
 ## Techniques
 
 - [Attributes](Attributes) How to use custom attributes with task actions.
+- [Confirm](Confirm) How to use `Confirm-Build` to confirm some tasks.
 - [Direct](Direct) How to make build scripts invokable directly.
 - [Dynamic](Dynamic) How to use a dynamic script with dynamic tasks.
 - [Header](Header) How to define custom task headers and footers.
@@ -15,12 +16,11 @@
 
 ## Custom tasks
 
-- [Ask](Ask) shows the custom task `ask` which asks for the confirmation.
-- [Check](Check) shows the custom task `check` which is invoked once even if a build script (check list) is invoked repeatedly.
+- [Check](Check) shows the custom task `check` which is invoked once even if a build (check list) is invoked repeatedly.
 - [File](File) shows the custom task `file`, an incremental task with simplified syntax, somewhat similar to Rake's `file`.
 - [Repeat](Repeat) shows the custom task `repeat` which is invoked periodically in a build script (schedule) with such tasks.
 - [Retry](Retry) shows the custom task `retry` which retries its action on failures several times depending on parameters.
 
 ## Known issues
 
-- [Bugs](Bugs) Known issues and workarounds
+- [Bugs](Bugs) Known issues and workarounds.

@@ -40,7 +40,7 @@ task WhatIf -If ($Version -ne 2) {
 
 # used to fail
 task Build-Checkpoint {
-	Build-Checkpoint.ps1 -Checkpoint z.clixml
+	Build-Checkpoint -Checkpoint z.clixml
 }
 
 # used to build all except `values` instead of just `.`

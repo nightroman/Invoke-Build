@@ -1,5 +1,18 @@
 # Invoke-Build Release Notes
 
+## v5.9.0
+
+New switch `Auto` of `Build-Checkpoint`.
+
+New build script helper `Confirm-Build`
+
+- See *Tasks/Confirm* for `Confirm-Build` demo and notes
+- *Tasks/Confirm* replaces its predecessor *Tasks/Ask*
+
+The build variable `$Task` previously defined for tasks is also defined in the
+script scope. It has the only property `Name` set to `$BuildFile`, the build
+script path. Scripts should not set this variable or change its content.
+
 ## v5.8.8
 
 Work around potential strict mode issues, #190.
