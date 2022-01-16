@@ -1,0 +1,19 @@
+name: test5
+
+on:
+  push:
+    branches: [ master, test ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test5:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: boot
+        shell: powershell
+        run: ./Invoke-Build.ps1 boot
+      - name: test
+        shell: powershell
+        run: ./Invoke-Build.ps1 . Tests/.build.ps1

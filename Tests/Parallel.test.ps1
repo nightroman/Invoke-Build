@@ -142,9 +142,14 @@ ERROR: Build timed out.*
 '@))
 
 	# Check the log files: the first is complete, the others are not.
-	assert ((Get-Content z.1)[-1] -like 'Build succeeded. 1 tasks, 0 errors, 0 warnings *')
-	assert (!(Test-Path z.2) -or (Get-Content z.2)[-1] -eq 'begin - начало')
-	assert (!(Test-Path z.2) -or (Get-Content z.3)[-1] -eq 'begin - начало')
+	$build_succeeded = 'Build succeeded. 1 tasks, 0 errors, 0 warnings *'
+	# log 1
+	$lines = Get-Content z.1
+	assert ($lines -contains 'end - конец')
+	assert ($lines[-1] -like $build_succeeded)
+	# log 2 and 3
+	assert (!(Test-Path z.2) -or (Get-Content z.2)[-1] -notlike $build_succeeded)
+	assert (!(Test-Path z.3) -or (Get-Content z.3)[-1] -notlike $build_succeeded)
 	Remove-Item z.?
 
 	# v4.1.1 Was 3. We now drop incomplete results.
