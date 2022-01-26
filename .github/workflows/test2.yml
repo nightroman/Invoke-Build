@@ -1,8 +1,9 @@
 name: test2
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ master, test ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
