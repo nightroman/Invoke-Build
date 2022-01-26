@@ -35,10 +35,17 @@ task Warnings {
 
 	# output
 	assert ($r[-5] -cmatch '^WARNING: .*Errors\.test\.ps1:\d+$')
-	equals $r[-4] demo-file-warning
 	assert ($r[-3] -cmatch '^WARNING: /t1 .*Errors\.test\.ps1:\d+$')
-	equals $r[-2] demo-task-warning
-	assert ($r[-1] -clike 'Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *')
+	if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -eq 'Ansi') {
+		equals $r[-4] "`e[93mdemo-file-warning`e[0m"
+		equals $r[-2] "`e[93mdemo-task-warning`e[0m"
+		assert ($r[-1] -clike "*Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *")
+	}
+	else {
+		equals $r[-4] demo-file-warning
+		equals $r[-2] demo-task-warning
+		assert ($r[-1] -clike 'Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *')
+	}
 
 	# result
 	equals $Result.Warnings.Count 2

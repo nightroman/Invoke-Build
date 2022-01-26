@@ -4,8 +4,8 @@
 # - Invoke-TaskFromVSCode.ps1
 # - Invoke-Build.ArgumentCompleters.ps1
 
+. ..\Shared.ps1
 $Version = $PSVersionTable.PSVersion.Major
-$IsUnix = $PSVersionTable['Platform'] -eq 'Unix'
 
 # used to fail
 task parameters {
@@ -35,6 +35,7 @@ task WhatIf -If ($Version -ne 2) {
 	($r = Invoke-Build -WhatIf | Out-String)
 	$r = $r -replace ' '
 	$r = $r -replace '\r?\n', '|'
+	$r = Remove-Ansi $r
 	assert ($r.Contains('|Parameters:|[Object]Count|[Object]Keys|[Object]Values|Environment:|Count,Keys,Values|'))
 }
 

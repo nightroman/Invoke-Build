@@ -6,6 +6,10 @@
 $IsUnix = $PSVersionTable['Platform'] -eq 'Unix'
 $Separator = if ($IsUnix) {'/'} else {'\'}
 
+function Remove-Ansi($text) {
+	$text -replace "`e\[\d+m"
+}
+
 function Replace-NL($text) {
 	$text.Replace("`r`n", "`n")
 }

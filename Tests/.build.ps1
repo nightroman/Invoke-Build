@@ -37,14 +37,14 @@ $MyPath = $MyInvocation.MyCommand.Path
 equals $MyPath $BuildFile
 equals (Split-Path $MyPath) $BuildRoot
 
-# In order to import more tasks invoke the script containing them. *.tasks.ps1
-# files play the same role as MSBuild *.targets files. NOTE: It is not typical
-# but imported tasks may use parameters and values as well. In this case task
-# scripts should be dot-sourced.
+# In order to import more tasks, simply invoke a script with them.
+# *.tasks.ps1 files play the same role as MSBuild *.targets files.
 .\Shared.tasks.ps1
 
 # This block is called before the first task.
 Enter-Build {
+	. .\Shared.ps1
+
 	# show the current version
 	"PowerShell version: $($PSVersionTable.PSVersion)"
 
@@ -58,9 +58,8 @@ Enter-Build {
 	Write-Warning 'Ignore this warning.'
 }
 
-Set-BuildHeader {
-	Write-Build 11 "Task $($args[0]) *".PadRight(79, '*')
-}
+# Custom task headers.
+Set-BuildHeader { Write-Build 11 "Task $($args[0]) *".PadRight(79, '*') }
 
 # Synopsis: "Invoke-Build ?[?]" lists tasks.
 # 1) show tasks with brief information
@@ -201,7 +200,8 @@ task TestStartJob -If ($PSVersionTable.PSVersion.Major -ne 2 -or !$env:GITHUB_AC
     $log = Wait-Job $job | Receive-Job
     Remove-Job $job
     $log
-    assert ($log[-1].StartsWith('Build succeeded. 5 tasks'))
+    $info = Remove-Ansi $log[-1]
+    assert ($info.StartsWith('Build succeeded. 5 tasks'))
 }
 
 # Synopsis: Invoke-Build should expose only documented functions.
@@ -238,6 +238,11 @@ task TestFunctions {
 		'Write-Build'
 		'Write-Warning'
 		'job'
+		# shared
+		'Remove-Ansi'
+		'Replace-NL'
+		'Set-Mock'
+		'Test-MSBuild'
 	)
 	Get-Command -CommandType Function | .{process{
 		if (($list -notcontains $_.Name) -and ($_.Name[0] -ne '*')) {
@@ -265,6 +270,9 @@ task TestVariables {
 		'PSItem'
 		'PWD'
 		'this'
+		# shared
+		'IsUnix'
+		'Separator'
 		# other variables
 		'VSSetupVersionTable'
 	)

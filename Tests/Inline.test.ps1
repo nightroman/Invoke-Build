@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests samples Tasks/Inline
@@ -24,12 +23,14 @@ task app1 {
 
 task app2 {
 	($r = ../Tasks/Inline/app2.ps1)
+	$r = Remove-Ansi $r
 	equals $log.ToString() '@Test'
 	assert ($r -contains '# Synopsis: Some task.')
 }
 
 task app3 {
 	($r = ../Tasks/Inline/app3.ps1)
+	$r = Remove-Ansi $r
 	equals $r[-4] 'Build summary:'
 	assert ($r[-3] -like '00:00:00* TestBuildFile - *app3.ps1:*')
 	assert ($r[-2] -like '00:00:00* TestBuildRoot - *app3.ps1:*')

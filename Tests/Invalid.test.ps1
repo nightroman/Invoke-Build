@@ -31,6 +31,7 @@ task NoTasks {
 	# build
 	$e = 0
 	($r = try {Invoke-Build . {} -Result result} catch {$e = $_})
+	$r = Remove-Ansi $r
 	Write-Build Magenta ($e | Out-String)
 
 	# caught error
@@ -142,6 +143,7 @@ task DanglingScriptblock {
 
 	$err = ''
 	($r = try {Invoke-Build . $file} catch {$err = $_})
+	$r = Remove-Ansi $r
 	assert (($r | Out-String) -like "ERROR: Dangling scriptblock at *${Separator}Invalid.test.ps1:*Build ABORTED *${Separator}Invalid.test.ps1. 0 tasks*")
 
 	$err

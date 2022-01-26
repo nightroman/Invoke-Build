@@ -3,6 +3,8 @@
 	Tests the sample Tasks/Header
 #>
 
+. .\Shared.ps1
+
 # Define headers as task path, synopsis, and location, e.g. for Ctrl+Click in VSCode
 Set-BuildHeader {
     param($Path)
@@ -16,6 +18,7 @@ task Sample {
 	($r = Invoke-Build * ../Tasks/Header/1.build.ps1)
 
 	# test custom headers (added synopsis)
+	$r = Remove-Ansi $r
 	assert ($r -contains 'Task /Task1/Task2 : Some task description 2.')
 	assert ($r -contains 'Task /Task1 : Some task description 1.')
 

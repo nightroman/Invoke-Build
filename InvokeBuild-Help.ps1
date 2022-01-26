@@ -1066,12 +1066,13 @@ If it is omitted, the current task or script name is used.
 
 	description = @'
 	This function is used in order to output colored text in a console or other
-	hosts with colors. Unlike Write-Host it is suitable for redirected output,
-	e.g. to a file. If a host does not have colors then just text is written.
+	hosts with colors. Unlike Write-Host it is suitable for redirected output.
 
 	Write-Build is designed for use in tasks and build blocks. Do not use it in
-	functions and scripts with returned results. Write-Host may be used in some
-	cases instead, with known limitations.
+	functions and scripts with returned results. Write-Host may help sometimes.
+
+	With PowerShell 7.2+ and $PSStyle.OutputRendering ANSI, Write-Build uses
+	ANSI escape sequences.
 '@
 
 	parameters = @{

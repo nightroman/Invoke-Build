@@ -200,10 +200,10 @@ task test5 {
 	Remove-Item $resultPath
 }
 
-# Synopsis: Test with PowerShell v6.
-task test7 -If $env:pwsh {
+# Synopsis: Test with PS Core.
+task test7 {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec {& $env:pwsh -NoProfile -Command Invoke-Build test5 $diff}
+	exec {pwsh -NoProfile -Command Invoke-Build test5 $diff}
 }
 
 # Synopsis: Gets dependencies (call by v5+).

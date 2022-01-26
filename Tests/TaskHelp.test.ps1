@@ -85,9 +85,8 @@ task UndocumentedStuff {
 		equals $r.Parameters[0].Name NoTestDiff
 		equals $r.Parameters[0].Type switch
 		equals $r.Parameters[0].Description $null
-		equals $r.Environment.Count 2
+		equals $r.Environment.Count 1
 		equals $r.Environment[0] MERGE
-		equals $r.Environment[1] pwsh
 	}
 	else {
 		equals $r.Parameters.Count 0

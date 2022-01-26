@@ -144,7 +144,7 @@ ERROR: Build timed out.*
 	# Check the log files: the first is complete, the others are not.
 	$build_succeeded = 'Build succeeded. 1 tasks, 0 errors, 0 warnings *'
 	# log 1
-	$lines = Get-Content z.1
+	$lines = Get-Content z.1 | .{process{ Remove-Ansi $_ }}
 	assert ($lines -contains 'end - конец')
 	assert ($lines[-1] -like $build_succeeded)
 	# log 2 and 3

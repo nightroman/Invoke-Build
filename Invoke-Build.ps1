@@ -321,19 +321,27 @@ function Confirm-Build([Parameter()][string]$Query, [string]$Caption=$Task.Name)
 	$PSCmdlet.ShouldContinue($Query, $Caption)
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
-function Write-Build([ConsoleColor]$Color, [string]$Text) {
-	$i = $Host.UI.RawUI
-	$_ = $i.ForegroundColor
-	try {
-		$i.ForegroundColor = $Color
-		$Text
-	}
-	finally {
-		$i.ForegroundColor = $_
+if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -eq 'Ansi') {
+	#.ExternalHelp InvokeBuild-Help.xml
+	function Write-Build([ConsoleColor]$Color, [string]$Text) {
+		"`e[$((30,34,32,36,31,35,33,37,90,94,92,96,91,95,93,97)[$Color])m$Text`e[0m"
 	}
 }
-try {$null = Write-Build 0} catch {function Write-Build($Color, [string]$Text) {$Text}}
+else {
+	#.ExternalHelp InvokeBuild-Help.xml
+	function Write-Build([ConsoleColor]$Color, [string]$Text) {
+		$i = $Host.UI.RawUI
+		$_ = $i.ForegroundColor
+		try {
+			$i.ForegroundColor = $Color
+			$Text
+		}
+		finally {
+			$i.ForegroundColor = $_
+		}
+	}
+	try {$null = Write-Build 0} catch {function Write-Build($Color, [string]$Text) {$Text}}
+}
 
 function *My {
 	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName

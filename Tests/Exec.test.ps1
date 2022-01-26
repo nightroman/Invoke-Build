@@ -93,6 +93,7 @@ task Echo -If ($Major -ge 3) {
 
 	# 1 line
 	($r = exec -echo {  cmd /c echo $script:foo $env:SOME_VAR  } | Out-String)
+	$r = Remove-Ansi $r
 	equals $r (@(
 		'exec { cmd /c echo $script:foo $env:SOME_VAR }'
 		"`$pwd = $pwd"
@@ -106,6 +107,7 @@ task Echo -If ($Major -ge 3) {
 		# bar
 		cmd /c echo $bar $env:SOME_VAR
 	} | Out-String)
+	$r = Remove-Ansi $r
 	equals $r (@(
 		'exec {'
 		'    # bar'
@@ -120,6 +122,7 @@ task Echo -If ($Major -ge 3) {
 	# splatting
 	$param = 'foo', 'bar', 42, 3.14, 'more'
 	($r = exec { cmd /c echo @param } -echo | Out-String)
+	$r = Remove-Ansi $r
 	equals $r (@(
 		'exec { cmd /c echo @param }'
 		"`$pwd = $pwd"
@@ -136,5 +139,6 @@ task ErrorMessage {
 		}
 	}
 	$r
+	$r = Remove-Ansi $r
 	assert ($r[2] -like 'ERROR: Demo ErrorMessage. Command exited with code 42. { $global:LastExitCode = 42 }*')
 }

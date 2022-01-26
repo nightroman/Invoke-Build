@@ -20,6 +20,7 @@ task IncompleteErrorOnSafe {
 		}
 	}
 	($r = Invoke-Build * $file -Safe | Out-String)
+	$r = Remove-Ansi $r
 	assert ($r -cmatch '(?s)^Build test.*Task /test.*ERROR: 42.*At .*[\\/]Fixed\.test\.ps1:.*At .*[\\/]Fixed\.test\.ps1:')
 }
 

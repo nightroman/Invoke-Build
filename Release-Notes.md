@@ -1,5 +1,12 @@
 # Invoke-Build Release Notes
 
+## v5.9.1
+
+With PowerShell 7.2+ and `$PSStyle.OutputRendering` ANSI, `Write-Build` uses
+ANSI escape sequences. As far as `Write-Build` is used by the engine itself,
+build/task headers/footers and build messages are rendered accordingly, for
+example, colored in GitHub workflow terminals.
+
 ## v5.9.0
 
 New switch `Auto` of `Build-Checkpoint`.

@@ -258,6 +258,7 @@ task PartialIncremental49 {
 		task t1 -Partial -Inputs z.New1.tmp, z.Old2.tmp -Outputs z.Old1.tmp, z.New2.tmp {}
 	}
 	($r = Invoke-Build . $file)
+	$r = Remove-Ansi $r
 	equals $r[2] 'Out-of-date outputs: 1/2.'
 }
 task FullIncremental49 {
@@ -265,6 +266,7 @@ task FullIncremental49 {
 		task t1 -Inputs z.New1.tmp, z.Old2.tmp -Outputs z.Old1.tmp, z.New2.tmp {}
 	}
 	($r = Invoke-Build . $file)
+	$r = Remove-Ansi $r
 	equals $r[2] "Out-of-date output 'z.Old1.tmp'."
 }
 
