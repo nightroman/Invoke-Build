@@ -1,5 +1,11 @@
 # Invoke-Build Release Notes
 
+## v5.9.3
+
+Amend `exec -echo` output, use `cd ...`.
+
+Add [Release.build.ps1](Tasks/Release.build.ps1).
+
 ## v5.9.2
 
 Amend `exec -echo` for ANSI rendering, [#192](https://github.com/nightroman/Invoke-Build/issues/192)

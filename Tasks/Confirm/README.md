@@ -33,3 +33,5 @@ unknown time. In this scenario:
 
 As a result, at the confirmation points a user may interrupt the build for
 whatever reason and resume it later from the saved checkpoint.
+
+See [Release.build.ps1](../Release.build.ps1) for a practical example.

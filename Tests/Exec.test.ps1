@@ -96,7 +96,7 @@ task Echo1 -If ($Major -ge 3) {
 	$r = Remove-Ansi $r
 	equals $r (@(
 		'exec {  cmd /c echo $script:foo $env:SOME_VAR  }'
-		"dir: $pwd"
+		"cd $pwd"
 		'$script:foo: foo'
 		'$env:SOME_VAR: SOME_VAR'
 		'foo SOME_VAR'
@@ -113,7 +113,7 @@ task Echo1 -If ($Major -ge 3) {
 		'    # bar'
 		'    cmd /c echo $bar $env:SOME_VAR'
 		'}'
-		"dir: $pwd"
+		"cd $pwd"
 		'$bar: bar'
 		'$env:SOME_VAR: SOME_VAR'
 		'bar SOME_VAR'
@@ -125,7 +125,7 @@ task Echo1 -If ($Major -ge 3) {
 	$r = Remove-Ansi $r
 	equals $r (@(
 		'exec { cmd /c echo @param }'
-		"dir: $pwd"
+		"cd $pwd"
 		'$param: foo bar 42 3.14 more'
 		'foo bar 42 3.14 more'
 	) | Out-String)
@@ -151,7 +151,7 @@ task Echo2 -If ($Major -ge 3) {
 	$r = *Echo {   foo   } | Out-String
 	equals $r.TrimEnd() @"
 exec {   foo   }
-dir: $BuildRoot
+cd $BuildRoot
 "@
 
 	#! 1st line preserved, end spaces resolved
@@ -161,7 +161,7 @@ dir: $BuildRoot
 exec {foo
     bar
 }
-dir: $BuildRoot
+cd $BuildRoot
 "@
 
 	#! preserve leading empty, remove trailing empty, format different indents
@@ -180,6 +180,6 @@ exec {
         2
     }
 }
-dir: $BuildRoot
+cd $BuildRoot
 "@
 }

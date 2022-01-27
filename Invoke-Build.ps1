@@ -254,7 +254,7 @@ function *Echo {
 	else {
 		Write-Build 3 "exec {${*t}}"
 	}
-	Write-Build 8 "dir: $pwd"
+	Write-Build 8 "cd $pwd"
 	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
 		${*p} = ${*v}.Parent
 		if (${*p} -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or ${*p}.Left -ne ${*v}) {
