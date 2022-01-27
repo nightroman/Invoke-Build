@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.9.2
+
+Amend `exec -echo` for ANSI rendering, [#192](https://github.com/nightroman/Invoke-Build/issues/192)
+
 ## v5.9.1
 
 With PowerShell 7.2+ and `$PSStyle.OutputRendering` ANSI, `Write-Build` uses

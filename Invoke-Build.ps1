@@ -235,7 +235,7 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 	${private:*e} = $Echo
 	Remove-Variable Command, ExitCode, ErrorMessage, Echo
 	if (${*e}) {
-		Write-Build 3 (Show-BuildExec ${*c})
+		*Echo ${*c}
 	}
 	& ${*c}
 	if (${*x} -notcontains $global:LastExitCode) {
@@ -243,26 +243,26 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 	}
 }
 
-function Show-BuildExec {($(
-	${private:*c}, $null = $args
-	${private:*t} = "${*c}".Replace("`t", '    ')
-	if (${*t} -match '((?:\r\n|[\r\n])\s+)\S') {
-		'exec {'
-		${*t}.Replace($matches[1], "$([Environment]::NewLine)    ").Trim() -replace '(?s)^', '    '
-		'}'
-	}
-	else {
-		"exec { $(${*t}.Trim()) }"
-	}
-	"`$pwd = $pwd"
-	foreach(${private:*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
-		${private:*p} = ${*v}.Parent
-		if (${*p} -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or ${*p}.Left -ne ${*v}) {
-			${*t} = ${*v}.ToString() -replace '^@', '$'
-			"$(${*t}) = $([scriptblock]::Create(${*t}).InvokeReturnAsIs())"
+function *Echo {
+	${*c} = $args[0]
+	${*t} = "${*c}".Replace("`t", '    ')
+	if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {
+		foreach($_ in "exec {$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n}" -split '\r\n|[\r\n]') {
+			Write-Build 3 $_
 		}
 	}
-) | Out-String).Trim()}
+	else {
+		Write-Build 3 "exec {${*t}}"
+	}
+	Write-Build 8 "dir: $pwd"
+	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
+		${*p} = ${*v}.Parent
+		if (${*p} -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or ${*p}.Left -ne ${*v}) {
+			${*t} = "${*v}" -replace '^@', '$'
+			Write-Build 8 "$(${*t}): $([scriptblock]::Create(${*t}).InvokeReturnAsIs())"
+		}
+	}
+}
 
 #.ExternalHelp InvokeBuild-Help.xml
 function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
