@@ -256,10 +256,9 @@ function *Echo {
 	}
 	Write-Build 8 "cd $pwd"
 	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
-		${*p} = ${*v}.Parent
-		if (${*p} -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or ${*p}.Left -ne ${*v}) {
+		if (${*v}.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
 			${*t} = "${*v}" -replace '^@', '$'
-			Write-Build 8 "$(${*t}): $([scriptblock]::Create(${*t}).InvokeReturnAsIs())"
+			Write-Build 8 "${*t}: $(& ([scriptblock]::Create(${*t})))"
 		}
 	}
 }

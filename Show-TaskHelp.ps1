@@ -103,7 +103,6 @@ $Hash = @{}
 $BuildJobs = @()
 $MapParameter = @{}
 $MapEnvironment = @{}
-$VariableExpressionAst = {$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}
 
 # collect jobs to do in $BuildJobs
 function Add-TaskJob($Jobs, $Task) {
@@ -170,10 +169,8 @@ function Add-VariablePath($Path) {
 }
 
 function Add-BlockVariable($Block) {
-	$variables = $Block.Ast.FindAll($VariableExpressionAst, $true)
-	foreach($variable in $variables) {
-		$parent = $variable.Parent
-		if ($parent -isnot [System.Management.Automation.Language.AssignmentStatementAst] -or $parent.Left -ne $variable) {
+	foreach($variable in $Block.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
+		if ($variable.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
 			Add-VariablePath $variable.VariablePath.UserPath
 		}
 	}

@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.9.4
+
+Tweak getting variable expressions.
+
 ## v5.9.3
 
 Amend `exec -echo` output, use `cd ...`.
