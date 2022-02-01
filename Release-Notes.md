@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.9.5
+
+`Write-Build`: render lines separately, #193
+
 ## v5.9.4
 
 Tweak getting variable expressions.

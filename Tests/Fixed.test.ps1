@@ -560,3 +560,16 @@ task JobAttributes -if ($PSVersionTable.PSVersion.Major -ge 5) {
 	Invoke-Build task1 ../Tasks/Attributes/Attributes.build.ps1
 	equals $log.log init1init2kill1kill2
 }
+
+# Write-Build: render lines separately. #193
+task WriteAnsi {
+	$text = "line1`rline2`nline3`r`nline4"
+	$r = (Write-Build 0 $text) -join '|'
+
+	if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -eq 'Ansi') {
+		equals $r "`e[30mline1`e[0m|`e[30mline2`e[0m|`e[30mline3`e[0m|`e[30mline4`e[0m"
+	}
+	else {
+		equals $r 'line1|line2|line3|line4'
+	}
+}

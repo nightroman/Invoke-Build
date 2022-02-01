@@ -145,7 +145,7 @@ task ErrorMessage {
 
 # #192
 task Echo2 -If ($Major -ge 3) {
-	. Set-Mock Write-Build { $args[1] }
+	. Set-Mock *Write { $args[1] }
 
 	#! 1 line, make 1 leading and trailing space
 	$r = *Echo {   foo   } | Out-String

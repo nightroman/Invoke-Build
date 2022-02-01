@@ -246,14 +246,7 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 function *Echo {
 	${*c} = $args[0]
 	${*t} = "${*c}".Replace("`t", '    ')
-	if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {
-		foreach($_ in "exec {$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n}" -split '\r\n|[\r\n]') {
-			Write-Build 3 $_
-		}
-	}
-	else {
-		Write-Build 3 "exec {${*t}}"
-	}
+	Write-Build 3 "exec {$(if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {"$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n"} else {${*t}})}"
 	Write-Build 8 "cd $pwd"
 	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
 		if (${*v}.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
@@ -320,26 +313,37 @@ function Confirm-Build([Parameter()][string]$Query, [string]$Caption=$Task.Name)
 	$PSCmdlet.ShouldContinue($Query, $Caption)
 }
 
+#.ExternalHelp InvokeBuild-Help.xml
+function Write-Build([ConsoleColor]$Color, [string]$Text) {
+	*Write $Color ($Text -split '\r\n|[\r\n]')
+}
+
 if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -eq 'Ansi') {
-	#.ExternalHelp InvokeBuild-Help.xml
-	function Write-Build([ConsoleColor]$Color, [string]$Text) {
-		"`e[$((30,34,32,36,31,35,33,37,90,94,92,96,91,95,93,97)[$Color])m$Text`e[0m"
+	function *Write($C, $T) {
+		$f = "`e[$((30,34,32,36,31,35,33,37,90,94,92,96,91,95,93,97)[$C])m{0}`e[0m"
+		foreach($_ in $T) {
+			$f -f $_
+		}
 	}
 }
 else {
-	#.ExternalHelp InvokeBuild-Help.xml
-	function Write-Build([ConsoleColor]$Color, [string]$Text) {
+	function *Write($C, $T) {
 		$i = $Host.UI.RawUI
 		$_ = $i.ForegroundColor
 		try {
-			$i.ForegroundColor = $Color
-			$Text
+			$i.ForegroundColor = $C
+			$T
 		}
 		finally {
 			$i.ForegroundColor = $_
 		}
 	}
-	try {$null = Write-Build 0} catch {function Write-Build($Color, [string]$Text) {$Text}}
+	try {
+		$null = *Write 0
+	}
+	catch {
+		function *Write {$args[1]}
+	}
 }
 
 function *My {
@@ -366,10 +370,7 @@ function *At($I) {
 }
 
 function *Msg($M, $I) {
-@"
-$M
-$(*At $I)
-"@
+	"$M`n$(*At $I)"
 }
 
 function *Job($J) {

@@ -62,12 +62,9 @@ function Test-MSBuild([Parameter()]$Path) {
 	$Path
 }
 
-# Simple mock helper. Must be dot-sourced.
-# Arguments:
-# [0]: Command name
-# [1]: Script block
+# Mock helper, dot-sourced. Arguments: [0] command name; [1] script block.
 function Set-Mock {
 	if ($MyInvocation.InvocationName -ne '.') {Write-Error -ErrorAction 1 'Dot-source Set-Mock.'}
+	Set-Content -LiteralPath "function:\Mock-$($args[0])" $args[1]
 	Set-Alias $args[0] "Mock-$($args[0])"
-	Set-Content "function:\Mock-$($args[0])" $args[1]
 }

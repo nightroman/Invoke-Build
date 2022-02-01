@@ -78,16 +78,12 @@ $OK = $(
 	'Write-Build'
 ) -join ','
 $KO = (Get-ChildItem *-Build* -Name | Sort-Object) -join ','
-assert ($OK -ceq $KO) "Unexpected functions:
-OK: [$OK]
-KO: [$KO]"
+equals $OK $KO
 
 # expected internal functions
-$OK = '*Amend,*At,*Check,*Die,*Echo,*Err,*Fin,*Help,*IO,*Job,*Msg,*My,*Path,*Root,*Run,*SL,*Task,*Unsafe'
+$OK = '*Amend,*At,*Check,*Die,*Echo,*Err,*Fin,*Help,*IO,*Job,*Msg,*My,*Path,*Root,*Run,*SL,*Task,*Unsafe,*Write'
 $KO = (Get-ChildItem [*]* -Name | Sort-Object) -join ','
-assert ($OK -ceq $KO) "Unexpected functions:
-OK: [$OK]
-KO: [$KO]"
+equals $OK $KO
 
 Pop-Location
 

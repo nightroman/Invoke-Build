@@ -1068,8 +1068,7 @@ If it is omitted, the current task or script name is used.
 	This function is used in order to output colored text in a console or other
 	hosts with colors. Unlike Write-Host it is suitable for redirected output.
 
-	Write-Build is designed for use in tasks and build blocks. Do not use it in
-	functions and scripts with returned results. Write-Host may help sometimes.
+	Write-Build is designed for tasks and build blocks, not script functions.
 
 	With PowerShell 7.2+ and $PSStyle.OutputRendering ANSI, Write-Build uses
 	ANSI escape sequences.
