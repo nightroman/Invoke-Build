@@ -39,18 +39,20 @@ equals (Split-Path $MyPath) $BuildRoot
 
 # In order to import more tasks, simply invoke a script with them.
 # *.tasks.ps1 files play the same role as MSBuild *.targets files.
+# If a task file sets script scope variables then "dot-source" it.
 .\Shared.tasks.ps1
 
 # This block is called before the first task.
 Enter-Build {
+	# dot-source common functions, import modules, etc.
 	. .\Shared.ps1
 
-	# show the current version
+	# show the version, note: Enter-Build may output, not script
 	"PowerShell version: $($PSVersionTable.PSVersion)"
 
 	# configure test environment
 	if ($env:GITHUB_ACTION) {
-		# add root to the path
+		# add root to the path, as in the author setup
 		$env:Path = "$(Split-Path $BuildRoot);$env:Path"
 	}
 
@@ -58,7 +60,7 @@ Enter-Build {
 	Write-Warning 'Ignore this warning.'
 }
 
-# Custom task headers.
+# Set custom task headers.
 Set-BuildHeader { Write-Build 11 "Task $($args[0]) *".PadRight(79, '*') }
 
 # Synopsis: "Invoke-Build ?[?]" lists tasks.

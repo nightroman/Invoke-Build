@@ -520,8 +520,8 @@ function *Task {
 		}
 		catch {
 			*Err $Task
+			Write-Build 8 (*At $Task)
 			${*}.Tasks.Add($Task)
-			Write-Build 14 (*At $Task)
 			$Task.Elapsed = [TimeSpan]::Zero
 			throw
 		}
@@ -584,6 +584,7 @@ function *Task {
 			}
 			catch {
 				*Err $Task
+				Write-Build 8 (*At $Task)
 				throw
 			}
 			finally {
@@ -598,10 +599,7 @@ function *Task {
 	finally {
 		$Task.Elapsed = [DateTime]::Now - $Task.Started
 		${*}.Tasks.Add($Task)
-		if ($Task.Error) {
-			Write-Build 14 (*At $Task)
-		}
-		else {
+		if (!$Task.Error) {
 			if (${*}.XCheck) {& ${*}.XCheck}
 			& ${*}.Footer ${*p}
 		}

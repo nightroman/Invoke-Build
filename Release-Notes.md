@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.9.6
+
+Amend output on task errors. #194
+
 ## v5.9.5
 
 `Write-Build`: render lines separately, #193
@@ -16,7 +20,7 @@ Add [Release.build.ps1](Tasks/Release.build.ps1).
 
 ## v5.9.2
 
-Amend `exec -echo` for ANSI rendering, [#192](https://github.com/nightroman/Invoke-Build/issues/192)
+Amend `exec -echo` for ANSI rendering, #192
 
 ## v5.9.1
 
