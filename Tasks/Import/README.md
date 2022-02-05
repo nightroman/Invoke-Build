@@ -1,5 +1,4 @@
-
-## How to share and import tasks
+# How to share and import tasks
 
 Tasks designed for sharing are normally defined in standard PowerShell scripts
 with the recommended suffix *.tasks.ps1*. Then these scripts are dot-sourced
@@ -13,18 +12,20 @@ This sample demonstrates:
 
 The build script `.build.ps1` imports tasks from external task scripts.
 
-***
-### EXAMPLE 1. Import from conventional task scripts
+## Example 1. Import from conventional task scripts
 
 Several task scripts are located in the directory *MyScript*. All found there
 `*.tasks.ps1` are imported by dot-sourcing. In practice, where to get such
 files and how to name them is up to authors.
 
-Each sample `*.tasks.ps1` specifies assets of different types by `requires`.
-In practice, assets of different types may be specified together.
+Each sample `*.tasks.ps1` specifies assets of various types by `requires`.
+Assets of different types may be specified in one command:
 
-***
-### EXAMPLE 2. Import from a module with tasks
+```powershell
+requires -Variable ... -Environment ... -Path ...
+```
+
+## Example 2. Import from a module with tasks
 
 The module *MyModule* exports some usual module stuff and also tasks. Due to
 some known module scope features, tasks normally should not be defined in

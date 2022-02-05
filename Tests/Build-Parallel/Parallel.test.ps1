@@ -1,12 +1,9 @@
 ﻿<#
 .Synopsis
-	Tests parallel builds called by Build-Parallel
-
-.Example
-	Invoke-Build * Parallel.test.ps1
+	Tests parallel builds called by Build-Parallel.
 #>
 
-. ./Shared.ps1
+Import-Module ..\Tools
 
 # The build engine defines aliases Invoke-Build and Build-Parallel
 task Alias {
@@ -27,44 +24,36 @@ task NoBuilds {
 # 1. Build-Parallel with 1 build is allowed (but this is not normal).
 # 2. Get the build result using the [ref] variable.
 task OneBuild {
-	#?? V3 does not return anything via [ref]
-	if ($PSVersionTable.PSVersion.Major -ge 3) {
-		$Result = @{}
-	}
-	else {
-		$Result = [ref]$null
-	}
-	Build-Parallel @{File='Dynamic.build.ps1'} -Result $Result
+	$Result = @{}
+	Build-Parallel @{File='..\Dynamic.build.ps1'} -Result $Result
 	equals $Result.Value.Tasks.Count 5
 }
 
 <#
-Invoke several builds (this is normal scenario) with one of them failing (it
-happens and should be tested as well). Each build is defined by a hash with the
-mandatory entry 'File' and optional 'Task' and 'Parameters'. These File, Task,
-and Parameters are used as Invoke-Build parameters.
+Invoke several builds (normal scenario) with one of them failing (it happens).
+Each build is defined by a table with the mandatory entry 'File' and optional
+'Task' and 'Parameters'. They are used as Invoke-Build parameters.
 
 Four parallel builds of this test could be invoked as simple as this
 
 	Build-Parallel @(
-		@{File='Dynamic.build.ps1'}
-		@{File='Safe.test.ps1'; Task='Error1'}
-		@{File='Dynamic.build.ps1'; Task='Task0'}
-		@{File='Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
+		@{File='..\Dynamic.build.ps1'}
+		@{File='..\Safe.test.ps1'; Task='Error1'}
+		@{File='..\Dynamic.build.ps1'; Task='Task0'}
+		@{File='..\Conditional.build.ps1'; Parameters=@{Configuration='Debug'}}
 	)
 
-The test itself does this in much more steps in order to test all the details.
-In most cases the code should not be like test. But this test code shows
-techniques useful for advanced build result analysis.
+But we use more steps in order to test the details and show techniques for
+advanced build result analysis.
 #>
 task Many {
-	# These build parameter hashes are not changed (to be tested).
-	$build0 = @{File='Dynamic.build.ps1'}
-	$build1 = @{File='Safe.test.ps1'; Task='Error1'}
-	$build2 = @{File='Dynamic.build.ps1'; Task='Task0'}
-	$build3 = @{File='Conditional.build.ps1'; Configuration='Debug'}
+	# These build parameter tables are not changed (to be tested).
+	$build0 = @{File='..\Dynamic.build.ps1'}
+	$build1 = @{File='..\Safe.test.ps1'; Task='Error1'}
+	$build2 = @{File='..\Dynamic.build.ps1'; Task='Task0'}
+	$build3 = @{File='..\Conditional.build.ps1'; Configuration='Debug'}
 
-	# But this array items will be replaced with copied and amended hashes:
+	# But these items will be replaced with copied and amended tables:
 	# File is resolved to its full path, added Result contains build results.
 	# NOTE: if [hashtable[]] is omitted then the $build is not changed because
 	# PowerShell converts it to [hashtable[]] and the copy is actually changed.
@@ -85,25 +74,26 @@ task Many {
 	equals $Result.Tasks.Count 8
 	equals $Result.Errors.Count 1
 
-	# Input hashes was not changed.
-	equals $build0.File 'Dynamic.build.ps1'
+	# Input data not changed.
+	equals $build0.File '..\Dynamic.build.ps1'
 
-	# But their copies have amended and new data, for example, File were
-	# resolved to full paths and Result entries were added.
-	assert ($build[0].File -like "*${Separator}Dynamic.build.ps1")
+	# But copies have amended and new data:
+	# - File is resolved to full path
+	assert ([System.IO.Path]::IsPathRooted($build[0].File))
+	# - Result is added
 	assert ($build[0].Result.Value)
 
 	# The call itself failed.
-	assert ($message -like "Failed builds:*Build: *${Separator}Safe.test.ps1*ERROR: Error1*At *${Separator}Safe.test.ps1:*")
+	assert ($message -like "Failed builds:*Build: *$(Get-Separator)Safe.test.ps1*ERROR: Error1*At *$(Get-Separator)Safe.test.ps1:*")
 
-	# Check each build error; note that three builds succeeded because the
+	# Check each build error; note that 3 builds succeeded because the
 	# parallel build engine lets all builds to work, even if some fail.
-	equals $build[0].Result.Value.Error # No error
+	equals $build[0].Result.Value.Error $null # OK
 	assert $build[1].Result.Value.Error # ERROR
-	equals $build[2].Result.Value.Error # No error
-	equals $build[3].Result.Value.Error # No error
+	equals $build[2].Result.Value.Error $null # OK
+	equals $build[3].Result.Value.Error $null # OK
 
-	# Check for task count in the results.
+	# Check result task counts.
 	equals $build[0].Result.Value.Tasks.Count 5
 	equals $build[1].Result.Value.Tasks.Count 1
 	equals $build[2].Result.Value.Tasks.Count 1
@@ -113,18 +103,14 @@ task Many {
 <#
 Invoke three builds with the specified timeout. The first build should
 complete, the other two should be stopped by the engine due to timeout.
-
-Skip this task in problem paths:
-https://connect.microsoft.com/PowerShell/feedback/details/708432
 #>
-task Timeout -If ($BuildRoot -notmatch '[\[\]]') {
-	# Invoke using try..catch because it fails and use log files for outputs.
+task Timeout {
 	$message = ''
 	try {
 		Build-Parallel -Result r -Timeout 500 @(
-			@{File='Shared.tasks.ps1'; Task='Sleep'; SleepMilliseconds=10; Log='z.1'}
-			@{File='Shared.tasks.ps1'; Task='Sleep'; SleepMilliseconds=2000; Log='z.2'}
-			@{File='Shared.tasks.ps1'; Task='Sleep'; SleepMilliseconds=3000; Log='z.3'}
+			@{File='Parallel.build.ps1'; Task='Sleep'; SleepMilliseconds=10; Log='z.1'}
+			@{File='Parallel.build.ps1'; Task='Sleep'; SleepMilliseconds=2000; Log='z.2'}
+			@{File='Parallel.build.ps1'; Task='Sleep'; SleepMilliseconds=3000; Log='z.3'}
 		)
 	}
 	catch {
@@ -133,11 +119,11 @@ task Timeout -If ($BuildRoot -notmatch '[\[\]]') {
 	Write-Build Magenta $message
 
 	# Check the error message.
-	assert ((Replace-NL $message) -like (Replace-NL @'
+	assert ((Format-LF $message) -like (Format-LF @'
 Failed builds:
-Build: *Shared.tasks.ps1
+Build: *Parallel.build.ps1
 ERROR: Build timed out.
-Build: *Shared.tasks.ps1
+Build: *Parallel.build.ps1
 ERROR: Build timed out.*
 '@))
 
@@ -158,7 +144,7 @@ ERROR: Build timed out.*
 
 # Error: invalid MaximumBuilds
 task ParallelBadMaximumBuilds {
-	Build-Parallel -MaximumBuilds 0 @{File='Dynamic.build.ps1'}
+	Build-Parallel -MaximumBuilds 0 @{File='..\Dynamic.build.ps1'}
 }
 
 # Error: Invoke-Build.ps1 is not in the same directory.
@@ -166,7 +152,7 @@ task ParallelBadMaximumBuilds {
 task ParallelMissingEngine -If (!$env:GITHUB_ACTION) {
 	remove z
 	$null = mkdir z
-	Copy-Item ../Build-Parallel.ps1 z
+	Copy-Item ..\..\Build-Parallel.ps1 z
 
 	$command = @"
 `$global:ErrorView = 'NormalView'
@@ -185,21 +171,15 @@ task ParallelMissingFile {
 
 # Error: invalid Parameters type on calling Build-Parallel
 task ParallelBadParameters {
-	Build-Parallel @{File='Dynamic.build.ps1'; Parameters=42}
+	Build-Parallel @{File='..\Dynamic.build.ps1'; Parameters=42}
 }
 
 # Test error cases.
-task ParallelErrorCases @(
-	'?ParallelMissingFile'
-	'?ParallelBadMaximumBuilds'
-	'?ParallelBadParameters'
-	{
-		Test-Error ParallelMissingFile "Missing script '*MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
-		Test-Error ParallelBadMaximumBuilds "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
-		Test-Error ParallelBadParameters `
-		"Failed builds:*Build: *Dynamic.build.ps1*ERROR: Invalid build arguments or script. Error: *parameter name 'Parameters'*"
-	}
-)
+task ParallelErrorCases ?ParallelMissingFile, ?ParallelBadMaximumBuilds, ?ParallelBadParameters, {
+	Test-Error (error ParallelMissingFile) "Missing script '*MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
+	Test-Error (error ParallelBadMaximumBuilds) "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
+	Test-Error (error ParallelBadParameters) "Failed builds:*Build: *Dynamic.build.ps1*ERROR: Invalid build arguments or script. Error: *parameter name 'Parameters'*"
+}
 
 # v2.0.1 - It is fine to omit the key File in build parameters.
 task OmittedBuildParameterFile {
@@ -228,9 +208,8 @@ task OmittedBuildParameterFile {
 
 # Covers #27, [IB] was not found before loading IB.
 task ParallelEmptyRun {
-	$version = $PSVersionTable.PSVersion.Major
 	($r = Invoke-PowerShell -NoProfile -Command 'Build-Parallel.ps1 -Result r; $r.GetType().Name')
-	equals $r $(if ($version -eq 2) {'Hashtable'} else {'PSCustomObject'})
+	equals $r $(if ($PSVersionTable.PSVersion.Major -eq 2) {'Hashtable'} else {'PSCustomObject'})
 }
 
 # Covers #93 with the new switch FailHard.

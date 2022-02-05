@@ -1,10 +1,6 @@
-
 <#
 .Synopsis
 	Tests task parameter splatting.
-
-.Example
-	Invoke-Build * TaskSplat.test.ps1
 #>
 
 task OK {

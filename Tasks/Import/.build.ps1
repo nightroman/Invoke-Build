@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Example of imported tasks and `requires`.
@@ -23,7 +22,7 @@ $MyProp1 = 'prop1'
 $env:MyProp2 = 'prop2'
 
 # Import tasks by dot-sourcing available task scripts
-foreach($file in Get-ChildItem MyScript/*.tasks.ps1) {. $file}
+foreach($file in Get-Item MyScript/*.tasks.ps1) {. $file}
 
 ### EXAMPLE 2. Import from a module with tasks
 
@@ -39,4 +38,4 @@ foreach($file in Get-Command *.tasks -Module MyModule) {. $file}
 ### MAIN SCRIPT. Define own tasks
 
 # Synopsis: This task calls imported tasks.
-task . MyVar, MyEnv, MyProp, MyModuleTask
+task . MyVar, MyEnv, MyProp, MyPath, MyModuleTask

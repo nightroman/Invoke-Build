@@ -1,9 +1,9 @@
 <#
 .Synopsis
-	Test safe jobs.
+	Tests safe jobs.
 #>
 
-. .\Shared.ps1
+Import-Module .\Tools
 
 # This task fails (but increments its call counter).
 $MyCountError1 = 0
@@ -125,7 +125,7 @@ task AlmostSurvives AlmostSurvives1, ?AlmostSurvives2
 
 # Trigger tasks and check for expected results.
 task TestAlmostSurvives ?AlmostSurvives, {
-	Test-Error AlmostSurvives "Error4*At *Safe.test.ps1*'Error4'*OperationStopped*"
+	Test-Error (error AlmostSurvives) "Error4*At *Safe.test.ps1*'Error4'*OperationStopped*"
 }
 
 ### DependsOnFailedDirectlyAndIndirectly

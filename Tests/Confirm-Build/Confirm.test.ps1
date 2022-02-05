@@ -3,7 +3,7 @@
 	Tests Confirm-Build using Tasks/Confirm demo and directly.
 #>
 
-. ../Shared.ps1
+Import-Module ..\Tools
 
 # All Yes due to -Quiet
 task Quiet {
@@ -16,7 +16,9 @@ task Quiet {
 
 # All Yes "interactive"
 task AllYes {
-	. Set-Mock Confirm-Build {$true}
+	Set-Alias Confirm-Build Confirm-Build2
+	function Confirm-Build2 {$true}
+
 	Invoke-Build MakeTea ../../Tasks/Confirm/Confirm.build.ps1 -Result r
 	equals $r.Tasks.Count 3
 	equals $r.Tasks[0].Name BoilWater
@@ -26,14 +28,18 @@ task AllYes {
 
 # Answer No to 1st confirm.
 task No {
-	. Set-Mock Confirm-Build {$false}
+	Set-Alias Confirm-Build Confirm-Build2
+	function Confirm-Build2 {$false}
+
 	Invoke-Build MakeTea ../../Tasks/Confirm/Confirm.build.ps1 -Result r
 	equals $r.Tasks.Count 0
 }
 
 # Answer Yes to 1st (default), No to second (custom).
 task YesNo {
-	. Set-Mock Confirm-Build {param($Query) !$Query}
+	Set-Alias Confirm-Build Confirm-Build2
+	function Confirm-Build2 {param($Query) !$Query}
+
 	Invoke-Build MakeTea ../../Tasks/Confirm/Confirm.build.ps1 -Result r
 	equals $r.Tasks.Count 2
 	equals $r.Tasks[0].Name BoilWater

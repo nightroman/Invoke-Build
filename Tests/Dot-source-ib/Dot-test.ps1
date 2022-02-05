@@ -7,8 +7,7 @@
 	supposed to be invoked by PowerShell.exe, i.e. not from a build script.
 #>
 
-. ../Shared.ps1
-Set-StrictMode -Version Latest
+Import-Module ..\Tools
 
 # to be changed/tested
 Set-Location -LiteralPath $HOME
@@ -114,7 +113,7 @@ assert ($r.InvocationInfo.ScriptName -like '*Dot-test.ps1')
 ($r = property true)
 equals $r $true
 
-if ($IsUnix) {
+if (Test-Unix) {
 	($r = property USER)
 	equals $r $env:USER
 }
@@ -131,7 +130,7 @@ equals "$r" "Missing property 'MissingVariable'."
 assert ($r.InvocationInfo.ScriptName -like '*Dot-test.ps1')
 
 ### use
-if (!$IsUnix) {
+if (!(Test-Unix)) {
 	#! Mind \\Framework(64)?\\ and do not log, avoid diff.
 
 	use 4.0 MSBuild

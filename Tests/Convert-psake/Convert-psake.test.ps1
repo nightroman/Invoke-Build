@@ -1,7 +1,6 @@
-
 <#
 .Synopsis
-	Tests Convert-psake.ps1
+	Tests Convert-psake.ps1.
 #>
 
 # Synopsis: Invoke Convert-psake.ps1. Output is to be compared.

@@ -1,17 +1,13 @@
 <#
 .Synopsis
 	Tests `exec`.
-
-.Example
-	Invoke-Build * Exec.test.ps1
 #>
 
-. ./Shared.ps1
-$Major = $PSVersionTable.PSVersion.Major
+Import-Module .\Tools
 
 task ExecWorksCode0 {
 	$r = exec {
-		if ($IsUnix) {
+		if (Test-Unix) {
 			bash -c 'echo Code0'
 		}
 		else {
@@ -24,7 +20,7 @@ task ExecWorksCode0 {
 
 task ExecWorksCode42 {
 	$r = exec {
-		if ($IsUnix) {
+		if (Test-Unix) {
 			bash -c 'echo Code42&& exit 42'
 		}
 		else {
@@ -37,7 +33,7 @@ task ExecWorksCode42 {
 
 task ExecFailsCode13 {
 	$r = try {
-		if ($IsUnix) {
+		if (Test-Unix) {
 			exec { bash -c "exit 13" }
 		}
 		else {
@@ -46,7 +42,7 @@ task ExecFailsCode13 {
 	} catch {$_}
 	$r
 
-	if ($IsUnix) {
+	if (Test-Unix) {
 		equals "$r" 'Command exited with code 13. { bash -c "exit 13" }'
 	}
 	else {
@@ -67,7 +63,7 @@ task ExecShouldUseGlobalLastExitCode {
 
 	# should fail regardless of local $LASTEXITCODE
 	$r = try {
-		if ($IsUnix) {
+		if (Test-Unix) {
 			exec { bash -c "exit 42" }
 		}
 		else {
@@ -76,7 +72,7 @@ task ExecShouldUseGlobalLastExitCode {
 	} catch {$_}
 	$r
 
-	if ($IsUnix) {
+	if (Test-Unix) {
 		equals "$r" 'Command exited with code 42. { bash -c "exit 42" }'
 	}
 	else {
@@ -85,7 +81,7 @@ task ExecShouldUseGlobalLastExitCode {
 }
 
 # New switch Echo, #176 #179
-task Echo1 -If ($Major -ge 3) {
+task Echo1 -If ($PSVersionTable.PSVersion.Major -ge 3) {
 	# different kind variables
 	$env:SOME_VAR = 'SOME_VAR'
 	$script:foo = 'foo'
@@ -144,8 +140,8 @@ task ErrorMessage {
 }
 
 # #192
-task Echo2 -If ($Major -ge 3) {
-	. Set-Mock *Write { $args[1] }
+task Echo2 -If ($PSVersionTable.PSVersion.Major -ge 3) {
+	function *Write { $args[1] }
 
 	#! 1 line, make 1 leading and trailing space
 	$r = *Echo {   foo   } | Out-String

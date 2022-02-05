@@ -11,9 +11,8 @@
 	tests. But the build itself should not fail, all errors should be caught.
 
 .Example
-	Invoke-Build
-	Assuming Invoke-Build.ps1 is in the system path and the current location is
-	the Tests directory this command invokes the . task from this build script.
+	> Invoke-Build
+	Assuming the current location is Tests.
 #>
 
 # Build scripts can use parameters
@@ -37,15 +36,10 @@ $MyPath = $MyInvocation.MyCommand.Path
 equals $MyPath $BuildFile
 equals (Split-Path $MyPath) $BuildRoot
 
-# In order to import more tasks, simply invoke a script with them.
-# *.tasks.ps1 files play the same role as MSBuild *.targets files.
-# If a task file sets script scope variables then "dot-source" it.
-.\Shared.tasks.ps1
-
 # This block is called before the first task.
 Enter-Build {
 	# dot-source common functions, import modules, etc.
-	. .\Shared.ps1
+	Import-Module .\Tools
 
 	# show the version, note: Enter-Build may output, not script
 	"PowerShell version: $($PSVersionTable.PSVersion)"
@@ -63,10 +57,10 @@ Enter-Build {
 # Set custom task headers.
 Set-BuildHeader { Write-Build 11 "Task $($args[0]) *".PadRight(79, '*') }
 
-# Synopsis: "Invoke-Build ?[?]" lists tasks.
+# Synopsis: "Invoke-Build ?[?]" info tasks.
 # 1) show tasks with brief information
-# 2) get task as an ordered dictionary
-task ListTask {
+# 2) get tasks as ordered dictionary
+task InfoTasks {
 	# show tasks info
 	$r = Invoke-Build ? Assert.test.ps1
 	$r | Out-String
@@ -117,12 +111,17 @@ task ParamsValues2 ParamsValues1, {
 
 # Synopsis: Invoke all tasks in all *.test.ps1 scripts using the special task **.
 # (Another special task * is used to invoke all tasks in one build file).
+# NB We can invoke all tests by one command `Invoke-Build ** ..`, but:
+# - with two commands we test the omitted and specified parameter
+# - we test core features first and demo scripts second
 task AllTestScripts {
 	# ** invokes all *.test.ps1
-	Invoke-Build ** -Result Result
+	Invoke-Build ** -Result Result1
+	Invoke-Build ** ..\Tasks -Result Result2
 
 	# Result can be used with **
-	assert ($Result.Tasks.Count -gt 0)
+	assert ($Result1.Tasks.Count -gt 0)
+	assert ($Result2.Tasks.Count -gt 0)
 }
 
 # Synopsis: Test conditional tasks.
@@ -178,7 +177,7 @@ task TestExitCode {
 # work around "Default Host" exception on setting colors and the case with
 # null $BuildFile.
 task TestSelfAlias {
-	$script = {
+	$log = [PowerShell]::Create().AddScript({
 		${*} = 42
 		Invoke-Build . {
 			task . {
@@ -190,118 +189,20 @@ task TestSelfAlias {
 		}
 		# two errors on setting ForegroundColor
 		foreach($_ in $Error) {"$_"}
-	}
+	}).Invoke() | Out-String
 
-	($log = [PowerShell]::Create().AddScript($script).Invoke() | Out-String)
+	$log
 	assert $log.Contains('Build succeeded')
 }
 
 # Synopsis: Test a build invoked from a background job just to be sure it works.
-task TestStartJob -If ($PSVersionTable.PSVersion.Major -ne 2 -or !$env:GITHUB_ACTION) {
+task TestStartJob -If {$PSVersionTable.PSVersion.Major -ne 2 -or !$env:GITHUB_ACTION} {
     $job = Start-Job { Invoke-Build . $args[0] } -ArgumentList "$BuildRoot\Dynamic.build.ps1"
     $log = Wait-Job $job | Receive-Job
     Remove-Job $job
     $log
     $info = Remove-Ansi $log[-1]
     assert ($info.StartsWith('Build succeeded. 5 tasks'))
-}
-
-# Synopsis: Invoke-Build should expose only documented functions.
-# The test warns about unknowns. In a clean session there must be no warnings.
-task TestFunctions {
-	$list = [PowerShell]::Create().AddScript({ Get-Command -CommandType Function | Select-Object -ExpandProperty Name }).Invoke()
-	$list += 'Format-Error', 'Test-Error', 'Test-Issue'
-	$known = @(
-		# build script and tests
-		'Invoke-MyModuleStuff'
-		# engine tools
-		'Add-BuildTask'
-		'Assert-Build'
-		'Assert-BuildEquals'
-		'Confirm-Build'
-		'Enter-Build'
-		'Enter-BuildJob'
-		'Enter-BuildTask'
-		'Exit-Build'
-		'Exit-BuildJob'
-		'Exit-BuildTask'
-		'Get-BuildError'
-		'Get-BuildFile'
-		'Get-BuildProperty'
-		'Get-BuildSynopsis'
-		'Invoke-BuildExec'
-		'Remove-BuildItem'
-		'Set-BuildData'
-		'Set-BuildHeader'
-		'Set-BuildFooter'
-		'Test-BuildAsset'
-		'Use-BuildAlias'
-		'Write-Build'
-		'Write-Warning'
-		'job'
-		# shared
-		'Remove-Ansi'
-		'Replace-NL'
-		'Set-Mock'
-		'Test-MSBuild'
-	)
-	Get-Command -CommandType Function | .{process{
-		if (($list -notcontains $_.Name) -and ($_.Name[0] -ne '*')) {
-			if ($known -notcontains $_.Name) {
-				Write-Warning "Unknown function '$_'."
-			}
-		}
-	}}
-}
-
-# Synopsis: Invoke-Build should expose only documented variables.
-# The test warns about unknowns. In a clean session there must be no warnings.
-task TestVariables {
-	$MyKnown = [PowerShell]::Create().AddScript({ Get-Variable | Select-Object -ExpandProperty Name }).Invoke()
-	$MyKnown += @(
-		# exposed by the project script
-		'Result'
-		'NoTestDiff'
-		# system variables
-		'_'
-		'foreach'
-		'LASTEXITCODE'
-		'PROFILE'
-		'PSCmdlet'
-		'PSItem'
-		'PWD'
-		'this'
-		# shared
-		'IsUnix'
-		'Separator'
-		# other variables
-		'VSSetupVersionTable'
-	)
-	Get-Variable | .{process{
-		if (($MyKnown -notcontains $_.Name) -and ($_.Name -notlike 'My*')) {
-			switch($_.Name) {
-				# exposed by Invoke-Build
-				'OriginalLocation' { 'OriginalLocation - where build starts - ' + $OriginalLocation }
-				'BuildFile' { 'BuildFile - build script path - ' + $BuildFile }
-				'BuildRoot' { 'BuildRoot - build script root - ' + $BuildRoot }
-				'BuildTask' { 'BuildTask - initial task list - ' + $BuildTask }
-				'*' { '* - internal build data' }
-				'Job' { 'Job - the current job' }
-				'Task' { 'Task - the current task' }
-				'WhatIf' { 'WhatIf - Invoke-Build parameter' }
-				# release script
-				'*checkpoint' {}
-				'NuGetApiKey' {}
-				'PSGalleryApiKey' {}
-				default { Write-Warning "Unknown variable '$_'" }
-			}
-		}
-	}}
-}
-
-# Synopsis: ..\Tasks\StdErr
-task StdErr {
-	Invoke-Build ** ..\Tasks\StdErr
 }
 
 # Synopsis: Show full help.
@@ -332,31 +233,16 @@ task ShowHelp -If (!$env:GITHUB_ACTION) {
 }
 
 # Synopsis: This task calls all test tasks.
-task Tests `
-Dummy1,
-Dummy2,
-AllTestScripts,
-Conditional,
-Dynamic,
-TestDefaultParameter,
-TestExitCode,
-TestSelfAlias,
-TestStartJob,
-TestFunctions,
-TestVariables,
-StdErr
+task Tests Dummy1, Dummy2, AllTestScripts, Conditional, Dynamic, TestDefaultParameter, TestExitCode, TestSelfAlias, TestStartJob
 
-# Synopsis: This is the default task due to its name, by the convention.
-# This task calls all the samples and the main test task.
-task . ParamsValues2, ParamsValues1, SharedTask2, {
-	"In default, script 1"
+# Synopsis: This is the default task due its conventional name.
+# Let's calls the samples and the main test task.
+task . ParamsValues2, ParamsValues1, {
+	"In default, action 1"
 },
 # It is possible to have several script jobs.
 {
-	"In default, script 2"
-	Invoke-Build SharedTask1 Shared.tasks.ps1
+	"In default, action 2"
 },
-# Tasks can be referenced between or after script jobs.
-Tests,
-ListTask,
-ShowHelp
+# Tasks can be referenced between or after actions.
+Tests, InfoTasks, ShowHelp

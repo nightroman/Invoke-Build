@@ -1,10 +1,6 @@
-
 <#
 .Synopsis
-	Tests 'equals'
-
-.Example
-	Invoke-Build * Equals.test.ps1
+	Tests 'equals'.
 #>
 
 task WhyEquals {

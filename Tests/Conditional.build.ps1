@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Example build script with a conditional task.
@@ -16,19 +15,19 @@
 	The script also shows how to use script variables shared between tasks.
 
 .Example
-	# Debug configuration
-	Invoke-Build . Conditional.build.ps1 -Configuration Debug
+	> Invoke-Build . Conditional.build.ps1 -Configuration Debug
+	Build Debug.
 
 .Example
-	# Release configuration
-	Invoke-Build . Conditional.build.ps1 -Configuration Release
+	> Invoke-Build . Conditional.build.ps1 -Configuration Release
+	Build Release.
 #>
 
 param(
 	$Configuration = 'Release'
 )
 
-. .\Shared.ps1
+Import-Module .\Tools
 
 $BeforeConditional = 'To do.'
 $AfterConditional = 'To do.'
@@ -103,6 +102,6 @@ task TestScriptCondition @(
 task ScriptConditionFails -If { throw 'If fails.' } { throw }
 task ScriptConditionFails2 ?ScriptConditionFails, { throw }
 task ConditionalErrors ?ScriptConditionFails2, {
-	Test-Error ScriptConditionFails "If fails.*At *Conditional.build.ps1*'If fails.'*"
-	Test-Error ScriptConditionFails2 "If fails.*At *Conditional.build.ps1*'If fails.'*"
+	Test-Error (error ScriptConditionFails) "If fails.*At *Conditional.build.ps1*'If fails.'*"
+	Test-Error (error ScriptConditionFails2) "If fails.*At *Conditional.build.ps1*'If fails.'*"
 }

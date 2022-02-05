@@ -1,13 +1,10 @@
 <#
 .Synopsis
 	Tests of Resolve-MSBuild.ps1
-
-.Example
-	Invoke-Build * Resolve-MSBuild.test.ps1
 #>
 
-. ./Shared.ps1
-if ($IsUnix) {return task unix}
+Import-Module .\Tools
+if (Test-Unix) {return task unix}
 
 $Program64 = $env:ProgramFiles
 if (!($Program86 = ${env:ProgramFiles(x86)})) {$Program86 = $Program64}
@@ -79,7 +76,8 @@ task test15VSSetup2022 -If $VS2022 {
 }
 
 task test15Guess -If $VS2017 {
-	. Set-Mock Get-MSBuild15VSSetup {}
+	Set-Alias Get-MSBuild15VSSetup Get-MSBuild15VSSetup2
+	function Get-MSBuild15VSSetup2 {}
 
 	$r = Resolve-MSBuild 15.0
 	Test-MSBuild $r
@@ -91,7 +89,8 @@ task test15Guess -If $VS2017 {
 }
 
 task test15Guess2019 -If $VS2019 {
-	. Set-Mock Get-MSBuild15VSSetup {}
+	Set-Alias Get-MSBuild15VSSetup Get-MSBuild15VSSetup2
+	function Get-MSBuild15VSSetup2 {}
 
 	$r = Resolve-MSBuild 16.0
 	Test-MSBuild $r
@@ -103,7 +102,8 @@ task test15Guess2019 -If $VS2019 {
 }
 
 task test15Guess2022 -If $VS2022 {
-	. Set-Mock Get-MSBuild15VSSetup {}
+	Set-Alias Get-MSBuild15VSSetup Get-MSBuild15VSSetup2
+	function Get-MSBuild15VSSetup2 {}
 
 	$r = Resolve-MSBuild 17.0
 	Test-MSBuild $r
@@ -156,7 +156,8 @@ task testAll15 -If ($VS2017 -or $VS2019) {
 }
 
 task testAll14 {
-	. Set-Mock Get-MSBuild15 {}
+	Set-Alias Get-MSBuild15 Get-MSBuild15-2
+	function Get-MSBuild15-2 {}
 
 	$r = Resolve-MSBuild
 	Test-MSBuild $r
@@ -201,7 +202,9 @@ task missingNew {
 }
 
 task missing15 {
-	. Set-Mock Get-MSBuild15 {}
+	Set-Alias Get-MSBuild15 Get-MSBuild15-2
+	function Get-MSBuild15-2 {}
+
 	($r = try {Resolve-MSBuild 15.0} catch {$_})
 	equals "$r" 'Cannot resolve MSBuild 15.0 : The specified version is not found.'
 	equals $r.InvocationInfo.ScriptName $BuildFile
@@ -219,10 +222,10 @@ task alias-of-Resolve-MSBuild {
 }
 
 task Get-MSBuild15VSSetup {
-	. Set-Mock Get-Module {1}
-	. Set-Mock Import-Module {}
-	. Set-Mock Get-VSSetupInstance {$it}
-	. Set-Mock Select-VSSetupInstance {$Input}
+	function Get-Module {1}
+	function Import-Module {}
+	function Get-VSSetupInstance {$it}
+	function Select-VSSetupInstance {$Input}
 
 	function New-It($Product, $InstallationPath, [version]$InstallationVersion='15.0') {
 		$productIns = New-Object psobject
@@ -312,9 +315,10 @@ task Get-MSBuild15VSSetup {
 }
 
 task Get-MSBuild15Guess {
-	. Set-Mock Get-MSBuild15VSSetup {}
-	. Set-Mock Test-Path {$true}
-	. Set-Mock Get-Item {$it}
+	Set-Alias Get-MSBuild15VSSetup Get-MSBuild15VSSetup2
+	function Get-MSBuild15VSSetup2 {}
+	function Test-Path {$true}
+	function Get-Item {$it}
 
     function New-It($FullName, [version]$FileVersion='15.0') {
     	$r = New-Object psobject

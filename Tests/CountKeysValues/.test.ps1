@@ -4,8 +4,7 @@
 # - Invoke-TaskFromVSCode.ps1
 # - Invoke-Build.ArgumentCompleters.ps1
 
-. ..\Shared.ps1
-$Version = $PSVersionTable.PSVersion.Major
+Import-Module ..\Tools
 
 # used to fail
 task parameters {
@@ -31,11 +30,9 @@ task Show-BuildTree {
 }
 
 # used to out funny parameters and environment
-task WhatIf -If ($Version -ne 2) {
+task WhatIf -If ($PSVersionTable.PSVersion.Major -ne 2) {
 	($r = Invoke-Build -WhatIf | Out-String)
-	$r = $r -replace ' '
-	$r = $r -replace '\r?\n', '|'
-	$r = Remove-Ansi $r
+	$r = Remove-Ansi ($r -replace ' ' -replace '\r?\n', '|')
 	assert ($r.Contains('|Parameters:|[Object]Count|[Object]Keys|[Object]Values|Environment:|Count,Keys,Values|'))
 }
 
@@ -71,7 +68,7 @@ task Show-BuildDgml {
 }
 
 # used to show just `values`
-task Show-BuildGraph -If (!$IsUnix -and !$env:GITHUB_ACTION) {
+task Show-BuildGraph -If (!(Test-Unix) -and !$env:GITHUB_ACTION) {
 	Show-BuildGraph.ps1 -NoShow -Output z.dot
 	$r = Get-Content z.dot | Out-String
 	assert ($r.Contains('"." -> count'))
@@ -81,7 +78,7 @@ task Show-BuildGraph -If (!$IsUnix -and !$env:GITHUB_ACTION) {
 }
 
 # used to generate just `values`
-task New-VSCodeTask -If ($Version -ne 2) {
+task New-VSCodeTask -If ($PSVersionTable.PSVersion.Major -ne 2) {
 	New-VSCodeTask.ps1
 	$r = (Get-Content .vscode/tasks.json | Out-String) -replace '\s+', ' '
 	assert ($r.Contains('"label": "count"'))

@@ -1,12 +1,9 @@
 <#
 .Synopsis
 	Tests 'remove'.
-
-.Example
-	Invoke-Build * Remove.test.ps1
 #>
 
-. ./Shared.ps1
+Import-Module .\Tools
 
 # Synopsis: Errors on invalid arguments.
 task InvalidArgument {
@@ -26,13 +23,13 @@ task InvalidArgument {
 	equals "$r" 'Not allowed paths.'
 
 	($r = try {remove Remove.test.ps1, *} catch {$_})
-	assert (Test-Path Remove.test.ps1)
+	requires -Path Remove.test.ps1
 	equals "$r" 'Not allowed paths.'
 }
 
 # Synopsis: Errors on locked items.
 # Unix: "locked" file is removed.
-task ErrorLockedFile -If (!$IsUnix) {
+task ErrorLockedFile -If (!(Test-Unix)) {
 	# create a locked file
 	$writer = [IO.File]::CreateText("$BuildRoot/z.txt")
 	try {
@@ -44,7 +41,7 @@ task ErrorLockedFile -If (!$IsUnix) {
 		## non-terminating error
 		# this will be removed
 		Set-Content z.2.txt 42
-		assert (Test-Path z.2.txt)
+		requires -Path z.2.txt
 		# call with good and locked files
 		$r = remove z.2.txt, z.txt -ea 2 -ev r2 2>&1
 		#! just message or IB source leaks to output
@@ -65,7 +62,7 @@ task ErrorLockedFile -If (!$IsUnix) {
 # https://github.com/PowerShell/PowerShell/issues/6473
 # Test-Path with wildcards cannot find anything hidden.
 # Unix: No .Attributes.
-task HiddenInSubdirectory -If (!$IsUnix) {
+task HiddenInSubdirectory -If (!(Test-Unix)) {
 	# new hidden item in a subdirectory
 	remove z
 	$item = mkdir z\hidden
@@ -92,23 +89,23 @@ task HiddenInSubdirectory -If (!$IsUnix) {
 
 # Support -Verbose, #147
 task Verbose {
-	. Set-Mock Write-Verbose {
+	function Write-Verbose {
 		param($Message, [switch]$Verbose)
 		$log.Add($Message)
 	}
 
 	# with Verbose
 	$log = [System.Collections.Generic.List[object]]@()
-	$Issue147 = 1
-	remove variable:Issue147*, Issue147 -Verbose
+	$env:Issue147 = 1
+	remove env:Issue147*, Issue147 -Verbose
 	$log
 	equals 2 $log.Count
-	equals 'remove: removing variable:Issue147*' $log[0]
+	equals 'remove: removing env:Issue147*' $log[0]
 	equals 'remove: skipping Issue147' $log[1]
 
 	# without Verbose
 	$log = [System.Collections.Generic.List[object]]@()
-	$Issue147 = 1
-	remove variable:Issue147*, Issue147
+	$env:Issue147 = 1
+	remove env:\Issue147*, Issue147
 	equals 0 $log.Count
 }

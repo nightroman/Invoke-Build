@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Tests build result `Errors`.
@@ -10,9 +9,6 @@
 
 	then the variable $Result contains info about the build. Its property
 	Errors is the list of build errors. This script tests these objects.
-
-.Example
-	Invoke-Build * Errors.test.ps1
 #>
 
 # The last task ${*}.Task should be reset before Exit-Build.

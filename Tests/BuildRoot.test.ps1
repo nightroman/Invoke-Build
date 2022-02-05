@@ -8,9 +8,6 @@
 	files in some directories. Their conventional build roots come from the
 	calling scripts. This is not always what the builds require, so use of
 	custom build roots is especially important for script block builds.
-
-.Example
-	Invoke-Build * BuildRoot.test.ps1
 #>
 
 <#

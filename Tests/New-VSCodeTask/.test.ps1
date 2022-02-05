@@ -1,12 +1,11 @@
 <#
 .Synopsis
 	Tests New-VSCodeTask.ps1
-
-.Example
-	Invoke-Build * .test.ps1
 #>
 
-if ($PSVersionTable.PSVersion.Major -lt 3) {return task NotV3}
+if ($PSVersionTable.PSVersion.Major -eq 2) {return task skipV2}
+
+Import-Module ..\Tools
 Set-StrictMode -Off
 
 function Import-Json($Path) {

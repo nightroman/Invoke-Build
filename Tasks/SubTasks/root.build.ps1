@@ -20,8 +20,8 @@ param(
 		$Tasks = $fakeBoundParameters['Tasks']
 		if ($Tasks) {
 			$map = @{deploy='deploy/deploy.build.ps1'; build='src/build.build.ps1'}
-			foreach($task in $Tasks) {
-				$file = $map[$task]
+			foreach($_ in $Tasks) {
+				$file = $map[$_]
 				if ($file) {
 					(Invoke-Build ?? $file).get_Keys()
 				}
@@ -42,8 +42,8 @@ dynamicparam {
 	if ($Tasks) {
 		$skip = 'Tasks', 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
 		$map = @{deploy='deploy/deploy.build.ps1'; build='src/build.build.ps1'}
-		foreach($task in $Tasks) {
-			$file = $map[$task]
+		foreach($_ in $Tasks) {
+			$file = $map[$_]
 			if ($file) {
 				$params = (Get-Command $file).Parameters
 				foreach($p in $params.get_Values()) {

@@ -1,10 +1,6 @@
-
 <#
 .Synopsis
 	Tests tasks altering others by the parameters After and Before.
-
-.Example
-	Invoke-Build * Alter.test.ps1
 #>
 
 # These tasks are to be altered below. Imagine that they are in another script

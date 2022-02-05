@@ -1,10 +1,6 @@
-
 <#
 .Synopsis
 	Tests of Test-BuildAsset (requires).
-
-.Example
-	Invoke-Build * Requires.test.ps1
 #>
 
 task ImportSample {
@@ -13,6 +9,7 @@ task ImportSample {
 	assert ($r -contains 'MyEnv1 = env1')
 	assert ($r -contains 'MyProp1 = prop1')
 	assert ($r -contains 'MyProp2 = prop2')
+	assert ($r -match 'MyPath Length = \d+')
 	assert ($r -contains '@Invoke-MyModuleStuff param1')
 	assert ($r -contains 'MyExtraStuff = stuff1')
 }
@@ -49,6 +46,16 @@ task Environment {
 	requires -Environment miss1
 
 	$env:miss1 = $null
+}
+
+task Path {
+	($r = try {<##> requires -Path miss1} catch {$_})
+	equals "$r" "Missing path 'miss1'."
+	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
+
+	($r = try {<##> requires -Path $BuildRoot, miss1} catch {$_})
+	equals "$r" "Missing path 'miss1'."
+	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
 }
 
 task PropertyVariable {

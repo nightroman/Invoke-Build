@@ -1,14 +1,9 @@
 <#
 .Synopsis
-	Assorted tests, fixed issues..
-
-.Example
-	Invoke-Build * Fixed.test.ps1
+	Assorted tests and fixed issues.
 #>
 
-Set-StrictMode -Version Latest
-
-. ./Shared.ps1
+Import-Module .\Tools
 
 # Synopsis: Fixed incomplete error on Safe.
 # 4.1.0  prints `ERROR: <error> At <position>`, then `At <task>`
@@ -154,7 +149,7 @@ task Fix22 {
 	$env:TestFix22 = 1
 	Build-Checkpoint z.clixml @{Task = '.'; File = 'z.build.ps1'; Safe = $true; Result = 'r'}
 	assert $r.Error
-	assert (Test-Path z.clixml)
+	requires -Path z.clixml
 
 	# resume
 	$env:TestFix22 = ''
@@ -252,7 +247,8 @@ task CurrentTaskError {
 
 # Warn about always skipped double referenced tasks #82
 task WarnDoubleReferenced {
-	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
+	Set-Alias Write-Warning Write-Warning2
+	function Write-Warning2 {param($Message) $log.Add($Message)}
 
 	$log = [System.Collections.Generic.List[object]]@()
 	Invoke-Build . {
@@ -328,7 +324,7 @@ task CheckpontSafeSummaryWhatIf {
 	# test Safe and Summary
 	($r = Build-Checkpoint z.clixml @{Task='*'; File='z.ps1'; Safe=$true; Summary=$true} | Out-String)
 	assert ($r -like '*Oops*Build summary:*Build FAILED. 2 tasks, 1 errors, 0 warnings*')
-	assert (Test-Path z.clixml)
+	requires -Path z.clixml
 
 	# test WhatIf
 	($r = try {Build-Checkpoint z.clixml @{Task='*'; File='z.ps1'; WhatIf=$true}} catch {$_})

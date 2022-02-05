@@ -1,9 +1,6 @@
 <#
 .Synopsis
-	Test Get-BuildSynopsis
-
-.Example
-	Invoke-Build * Synopsis.test.ps1
+	Tests Get-BuildSynopsis.
 #>
 
 # Synopsis: Simple synopsis.

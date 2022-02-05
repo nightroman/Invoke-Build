@@ -1,10 +1,6 @@
-
 <#
 .Synopsis
 	Tests 'assert' and $ErrorActionPreference.
-
-.Example
-	Invoke-Build * Assert.test.ps1
 #>
 
 # $ErrorActionPreference is 'Stop' by default.

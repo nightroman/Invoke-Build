@@ -3,8 +3,7 @@
 	Tests Show-TaskHelp.ps1 (Invoke-Build -WhatIf)
 #>
 
-# Variable info is v3 only.
-$V3 = $PSVersionTable.PSVersion.Major -ge 3
+Import-Module .\Tools
 
 # This script was the first on testing and it caught a few issues.
 task DocumentedStuff {
@@ -79,7 +78,7 @@ task UndocumentedStuff {
 	foreach($job in $r.Jobs) {
 		assert ($job.Location -match '\.build\.ps1:\d+$')
 	}
-	if ($V3) {
+	if ($PSVersionTable.PSVersion.Major -ge 3) {
 		#! fixed .Parameters = 1 object, not array
 		equals $r.Parameters.Count 1
 		equals $r.Parameters[0].Name NoTestDiff
@@ -178,7 +177,7 @@ task IfInputsOutputs {
 
 	# call and test
 	$r = Show-TaskHelp t1 z.ps1 -Format {$args[0]}
-	if ($V3) {
+	if ($PSVersionTable.PSVersion.Major -ge 3) {
 		equals $r.Parameters.Count 3
 		equals $r.Parameters[0].Name If
 		equals $r.Parameters[1].Name Inputs

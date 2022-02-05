@@ -6,21 +6,21 @@
 	If a build script or a task is invalid then build fails on the first issue.
 	In order to test all issues and avoid too many small invalid scripts this
 	script creates and tests temporary scripts, one issue each.
-
-.Example
-	Invoke-Build * Invalid.test.ps1
 #>
 
-. ./Shared.ps1
+Import-Module .\Tools
 
 # Writes a temporary script with an issue, calls it, compares the message.
 function Test($ExpectedPattern, $Script, $Task = '.') {
+	trap { Write-Error $_ }
+
 	# write the temp script
 	$Script > z.build.ps1
 
-	# invoke
-	try { Test-Issue $Task z.build.ps1 $ExpectedPattern }
-	catch { Write-Error -ErrorAction Stop $_ }
+	# run
+	$r = ''
+	try { Invoke-Build $Task z.build.ps1 } catch { $r = $_ }
+	Test-Error $r $ExpectedPattern
 
 	# remove the temp script
 	Remove-Item z.build.ps1
@@ -40,7 +40,7 @@ task NoTasks {
 	equals $e.InvocationInfo.ScriptName $BuildFile
 
 	# 2.10.4, was 0 errors
-	assert ($r -clike "Build ABORTED *${Separator}Invalid.test.ps1. 0 tasks, 1 errors, 0 warnings *")
+	assert ($r -clike "Build ABORTED *$(Get-Separator)Invalid.test.ps1. 0 tasks, 1 errors, 0 warnings *")
 	equals $result.Errors.Count 1
 }
 
@@ -57,7 +57,7 @@ task InvalidJobType {
 
 # Missing task in jobs.
 task TaskNotDefined {
-	Test "Task 'task1': Missing task 'missing'.*At *${Separator}z.build.ps1:*InvalidArgument*" {
+	Test "Task 'task1': Missing task 'missing'.*At *$(Get-Separator)z.build.ps1:*InvalidArgument*" {
 		task TaskNotDefined task1, {}
 		task task1 missing, {}
 	}
@@ -65,21 +65,21 @@ task TaskNotDefined {
 
 # Missing task in After.
 task TaskNotDefinedAfter {
-	Test "Task 'AfterMissing': Missing task 'MissingTask'.*At *${Separator}z.build.ps1*InvalidArgument*" {
+	Test "Task 'AfterMissing': Missing task 'MissingTask'.*At *$(Get-Separator)z.build.ps1*InvalidArgument*" {
 		task AfterMissing -After MissingTask {}
 	}
 }
 
 # Missing task in Before.
 task TaskNotDefinedBefore {
-	Test "Task 'BeforeMissing': Missing task 'MissingTask'.*At *${Separator}z.build.ps1*InvalidArgument*" {
+	Test "Task 'BeforeMissing': Missing task 'MissingTask'.*At *$(Get-Separator)z.build.ps1*InvalidArgument*" {
 		task BeforeMissing -Before MissingTask {}
 	}
 }
 
 # Tasks with a cyclic reference: . -> task1 -> task2 -> task1
 task CyclicReference {
-	Test "Task 'task2': Cyclic reference to 'task1'.*At *${Separator}z.build.ps1:*InvalidArgument*" {
+	Test "Task 'task2': Cyclic reference to 'task1'.*At *$(Get-Separator)z.build.ps1:*InvalidArgument*" {
 		task CyclicReference task1
 		task task1 task2
 		task task2 task1
@@ -88,7 +88,7 @@ task CyclicReference {
 
 # Cyclic references should be caught on ? as well.
 task CyclicReferenceList {
-	Test -Task ? "Task 'test2': Cyclic reference to 'test1'.*At *${Separator}z.build.ps1:*InvalidArgument*" {
+	Test -Task ? "Task 'test2': Cyclic reference to 'test1'.*At *$(Get-Separator)z.build.ps1:*InvalidArgument*" {
 		task test1 test2
 		task test2 test1
 	}
@@ -96,7 +96,7 @@ task CyclicReferenceList {
 
 # Cyclic references should be caught on * as well.
 task CyclicReferenceStar {
-	Test -Task * "Task 'test2': Cyclic reference to 'test1'.*At *${Separator}z.build.ps1:3 *InvalidArgument*" {
+	Test -Task * "Task 'test2': Cyclic reference to 'test1'.*At *$(Get-Separator)z.build.ps1:3 *InvalidArgument*" {
 		task test1 test2
 		task test2 test1
 	}
@@ -105,7 +105,7 @@ task CyclicReferenceStar {
 # On * missing references should be reported with location.
 # On developing v2.14.6 some code used to fail this.
 task MissingReferenceStar {
-	Test -Task * "Task 'bad': Missing task 'missing'.*At *${Separator}z.build.ps1:3 *InvalidArgument*" {
+	Test -Task * "Task 'bad': Missing task 'missing'.*At *$(Get-Separator)z.build.ps1:3 *InvalidArgument*" {
 		task good {}
 		task bad missing
 	}
@@ -116,8 +116,9 @@ task MissingCommaInJobs {
 		task t1 t2 {}
 	}
 
+	Set-Alias Write-Warning Write-Warning2
 	$log = [System.Collections.Generic.List[object]]@()
-	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
+	function Write-Warning2 {param($Message) $log.Add($Message)}
 
 	($r = try {Invoke-Build . $file} catch {$_})
 	equals $r[-1].FullyQualifiedErrorId 'PositionalParameterNotFound,Add-BuildTask'
@@ -138,16 +139,17 @@ task DanglingScriptblock {
 		{bar}
 	}
 
+	Set-Alias Write-Warning Write-Warning2
 	$log = [System.Collections.Generic.List[object]]@()
-	. Set-Mock Write-Warning {param($Message) $log.Add($Message)}
+	function Write-Warning2 {param($Message) $log.Add($Message)}
 
 	$err = ''
 	($r = try {Invoke-Build . $file} catch {$err = $_})
 	$r = Remove-Ansi $r
-	assert (($r | Out-String) -like "ERROR: Dangling scriptblock at *${Separator}Invalid.test.ps1:*Build ABORTED *${Separator}Invalid.test.ps1. 0 tasks*")
+	assert (($r | Out-String) -like "ERROR: Dangling scriptblock at *$(Get-Separator)Invalid.test.ps1:*Build ABORTED *$(Get-Separator)Invalid.test.ps1. 0 tasks*")
 
 	$err
-	assert ("$err" -like "Dangling scriptblock at *${Separator}Invalid.test.ps1:*")
+	assert ("$err" -like "Dangling scriptblock at *$(Get-Separator)Invalid.test.ps1:*")
 	equals $err.InvocationInfo.ScriptName $BuildFile
 
 	equals $log.Count 2

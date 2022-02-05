@@ -275,8 +275,8 @@ function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
-function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$Environment, [string[]]$Property) {
-	Remove-Variable Variable, Environment, Property
+function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$Environment, [string[]]$Path, [string[]]$Property) {
+	Remove-Variable Variable, Environment, Path, Property
 	if ($_ = $PSBoundParameters['Variable']) {foreach($_ in $_) {
 		if ($null -eq ($$ = $PSCmdlet.GetVariableValue($_)) -or '' -eq $$) {*Die "Missing variable '$_'." 13}
 	}}
@@ -285,6 +285,9 @@ function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$
 	}}
 	if ($_ = $PSBoundParameters['Property']) {foreach($_ in $_) {
 		if ('' -eq (Get-BuildProperty $_ '')) {*Die "Missing property '$_'." 13}
+	}}
+	if ($_ = $PSBoundParameters['Path']) {foreach($_ in $_) {
+		if (!(Test-Path -LiteralPath $_)) {*Die "Missing path '$_'." 13}
 	}}
 }
 

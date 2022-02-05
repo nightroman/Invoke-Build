@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.9.7
+
+New parameter `Path` of `requires` (`Test-BuildAsset`).
+
 ## v5.9.6
 
 Amend output on task errors. #194

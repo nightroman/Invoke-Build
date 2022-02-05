@@ -6,9 +6,6 @@
 	Dot-sourcing of Invoke-Build is used not only for getting build commands
 	help. It can be used in normal scripts in order to import the task-like
 	environment and tools.
-
-.Example
-	Invoke-Build * Dot.test.ps1
 #>
 
 # Synopsis: Invokes Dot-test.ps1

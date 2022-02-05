@@ -9,13 +9,10 @@
 	* If a build script changes the location it does not have to restore it.
 	* Conditional tasks, see the parameters -If (...).
 	* Use of several frameworks simultaneously.
-
-.Example
-	Invoke-Build * Use.test.ps1
 #>
 
-. ./Shared.ps1
-if ($IsUnix) {return task unix}
+Import-Module .\Tools
+if (Test-Unix) {return task unix}
 
 $Is64 = [IntPtr]::Size -eq 8
 $Program64 = $env:ProgramFiles

@@ -4,9 +4,6 @@
 
 .Description
 	This script should be called with no parameters.
-
-.Example
-	Invoke-Build * Property.test.ps1
 #>
 
 param(
@@ -15,12 +12,12 @@ param(
 	$Param3 = (property USER missing)
 )
 
-. ./Shared.ps1
+Import-Module .\Tools
 
 equals $Param1 $BuildFile
 equals (property BuildFile) $BuildFile
 
-if ($IsUnix) {
+if (Test-Unix) {
 	equals $Param3 $env:USER
 	equals (property USER) $env:USER
 }

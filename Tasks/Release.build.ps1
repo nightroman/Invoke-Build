@@ -30,7 +30,7 @@ task status -if {ask} {
 
 # Synopsis: Run Invoke-Build tests.
 task test_IB -if {ask} {
-	Invoke-Build . -NoTestDiff
+	Invoke-Build
 }
 
 # Synopsis: Test the ib dotnet tool.

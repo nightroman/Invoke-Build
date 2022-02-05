@@ -3,8 +3,8 @@
 	Tests Invoke-TaskFromISE.ps1
 #>
 
-. ../Shared.ps1
-if ($IsUnix) {return task unix}
+Import-Module ..\Tools
+if (Test-Unix) {return task unix}
 
 . .\Tools.ps1
 

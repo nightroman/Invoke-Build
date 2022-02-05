@@ -3,7 +3,7 @@
 	Tests the sample Tasks/Header
 #>
 
-. .\Shared.ps1
+Import-Module .\Tools
 
 # Define headers as task path, synopsis, and location, e.g. for Ctrl+Click in VSCode
 Set-BuildHeader {

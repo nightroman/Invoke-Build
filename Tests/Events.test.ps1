@@ -7,9 +7,6 @@
 	calling the current location is restored to $BuildRoot.
 
 	Task and job event scopes must be the same for a task.
-
-.Example
-	Invoke-Build * Events.test.ps1
 #>
 
 Set-Location $HOME

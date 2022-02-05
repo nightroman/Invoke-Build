@@ -1,10 +1,6 @@
-
 <#
 .Synopsis
 	Tests Show-BuildTree.ps1.
-
-.Example
-	Invoke-Build * Tree.test.ps1
 #>
 
 function Get-NormalText($_) {
