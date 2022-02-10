@@ -42,10 +42,10 @@ function Format-LF([string]$Text) {
 
 <#
 .Synopsis
-	Removes ANSI escape sequences from string(s).
+	Removes ANSI color escape sequences from string(s).
 #>
 function Remove-Ansi([object]$Text) {
-	$Text -replace "`e\[\d+m"
+	$Text -replace "`e\[[0-9;]*m"
 }
 
 <#

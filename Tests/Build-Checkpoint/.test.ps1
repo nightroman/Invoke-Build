@@ -13,8 +13,9 @@ task Auto {
 		throw
 	}
 	catch {
-		equals "$_" 'Oops task2'
+		$err = $_
 	}
+	equals "$err" 'Oops task2'
 	requires -Path z.clixml
 
 	# call 2 works
@@ -38,8 +39,9 @@ task Resume {
 		throw
 	}
 	catch {
-		equals "$_" 'Oops task2'
+		$err = $_
 	}
+	equals "$err" 'Oops task2'
 	requires -Path z.clixml
 
 	# call 2 works, NB -Build is not required
@@ -58,8 +60,9 @@ task ResumeShouldFailOnMissingFile {
 		throw
 	}
 	catch {
-		equals "$_" "Missing checkpoint '$BuildRoot\missing.clixml'."
+		$err = $_
 	}
+	equals "$err" "Missing checkpoint '$BuildRoot\missing.clixml'."
 }
 
 # Tests the code used for clixml export and import

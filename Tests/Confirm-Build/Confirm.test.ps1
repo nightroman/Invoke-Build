@@ -54,6 +54,7 @@ task setTaskVariableShouldFail {
 		throw
 	}
 	catch {
-		equals "$_" 'Cannot overwrite variable Task because it is read-only or constant.'
+		$err = $_
 	}
+	equals "$err" 'Cannot overwrite variable Task because it is read-only or constant.'
 }

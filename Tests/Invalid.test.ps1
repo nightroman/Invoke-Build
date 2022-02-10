@@ -206,8 +206,9 @@ task DoNotAddTasksAfterLoading {
 		throw
 	}
 	catch {
-		equals "$_" "Task 'bad': Cannot add tasks."
+		$err = $_
 	}
+	equals "$err" "Task 'bad': Cannot add tasks."
 }
 
 # Task names cannot start with `?`.
@@ -219,6 +220,7 @@ task InvalidTaskName {
 		throw
 	}
 	catch {
-		equals "$_" "Task '?bad': Invalid task name."
+		$err = $_
 	}
+	equals "$err" "Task '?bad': Invalid task name."
 }
