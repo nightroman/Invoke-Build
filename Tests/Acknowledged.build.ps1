@@ -1,65 +1,24 @@
-
 <#
 .Synopsis
 	Acknowledged issues and various facts.
+
+.Link
+	https://github.com/nightroman/Invoke-Build/tree/master/Tasks/Bugs
 #>
-
-### Dynamic switch
-
-<#
-Synopsis: Shows why dynamic switches should be used after positional arguments.
-https://github.com/nightroman/Invoke-Build/issues/4
-#>
-task Dynamic-Switch-Issue {
-	# temp directory
-	Push-Location (mkdir z -ErrorAction 0)
-
-	# temp build script
-	{
-		param($Param = 'data1', [switch]$Switch)
-		task task1 {"1 $Param $Switch"}
-		task task2 {"2 $Param $Switch"}
-	} > z.build.ps1
-
-	# Works fine when a dynamic switch is after positional arguments.
-	# The task2 is invoked as expected.
-
-	($r = Invoke-Build task2 -Switch | Out-String)
-	assert ($r -like '*Task /task2*2 data1 True*')
-
-	# Works incorrectly when a dynamic switch is before positional arguments.
-	# The task1 is invoked unexpectedly.
-
-	($r = Invoke-Build -Switch task2 | Out-String)
-	assert ($r -like '*Task /task1*1 data1 True*')
-
-	# Or even fails on parsing the parameters.
-	# Note shifted arguments, z.build.ps1 is treated as an argument of -Task.
-
-	($r = try {Invoke-Build -Switch task2 z.build.ps1} catch {$_})
-	assert ($r -like "*Missing task 'z.build.ps1'*")
-
-	Pop-Location
-	remove z
-}
 
 ### Lost colors
 
-<#
-Synopsis: Invoke-Build output looses colors.
-The culprit is Format-Table -AutoSize.
-Tested with PowerShell v2, v3, v4.
-#>
-task Footer-Lost-Color {
+# Synopsis: Invoke-Build output loses colors.
+# The culprit is Format-Table -AutoSize.
+# Works fine in PS Core with ANSI.
+task footer_lost_color {
 	Get-Process svchost | Format-Table Name, PM -AutoSize
 	Get-Process svchost | Select-Object Name, PM
 }
 
-<#
-Synopsis: Invoke-Build output looses colors - workaround.
-Out-String is recommended with Format-* cmdlets in builds.
-#>
-task Footer-Lost-Color-Workaround {
+# Synopsis: Invoke-Build output loses colors - workaround.
+# Use Out-String after Format-* cmdlets.
+task footer_lost_color_workaround {
 	Get-Process svchost | Format-Table Name, PM -AutoSize | Out-String
 	Get-Process svchost | Select-Object Name, PM | Out-String
 }
@@ -67,35 +26,35 @@ task Footer-Lost-Color-Workaround {
 ### Colors from job builds and remote builds
 
 # Synopsis: Some colored output for other tests.
-task Output-With-Color {
-	Write-Build Magenta 'Output from Output-With-Color'
+task output_with_color {
+	Write-Build Magenta 'Output from output_with_color'
 }
 
 # Synopsis: Colored output of a build started by Start-Job.
-task Output-With-Color-As-Job {
+task output_with_color_as_job {
 	$env:_140620_191326 = $BuildFile
 	$job = Start-Job {
 		Set-StrictMode -Version Latest # does not fail
-		Invoke-Build Output-With-Color $env:_140620_191326
+		Invoke-Build output_with_color $env:_140620_191326
 	}
 	$job | Wait-Job | Receive-Job
 }
 
 # Synopsis: Colored output of a remote build.
-task Output-With-Color-Remote {
+task output_with_color_remote {
 	$BuildFile > $env:TEMP\_140620_191326
 	Invoke-Command -ComputerName $env:COMPUTERNAME -ScriptBlock {
 		Set-StrictMode -Version Latest # does not fail
 		$file = Get-Content $env:TEMP\_140620_191326
-		Invoke-Build Output-With-Color $file
+		Invoke-Build output_with_color $file
 	}
 	Remove-Item $env:TEMP\_140620_191326
 }
 
 ###	How to get Invoke-Build location
 <#
-	This is needed in order to resolve paths to other tools with their
-	locations known to be relative to Invoke-Build.
+	Normal build scripts do not usually need this.
+	But some tests and advanced tools may need this.
 
 	1. In build scripts, tasks, functions:
 
@@ -126,7 +85,7 @@ function Get-IBRootInFunction {
 
 # Synopsis: How to get Invoke-Build directory in a task.
 # It also tests directories got from script and function.
-task How-To-Get-Invoke-Build-Directory {
+task how_to_get_ib_directory {
 	# get it in the task scope
 	$IBRoot2 = Split-Path $MyInvocation.ScriptName
 
@@ -153,10 +112,10 @@ task How-To-Get-Invoke-Build-Directory {
 	- If Condition=true then invoke own tasks.
 	- Invoke AfterTargets always (unlike IB).
 
-	See also #51.
-	See wiki Comparison-with-MSBuild.md
+	https://github.com/nightroman/Invoke-Build/issues/51
+	https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild
 #>
-task Condition-and-related-targets {
+task condition_and_targets {
 	Set-Content z.proj @'
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<Target Name="Test" Condition="false" DependsOnTargets="Target1">
