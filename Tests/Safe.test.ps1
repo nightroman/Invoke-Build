@@ -29,11 +29,11 @@ task Survives1 @(
 	{
 		"After Error1"
 
-		$error1 = error Error1
+		$error1 = Get-BuildError Error1
 		equals $MyCountError1 1
 		equals "$error1" Error1
 
-		$error2 = error Error2
+		$error2 = Get-BuildError Error2
 		equals $MyCountError2 0
 		equals $error2
 	}
@@ -43,7 +43,7 @@ task Survives1 @(
 	{
 		"After Error2"
 
-		$error2 = error Error2
+		$error2 = Get-BuildError Error2
 		equals $MyCountError2 1
 		equals "$error2" Error2
 	}
@@ -59,7 +59,7 @@ task Survives2 @(
 	{
 		"After Error1"
 
-		$error1 = error Error1
+		$error1 = Get-BuildError Error1
 		equals $MyCountError1 1 #! not 2
 		equals "$error1" Error1
 	}
@@ -69,7 +69,7 @@ task Survives2 @(
 	{
 		"After Error2"
 
-		$error2 = error Error2
+		$error2 = Get-BuildError Error2
 		equals $MyCountError2 1 #! not 2
 		equals "$error2" Error2
 	}
@@ -125,7 +125,7 @@ task AlmostSurvives AlmostSurvives1, ?AlmostSurvives2
 
 # Trigger tasks and check for expected results.
 task TestAlmostSurvives ?AlmostSurvives, {
-	Test-Error (error AlmostSurvives) "Error4*At *Safe.test.ps1*'Error4'*OperationStopped*"
+	Test-Error (Get-BuildError AlmostSurvives) "Error4*At *Safe.test.ps1*'Error4'*OperationStopped*"
 }
 
 ### DependsOnFailedDirectlyAndIndirectly
@@ -142,22 +142,22 @@ task DependsOnFailedDirectlyAndIndirectly ?FailedUsedByMany, ?DependsOnFailed, {
 }
 task TestDependsOnFailedDirectlyAndIndirectly ?DependsOnFailedDirectlyAndIndirectly, {
 	# error of initial failure
-	equals "$(error FailedUsedByMany)" 'Oops in FailedUsedByMany'
+	equals "$(Get-BuildError FailedUsedByMany)" 'Oops in FailedUsedByMany'
 
 	# no error because it is not called, even if it is called safe itself it
 	# also calls the failed task unsafe
-	equals (error DependsOnFailed)
+	equals (Get-BuildError DependsOnFailed)
 
 	# error, even if it calls the failed task safe it also calls another task
 	# which leads to unsafe calls of the failed task
-	equals "$(error DependsOnFailedDirectlyAndIndirectly)" 'Oops in FailedUsedByMany'
+	equals "$(Get-BuildError DependsOnFailedDirectlyAndIndirectly)" 'Oops in FailedUsedByMany'
 }
 
 ### Misc
 
 # Test missing task
 task ErrorMissingTask {
-	($r = try {<##> error missing} catch {$_})
+	($r = try {<##> Get-BuildError missing} catch {$_})
 	equals "$r" "Missing task 'missing'."
 	assert $r.InvocationInfo.PositionMessage.Contains('<##>')
 }

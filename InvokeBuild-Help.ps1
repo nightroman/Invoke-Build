@@ -38,9 +38,9 @@
 		property  (Get-BuildProperty)
 		requires  (Test-BuildAsset)
 		use       (Use-BuildAlias)
-		error     (Get-BuildError)
 
 		Confirm-Build
+		Get-BuildError
 		Get-BuildSynopsis
 		Resolve-MSBuild
 		Set-BuildFooter
@@ -354,8 +354,9 @@
 		@{ text = 'property  (Get-BuildProperty)' }
 		@{ text = 'requires  (Test-BuildAsset)' }
 		@{ text = 'use       (Use-BuildAlias)' }
-		@{ text = 'error     (Get-BuildError)' }
 		# functions
+		@{ text = 'Confirm-Build' }
+		@{ text = 'Get-BuildError' }
 		@{ text = 'Get-BuildSynopsis' }
 		@{ text = 'Resolve-MSBuild' }
 		@{ text = 'Set-BuildFooter' }
@@ -589,11 +590,11 @@
 ### Get-BuildError
 @{
 	command = 'Get-BuildError'
-	synopsis = '(error) Gets the specified task error.'
+	synopsis = 'Gets the specified task error.'
 
 	description = @'
-	Scripts use its alias 'error'. It is used for a task with a safe reference
-	'?TaskName' in order to get and analyse its potential error.
+	The specified task is usually safe referenced in the build (?name) and a
+	caller (usually a downstream task) gets its potential error for analysis.
 '@
 
 	parameters = @{

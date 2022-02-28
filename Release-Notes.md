@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+**DEPRECATED**
+
+The alias `error` will be removed, use `Get-BuildError` instead.
+
 ## v5.9.7
 
 New parameter `Path` of `requires` (`Test-BuildAsset`).
