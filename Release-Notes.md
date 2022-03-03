@@ -4,6 +4,10 @@
 
 The alias `error` will be removed, use `Get-BuildError` instead.
 
+## v5.9.8
+
+Amend parameter sets of `Build-Checkpoint`.
+
 ## v5.9.7
 
 New parameter `Path` of `requires` (`Test-BuildAsset`).

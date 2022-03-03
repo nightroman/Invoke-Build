@@ -1181,48 +1181,43 @@ If it is omitted, the current task or script name is used.
 	command = 'Build-Checkpoint.ps1'
 	synopsis = 'Invokes persistent builds with checkpoints.'
 	description = @'
-	This command invokes the build specified by the hashtable Build so that it
-	writes checkpoints to the file specified by Checkpoint. If the build fails
-	then it may be resumed later, use the switch Resume or Auto in addition to
-	Checkpoint. The build resumes at the stopped task.
+	This command invokes the build and saves build state checkpoints after each
+	completed task. If the build is interrupted then it may be resumed later
+	with the saved checkpoint file.
 
-	Not every build may be persistent, right away or at all:
-
-		- Think carefully of what the persistent build state is.
-		- Some data are not suitable for persistence in clixml files.
-		- Changes in stopped build scripts may cause incorrect resuming.
-		- Checkpoint files must not be used with different engine versions.
+	The built-in Export-Clixml and Import-Clixml are used for saving checkpoints.
+	Keep in mind that not all data types are suitable for this serialization.
 
 	CUSTOM EXPORT AND IMPORT
 
 	By default, the command saves and restores build tasks, script path, and
-	all parameters declared by the build script, not just specified by Build.
-	Tip: consider declaring some script variables as artificial parameters
-	in order to make them persistent.
+	all parameters declared by the build script. Tip: consider declaring some
+	script variables as artificial parameters in order to make them persistent.
 
 	If this is not enough for saving and restoring the build state then use
 	custom export and import blocks. The export block is called on writing
 	checkpoints, i.e. on each task. The import block is called on resuming
 	once, before the task to be resumed.
 
-	The export block is defined as
+	The export block is set by `Set-BuildData Checkpoint.Export`, e.g.
 
 		Set-BuildData Checkpoint.Export {
 			$script:var1
 			$script:var2
 		}
 
-	The import block is defined as
+	The import block is set by `Set-BuildData Checkpoint.Import`, e.g.
 
 		Set-BuildData Checkpoint.Import {
 			param($data)
 			$var1, $var2 = $data
 		}
 
-	Note that the import block is called in the script scope. In the example,
-	variables $var1, $var2 are the script variables, you may but do not have
-	to use the prefix `$script:`. The parameter $data is the data written by
-	Checkpoint.Export, exported to clixml and then imported from clixml.
+	The import block is called in the script scope. Thus, $var1 and $var2 are
+	script variables right away. We may but do not have to use the prefix.
+
+	The parameter $data is the output of Checkpoint.Export exported to clixml
+	and then imported from clixml.
 '@
 	parameters = @{
 		Checkpoint = @'
@@ -1232,15 +1227,15 @@ If it is omitted, the current task or script name is used.
 		Build = @'
 		Specifies the build and script parameters. WhatIf is not supported.
 
-		When the build resumes by Resume or Auto, fields Task, File, and script
-		parameters are ignored. Fields Result, Safe, Summary are still used.
+		When the build resumes by Resume or Auto then fields Task, File, and
+		script parameters are ignored and restored from the checkpoint file.
+		But fields Result, Safe, Summary are used as usual build parameters.
 '@
 		Preserve = @'
 		Tells to preserve the checkpoint file on successful builds.
 '@
 		Resume = @'
 		Tells to resume the build from the existing checkpoint file.
-		With Auto, this switch is ignored.
 '@
 		Auto = @'
 		Tells to start a new build if the checkpoint file is not found or

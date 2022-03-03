@@ -12,11 +12,14 @@ specific language governing permissions and limitations under the License.
 #>
 
 #.ExternalHelp InvokeBuild-Help.xml
+[CmdletBinding(DefaultParameterSetName='Default')]
 param(
 	[Parameter(Position=0, Mandatory=1)][string]$Checkpoint,
 	[Parameter(Position=1)][hashtable]$Build,
 	[switch]$Preserve,
+	[Parameter(ParameterSetName='Resume', Mandatory=1)]
 	[switch]$Resume,
+	[Parameter(ParameterSetName='Auto', Mandatory=1)]
 	[switch]$Auto
 )
 

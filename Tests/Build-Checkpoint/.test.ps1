@@ -1,4 +1,10 @@
 
+task InvalidParameters {
+	# -Auto and -Resume cannot be used together
+	$r = try { Build-Checkpoint foo -Auto -Resume } catch { $_ }
+	assert ("$r" -like 'Parameter set cannot be resolved using the specified named parameters.*')
+}
+
 task Auto {
 	# init
 	remove z.clixml
