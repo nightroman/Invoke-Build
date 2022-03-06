@@ -187,7 +187,6 @@ task MandatoryParameters {
 	equals (Get-Mandatory task bar)
 
 	# test other commands
-	equals (Get-Mandatory error Task) $true
 	equals (Get-Mandatory property Name) $true
 	equals (Get-Mandatory Get-BuildSynopsis Task) $true
 	equals (Get-Mandatory exec Command) $true

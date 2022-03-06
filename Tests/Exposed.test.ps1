@@ -26,7 +26,6 @@ task ExposedAliases {
 assert
 Build-Parallel
 equals
-error
 exec
 Invoke-Build
 property

@@ -176,9 +176,9 @@ task ParallelBadParameters {
 
 # Test error cases.
 task ParallelErrorCases ?ParallelMissingFile, ?ParallelBadMaximumBuilds, ?ParallelBadParameters, {
-	Test-Error (error ParallelMissingFile) "Missing script '*MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
-	Test-Error (error ParallelBadMaximumBuilds) "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
-	Test-Error (error ParallelBadParameters) "Failed builds:*Build: *Dynamic.build.ps1*ERROR: Invalid build arguments or script. Error: *parameter name 'Parameters'*"
+	Test-Error (Get-BuildError ParallelMissingFile) "Missing script '*MissingFile'.*@{File='MissingFile'}*ObjectNotFound*"
+	Test-Error (Get-BuildError ParallelBadMaximumBuilds) "MaximumBuilds should be a positive number.*-MaximumBuilds 0*InvalidArgument*"
+	Test-Error (Get-BuildError ParallelBadParameters) "Failed builds:*Build: *Dynamic.build.ps1*ERROR: Invalid build arguments or script. Error: *parameter name 'Parameters'*"
 }
 
 # v2.0.1 - It is fine to omit the key File in build parameters.

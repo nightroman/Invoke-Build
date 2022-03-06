@@ -39,6 +39,9 @@ ${*checkpoint} = @{
 }
 $Build.Remove('Result')
 
+$Auto = $PSCmdlet.ParameterSetName -eq 'Auto' -and $Auto
+$Resume = $PSCmdlet.ParameterSetName -eq 'Resume' -and $Resume
+
 if ($Auto) {
 	$Resume = [System.IO.File]::Exists($Checkpoint)
 }

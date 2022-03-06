@@ -45,9 +45,6 @@ equals $r 'Use-BuildAlias'
 
 # aliases for Get-Help
 
-($r = (Get-Alias error).Definition)
-equals $r 'Get-BuildError'
-
 ($r = (Get-Alias task).Definition)
 equals $r 'Add-BuildTask'
 

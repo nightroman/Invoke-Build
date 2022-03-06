@@ -613,7 +613,6 @@ function *Task {
 
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
-Set-Alias error Get-BuildError
 Set-Alias exec Invoke-BuildExec
 Set-Alias property Get-BuildProperty
 Set-Alias remove Remove-BuildItem

@@ -188,16 +188,16 @@ task TestPartIncrementalTwoOutOfDate PartIncrementalTwoOutOfDate, {
 task IncrementalInputsFails -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
 task PartialInputsFails -Partial -Inputs {throw 'Throw in input.'} -Outputs {} {throw}
 task TestInputsFails ?IncrementalInputsFails, ?PartialInputsFails, {
-	Test-Error (error IncrementalInputsFails) "Throw in input.*At *$(Get-Separator)Incremental.test.ps1:*"
-	Test-Error (error PartialInputsFails) "Throw in input.*At *$(Get-Separator)Incremental.test.ps1:*"
+	Test-Error (Get-BuildError IncrementalInputsFails) "Throw in input.*At *$(Get-Separator)Incremental.test.ps1:*"
+	Test-Error (Get-BuildError PartialInputsFails) "Throw in input.*At *$(Get-Separator)Incremental.test.ps1:*"
 }
 
 # The outputs script fails.
 task IncrementalOutputsFails -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
 task PartialOutputsFails -Partial -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
 task TestOutputsFails ?IncrementalOutputsFails, ?PartialOutputsFails, {
-	Test-Error (error IncrementalOutputsFails) "Throw in output.*At *$(Get-Separator)Incremental.test.ps1:*"
-	Test-Error (error PartialOutputsFails) "Throw in output.*At *$(Get-Separator)Incremental.test.ps1:*"
+	Test-Error (Get-BuildError IncrementalOutputsFails) "Throw in output.*At *$(Get-Separator)Incremental.test.ps1:*"
+	Test-Error (Get-BuildError PartialOutputsFails) "Throw in output.*At *$(Get-Separator)Incremental.test.ps1:*"
 }
 
 # Error: incremental output is empty

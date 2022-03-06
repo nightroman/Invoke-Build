@@ -48,10 +48,10 @@ task . ?AssertDefault, ?AssertMessage, {
 	# silly test
 	assert $true
 
-	$e = error AssertDefault
+	$e = Get-BuildError AssertDefault
 	assert ("$e" -eq 'Assertion failed.')
 
-	$e = error AssertMessage
+	$e = Get-BuildError AssertMessage
 	assert ("$e" -eq 'Assertion failed. Custom assert message.')
 
 	'assert is tested.'
