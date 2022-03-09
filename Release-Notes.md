@@ -1,8 +1,10 @@
 # Invoke-Build Release Notes
 
-**DEPRECATED**
+## v5.9.9
 
-The alias `error` will be removed, use `Get-BuildError` instead.
+Amend `Build-Checkpoint` for PS v2.
+
+Retire deprecated alias `error`, use `Get-BuildError` instead.
 
 ## v5.9.8
 
