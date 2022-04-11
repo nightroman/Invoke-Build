@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.9.10
+
+Fix package version issue, #198.
+
 ## v5.9.9
 
 Amend `Build-Checkpoint` for PS v2.
