@@ -1,10 +1,10 @@
 ## Dealing with standard error output
 
-Invoking apps with standard error output may have issues in PowerShell and Invoke-Build.
+Invoking apps with standard error output may have issues in PowerShell.
 
-PowerShell converts app standard errors to its own non-terminating errors,
+PowerShell may convert app standard errors to its own non-terminating errors,
 arguably unnecessarily. These errors become terminating if the error action
-preference is `Stop`. Note that Invoke-Build sets this preference to `Stop`.
+preference is `Stop`. Invoke-Build sets this preference to `Stop`.
 
 As a result, without workarounds, builds may terminate unexpectedly on invoking
 apps having standard error output. Another known issue is missing redirected
@@ -14,11 +14,11 @@ error output, see [#161].
 
 This workaround works for normal PowerShell and Invoke-Build build scripts.
 Just change `$ErrorActionPreference` to `Continue`, `SilentlyContinue`, or
-`Ignore`, ideally in an extra script block, so that the change does not affect
-other code:
+`Ignore`, ideally in an extra script block (this is the case with `exec`),
+so that the change is local for the script block:
 
 ```powershell
-& {
+exec {
     $ErrorActionPreference = 'Continue'
     <invoke app with error output>
 }
@@ -33,10 +33,9 @@ with relaxed `ErrorAction`:
 exec { <invoke app with error output> } -ErrorAction Continue
 ```
 
-This option does not change how `exec` fails, it still fails depending on the
-`$LASTEXITCODE` after the invocation. But keep in mind, this option may affect
-another code in the `exec` block, if there is something before or after
-invoking an app or in its command parameter expressions.
+The workarounds do not change how `exec` fails, it still fails depending on the
+`$LASTEXITCODE` after the invocation. But workarounds may affect another code
+in `exec` if there is anything but invoking an app.
 
 ### Tasks and tests
 
@@ -47,13 +46,17 @@ The script [.test.ps1](.test.ps1) tests the expected behaviour of these tasks.
 
     Shows the problem, the build fails on standard error output.
 
-- **Workaround**
+- **Workaround1**
 
-    `exec {...} -ErrorAction Continue` works around the problem.
+    `$ErrorActionPreference = 'Continue'` in `exec` helps.
 
 - **Workaround2**
 
-    The workaround does not affect how `exec` fails on app exit codes.
+    `exec {...} -ErrorAction Continue` works around the problem.
+
+- **NonZeroExitCode**
+
+    Workarounds do not affect how `exec` fails on app exit codes.
 
 ### See also
 
