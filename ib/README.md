@@ -57,6 +57,9 @@ Unlike with the tool `ib`, Invoke-Build has to be installed, either as the
 module in a standard location or as scripts with the directory added to the
 path.
 
+`ib.cmd` invokes `powershell` by default or `pwsh` if the environment
+environment `pwsh` is defined and points to the executable.
+
 ## PowerShell alias ib
 
 For similar experience in PowerShell interactive consoles you may add the alias

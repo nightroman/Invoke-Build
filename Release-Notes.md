@@ -1,5 +1,11 @@
 # Invoke-Build Release Notes
 
+## v5.9.11
+
+- rename master to main, update links
+- use `%pwsh%` in ib.cmd
+- use `net6.0` in ib tool
+
 ## v5.9.10
 
 Fix package version issue, #198.
@@ -100,7 +106,7 @@ Removed `ib.cmd`, `ib.sh` from the package avoiding conflicts with the tool `ib`
 The scripts are still available in the repository, slightly adjusted for their new roles.
 
 Users decide which of the `ib` shell commands is more suitable for their scenarios.\
-For details see [ib commands](https://github.com/nightroman/Invoke-Build/tree/master/ib#readme).
+For details see [ib commands](https://github.com/nightroman/Invoke-Build/tree/main/ib#readme).
 
 ## v5.7.3
 

@@ -3,7 +3,7 @@
 	Acknowledged issues and various facts.
 
 .Link
-	https://github.com/nightroman/Invoke-Build/tree/master/Tasks/Bugs
+	https://github.com/nightroman/Invoke-Build/tree/main/Tasks/Bugs
 #>
 
 ### Lost colors

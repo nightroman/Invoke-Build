@@ -2,11 +2,12 @@
 
 @echo off
 
+if "%pwsh%"=="" set pwsh=powershell.exe
 if "%1"=="/?" goto help
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Build %*"
+"%pwsh%" -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Build %*"
 exit /B %errorlevel%
 
 :help
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "help -Full Invoke-Build"
+"%pwsh%" -NoProfile -ExecutionPolicy Bypass -Command "help -Full Invoke-Build"
 exit /B 0

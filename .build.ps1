@@ -96,8 +96,8 @@ task module version, markdown, help, {
 			Tags = 'Build', 'Test', 'Automation'
 			ProjectUri = 'https://github.com/nightroman/Invoke-Build'
 			LicenseUri = 'http://www.apache.org/licenses/LICENSE-2.0'
-			IconUri = 'https://raw.githubusercontent.com/nightroman/Invoke-Build/master/ib.png'
-			ReleaseNotes = 'https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md'
+			IconUri = 'https://raw.githubusercontent.com/nightroman/Invoke-Build/main/ib.png'
+			ReleaseNotes = 'https://github.com/nightroman/Invoke-Build/blob/main/Release-Notes.md'
 		}
 	}
 }
@@ -131,11 +131,9 @@ more powerful. It is complete, bug free, well covered by tests.
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
 		<icon>ib.png</icon>
 		<license type="expression">Apache-2.0</license>
-		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<summary>$text</summary>
 		<description>$text</description>
 		<tags>Build Automation PowerShell</tags>
-		<releaseNotes>https://github.com/nightroman/Invoke-Build/blob/master/Release-Notes.md</releaseNotes>
+		<releaseNotes>https://github.com/nightroman/Invoke-Build/blob/main/Release-Notes.md</releaseNotes>
 		<developmentDependency>true</developmentDependency>
 	</metadata>
 </package>

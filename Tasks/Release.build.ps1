@@ -22,9 +22,9 @@ task . -if {'.' -eq $BuildTask} {
 	Build-Checkpoint -Auto $HOME\z.releaseInvokeBuild.clixml @{Task='*'; File=$BuildFile}
 }
 
-# Synopsis: It should be the master branch with no changes.
+# Synopsis: It should be the main branch with no changes.
 task status -if {ask} {
-	assert ('master' -ceq (exec { git branch --show-current })) 'Please checkout master.'
+	assert ('main' -ceq (exec { git branch --show-current })) 'Please checkout main.'
 	assert ($null -ceq (exec { git status --short })) 'Please commit changes.'
 }
 
