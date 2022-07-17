@@ -60,7 +60,7 @@ if ($Output) {
 else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
-	$hash = '{0:x8}' -f ($path.ToUpper().GetHashCode())
+	$hash = [IO.Path]::GetFileName([IO.Path]::GetDirectoryName($path))
 	$Output = "$env:TEMP\$name-$hash.dgml"
 }
 
