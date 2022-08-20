@@ -196,13 +196,15 @@ task TestSelfAlias {
 }
 
 # Synopsis: Test a build invoked from a background job just to be sure it works.
-task TestStartJob -If {$PSVersionTable.PSVersion.Major -ne 2 -or !$env:GITHUB_ACTION} {
-    $job = Start-Job { Invoke-Build . $args[0] } -ArgumentList "$BuildRoot\Dynamic.build.ps1"
-    $log = Wait-Job $job | Receive-Job
-    Remove-Job $job
-    $log
-    $info = Remove-Ansi $log[-1]
-    assert ($info.StartsWith('Build succeeded. 5 tasks'))
+task TestStartJob -If {
+	!($PSVersionTable.PSVersion.Major -eq 2 -and $env:GITHUB_ACTION) -and !($Host.Name -eq 'FarHost')
+} {
+	$job = Start-Job { Invoke-Build . $args[0] } -ArgumentList "$BuildRoot\Dynamic.build.ps1"
+	$log = Wait-Job $job | Receive-Job
+	Remove-Job $job
+	$log
+	$info = Remove-Ansi $log[-1]
+	assert ($info.StartsWith('Build succeeded. 5 tasks'))
 }
 
 # Synopsis: Show full help.

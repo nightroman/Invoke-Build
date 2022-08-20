@@ -180,9 +180,6 @@ task loop {
 task test5 {
 	assert ($PSVersionTable['Platform'] -ne 'Unix') 'WSL: cd Tests; ib'
 
-	#! v7 may use different view
-	$script:ErrorView = 'NormalView'
-
 	# invoke tests, get output and result
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200
 	if ($NoTestDiff) {return}
