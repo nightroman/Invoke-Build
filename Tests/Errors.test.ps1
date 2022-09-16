@@ -32,7 +32,7 @@ task Warnings {
 	# output
 	assert ($r[-5] -cmatch '^WARNING: .*Errors\.test\.ps1:\d+$')
 	assert ($r[-3] -cmatch '^WARNING: /t1 .*Errors\.test\.ps1:\d+$')
-	if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -eq 'Ansi') {
+	if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText') {
 		equals $r[-4] "`e[93mdemo-file-warning`e[0m"
 		equals $r[-2] "`e[93mdemo-task-warning`e[0m"
 		assert ($r[-1] -clike "*Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *")

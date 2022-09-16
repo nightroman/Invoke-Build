@@ -562,7 +562,7 @@ task WriteAnsi {
 	$text = "line1`rline2`nline3`r`nline4"
 	$r = (Write-Build 0 $text) -join '|'
 
-	if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -eq 'Ansi') {
+	if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText') {
 		equals $r "`e[30mline1`e[0m|`e[30mline2`e[0m|`e[30mline3`e[0m|`e[30mline4`e[0m"
 	}
 	else {

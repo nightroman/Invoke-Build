@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.9.12
+
+Fix ANSI in PS Core 7.2.6, #204
+
 ## v5.9.11
 
 - rename master to main, update links
