@@ -71,6 +71,7 @@ $OK = $(
 	'Set-BuildHeader'
 	'Test-BuildAsset'
 	'Use-BuildAlias'
+	'Use-BuildEnv'
 	'Write-Build'
 ) -join ','
 $KO = (Get-ChildItem *-Build* -Name | Sort-Object) -join ','

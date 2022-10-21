@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.10.0
+
+New helper function `Use-BuildEnv`.
+
 ## v5.9.12
 
 Fix ANSI in PS Core 7.2.6, #204

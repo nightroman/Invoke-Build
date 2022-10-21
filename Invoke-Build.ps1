@@ -228,6 +228,25 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
+function Use-BuildEnv([Parameter()][hashtable]$Env, [scriptblock]$Script) {
+	${private:*e} = @{}
+	${private:*s} = $Script
+	foreach($_ in $Env.GetEnumerator()) {
+		${*e}[$_.Key] = [Environment]::GetEnvironmentVariable($_.Key)
+		[Environment]::SetEnvironmentVariable($_.Key, $_.Value)
+	}
+	Remove-Variable Env, Script
+	try {
+		& ${*s}
+	}
+	finally {
+		foreach($_ in ${*e}.GetEnumerator()) {
+			[Environment]::SetEnvironmentVariable($_.Key, $_.Value)
+		}
+	}
+}
+
+#.ExternalHelp InvokeBuild-Help.xml
 function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0, [string]$ErrorMessage, [switch]$Echo) {
 	${private:*c} = $Command
 	${private:*x} = $ExitCode

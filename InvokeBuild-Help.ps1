@@ -45,6 +45,7 @@
 		Resolve-MSBuild
 		Set-BuildFooter
 		Set-BuildHeader
+		Use-BuildEnv
 		Write-Build
 		Write-Warning [1]
 
@@ -819,6 +820,7 @@
 
 	links = @(
 		@{ text = 'Use-BuildAlias' }
+		@{ text = 'Use-BuildEnv' }
 	)
 }
 
@@ -1092,6 +1094,48 @@ If it is omitted, the current task or script name is used.
 	outputs = @{
 		type = 'String'
 	}
+}
+
+### Use-BuildEnv
+@{
+	command = 'Use-BuildEnv'
+	synopsis = 'Invokes script with temporary changed environment variables.'
+
+	description = @'
+	This command sets the specified environment variables and invokes the
+	script. Then it restores the original values of specified variables.
+'@
+
+	parameters = @{
+		Env = @'
+		The hashtable of environment variables used by the script.
+		Keys and values correspond to variable names and values.
+'@
+		Script = @'
+		The script invoked with the specified variables.
+'@
+	}
+
+	outputs = @{
+		type = 'Objects'
+		description = 'Output of the specified script.'
+	}
+
+	examples = @(
+		@{code={
+			# Invoke with temporary changed Port and Path
+			Use-BuildEnv @{
+				Port = '9780'
+				Path = "$PSScriptRoot\Scripts;$env:Path"
+			} {
+				exec { dotnet test }
+			}
+		}}
+	)
+
+	links = @(
+		@{ text = 'Invoke-BuildExec' }
+	)
 }
 
 ### Build-Parallel.ps1

@@ -106,6 +106,7 @@ Set-BuildFooter
 Set-BuildHeader
 Test-BuildAsset
 Use-BuildAlias
+Use-BuildEnv
 Write-Build
 Write-Warning
 '@ -split '\r?\n'
