@@ -228,7 +228,7 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 }
 
 #.ExternalHelp InvokeBuild-Help.xml
-function Use-BuildEnv([Parameter()][hashtable]$Env, [scriptblock]$Script) {
+function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandatory=1)][scriptblock]$Script) {
 	${private:*e} = @{}
 	${private:*s} = $Script
 	foreach($_ in $Env.GetEnumerator()) {

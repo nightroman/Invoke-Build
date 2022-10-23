@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.10.1
+
+Make `Use-BuildEnv` parameters mandatory.
+
 ## v5.10.0
 
 New helper function `Use-BuildEnv`.
