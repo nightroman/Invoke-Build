@@ -28,3 +28,7 @@ Scripts:
 
 - [1.build.ps1](1.build.ps1) shows how to set custom headers and footers and typical useful data.
 - [2.build.ps1](2.build.ps1) is called by the first script to show that headers and footers are inherited.
+
+See also:
+
+- [Color and formatting text in Azure DevOps Pipelines #205](https://github.com/nightroman/Invoke-Build/issues/205)
