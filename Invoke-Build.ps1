@@ -266,7 +266,7 @@ function *Echo {
 	${*c} = $args[0]
 	${*t} = "${*c}".Replace("`t", '    ')
 	Write-Build 3 "exec {$(if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {"$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n"} else {${*t}})}"
-	Write-Build 8 "cd $pwd"
+	Write-Build 8 "cd $global:pwd"
 	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
 		if (${*v}.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
 			${*t} = "${*v}" -replace '^@', '$'

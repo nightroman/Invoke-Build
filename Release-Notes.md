@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.10.2
+
+Use global `$pwd`, #208
+
 ## v5.10.1
 
 Make `Use-BuildEnv` parameters mandatory.
