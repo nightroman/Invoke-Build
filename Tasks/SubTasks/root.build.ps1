@@ -40,7 +40,7 @@ dynamicparam {
 		$Tasks = $PSCmdlet.GetVariableValue('DynamicParamTasks')
 	}
 	if ($Tasks) {
-		$skip = 'Tasks', 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
+		$skip = 'Tasks', 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
 		$map = @{deploy='deploy/deploy.build.ps1'; build='src/build.build.ps1'}
 		foreach($_ in $Tasks) {
 			$file = $map[$_]
