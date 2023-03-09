@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.10.3
+
+Add `ProgressAction` to common parameters, #210
+
 ## v5.10.2
 
 Use global `$pwd`, #208

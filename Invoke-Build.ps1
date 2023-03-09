@@ -113,7 +113,7 @@ if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
 	throw 'Invalid script.'
 }
 if ($_.get_Count()) {
-	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
+	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
 	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
 	foreach($p in $_.get_Values()) {
 		if ($c -notcontains ($_ = $p.Name)) {
