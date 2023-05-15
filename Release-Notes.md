@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.10.4
+
+Support verbose and information streams in `Build-Parallel`, #212
+
 ## v5.10.3
 
 Add `ProgressAction` to common parameters, #210

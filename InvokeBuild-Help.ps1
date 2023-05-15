@@ -1149,6 +1149,38 @@ If it is omitted, the current task or script name is used.
 
 	NOTE: Avoid using Build-Parallel in scenarios with PowerShell classes.
 	Known issues: https://github.com/nightroman/Invoke-Build/issues/180
+
+	VERBOSE STREAM
+
+	Verbose messages are propagated to the caller if Verbose is set to true in
+	build parameters. They are written all together before the build output.
+
+		Build-Parallel @(
+			@{File=...; Task=...; Verbose=$true}
+			...
+		)
+
+	INFORMATION STREAM
+
+	Information messages are propagated to the caller if InformationAction is
+	set to Continue in build parameters. They are written all together before
+	the build output.
+
+		Build-Parallel @(
+			@{File=...; Task=...; InformationAction='Continue'}
+			...
+		)
+
+	In addition or instead, information messages are collected in the variable
+	specified by InformationVariable in build parameters.
+
+		Build-Parallel @(
+			@{File=...; Task=...; InformationVariable='info'}
+			...
+		)
+
+		# information messages
+		$info
 '@
 
 	parameters = @{

@@ -184,6 +184,25 @@ try {
 				$work.PS.Stop()
 				$abort
 			}
+
+			### streams
+			$streams = $work.PS.Streams
+
+			if ($work.Build['Verbose']) {
+				foreach($_ in $streams.Verbose) {
+					Write-Verbose $_ -Verbose
+				}
+			}
+
+			if ($var = $work.Build['InformationVariable']) {
+				New-Variable $var ([System.Collections.Generic.List[object]]$streams.Information) -Scope 1 -Force
+			}
+
+			if ($null -ne $work.Build['InformationAction']) {
+				foreach($_ in $streams.Information) {
+					Write-Information $_ -InformationAction $work.Build.InformationAction
+				}
+			}
 		}
 		catch {
 			$_
