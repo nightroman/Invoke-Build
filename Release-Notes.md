@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+New script `Show-BuildMermaid.ps1` for viewing build task graphs.
+
 ## v5.10.4
 
 Support verbose and information streams in `Build-Parallel`, #212

@@ -101,7 +101,7 @@ if ($Output) {
 else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
-	$hash = $hash = [IO.Path]::GetFileName([IO.Path]::GetDirectoryName($path))
+	$hash = [IO.Path]::GetFileName([IO.Path]::GetDirectoryName($path))
 	if ($JS) {
 		$Output = "$env:TEMP\$name-$hash.html"
 		$type = 'html'

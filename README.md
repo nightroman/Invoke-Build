@@ -48,8 +48,9 @@ And some more tools, see the repository:
 * [Build-JustTask.ps1](Build-JustTask.ps1) - invokes tasks without references
 * [Convert-psake.ps1](Convert-psake.ps1) - converts psake build scripts, see [wiki](https://github.com/nightroman/Invoke-Build/wiki/Convert~psake)
 * [Show-BuildTree.ps1](Show-BuildTree.ps1) - shows task trees as text
-* [Show-BuildDgml.ps1](Show-BuildDgml.ps1) - shows task trees as DGML
-* [Show-BuildGraph.ps1](Show-BuildGraph.ps1) - shows task trees by Graphviz
+* [Show-BuildDgml.ps1](Show-BuildDgml.ps1) - shows task graph as DGML
+* [Show-BuildGraph.ps1](Show-BuildGraph.ps1) - shows task graph by Graphviz
+* [Show-BuildMermaid.ps1](Show-BuildMermaid.ps1) - shows task graph by Mermaid
 
 ## Install as module
 
