@@ -1003,6 +1003,16 @@
 		scripts may invoke it directly by the provided alias Resolve-MSBuild.
 		The optional suffix x86 tells to use 32-bit MSBuild.
 
+			For just MSBuild use Resolve-MSBuild instead:
+
+				Set-Alias MSBuild (Resolve-MSBuild ...)
+				MSBuild ...
+
+			or
+
+				$MSBuild = Resolve-MSBuild ...
+				& $MSBuild ...
+
 		If it is like Framework* then it is assumed to be a path relative to
 		Microsoft.NET in the Windows directory.
 

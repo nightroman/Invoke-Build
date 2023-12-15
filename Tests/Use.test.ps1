@@ -206,12 +206,12 @@ task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version
 
 # This task simply uses the alias set at the scope level.
 task CurrentFramework {
-	# v6 beta
-	if (!(Test-Path -LiteralPath (Get-Alias MSBuild.exe).Definition)) {
-		Write-Warning 'Missing MSBuild.'
-		return
+	if ($PSVersionTable.PSVersion.Major -gt 5 ) {
+		assert (!(Test-Path -LiteralPath (Get-Alias MSBuild.exe).Definition))
 	}
-	($version = exec { MSBuild.exe /version /nologo })
+	else {
+		($version = exec { MSBuild.exe /version /nologo })
+	}
 }
 
 # The directory path used for aliased commands should be resolved.
@@ -224,7 +224,7 @@ task ResolvedPath {
 # Error: missing version.
 task MissingVersion {
 	($r = try {use 3.14 MSBuild} catch {$_})
-	equals "$r" 'Cannot resolve MSBuild 3.14 : The specified version is not found.'
+	equals "$r" 'Cannot find MSBuild version: 3.14.'
 	equals $r.InvocationInfo.ScriptName $BuildFile
 	equals $r.FullyQualifiedErrorId Use-BuildAlias
 }

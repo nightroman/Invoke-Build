@@ -191,13 +191,13 @@ task testAll14 {
 
 task missingOld {
 	($r = try {Resolve-MSBuild 1.0} catch {$_})
-	equals "$r" 'Cannot resolve MSBuild 1.0 : The specified version is not found.'
+	equals "$r" 'Cannot find MSBuild version: 1.0.'
 	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
 task missingNew {
 	($r = try {Resolve-MSBuild 15.1} catch {$_})
-	equals "$r" 'Cannot resolve MSBuild 15.1 : The specified version is not found.'
+	equals "$r" 'Cannot find MSBuild version: 15.1.'
 	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
@@ -206,13 +206,13 @@ task missing15 {
 	function Get-MSBuild15-2 {}
 
 	($r = try {Resolve-MSBuild 15.0} catch {$_})
-	equals "$r" 'Cannot resolve MSBuild 15.0 : The specified version is not found.'
+	equals "$r" 'Cannot find MSBuild version: 15.0.'
 	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
 task invalidVersion {
 	($r = try {Resolve-MSBuild invalid} catch {$_})
-	assert ("$r" -like 'Cannot resolve MSBuild invalid :*"invalid"*')
+	equals "$r" 'Invalid MSBuild version format: invalid.'
 	equals $r.InvocationInfo.ScriptName $BuildFile
 }
 
@@ -407,9 +407,8 @@ task Get-MSBuild15Guess {
 }
 
 task MinimumVersionBad {
-	$r = try { Resolve-MSBuild -MinimumVersion 9999.0 } catch { $_ }
-	"$r"
-	assert ("$r" -match '^Cannot resolve MSBuild \* : MSBuild resolved version \d+\.\d+\.\d+\.\d+ is less than required minimum 9999\.0\.$')
+	($r = try { Resolve-MSBuild -MinimumVersion 9999.0 } catch { $_ })
+	assert ("$r" -match '^MSBuild resolved version \d+\.\d+\.\d+\.\d+ is less than required minimum 9999\.0\.$')
 }
 
 task MinimumVersionGood {

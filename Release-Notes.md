@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.10.5
+
+`Resolve-MSBuild.ps1`: Tweak errors, do not wrap internal errors, #216
+
 New script `Show-BuildMermaid.ps1` for viewing build task graphs.
 
 ## v5.10.4
