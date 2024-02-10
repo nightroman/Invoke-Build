@@ -177,7 +177,7 @@ task loop {
 
 # Synopsis: Test and check expected output.
 # Requires PowerShelf/Assert-SameFile.ps1
-task test5 {
+task test {
 	assert ($PSVersionTable['Platform'] -ne 'Unix') 'WSL: cd Tests; ib'
 
 	# invoke tests, get output and result
@@ -195,19 +195,23 @@ task test5 {
 	Remove-Item $resultPath
 }
 
-# Synopsis: Test with PS Core.
-task test7 {
+# Synopsis: Test Desktop.
+task desktop {
 	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec {pwsh -NoProfile -Command Invoke-Build test5 $diff}
+	exec {powershell -NoProfile -Command Invoke-Build test $diff}
 }
 
-# Synopsis: Gets dependencies (call by v5+).
+# Synopsis: Test Core.
+task core {
+	$diff = if ($NoTestDiff) {'-NoTestDiff'}
+	exec {pwsh -NoProfile -Command Invoke-Build test $diff}
+}
+
+# Synopsis: Gets dependencies
 task boot {
 	Save-Script Invoke-PowerShell -Path . -Force
 }
 
-# Synopsis: Test versions.
-task test test5, test7
-
 # Synopsis: The default task: make, test, clean.
-task . help, test, clean
+# `desktop` first is better than `core`.
+task . help, desktop, core, clean

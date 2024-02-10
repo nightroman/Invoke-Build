@@ -69,12 +69,34 @@ task UndocumentedStuff {
 	# call by WhatIf
 	Invoke-Build -File ../.build.ps1 -WhatIf
 
-	# default call with code
+	# test default task call with code
 	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]}
 	equals $r.Task.Count 1
 	equals $r.Task[0].Name .
 	equals $r.Task[0].Synopsis 'The default task: make, test, clean.'
-	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'help, test5, test7, clean'
+	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'help, desktop, core, clean'
+	foreach($job in $r.Jobs) {
+		assert ($job.Location -match '\.build\.ps1:\d+$')
+	}
+	if ($PSVersionTable.PSVersion.Major -ge 3) {
+		#! fixed .Parameters = 1 object, not array
+		equals $r.Parameters.Count 1
+		equals $r.Parameters[0].Name NoTestDiff
+		equals $r.Parameters[0].Type switch
+		equals $r.Parameters[0].Description $null
+		equals $r.Environment.Count 0
+	}
+	else {
+		equals $r.Parameters.Count 0
+		equals $r.Environment.Count 0
+	}
+
+	# test a task with code and environment variable
+	$r = Show-TaskHelp test ../.build.ps1 -Format {$args[0]}
+	equals $r.Task.Count 1
+	equals $r.Task[0].Name test
+	equals $r.Task[0].Synopsis 'Test and check expected output.'
+	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'test'
 	foreach($job in $r.Jobs) {
 		assert ($job.Location -match '\.build\.ps1:\d+$')
 	}
@@ -92,8 +114,8 @@ task UndocumentedStuff {
 		equals $r.Environment.Count 0
 	}
 
-	# call with no code
-	$r = Show-TaskHelp '' ../.build.ps1 -Format {$args[0]} -NoCode
+	# call with -NoCode
+	$r = Show-TaskHelp test ../.build.ps1 -Format {$args[0]} -NoCode
 	equals $r.Parameters.Count 0
 	equals $r.Environment.Count 0
 }
