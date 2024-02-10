@@ -123,6 +123,8 @@ In order to get help for internal commands:
 : Why build scripts may have advantages over normal scripts.
 - [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial)
 : Take a look in order to get familiar with build scripts.
+- [01-step-by-step-tutorial](https://github.com/nightroman/Invoke-Build/tree/main/Tasks/01-step-by-step-tutorial)
+: From "Hello world" to featured script.
 - [Invoke-Build.template](https://github.com/nightroman/Invoke-Build.template)
 : Create scripts by `dotnet new ib`.
 - [Project Wiki](https://github.com/nightroman/Invoke-Build/wiki)
