@@ -2,13 +2,13 @@
 
 Composing build scripts is incremental process, from small to complex, gradually adding tasks and features.
 
-This tutorial guides from the "Hello world" to some relatively featured build script.
+This tutorial guides from "Hello world" to some featured build script.
 
-The objective is "making tea" with tasks like boiling water, adding tea and sugar.
+Contrived tasks: "making tea", boiling water, adding tea, sugar.
 
 - [01-script-and-task](01-script-and-task)
 - [02-add-new-tasks](02-add-new-tasks)
-- [03-docs-default](03-docs-default)
+- [03-dot-and-docs](03-dot-and-docs)
 - [04-variables](04-variables)
 - [05-references](05-references)
 - [06-parameters](06-parameters)

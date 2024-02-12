@@ -1,14 +1,14 @@
 ﻿<#
 New features:
-	- documentation comments `# Synopsis:`
-	- the default task `.`
-
-Show tasks with their details:
-	Invoke-Build ?
+	- the default task `.` is our "make tea"
+	- special comments `# Synopsis:`
 
 Run the default task:
 	Invoke-Build
 	Invoke-Build .
+
+Show the task list:
+	Invoke-Build ?
 #>
 
 # Synopsis: Boils a pot of water.

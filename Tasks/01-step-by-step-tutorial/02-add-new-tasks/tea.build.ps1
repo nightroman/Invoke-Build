@@ -7,7 +7,9 @@ Run any task or combinations:
 	Invoke-Build add_tea
 	Invoke-Build add_sugar
 	Invoke-Build boil_water, add_tea, add_sugar
-	Invoke-Build *  # all tasks, sometimes handy
+
+Issue:
+	- the last command "make tea" is rather verbose for the task
 #>
 
 task boil_water {
