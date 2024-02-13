@@ -3,7 +3,7 @@ Resolved:
 	- `add_sugar` is invoked for nothing when there is no sugar
 
 New features:
-	- `add_sugar` has a condition, the task is skipped when there is no sugar
+	- `add_sugar` task condition, it runs with one or more sugar
 #>
 
 param(

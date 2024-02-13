@@ -1,6 +1,6 @@
 ﻿<#
 New features:
-	- parameter `$Tasks` and bootstrap block allow running the script directly
+	- parameter `$Tasks` and bootstrap block to run the script directly
 	- InvokeBuild is installed automatically when needed
 
 Run the build script directly:
@@ -11,8 +11,11 @@ But it is still Invoke-Build:
 #>
 
 param(
-	[string[]]$Tasks,
-	[int]$TeaBags = 1,
+	[Parameter(Position=0)]
+	[string[]]$Tasks
+	,
+	[int]$TeaBags = 1
+	,
 	[int]$SugarLumps
 )
 

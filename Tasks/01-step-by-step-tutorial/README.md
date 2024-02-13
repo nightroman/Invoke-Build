@@ -1,4 +1,4 @@
-﻿# Step by step tutorial
+﻿# Step by Step Tutorial
 
 Composing build scripts is incremental process, from small to complex, gradually adding tasks and features.
 

@@ -46,15 +46,20 @@ usual call by `Invoke-Build`.
 
 See the script [my.build.ps1](my.build.ps1) for a working example.
 
-See also the sample [Paket](../Paket) where a directly invokable build script
-is designed for automatic bootstrapping with `Invoke-Build` downloaded as well.
+## Bootstrap InvokeBuild
 
-## Note
+Directly invokable scripts may automatically install `InvokeBuild` when needed.
 
-Make the parameter `Tasks` positional (`[Parameter(Position=0)]`) and keep other parameters named.
-This maintains similarity of parameters used by direct invocation and `Invoke-Build`.
-Task names are often specified with the parameter name omitted (`Tasks` or `Task`).
-Other parameters are usually named.
+See examples:
 
-Also, using the `Parameter` attribute automatically applies `CmdletBinding`.
-As a result, misspelled or not supported parameters cause invocation errors.
+- [08-bootstrap/tea.build.ps1](../01-step-by-step-tutorial/08-bootstrap/tea.build.ps1) - straightforward bootstrapping
+- [Paket/Project.build.ps1](../Paket/Project.build.ps1) - some custom bootstrapping
+
+## Notes
+
+Consider making the parameter `Tasks` positional (`[Parameter(Position=0)]`) and keeping other parameters named.
+This maintains similarity of parameters used by direct invocation and by `Invoke-Build`:
+tasks are specified first, unnamed, then other parameters, all named.
+
+Also, `Parameter` implies `CmdletBinding`, so we may omit `CmdletBinding` if it was used.
+`Parameter` or `CmdletBinding` is recommended for parameter checks on direct invocations.

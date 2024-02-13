@@ -1,12 +1,12 @@
 ﻿<#
 New features:
-	- new file `implicit.Dockerfile`, does not install InvokeBuild
-	- new file `explicit.Dockerfile`, gets and imports InvokeBuild
-	- new parameter `Docker`, to choose 'implicit', 'explicit'
+	- new file `implicit.Dockerfile` does not install InvokeBuild
+	- new file `explicit.Dockerfile` gets and imports InvokeBuild
+	- new parameter `Docker` to choose 'implicit', 'explicit'
 	- new task `docker` to build the image
-	- and standard documentation comments
+	- PowerShell script help comments
 
-Build and run the Docker image:
+Build the Docker image, then run it:
 	Invoke-Build docker
 	Invoke-Build docker -Docker explicit
 
@@ -34,6 +34,7 @@ See -WhatIf info and script help:
 		Tells how to build the Docker image. Used by `docker`. Values: implicit (default), explicit
 #>
 param(
+	[Parameter(Position=0)]
 	[string[]]$Tasks
 	,
 	[int]$TeaBags = 1

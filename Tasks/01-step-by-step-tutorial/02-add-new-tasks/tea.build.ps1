@@ -8,8 +8,8 @@ Run any task or combinations:
 	Invoke-Build add_sugar
 	Invoke-Build boil_water, add_tea, add_sugar
 
-Issue:
-	- the last command "make tea" is rather verbose for the task
+Issue to solve:
+	- the last command "make tea" is rather verbose for the objective
 #>
 
 task boil_water {

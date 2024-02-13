@@ -1,13 +1,13 @@
 ﻿<#
 New features:
-	- the default task `.` is our "make tea"
-	- special comments `# Synopsis:`
+	- the default task `.` is our objective "make tea"
+	- special task comments `# Synopsis:`
 
-Run the default task:
+Run the default task, "make tea":
 	Invoke-Build
 	Invoke-Build .
 
-Show the task list:
+Show the task list with comments:
 	Invoke-Build ?
 #>
 

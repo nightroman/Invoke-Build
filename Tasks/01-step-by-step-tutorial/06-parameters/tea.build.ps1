@@ -3,7 +3,7 @@ New features:
 	- new script parameters with reasonable defaults
 	- tasks `add_tea` and `add_sugar` use parameters
 
-Make default tea:
+Make default tea, one tea bag, no sugar:
 	Invoke-Build
 
 Make stronger tea with one sugar:

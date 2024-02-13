@@ -38,8 +38,7 @@ param(
 
 # call the build engine with this script and return
 if ($MyInvocation.ScriptName -notlike '*Invoke-Build.ps1') {
-	Invoke-Build $Tasks $MyInvocation.MyCommand.Path @PSBoundParameters
-	return
+	return Invoke-Build $Tasks $MyInvocation.MyCommand.Path @PSBoundParameters
 }
 
 # the usual build script
