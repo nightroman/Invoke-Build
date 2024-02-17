@@ -46,10 +46,10 @@ param(
 )
 
 # bootstrap
-if ($MyInvocation.ScriptName -notlike '*Invoke-Build.ps1') {
+if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
 	$ErrorActionPreference = 1
-	if (!(Get-Command Invoke-Build -ErrorAction Ignore)) {
-		Write-Host -ForegroundColor Cyan 'Installing module InvokeBuild...'
+	if (!(Get-Command Invoke-Build -ErrorAction 0)) {
+		Write-Host 'Installing module InvokeBuild...'
 		Install-Module InvokeBuild -Scope CurrentUser -Force
 		Import-Module InvokeBuild
 	}

@@ -37,7 +37,7 @@ param(
 )
 
 # call the build engine with this script and return
-if ($MyInvocation.ScriptName -notlike '*Invoke-Build.ps1') {
+if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
 	return Invoke-Build $Tasks $MyInvocation.MyCommand.Path @PSBoundParameters
 }
 

@@ -498,9 +498,8 @@ task DoNotMakeScriptParametersNamed {
 		param(
 			[Parameter()]$Tasks
 		)
-		if ($MyInvocation.ScriptName -notlike "*Invoke-Build.ps1") {
-			Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
-			return
+		if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
+			return Invoke-Build $Tasks $MyInvocation.MyCommand.Path @PSBoundParameters
 		}
 		task Test {}
 	}
