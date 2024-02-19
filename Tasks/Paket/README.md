@@ -2,7 +2,8 @@
 
 The sample script *Project.build.ps1* shows how to use automatic bootstrapping.
 The script is designed as directly invokable by PowerShell and it does not
-require `Invoke-Build` installed. `Invoke-Build` is restored using `paket`.
+require `Invoke-Build` installed. `Invoke-Build` is restored using `paket`,
+locally.
 
 The `paket` tool is used as one possible way of getting packages. Instead or in
 addition, we could use `PSDepend`, `NuGet.exe`, `Install-Module`, etc.
@@ -35,53 +36,26 @@ Such a script is designed for scenarios like:
     - Packages restored by `paket` and stored locally.
     In this sample, it is `Invoke-Build`.
 - *paket-files*
-    - Files generated or restored by `paket.
+    - Files generated or restored by `paket`.
 
 These directories are usually added to `.gitignore`.
 
-## How to get PowerShell modules by paket
-
-Module entries in *paket.dependencies* should normally use PSGallery source.
-Module packages should be downloaded to *packages* (`storage: packages`).
-The build script should be designed to import modules from *packages*.
-
-This looks like a ceremony but it has some advantages. This scenario does not
-pollute the usual PowerShell module directories and avoids possible module
-version issues.
-
-## How to customize package/module management
-
-If `paket` and its *paket.dependencies* is not enough, e.g. you want to install
-modules by `Install-Module`, then look at the "bootstrapping" block in
-*Project.build.ps1* and add required checks and commands.
-
-For example, just for the `InvokeBuild` module bootstrapping instead of `paket`
-we could use this trivial PowerShell code:
-
-```powershell
-if (!(Get-Module InvokeBuild -ListAvailable)) {
-    Install-Module InvokeBuild
-    Import-Module InvokeBuild
-    #... other stuff
-}
-```
-
 ## Steps from scratch
 
-To create the dotnet tool manifest *.config/dotnet-tools.json*, invoke:
+Create the dotnet tool manifest *.config/dotnet-tools.json*:
 
     dotnet new tool-manifest
 
-To install paket and add its record to the manifest, invoke:
+Install paket and add to the manifest:
 
     dotnet tool install paket
 
-To create the paket file *paket.dependencies*, invoke:
+Create the paket file *paket.dependencies*:
 
     dotnet paket init
 
-Add Invoke-Build line to *paket.dependencies*:
+Add this line to *paket.dependencies*:
 
     nuget Invoke-Build storage: packages
 
-Add the sample build script *Project.build.ps1*.
+Use the build script like *Project.build.ps1*.

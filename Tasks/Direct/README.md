@@ -2,7 +2,7 @@
 
 Build scripts are normally invoked by the engine `Invoke-Build`, not directly.
 If this is inconvenient then decorate a script to make it directly invokable.
-Add `Tasks` as the first parameter and the command redirecting the call:
+Add `Tasks` as the first parameter and the code block redirecting the call:
 
 ```powershell
 param(
@@ -39,19 +39,28 @@ directory or subdirectory then you may omit the script:
 Invoke-Build <tasks> [<parameters>]
 ```
 
-Note that `Invoke-Build` parameters are not available on direct calls, i.e. you
-cannot specify `Safe`, `Summary`, `WhatIf`, etc. When they are needed use the
-usual call by `Invoke-Build`.
+See [Project.build.ps1](Project.build.ps1) for the working example.
 
-See the script [my.build.ps1](my.build.ps1) for a working example.
+## Caveats
 
-## Bootstrap InvokeBuild
+Directly invocable build scripts are handy but they have rules and limitations.
 
-Directly invokable scripts may automatically install `InvokeBuild` when needed.
+The rules are the extra parameter `$Tasks` and the code block "who calls me".
+This code block must be placed immediately after the script parameter block.
+
+Script parameters cannot use `Invoke-Build` features, e.g. `parameter` in
+default parameter value expressions.
+
+`Invoke-Build` parameters `Safe`, `Summary`, `WhatIf` are not available on
+direct calls.
+
+## Bootstrap
+
+Directly invokable scripts may automatically install the `InvokeBuild` module.
 
 See examples:
 
-- [08-bootstrap/tea.build.ps1](../01-step-by-step-tutorial/08-bootstrap/tea.build.ps1) - straightforward bootstrapping
+- [Bootstrap/Project.build.ps1](../Bootstrap/Project.build.ps1) - straightforward bootstrapping
 - [Paket/Project.build.ps1](../Paket/Project.build.ps1) - some custom bootstrapping
 
 ## Notes

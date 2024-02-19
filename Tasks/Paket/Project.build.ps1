@@ -27,24 +27,22 @@ param(
 
 # Direct call: ensure packages and call the local Invoke-Build
 
-if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -ne 'Invoke-Build.ps1') {
-	$ErrorActionPreference = 'Stop'
+if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
+	$ErrorActionPreference = 1
 	$ib = "$PSScriptRoot/packages/Invoke-Build/tools/Invoke-Build.ps1"
 
-	# get packages
 	if (!(Test-Path -LiteralPath $ib)) {
-		# restore paket and other local dotnet tools
+		# restore paket and other tools
 		dotnet tool restore
 		if ($LASTEXITCODE) {throw "tool restore exit code: $LASTEXITCODE"}
 
-		# install packages (if you keep paket.lock, use restore instead)
+		# ensure packages
 		dotnet paket install
 		if ($LASTEXITCODE) {throw "paket install exit code: $LASTEXITCODE"}
 	}
 
 	# call Invoke-Build
-	& $ib -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
-	return
+	return & $ib $Tasks $MyInvocation.MyCommand.Path @PSBoundParameters
 }
 
 # Normal call for tasks, either by local or global Invoke-Build
@@ -57,5 +55,5 @@ task Build {
 # Synopsis: Remove files.
 task Clean {
 	Write-Warning 'This sample removes paket.lock'
-	remove packages, paket-files, paket.lock
+	remove .paket, packages, paket-files, paket.lock
 }

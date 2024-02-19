@@ -4,6 +4,7 @@
 
 - [01-step-by-step-tutorial](01-step-by-step-tutorial) - From "Hello world" to featured script.
 - [Attributes](Attributes) How to use custom attributes with task actions.
+- [Bootstrap](Bootstrap) How to install the module automatically.
 - [Confirm](Confirm) How to use `Confirm-Build` to confirm some tasks.
 - [Direct](Direct) How to make build scripts invokable directly.
 - [Dynamic](Dynamic) How to use a dynamic script with dynamic tasks.
