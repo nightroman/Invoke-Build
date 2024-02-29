@@ -69,7 +69,7 @@ task Show-BuildDgml {
 
 # used to show just `values`
 task Show-BuildGraph -If (!(Test-Unix) -and !$env:GITHUB_ACTION) {
-	Show-BuildGraph.ps1 -NoShow -Output z.dot
+	Show-BuildGraph.ps1 -Dot -NoShow -Output z.dot
 	$r = Get-Content z.dot | Out-String
 	assert ($r.Contains('"." -> count'))
 	assert ($r.Contains('"." -> keys'))
