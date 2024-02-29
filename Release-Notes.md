@@ -1,5 +1,8 @@
 # Invoke-Build Release Notes
 
+- `Show-BuildGraph.ps1` uses `Viz.js` by default and `dot` if `-Dot`
+- `Show-BuildMermaid.ps1` uses `Mermaid` 10.8.0
+
 ## v5.10.5
 
 `Resolve-MSBuild.ps1`: Tweak errors, do not wrap internal errors, #216

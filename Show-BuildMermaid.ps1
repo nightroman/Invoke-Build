@@ -5,7 +5,7 @@
 
 .Description
 	Requirements:
-	- Invoke-Build in the path or available as module command
+	- Invoke-Build command is available for calls
 	- Internet connection for Mermaid, https://mermaid.js.org
 
 	The script calls Invoke-Build in order to get the tasks, generates the HTML
@@ -21,7 +21,7 @@
 
 .Parameter Output
 		Specifies the output HTML file.
-		The default is like "$env:TEMP\name-xxx.html".
+		The default is in the temp directory.
 
 .Parameter Direction
 		Specifies the direction, Top-Bottom or Left-Right: TB, BT, LR, RL.
@@ -36,7 +36,7 @@
 
 .Parameter NoShow
 		Tells to create the output file without showing it.
-		In this case it is normally useful to specify Output.
+		Use Output in order to specify the file exactly.
 
 .Parameter Number
 		Tells to show job numbers on arrows connecting tasks.
@@ -64,8 +64,7 @@ param(
 	[switch]$Number
 )
 
-trap {$PSCmdlet.ThrowTerminatingError($_)}
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 1
 
 function Escape-Text($Text) {
 	$Text.Replace('"', '#quot;').Replace('<', '#lt;').Replace('>', '#gt;')
@@ -78,8 +77,8 @@ if ($Output) {
 else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
-	$hash = [IO.Path]::GetFileName([IO.Path]::GetDirectoryName($path))
-	$Output = "$env:TEMP\$name-$hash.html"
+	$hash = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName($path))
+	$Output = "$([System.IO.Path]::GetTempPath())\$name-$hash.html"
 }
 
 ### get tasks
@@ -90,7 +89,7 @@ $all = Invoke-Build ?? $File @Parameters
 $docs = @{}
 . Invoke-Build
 
-### get text
+### make text
 $map = @{}
 $text = @(
 	if ($Directive) {$Directive}
@@ -143,7 +142,7 @@ $text = @(
 <html>
 <head>
 <meta charset="utf-8">
-<title>Build graph</title>
+<title>$([System.IO.Path]::GetFileNameWithoutExtension($Output)) tasks</title>
 </head>
 <body>
 <pre class="mermaid">
@@ -154,7 +153,7 @@ $text = @(
 	@'
 </pre>
 <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.8.0/dist/mermaid.esm.min.mjs';
   mermaid.initialize({ startOnLoad: true });
 </script>
 </body>
@@ -162,6 +161,8 @@ $text = @(
 '@
 ) | Set-Content -LiteralPath $Output -Encoding UTF8
 
-### show
-if ($NoShow) {return}
+### show HTML
+if ($NoShow) {
+	return
+}
 Invoke-Item $Output

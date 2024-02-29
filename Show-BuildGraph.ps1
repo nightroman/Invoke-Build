@@ -1,18 +1,17 @@
 <#
 .Synopsis
-	Shows Invoke-Build task graph using Graphviz.
+	Shows Invoke-Build task graph using Graphviz Viz.js or dot.
 	Copyright (c) Roman Kuzmin
 
 .Description
 	Requirements:
-	- Invoke-Build is in the path or available as the module command.
-	- Graphviz (http://graphviz.org) is used as the default engine.
-	  Graphviz\bin is in the path or defined as $env:Graphviz.
-	- viz.js is used as an alternative, see the parameter JS.
+	- Invoke-Build command is available for calls
+	- Internet connection for using online viz-standalone.js
+	- or viz-standalone.js in the path, https://github.com/mdaines/viz.js
+	- or, when -Dot, dot in $env:Graphviz or in the path, http://graphviz.org
 
-	The script calls Invoke-Build in order to get the tasks, writes DOT, and
-	uses either dot.exe or viz.js in order to visualize it using one of the
-	supported output formats and the associated application.
+	The script calls Invoke-Build to get the build tasks, makes the DOT graph,
+	and uses either Viz.js or dot in order to convert the graph for show.
 
 	Tasks without code are shown as ovals, conditional tasks as diamonds, other
 	tasks as boxes. Safe references are shown as dotted edges, regular calls as
@@ -20,33 +19,38 @@
 
 	EXAMPLES
 
-	# Make and show PDF graph using dot.exe
+	# Make and show HTML using viz-standalone.js (local or online)
 	Show-BuildGraph
 
-	# Make and show HTML graph by viz.js
-	Show-BuildGraph -JS *
+	# Make and show PDF using dot
+	Show-BuildGraph -Dot
 
 	# Make Build.png with job numbers and top to bottom edges
-	Show-BuildGraph -Number -NoShow -Code '' -Output Build.png
+	Show-BuildGraph -Dot -Number -NoShow -Code "" -Output Build.png
 
 .Parameter File
 		See: help Invoke-Build -Parameter File
+
 .Parameter Output
-		The output file and the format specified by its extension.
-		The default is "$env:TEMP\name-xxxxxxxx.ext".
-.Parameter JS
-		Tells to use viz.js and generate an HTML file. If it is * then the
-		online script is used. Otherwise, it specifies the path to the
-		directory containing viz.js and lite.render.js.
-		See https://github.com/mdaines/viz.js
+		The custom output file path. The default is in the temp directory.
+		When -Dot, the format is inferred from extension, PDF by default.
+		Otherwise the file extension should be .html.
+
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
 		The default 'graph [rankdir=LR]' tells edges to go from left to right.
+
 .Parameter Parameters
 		Build script parameters needed in special cases when they alter tasks.
+
+.Parameter Dot
+		Tells to use Graphviz dot. By default it creates a PDF file.
+		For different formats use Output with the format extension.
+
 .Parameter NoShow
 		Tells to create the output file without showing it.
-		In this case Output is normally specified by a caller.
+		Use Output in order to specify the file exactly.
+
 .Parameter Number
 		Tells to show job numbers on edges connecting tasks.
 
@@ -56,67 +60,69 @@
 
 param(
 	[Parameter(Position=0)]
-	[string]$File,
+	[string]$File
+	,
 	[Parameter(Position=1)]
-	[string]$Output,
-	[string]$JS,
-	[string]$Code = 'graph [rankdir=LR]',
-	[hashtable]$Parameters,
-	[switch]$NoShow,
+	[string]$Output
+	,
+	[string]$Code = 'graph [rankdir=LR]'
+	,
+	[hashtable]$Parameters
+	,
+	[switch]$Dot
+	,
+	[switch]$NoShow
+	,
 	[switch]$Number
 )
 
-trap {$PSCmdlet.ThrowTerminatingError($_)}
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 1
 
-# resolve dot.exe or js
-if ($JS) {
-	$vizjs = @('viz.js', 'lite.render.js')
-	if ($JS -eq '*') {
-		$jsUrl = foreach($_ in $vizjs) {
-			"https://cdnjs.cloudflare.com/ajax/libs/viz.js/2.1.2/$_"
-		}
-	}
-	else {
-		$JS = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($JS)
-		$jsUrl = foreach($_ in $vizjs) {
-			$_ = Join-Path $JS $_
-			if (!(Test-Path -LiteralPath $_)) {throw "Cannot find '$_'."}
-			'file:///' + $_.Replace('\', '/')
-		}
+### resolve dot or js
+if ($Dot) {
+	$app = if ($env:Graphviz) {"$env:Graphviz/dot"} else {'dot'}
+	$app = Get-Command $app -CommandType Application -ErrorAction 0
+	if (!$app) {
+		Write-Error 'Cannot resolve dot.exe'
 	}
 }
 else {
-	$dot = if ($env:Graphviz) {"$env:Graphviz\dot.exe"} else {'dot.exe'}
-	$dot = Get-Command $dot -CommandType Application -ErrorAction 0
-	if (!$dot) {throw 'Cannot resolve dot.exe'}
+	$app = Get-Command viz-standalone.js -CommandType Application -ErrorAction 0
+	if ($app) {
+		$jsUrl = 'file:///' + $app.Source.Replace('\', '/')
+	}
+	else {
+		$jsUrl = "https://github.com/mdaines/viz-js/releases/download/release-viz-3.2.4/viz-standalone.js"
+	}
 }
 
-# output
+### resolve output
 if ($Output) {
-	if (!($type = [System.IO.Path]::GetExtension($Output))) {throw 'Output must have an extension'}
+	if (!($type = [System.IO.Path]::GetExtension($Output))) {
+		Write-Error 'Output file name must have an extension.'
+	}
 	$Output = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Output)
 	$type = $type.Substring(1).ToLower()
 }
 else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
-	$hash = [IO.Path]::GetFileName([IO.Path]::GetDirectoryName($path))
-	if ($JS) {
-		$Output = "$env:TEMP\$name-$hash.html"
-		$type = 'html'
+	$hash = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName($path))
+	if ($Dot) {
+		$Output = "$([System.IO.Path]::GetTempPath())/$name-$hash.pdf"
+		$type = 'pdf'
 	}
 	else {
-		$Output = "$env:TEMP\$name-$hash.pdf"
-		$type = 'pdf'
+		$Output = "$([System.IO.Path]::GetTempPath())/$name-$hash.html"
+		$type = 'html'
 	}
 }
 
-# get tasks
+### get tasks
 if (!$Parameters) {$Parameters = @{}}
 $all = Invoke-Build ?? $File @Parameters
 
-# DOT code
+### make dot-code
 $text = @(
 	'digraph Tasks {'
 	$Code
@@ -158,43 +164,37 @@ $text = @(
 	'}'
 )
 
-if ($JS) {
+### write output
+if ($Dot) {
+	$temp = "$([System.IO.Path]::GetTempPath())/Graphviz.dot"
+	[System.IO.File]::WriteAllLines($temp, $text)
+
+	& $app "-T$type" -o $Output $temp
+	if ($Global:LASTEXITCODE) {
+		return
+	}
+}
+else {
+	$text = $text | .{process{$_.Replace('"', '\"') + '\'}} | Out-String -Width 9999
 	@"
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>Build graph</title>
+<title>$([System.IO.Path]::GetFileNameWithoutExtension($Output)) tasks</title>
 </head>
 <body>
-$($jsUrl | .{process{"<script src=`"$_`"></script>"}} | Out-String -Width ([int]::MaxValue))
+<script src="$jsUrl"></script>
 <script>
-var viz = new Viz();
-viz.renderSVGElement("$(
-	$text | .{process{$_.Replace('"', '\"') + '\'}} | Out-String -Width ([int]::MaxValue)
-)")
-.then(function(element) {
-	document.body.appendChild(element);
-})
-.catch(error => {
-	viz = new Viz();
-	console.error(error);
-});
+Viz.instance().then(function(viz) {document.body.appendChild(viz.renderSVGElement("$text"));});
 </script>
 </body>
 </html>
 "@ | Set-Content -LiteralPath $Output -Encoding UTF8
 }
-else {
-	#! temp file UTF8 no BOM
-	$temp = "$env:TEMP\Graphviz.dot"
-	[System.IO.File]::WriteAllLines($temp, $text)
 
-	# make
-	& $dot "-T$type" -o $Output $temp
-	if ($LastExitCode) {return}
+### show file
+if ($NoShow) {
+	return
 }
-
-# show
-if ($NoShow) {return}
 Invoke-Item $Output
