@@ -72,15 +72,12 @@ task module version, markdown, help, {
 	)
 
 	# copy Invoke-Build.ps1 with version comment
-	$line, $text = Get-Content Invoke-Build.ps1
-	equals $line '<#'
-	$(
-		"<# Invoke-Build $script:Version"
-		$text
-	) | Set-Content $dir\Invoke-Build.ps1
+	$text = Get-Content Invoke-Build.ps1 -Raw
+	assert ($text -match '^<#\n')
+	[System.IO.File]::WriteAllText("$dir\Invoke-Build.ps1", ("<# Invoke-Build $script:Version" + $text.Substring(2)))
 
 	# make manifest
-	Set-Content "$dir\InvokeBuild.psd1" @"
+	[System.IO.File]::WriteAllText("$dir\InvokeBuild.psd1", @"
 @{
 	ModuleVersion = '$script:Version'
 	ModuleToProcess = 'InvokeBuild.psm1'
@@ -101,7 +98,12 @@ task module version, markdown, help, {
 		}
 	}
 }
-"@
+"@)
+
+	# test line endings
+	(Get-ChildItem $dir -Recurse -File -Exclude *.xml, *.htm).ForEach{
+		assert (!(Get-Content $_ -Raw).Contains("`r")) "Unexpected line ending CR: $_"
+	}
 }
 
 # Synopsis: Make the NuGet package.

@@ -1,2 +1,14 @@
-# prevent converting LF to CRLF for *.sh
+* text=auto
+
+*.cmd text eol=crlf
 *.sh text eol=lf
+
+.build.ps1 text eol=lf
+about_InvokeBuild.help.txt text eol=lf
+Build-Checkpoint.ps1 text eol=lf
+Build-Parallel.ps1 text eol=lf
+Invoke-Build.ps1 text eol=lf
+Resolve-MSBuild.ps1 text eol=lf
+Show-TaskHelp.ps1 text eol=lf
+InvokeBuild.psm1 text eol=lf
+LICENSE text eol=lf
