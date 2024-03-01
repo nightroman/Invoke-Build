@@ -1,3 +1,13 @@
+<#PSScriptInfo
+.VERSION 1.0.0
+.AUTHOR Roman Kuzmin
+.COPYRIGHT (c) Roman Kuzmin
+.TAGS Invoke-Build, Graphviz
+.GUID 43d94ab6-d0c5-4c6a-839d-2ace0449bf56
+.LICENSEURI http://www.apache.org/licenses/LICENSE-2.0
+.PROJECTURI https://github.com/nightroman/Invoke-Build
+#>
+
 <#
 .Synopsis
 	Shows Invoke-Build task graph using Graphviz Viz.js or dot.

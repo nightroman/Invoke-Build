@@ -25,14 +25,18 @@
 
 .Parameter File
 		See: help Invoke-Build -Parameter File
+
 .Parameter Output
 		The output file and the format specified by its extension.
 		The default is "$env:TEMP\name-xxxxxxxx.dgml".
+
 .Parameter Parameters
 		Build script parameters needed in special cases when they alter tasks.
+
 .Parameter NoShow
 		Tells to create the output file without showing it.
 		In this case Output is normally specified by a caller.
+
 .Parameter Number
 		Tells to show job numbers on edges connecting tasks.
 

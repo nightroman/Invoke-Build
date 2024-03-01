@@ -654,7 +654,7 @@ function Write-Warning([Parameter()]$Message) {
 	${*}.Warnings.Add([PSCustomObject]@{Message = $Message; File = $BuildFile; Task = ${*}.Task; InvocationInfo=$MyInvocation})
 }
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 1
 foreach($_ in ${*}.DP.get_Values()) {
 	if ($_.IsSet) {
 		${*}.SP[$_.Name] = $_.Value

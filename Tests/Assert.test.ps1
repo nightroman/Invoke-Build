@@ -3,8 +3,8 @@
 	Tests 'assert' and $ErrorActionPreference.
 #>
 
-# $ErrorActionPreference is 'Stop' by default.
-assert ($ErrorActionPreference -eq 'Stop')
+# $ErrorActionPreference is 1 by default.
+assert ($ErrorActionPreference -eq 1)
 
 # But scripts can change this.
 $ErrorActionPreference = 0

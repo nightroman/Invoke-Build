@@ -3,3 +3,5 @@
 periodically depending on parameters.
 
 The build script *Repeat.build.ps1* demonstrates scheduled tasks.
+
+See also [Repeat2](../Repeat2).

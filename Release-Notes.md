@@ -1,6 +1,11 @@
 # Invoke-Build Release Notes
 
+## v5.10.6
+
+Minor tweaks, new demo Tasks/Repeat2, etc.
+
 `Show-BuildGraph.ps1`
+- available at PSGallery
 - uses `Viz.js` by default and `dot` with `-Dot`
 - shows node and edge tooltips (synopses, names)
 

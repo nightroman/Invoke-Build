@@ -11,16 +11,17 @@
 		Task names.
 		If it is "*" then all root tasks are used.
 		If it is omitted or "." then the default task is used.
+
 .Parameter File
 		The build script.
 		If it is omitted then the default script is used.
+
 .Parameter Parameters
 		Build script parameters needed in special cases when they alter tasks.
+
 .Parameter Upstream
 		Tells to show upstream tasks for each task.
 
-.Inputs
-	None.
 .Outputs
 	Specified task trees.
 
@@ -29,11 +30,19 @@
 #>
 
 param(
-	[Parameter(Position=0)][string[]]$Task,
-	[Parameter(Position=1)][string]$File,
-	[Parameter(Position=2)][hashtable]$Parameters,
+	[Parameter(Position=0)]
+	[string[]]$Task
+	,
+	[Parameter(Position=1)]
+	[string]$File
+	,
+	[Parameter(Position=2)]
+	[hashtable]$Parameters
+	,
 	[switch]$Upstream
 )
+
+$ErrorActionPreference = 1
 
 $private:_Task = $Task
 $private:_File = $File
@@ -76,7 +85,6 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	}
 }
 
-$ErrorActionPreference = 'Stop'
 try {
 	. Invoke-Build
 

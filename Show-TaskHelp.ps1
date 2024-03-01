@@ -32,11 +32,14 @@
 
 .Parameter Task
 		Build task name(s). The default is the usual default task.
+
 .Parameter File
 		Build script path. The default is the usual default script.
+
 .Parameter NoCode
 		Tells to skip code analysis for parameters and environment.
 		It is used as true for PowerShell v2.
+
 .Parameter Format
 		Specifies the custom task help formatter.
 
@@ -45,9 +48,12 @@
 #>
 
 param(
-	[Parameter(Position=0)][string[]]$Task,
-	[Parameter(Position=1)]$File,
-	$Format = 'Format-TaskHelp',
+	[Parameter(Position=0)][string[]]$Task
+	,
+	[Parameter(Position=1)]$File
+	,
+	[object]$Format = 'Format-TaskHelp'
+	,
 	[switch]$NoCode
 )
 

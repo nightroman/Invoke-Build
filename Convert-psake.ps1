@@ -138,8 +138,8 @@ param(
 )
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
-$ErrorActionPreference = 'Stop'
-Set-StrictMode -Version Latest
+$ErrorActionPreference = 1
+Set-StrictMode -Version 3
 
 ### Source
 

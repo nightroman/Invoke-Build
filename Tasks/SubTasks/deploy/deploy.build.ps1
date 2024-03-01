@@ -9,12 +9,9 @@ param(
 	[string]$CommonChildParam
 )
 
-Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
-
-if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -ne 'Invoke-Build.ps1') {
-	Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
-	return
+if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
+	$ErrorActionPreference = 1
+	return Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
 }
 
 task task1 {

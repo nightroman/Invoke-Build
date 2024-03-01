@@ -13,13 +13,21 @@ specific language governing permissions and limitations under the License.
 
 #.ExternalHelp InvokeBuild-Help.xml
 param(
-	[Parameter(Position=0)][hashtable[]]$Build,
-	$Result,
-	[int]$Timeout=[int]::MaxValue,
-	[int]$MaximumBuilds=[Environment]::ProcessorCount,
-	[switch]$FailHard,
+	[Parameter(Position=0)]
+	[hashtable[]]$Build
+	,
+	[object]$Result
+	,
+	[int]$Timeout=[int]::MaxValue
+	,
+	[int]$MaximumBuilds=[Environment]::ProcessorCount
+	,
+	[switch]$FailHard
+	,
 	[string[]]$ShowParameter
 )
+
+$ErrorActionPreference = 1
 
 # info, result
 $info = [PSCustomObject]@{
@@ -44,7 +52,6 @@ if (!$Build) {return}
 # get and source the engine
 $ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
 try {. $ib} catch {$PSCmdlet.ThrowTerminatingError($_)}
-$ErrorActionPreference = 'Stop'
 
 ### make works, check scripts
 $works = @()

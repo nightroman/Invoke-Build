@@ -18,9 +18,12 @@
 
 ## Custom tasks
 
+Custom tasks may be defined literally and via custom parameters, see [Repeat](Repeat) and [Repeat2](Repeat2).
+
 - [Check](Check) shows the custom task `check` which is invoked once even if a build (check list) is invoked repeatedly.
 - [File](File) shows the custom task `file`, an incremental task with simplified syntax, somewhat similar to Rake's `file`.
 - [Repeat](Repeat) shows the custom task `repeat` which is invoked periodically in a build script (schedule) with such tasks.
+- [Repeat2](Repeat2) shows the alternative way with using the special command `repeat` which turns tasks into repeatable.
 - [Retry](Retry) shows the custom task `retry` which retries its action on failures several times depending on parameters.
 
 ## Known issues

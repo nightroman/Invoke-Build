@@ -15,13 +15,17 @@
 #>
 
 param(
-	[Parameter(Position=0, Mandatory=1)][string[]]$Task,
-	[Parameter(Position=1)]$File,
-	[switch]$Safe,
+	[Parameter(Position=0, Mandatory=1)]
+	[string[]]$Task
+	,
+	[Parameter(Position=1)]$File
+	,
+	[switch]$Safe
+	,
 	[switch]$Summary
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 1
 try {
 	${*data} = @{
 		Task = $Task

@@ -33,8 +33,9 @@ param(
 	[Parameter()]
 	[switch]$Console
 )
+
+$ErrorActionPreference = 1
 try {
-$ErrorActionPreference = 'Stop'
 
 $private:file = $null
 try {

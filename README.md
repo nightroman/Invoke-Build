@@ -1,6 +1,6 @@
 
-[![NuGet](https://buildstats.info/nuget/Invoke-Build)](https://www.nuget.org/packages/Invoke-Build)
 [![PSGallery](https://img.shields.io/powershellgallery/dt/InvokeBuild.svg)](https://www.powershellgallery.com/packages/InvokeBuild)
+[![NuGet](https://buildstats.info/nuget/Invoke-Build)](https://www.nuget.org/packages/Invoke-Build)
 <img src="https://raw.githubusercontent.com/nightroman/Invoke-Build/main/ib.png" align="right"/>
 
 ## Build Automation in PowerShell
@@ -27,44 +27,43 @@ Several *PowerShell Team* projects use Invoke-Build.
 
 The package includes the engine, helpers, and help:
 
-* [Invoke-Build.ps1](Invoke-Build.ps1) - invokes build scripts, this is the build engine
-* [Build-Checkpoint.ps1](Build-Checkpoint.ps1) - invokes persistent builds using the engine
-* [Build-Parallel.ps1](Build-Parallel.ps1) - invokes parallel builds using the engine
-* [Resolve-MSBuild.ps1](Resolve-MSBuild.ps1) - finds the specified or latest MSBuild
-* [Show-TaskHelp.ps1](Show-TaskHelp.ps1) - shows task help, used on WhatIf calls
+* [Invoke-Build.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Invoke-Build.ps1) - invokes build scripts, this is the build engine
+* [Build-Checkpoint.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Build-Checkpoint.ps1) - invokes persistent builds using the engine
+* [Build-Parallel.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Build-Parallel.ps1) - invokes parallel builds using the engine
+* [Resolve-MSBuild.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Resolve-MSBuild.ps1) - finds the specified or latest MSBuild
+* [Show-TaskHelp.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Show-TaskHelp.ps1) - shows task help, used on WhatIf calls
 * *about_InvokeBuild.help.txt* - module help file
 * *InvokeBuild-Help.xml* - content for Get-Help
 
-Extra tools, see PSGallery and the repository:
+Extra scripts, see PSGallery and the repository:
 
-* [Invoke-Build.ArgumentCompleters.ps1](Invoke-Build.ArgumentCompleters.ps1) - completers for v5 native, TabExpansion2.ps1
-* [Invoke-TaskFromVSCode.ps1](Invoke-TaskFromVSCode.ps1) - invokes a task from a build script opened in VSCode
-* [New-VSCodeTask.ps1](New-VSCodeTask.ps1) - generates VSCode tasks bound to build script tasks
-* [Invoke-TaskFromISE.ps1](Invoke-TaskFromISE.ps1) - invokes a task from a script opened in ISE
+* [Invoke-Build.ArgumentCompleters](https://www.powershellgallery.com/packages/Invoke-Build.ArgumentCompleters) - completers for v5 native, TabExpansion2.ps1
+* [Invoke-TaskFromVSCode](https://www.powershellgallery.com/packages/Invoke-TaskFromVSCode) - invokes a task from a build script opened in VSCode
+* [Show-BuildGraph](https://www.powershellgallery.com/packages/Show-BuildGraph) - shows task graph by Graphviz Viz.js or dot
+* [New-VSCodeTask](https://www.powershellgallery.com/packages/New-VSCodeTask) - generates VSCode tasks bound to build script tasks
+* [Invoke-TaskFromISE](https://www.powershellgallery.com/packages/Invoke-TaskFromISE) - invokes a task from a script opened in ISE
 
 And some more tools, see the repository:
 
-* [ib.cmd](ib.cmd), [ib.sh](ib.sh) - cmd and bash helpers
-* [Build-JustTask.ps1](Build-JustTask.ps1) - invokes tasks without references
-* [Convert-psake.ps1](Convert-psake.ps1) - converts psake build scripts, see [wiki](https://github.com/nightroman/Invoke-Build/wiki/Convert~psake)
-* [Show-BuildTree.ps1](Show-BuildTree.ps1) - shows task trees as text
-* [Show-BuildDgml.ps1](Show-BuildDgml.ps1) - shows task graph as DGML
-* [Show-BuildGraph.ps1](Show-BuildGraph.ps1) - shows task graph by Graphviz
-* [Show-BuildMermaid.ps1](Show-BuildMermaid.ps1) - shows task graph by Mermaid
+* [ib.cmd](https://github.com/nightroman/Invoke-Build/blob/main/ib.cmd), [ib.sh](https://github.com/nightroman/Invoke-Build/blob/main/ib.sh) - cmd and bash helpers
+* [Build-JustTask.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Build-JustTask.ps1) - invokes tasks without references
+* [Convert-psake.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Convert-psake.ps1) - converts psake build scripts, see [wiki](https://github.com/nightroman/Invoke-Build/wiki/Convert~psake)
+* [Show-BuildTree.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Show-BuildTree.ps1) - shows task trees as text
+* [Show-BuildDgml.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Show-BuildDgml.ps1) - shows task graph as DGML
+* [Show-BuildMermaid.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Show-BuildMermaid.ps1) - shows task graph by Mermaid
 
 ## Install as module
 
 Invoke-Build is published as PSGallery module [InvokeBuild](https://www.powershellgallery.com/packages/InvokeBuild).
 You can install it by one of these commands:
 
-    Install-Module InvokeBuild -Scope CurrentUser
     Install-Module InvokeBuild
 
 To install the module with Chocolatey, run the following command:
 
     choco install invoke-build
 
-> NOTE: The Chocolatey package is maintained by its owner.
+NOTE: The Chocolatey package is maintained by its owner.
 
 ## Install as scripts
 
@@ -79,12 +78,12 @@ path. You may need to start a new PowerShell session with the updated path.
 
 Otherwise, download the package manually, rename it to zip, extract its *tools*
 and rename to *InvokeBuild*. Consider including this directory to the path for
-invoking scripts by names. Or copy to the PowerShell module directory in order
-to use it as the module.
+invoking scripts by names. Or copy to any PowerShell module directory in order
+to use it as module.
 
 ## Install as dotnet tool
 
-[nuget.org/packages/ib](https://www.nuget.org/packages/ib/) provides Invoke-Build
+[nuget.org/packages/ib](https://www.nuget.org/packages/ib) provides Invoke-Build
 as the dotnet tool `ib` which may be installed as global or local.
 
 To install the global tool:
@@ -96,7 +95,7 @@ To install the local tool:
     dotnet new tool-manifest # once on setting up a repo with tools
     dotnet tool install --local ib
 
-> See [ib/README](ib/README.md) for more details about `ib` commands.
+See [ib/README](https://github.com/nightroman/Invoke-Build/blob/main/ib/README.md) for more details about `ib` commands.
 
 ## Getting help
 
@@ -119,22 +118,14 @@ In order to get help for internal commands:
 
 ## Online resources
 
-- [Basic Concepts](https://github.com/nightroman/Invoke-Build/wiki/Concepts)
-: Why build scripts may have advantages over normal scripts.
-- [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial)
-: Take a look in order to get familiar with build scripts.
-- [Step by Step Tutorial](https://github.com/nightroman/Invoke-Build/tree/main/Tasks/01-step-by-step-tutorial)
-: From "Hello world" to featured scripts.
-- [Invoke-Build.template](https://github.com/nightroman/Invoke-Build.template)
-: Create scripts by `dotnet new ib`.
-- [Project Wiki](https://github.com/nightroman/Invoke-Build/wiki)
-: Detailed tutorials, helpers, notes, and etc.
-- [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects)
-: Build scripts used in various projects.
-- [Tasks](https://github.com/nightroman/Invoke-Build/tree/main/Tasks)
-: Samples, patterns, and various techniques.
-- [Design Notes](https://github.com/nightroman/Invoke-Build/wiki/Design-Notes)
-: Technical details for contributors.
+- [Basic Concepts](https://github.com/nightroman/Invoke-Build/wiki/Concepts): Why build scripts may have advantages over normal scripts.
+- [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial): Take a look in order to get familiar with build scripts.
+- [Step by Step Tutorial](https://github.com/nightroman/Invoke-Build/tree/main/Tasks/01-step-by-step-tutorial): From "Hello world" to featured scripts.
+- [Invoke-Build.template](https://github.com/nightroman/Invoke-Build.template): Create scripts by `dotnet new ib`.
+- [Project Wiki](https://github.com/nightroman/Invoke-Build/wiki): Detailed tutorials, helpers, notes, and etc.
+- [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects): Build scripts used in various projects.
+- [Tasks](https://github.com/nightroman/Invoke-Build/tree/main/Tasks): Samples, patterns, and various techniques.
+- [Design Notes](https://github.com/nightroman/Invoke-Build/wiki/Design-Notes): Technical details for contributors.
 - [Release Notes](https://github.com/nightroman/Invoke-Build/blob/main/Release-Notes.md)
 
 [discussions]: https://github.com/nightroman/Invoke-Build/discussions

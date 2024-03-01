@@ -53,7 +53,7 @@ param(
 	[switch]$Console
 )
 
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 1
 
 $private:ib = "$(Split-Path $MyInvocation.MyCommand.Path)\Invoke-Build.ps1"
 if (!(Test-Path -LiteralPath $ib)) {

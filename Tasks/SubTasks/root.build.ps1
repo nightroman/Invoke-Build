@@ -58,11 +58,10 @@ dynamicparam {
 }
 
 end {
-	Set-StrictMode -Version Latest
-	$ErrorActionPreference = 'Stop'
-
 	# Bootstrap and call Invoke-Build
-	if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -ne 'Invoke-Build.ps1') {
+	if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
+		$ErrorActionPreference = 1
+
 		# bootstrap (omitted)
 		# ...
 
@@ -70,8 +69,7 @@ end {
 		$DynamicParamTasks = $Tasks
 
 		# call Invoke-Build
-		Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
-		return
+		return Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
 	}
 
 	# remove SubTasks, it does not exist in child scripts
