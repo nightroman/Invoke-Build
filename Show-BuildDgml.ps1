@@ -42,37 +42,40 @@
 
 param(
 	[Parameter(Position=0)]
-	[string]$File,
+	[string]$File
+	,
 	[Parameter(Position=1)]
-	[string]$Output,
-	[hashtable]$Parameters,
-	[switch]$NoShow,
+	[string]$Output
+	,
+	[hashtable]$Parameters
+	,
+	[switch]$NoShow
+	,
 	[switch]$Number
 )
 
-trap {$PSCmdlet.ThrowTerminatingError($_)}
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 1
 
-# output
+### resolve output
 if ($Output) {
 	$Output = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Output)
 }
 else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
-	$hash = [IO.Path]::GetFileName([IO.Path]::GetDirectoryName($path))
-	$Output = "$env:TEMP\$name-$hash.dgml"
+	$hash = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName($path))
+	$Output = [System.IO.Path]::GetTempPath() + "$name-$hash.dgml"
 }
 
-# get tasks
+### get tasks
 if (!$Parameters) {$Parameters = @{}}
 $all = Invoke-Build ?? $File @Parameters
 
-# synopses
+### for synopses
 $docs = @{}
 . Invoke-Build
 
-# make DGML
+### make DGML
 $xml = [xml]'<?xml version="1.0" encoding="utf-8"?><DirectedGraph/>'
 $doc = $xml.DocumentElement
 $nodes = $doc.AppendChild($xml.CreateElement('Nodes'))
@@ -127,10 +130,11 @@ foreach($it in $all.get_Values()) {
 	}
 }
 
-# save DGML
+### save DGML
 $doc.SetAttribute('xmlns', 'http://schemas.microsoft.com/vs/2009/dgml')
 $xml.Save($Output)
 
-# show
-if ($NoShow) {return}
-Invoke-Item $Output
+### show file
+if (!$NoShow) {
+	Invoke-Item -LiteralPath $Output
+}

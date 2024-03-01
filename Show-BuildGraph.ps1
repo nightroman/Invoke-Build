@@ -22,7 +22,7 @@
 	# Make and show HTML using viz-standalone.js (local or online)
 	Show-BuildGraph
 
-	# Make and show PDF using dot
+	# Make and show SVG using dot
 	Show-BuildGraph -Dot
 
 	# Make Build.png with job numbers and top to bottom edges
@@ -33,18 +33,18 @@
 
 .Parameter Output
 		The custom output file path. The default is in the temp directory.
-		When -Dot, the format is inferred from extension, PDF by default.
-		Otherwise the file extension should be .html.
+		When -Dot, the format is inferred from extension, SVG by default,
+		otherwise the file extension should be htm or html.
 
 .Parameter Code
 		Custom DOT code added to the graph definition, see Graphviz manuals.
-		The default 'graph [rankdir=LR]' tells edges to go from left to right.
+		The default 'graph [rankdir=LR]' tells to make left to right edges.
 
 .Parameter Parameters
 		Build script parameters needed in special cases when they alter tasks.
 
 .Parameter Dot
-		Tells to use Graphviz dot. By default it creates a PDF file.
+		Tells to use Graphviz dot. By default it creates a SVG file.
 		For different formats use Output with the format extension.
 
 .Parameter NoShow
@@ -92,7 +92,7 @@ else {
 		$jsUrl = 'file:///' + $app.Source.Replace('\', '/')
 	}
 	else {
-		$jsUrl = "https://github.com/mdaines/viz-js/releases/download/release-viz-3.2.4/viz-standalone.js"
+		$jsUrl = 'https://github.com/mdaines/viz-js/releases/download/release-viz-3.2.4/viz-standalone.js'
 	}
 }
 
@@ -109,11 +109,11 @@ else {
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
 	$hash = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName($path))
 	if ($Dot) {
-		$Output = "$([System.IO.Path]::GetTempPath())/$name-$hash.pdf"
-		$type = 'pdf'
+		$Output = [System.IO.Path]::GetTempPath() + "$name-$hash.svg"
+		$type = 'svg'
 	}
 	else {
-		$Output = "$([System.IO.Path]::GetTempPath())/$name-$hash.html"
+		$Output = [System.IO.Path]::GetTempPath() + "$name-$hash.html"
 		$type = 'html'
 	}
 }
@@ -122,45 +122,72 @@ else {
 if (!$Parameters) {$Parameters = @{}}
 $all = Invoke-Build ?? $File @Parameters
 
-### make dot-code
-$text = @(
-	'digraph Tasks {'
-	$Code
-	foreach($it in $all.get_Values()) {
-		$name = $it.Name
-		'"{0}"' -f $name
+### for synopses
+$docs = @{}
+. Invoke-Build
 
+### make dot-code
+
+function escape_text($text) {
+	$text.Replace('\', '\\').Replace('"', '\"')
+}
+
+$text = @(
+	### begin
+	'digraph {'
+	$Code
+
+	### nodes
+	$id = 0
+	$map = @{}
+	foreach($it in $all.get_Values()) {
+		++$id
+		$name = $it.Name
+		$map[$name] = $id
+		$attr = 'label="{0}"' -f (escape_text $name)
+
+		if ($synopsis = Get-BuildSynopsis $it $docs) {
+			$attr += ' tooltip="{0}"' -f (escape_text $synopsis)
+		}
+
+		$hasScript = foreach($job in $it.Jobs) {if ($job -is [scriptblock]) {$true}}
+		if ($hasScript) {
+			if ((-9).Equals($it.If)) {
+				$attr += ' shape=box'
+			}
+			else {
+				$attr += ' shape=diamond'
+			}
+		}
+
+		'{0} [{1}]' -f $id, $attr
+	}
+
+	### edges
+	$id = 0
+	foreach($it in $all.get_Values()) {
+		++$id
 		$jobNumber = 0
-		$hasScript = $false
 		foreach($job in $it.Jobs) {
 			++$jobNumber
 			if ($job -is [string]) {
 				$job, $safe = if ($job[0] -eq '?') {$job.Substring(1), 1} else {$job}
 				$job = $all[$job].Name
-				$edge = ' '
+				$id2 = $map[$job]
+				$tooltip = escape_text "$($it.Name) -> $job"
+				$attr = 'edgetooltip="{0}"' -f $tooltip
 				if ($Number) {
-					$edge += "label=$jobNumber "
+					$attr += ' label="{0}" labeltooltip="{1}"' -f $jobNumber, $tooltip
 				}
 				if ($safe) {
-					$edge += "style=dotted "
+					$attr += ' style=dotted'
 				}
-				'"{0}" -> "{1}" [{2}]' -f $name, $job, $edge
+				'{0} -> {1} [{2}]' -f $id, $id2, $attr
 			}
-			else {
-				$hasScript = $true
-			}
-		}
-
-		if ($hasScript) {
-			if ((-9).Equals($it.If)) {
-				$node = 'shape=box'
-			}
-			else {
-				$node = 'shape=diamond'
-			}
-			'"{0}" [ {1} ]' -f $name, $node
 		}
 	}
+
+	### end
 	'}'
 )
 
@@ -175,7 +202,7 @@ if ($Dot) {
 	}
 }
 else {
-	$text = $text | .{process{$_.Replace('"', '\"') + '\'}} | Out-String -Width 9999
+	$text = $text | .{process{$_.Replace('\', '\\').Replace('"', '\"') + '\'}} | Out-String -Width 9999
 	@"
 <!DOCTYPE html>
 <html>
@@ -186,7 +213,7 @@ else {
 <body>
 <script src="$jsUrl"></script>
 <script>
-Viz.instance().then(function(viz) {document.body.appendChild(viz.renderSVGElement("$text"));});
+Viz.instance().then(function(viz) {document.body.appendChild(viz.renderSVGElement("$text"))})
 </script>
 </body>
 </html>
@@ -194,7 +221,6 @@ Viz.instance().then(function(viz) {document.body.appendChild(viz.renderSVGElemen
 }
 
 ### show file
-if ($NoShow) {
-	return
+if (!$NoShow) {
+	Invoke-Item -LiteralPath $Output
 }
-Invoke-Item $Output

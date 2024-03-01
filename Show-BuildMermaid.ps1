@@ -78,14 +78,14 @@ else {
 	$path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($(if ($File) {$File} else {''}))
 	$name = [System.IO.Path]::GetFileNameWithoutExtension($path)
 	$hash = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName($path))
-	$Output = "$([System.IO.Path]::GetTempPath())\$name-$hash.html"
+	$Output = [System.IO.Path]::GetTempPath() + "$name-$hash.html"
 }
 
 ### get tasks
 if (!$Parameters) {$Parameters = @{}}
 $all = Invoke-Build ?? $File @Parameters
 
-### synopses
+### for synopses
 $docs = @{}
 . Invoke-Build
 
@@ -161,8 +161,7 @@ $text = @(
 '@
 ) | Set-Content -LiteralPath $Output -Encoding UTF8
 
-### show HTML
-if ($NoShow) {
-	return
+### show file
+if (!$NoShow) {
+	Invoke-Item -LiteralPath $Output
 }
-Invoke-Item $Output

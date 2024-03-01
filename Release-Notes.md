@@ -1,7 +1,11 @@
 # Invoke-Build Release Notes
 
-- `Show-BuildGraph.ps1` uses `Viz.js` by default and `dot` if `-Dot`
-- `Show-BuildMermaid.ps1` uses `Mermaid` 10.8.0
+`Show-BuildGraph.ps1`
+- uses `Viz.js` by default and `dot` with `-Dot`
+- shows node and edge tooltips (synopses, names)
+
+`Show-BuildMermaid.ps1`
+- uses `Mermaid` 10.8.0
 
 ## v5.10.5
 
