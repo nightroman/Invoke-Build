@@ -43,7 +43,7 @@ if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
 $p = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
-$c, $r = $null
+$c, $r, $a = $null
 New-Variable * -Description IB ([PSCustomObject]@{
 	All = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Tasks = [System.Collections.Generic.List[object]]@()
@@ -116,10 +116,14 @@ if ($_.get_Count()) {
 	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
 	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
 	foreach($p in $_.get_Values()) {
-		if ($c -notcontains ($_ = $p.Name)) {
-			if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
-			${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $p.Attributes))
+		if ($c -contains ($_ = $p.Name)) {continue}
+		if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
+		foreach ($a in $p.Attributes) {
+			if ($a -is [System.Management.Automation.ParameterAttribute] -and $a.Position -ge 0) {
+				$a.Position += 2
+			}
 		}
+		${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $p.Attributes))
 	}
 	${*}.DP
 }
@@ -663,7 +667,7 @@ foreach($_ in ${*}.DP.get_Values()) {
 if (${*}.Q = $BuildTask -eq '?' -or $BuildTask -eq '??') {
 	$WhatIf = $true
 }
-Remove-Variable Task, File, Result, Safe, Summary, p, c, r
+Remove-Variable Task, File, Result, Safe, Summary, p, c, r, a
 
 ${*}.Error = $null
 try {

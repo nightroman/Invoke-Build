@@ -2,6 +2,8 @@
 
 ## v5.10.6
 
+Fix cryptic errors on unknown parameters, #217
+
 Minor tweaks, new demo Tasks/Repeat2, etc.
 
 `Show-BuildGraph.ps1`

@@ -29,12 +29,12 @@ task status -if {ask} {
 }
 
 # Synopsis: Run Invoke-Build tests.
-task test_IB -if {ask} {
+task test_IB -if {ask} test_ib_tool, {
 	Invoke-Build
 }
 
 # Synopsis: Test the ib dotnet tool.
-task test_ib_tool -if {ask} {
+task test_ib_tool {
 	Invoke-Build . ib/ib.build.ps1
 }
 

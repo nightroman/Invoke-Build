@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.0
+.VERSION 1.0.1
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -166,7 +166,7 @@ $text = @(
 				$attr += ' shape=box'
 			}
 			else {
-				$attr += ' shape=diamond'
+				$attr += ' shape=note'
 			}
 		}
 
