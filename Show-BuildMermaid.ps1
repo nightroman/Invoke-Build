@@ -105,11 +105,11 @@ $text = @(
 		if (!$hasScript) {
 			"$id([`"$name`"])"
 		}
-		elseif ((-9).Equals($it.If)) {
-			"$id[`"$name`"]"
+		elseif ($it.Inputs -or !(-9).Equals($it.If)) {
+			"$id{{`"$name`"}}"
 		}
 		else {
-			"$id{{`"$name`"}}"
+			"$id[`"$name`"]"
 		}
 
 		if ($synopsis = Get-BuildSynopsis $it $docs) {

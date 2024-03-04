@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.2
+.VERSION 1.0.3
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -161,11 +161,11 @@ $text = @(
 
 		$hasScript = foreach($job in $it.Jobs) {if ($job -is [scriptblock]) {$true}}
 		if ($hasScript) {
-			if ((-9).Equals($it.If)) {
-				$attr += ' shape=box'
+			if ($it.Inputs -or !(-9).Equals($it.If)) {
+				$attr += ' shape=note'
 			}
 			else {
-				$attr += ' shape=note'
+				$attr += ' shape=box'
 			}
 		}
 
