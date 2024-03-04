@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.1
+.VERSION 1.0.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -156,9 +156,8 @@ $text = @(
 		$map[$name] = $id
 		$attr = 'label="{0}"' -f (escape_text $name)
 
-		if ($synopsis = Get-BuildSynopsis $it $docs) {
-			$attr += ' tooltip="{0}"' -f (escape_text $synopsis)
-		}
+		$tooltip = if ($synopsis = Get-BuildSynopsis $it $docs) {$synopsis} else {$name}
+		$attr += ' tooltip="{0}"' -f (escape_text $tooltip)
 
 		$hasScript = foreach($job in $it.Jobs) {if ($job -is [scriptblock]) {$true}}
 		if ($hasScript) {
