@@ -11,7 +11,7 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 #>
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 param(
 	[Parameter(Position=0)][string[]]$Task,
 	[Parameter(Position=1)]$File,
@@ -130,7 +130,7 @@ if ($_.get_Count()) {
 
 } end {
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Add-BuildTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
 	[Parameter(Position=1)]$Jobs,
@@ -180,14 +180,14 @@ function Add-BuildTask(
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Assert-Build([Parameter()]$Condition, [string]$Message) {
 	if (!$Condition) {
 		*Die "Assertion failed.$(if ($Message) {" $Message"})" 7
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Assert-BuildEquals([Parameter()]$A, $B) {
 	if (![Object]::Equals($A, $B)) {
 		*Die @"
@@ -198,7 +198,7 @@ B:$(if ($null -ne $B) {" $B [$($B.GetType())]"})
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 	if (!($_ = ${*}.All[$Task])) {
 		*Die "Missing task '$Task'." 5
@@ -206,7 +206,7 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 	$_.Error
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 	${*n} = $Name
 	${*v} = $Value
@@ -216,7 +216,7 @@ function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
 	${*v}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 	$f = ($I = $Task.InvocationInfo).ScriptName
 	if (!($d = $Hash[$f])) {
@@ -231,7 +231,7 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandatory=1)][scriptblock]$Script) {
 	${private:*e} = @{}
 	${private:*s} = $Script
@@ -250,19 +250,39 @@ function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandat
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
-function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0, [string]$ErrorMessage, [switch]$Echo) {
+#.ExternalHelp Help.xml
+function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0, [string]$ErrorMessage, [switch]$Echo, [switch]$StdErr) {
 	${private:*c} = $Command
 	${private:*x} = $ExitCode
 	${private:*m} = $ErrorMessage
-	${private:*e} = $Echo
-	Remove-Variable Command, ExitCode, ErrorMessage, Echo
-	if (${*e}) {
+	${private:*v} = $Echo
+	${private:*s} = $StdErr
+	${private:*e} = ''
+	Remove-Variable Command, ExitCode, ErrorMessage, Echo, StdErr
+	if (${*v}) {
 		*Echo ${*c}
 	}
-	& ${*c}
+
+	$global:LastExitCode = 0
+	if (${*s}) {
+		$ErrorActionPreference = 2
+		try {
+			& ${*c} 2>&1 | .{process{
+				if ($_ -is [System.Management.Automation.ErrorRecord]) {
+					$_ = $_.Exception.Message
+					${*e} += "`n$_"
+				}
+				$_
+			}}
+		}
+		catch {throw}
+	}
+	else {
+		& ${*c}
+	}
+
 	if (${*x} -notcontains $global:LastExitCode) {
-		*Die "$(if (${*m}) {"${*m} "})Command exited with code $global:LastExitCode. {${*c}}" 8
+		*Die "$(if (${*m}) {"${*m} "})Command exited with code $global:LastExitCode. {${*c}}${*e}" 8
 	}
 }
 
@@ -279,7 +299,7 @@ function *Echo {
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 	if ($Path -match '^[.*/\\]*$') {*Die 'Not allowed paths.' 5}
 	$v = $PSBoundParameters['Verbose']
@@ -297,7 +317,7 @@ function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$Environment, [string[]]$Path, [string[]]$Property) {
 	Remove-Variable Variable, Environment, Path, Property
 	if ($_ = $PSBoundParameters['Variable']) {foreach($_ in $_) {
@@ -314,7 +334,7 @@ function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$
 	}}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) {
 	trap {*Die $_ 5}
 	$d = switch -regex ($Path) {
@@ -328,18 +348,18 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 	}
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Set-BuildFooter([Parameter()][scriptblock]$Script) {${*}.Footer = $Script}
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Confirm-Build([Parameter()][string]$Query, [string]$Caption=$Task.Name) {
 	$PSCmdlet.ShouldContinue($Query, $Caption)
 }
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	*Write $Color ($Text -split '\r\n|[\r\n]')
 }

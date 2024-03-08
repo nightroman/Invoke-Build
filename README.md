@@ -1,5 +1,5 @@
 
-[![PSGallery](https://img.shields.io/powershellgallery/dt/InvokeBuild.svg)](https://www.powershellgallery.com/packages/InvokeBuild)
+[![PSGV](https://img.shields.io/powershellgallery/v/InvokeBuild) ![PSGD](https://img.shields.io/powershellgallery/dt/InvokeBuild)](https://www.powershellgallery.com/packages/InvokeBuild)
 [![NuGet](https://buildstats.info/nuget/Invoke-Build)](https://www.nuget.org/packages/Invoke-Build)
 <img src="https://raw.githubusercontent.com/nightroman/Invoke-Build/main/ib.png" align="right"/>
 
@@ -33,7 +33,7 @@ The package includes the engine, helpers, and help:
 * [Resolve-MSBuild.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Resolve-MSBuild.ps1) - finds the specified or latest MSBuild
 * [Show-TaskHelp.ps1](https://github.com/nightroman/Invoke-Build/blob/main/Show-TaskHelp.ps1) - shows task help, used on WhatIf calls
 * *about_InvokeBuild.help.txt* - module help file
-* *InvokeBuild-Help.xml* - content for Get-Help
+* *Help.xml* - content for Get-Help
 
 Extra scripts, see PSGallery and the repository:
 

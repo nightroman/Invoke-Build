@@ -799,6 +799,11 @@
 		Tells to write the command and its used variable values.
 		WARNING: With echo you may expose sensitive information.
 '@
+		StdErr = @'
+		Tells to set $ErrorActionPreference to Continue, capture all output and
+		write as strings. Then, if the exit code is failure, add the standard
+		error output text to the error message.
+'@
 	}
 
 	outputs = @(

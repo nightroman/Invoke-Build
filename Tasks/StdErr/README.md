@@ -1,3 +1,5 @@
+[#161]: https://github.com/nightroman/Invoke-Build/issues/161
+
 ## Dealing with standard error output
 
 Invoking apps with standard error output may have issues in PowerShell.
@@ -33,33 +35,26 @@ with relaxed `ErrorAction`:
 exec { <invoke app with error output> } -ErrorAction Continue
 ```
 
-The workarounds do not change how `exec` fails, it still fails depending on the
-`$LASTEXITCODE` after the invocation. But workarounds may affect another code
-in `exec` if there is anything but invoking an app.
+### Workaround 3: exec with -StdErr, v5.11.0
+
+Use `exec -StdErr {...}` in order to handle standard errors differently:
+
+- Automatically set `$ErrorActionPreference` to `Continue`.
+- Capture standard output and errors and write as strings.
+- If the exit code is failure, add errors to the message.
+
+### Notes
+
+The workarounds do not change how `exec` fails, it still fails depending on `$LastExitCode`.
+But workarounds may affect another code in `exec` if there is anything but invoking an app.
+
+Ideally and by design, each `exec` should invoke just one native command and nothing else.
 
 ### Tasks and tests
 
-The script [.build.ps1](.build.ps1) shows the tasks with issues and workarounds.
-The script [.test.ps1](.test.ps1) tests the expected behaviour of these tasks.
-
-- **Problem**
-
-    Shows the problem, the build fails on standard error output.
-
-- **Workaround1**
-
-    `$ErrorActionPreference = 'Continue'` in `exec` helps.
-
-- **Workaround2**
-
-    `exec {...} -ErrorAction Continue` works around the problem.
-
-- **NonZeroExitCode**
-
-    Workarounds do not affect how `exec` fails on app exit codes.
+- [StdErr.build.ps1](StdErr.build.ps1) shows tasks with issues and workarounds.
+- [StdErr.test.ps1](StdErr.test.ps1) tests the expected behaviour of these tasks.
 
 ### See also
 
 - [#161]
-
-[#161]: https://github.com/nightroman/Invoke-Build/issues/161

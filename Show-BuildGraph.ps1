@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.3
+.VERSION 1.0.4
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -23,9 +23,9 @@
 	The script calls Invoke-Build to get the build tasks, makes the DOT graph,
 	and uses either Viz.js or dot in order to convert the graph for show.
 
-	Tasks without code are shown as ovals, conditional tasks as diamonds, other
-	tasks as boxes. Safe references are shown as dotted edges, regular calls as
-	solid edges. Job numbers are not shown by default.
+	Tasks without code are shown as ovals, conditional and incremental tasks as
+	notes, other tasks as boxes. Safe references are shown as dotted edges,
+	normal references as solid edges. Job numbers are not shown by default.
 
 	EXAMPLES
 

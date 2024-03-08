@@ -43,7 +43,7 @@ task clean {
 # <https://github.com/nightroman/Helps>
 task help {
 	. Helps.ps1
-	Convert-Helps InvokeBuild-Help.ps1 InvokeBuild-Help.xml
+	Convert-Helps Help.ps1 Help.xml
 }
 
 # Synopsis: Set $script:Version from Release-Notes.
@@ -64,7 +64,7 @@ task module version, markdown, help, {
 	Copy-Item -Destination $dir $(
 		'Build-Checkpoint.ps1'
 		'Build-Parallel.ps1'
-		'InvokeBuild-Help.xml'
+		'Help.xml'
 		'Resolve-MSBuild.ps1'
 		'Show-TaskHelp.ps1'
 		'README.htm'

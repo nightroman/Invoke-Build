@@ -179,3 +179,35 @@ exec {
 cd $BuildRoot
 "@
 }
+
+task StdErr {
+	$err = ''
+	$out = try {
+		exec -StdErr {
+			'stdout'
+			git bar
+		}
+		throw
+	}
+	catch {
+		$err = "$_"
+	}
+
+	$out = $out -split '\r?\n'
+	equals $out[0] "stdout"
+	equals $out[1] "git: 'bar' is not a git command. See 'git --help'."
+
+	$err = $err -split '\r?\n'
+	equals $err[0] "Command exited with code 1. {"
+	equals $err[3].Trim() "}"
+	equals $err[4] "git: 'bar' is not a git command. See 'git --help'."
+}
+
+task StdErrBadCommand {
+	try {
+		throw exec -StdErr { BadCommand }
+	}
+	catch {
+		assert ("$_" -like "*The term 'BadCommand'*")
+	}
+}

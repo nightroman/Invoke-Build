@@ -11,7 +11,7 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 #>
 
-#.ExternalHelp InvokeBuild-Help.xml
+#.ExternalHelp Help.xml
 [CmdletBinding(DefaultParameterSetName='Default')]
 param(
 	[Parameter(Position=0, Mandatory=1)]

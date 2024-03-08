@@ -33,3 +33,22 @@ task TestWorkaround2 {
 		equals "$_" 'Command exited with code 42. { ./error2.cmd 2>$null }'
 	}
 }
+
+### Using the switch -StdErr, v5.11.0
+
+task StdErr_ZeroExitCode {
+	$r = Invoke-Build StdErr_ZeroExitCode
+	($r = $r -join '|')
+	assert $r.Contains('|standard output|standard error |')
+}
+
+task StdErr_NonZeroExitCode {
+	try {
+		throw Invoke-Build StdErr_NonZeroExitCode
+	}
+	catch {
+		($r = "$_")
+		assert $r.Contains('Command exited with code 42. { ./error2.cmd }')
+		assert $r.Contains('standard error ')
+	}
+}

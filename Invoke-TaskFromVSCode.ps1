@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.7
+.VERSION 1.0.8
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Task, VSCode

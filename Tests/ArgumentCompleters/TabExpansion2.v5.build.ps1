@@ -23,7 +23,7 @@ task CompleteFile {
 	equals $folder1 ib
 	equals $folder2 InvokeBuild
 
-	assert ($files.Count -ge 5)
+	assert ($files.Count -ge 4)
 	foreach($$ in $files) {
 		assert ($$ -like 'i*.ps1')
 	}

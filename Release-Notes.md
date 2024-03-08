@@ -1,5 +1,11 @@
 # Invoke-Build Release Notes
 
+## v5.11.0
+
+`exec` / `Invoke-BuildExec`
+- new switch `StdErr`, to get more useful error messages, #218
+- `$LastExitCode` is set to 0 before invoking, to avoid subtleties
+
 ## v5.10.6
 
 Fix cryptic errors on unknown parameters, #217
