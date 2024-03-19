@@ -1,5 +1,5 @@
 
-[![PSGV](https://img.shields.io/powershellgallery/v/InvokeBuild) ![PSGD](https://img.shields.io/powershellgallery/dt/InvokeBuild)](https://www.powershellgallery.com/packages/InvokeBuild)
+[![PSGV](https://img.shields.io/powershellgallery/v/InvokeBuild)![PSGD](https://img.shields.io/powershellgallery/dt/InvokeBuild)](https://www.powershellgallery.com/packages/InvokeBuild)
 [![NuGet](https://buildstats.info/nuget/Invoke-Build)](https://www.nuget.org/packages/Invoke-Build)
 <img src="https://raw.githubusercontent.com/nightroman/Invoke-Build/main/ib.png" align="right"/>
 

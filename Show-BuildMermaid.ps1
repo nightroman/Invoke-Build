@@ -139,7 +139,7 @@ $text = @(
 @(
 	@"
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>$([System.IO.Path]::GetFileNameWithoutExtension($Output)) tasks</title>

@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.4
+.VERSION 1.0.5
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -214,7 +214,7 @@ else {
 	$text = $text | .{process{$_.Replace('\', '\\').Replace('"', '\"') + '\'}} | Out-String -Width 9999
 	@"
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <title>$([System.IO.Path]::GetFileNameWithoutExtension($Output)) tasks</title>
