@@ -1,5 +1,10 @@
 # Invoke-Build Release Notes
 
+## v5.11.1
+
+`requires` / `Test-BuildAsset`
+- improved errors on invalid null/empty arguments
+
 ## v5.11.0
 
 `exec` / `Invoke-BuildExec`

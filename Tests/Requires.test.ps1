@@ -91,3 +91,31 @@ task PropertyEnvironment {
 
 	$env:miss1 = $null
 }
+
+task NullArgument1 {
+	try { throw requires -Variable $null }
+	catch { assert ($_ -like '*The argument is null.*') }
+
+	try { throw requires -Environment $null }
+	catch { assert ($_ -like '*The argument is null.*') }
+
+	try { throw requires -Property $null }
+	catch { assert ($_ -like '*The argument is null.*') }
+
+	try { throw requires -Path $null }
+	catch { assert ($_ -like '*The argument is null.*') }
+}
+
+task NullArgument2 {
+	try { throw requires -Variable host, $null }
+	catch { assert ("Invalid empty 'Variable'." -eq $_) }
+
+	try { throw requires -Environment path, $null }
+	catch { assert ("Invalid empty 'Environment'." -eq $_) }
+
+	try { throw requires -Property host, $null }
+	catch { assert ("Invalid empty 'Property'." -eq $_) }
+
+	try { throw requires -Path ., $null }
+	catch { assert ("Invalid empty 'Path'." -eq $_) }
+}

@@ -318,20 +318,30 @@ function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 }
 
 #.ExternalHelp Help.xml
-function Test-BuildAsset([Parameter(Position=0)][string[]]$Variable, [string[]]$Environment, [string[]]$Path, [string[]]$Property) {
-	Remove-Variable Variable, Environment, Path, Property
-	if ($_ = $PSBoundParameters['Variable']) {foreach($_ in $_) {
+function Test-BuildAsset(
+	[ValidateNotNull()][string[]][Parameter(Position=0)]$Variable,
+	[ValidateNotNull()][string[]]$Environment,
+	[ValidateNotNull()][string[]]$Property,
+	[ValidateNotNull()][string[]]$Path
+) {
+	Remove-Variable Variable, Environment, Property, Path
+	function *get($p, $n) {
+		if ($_ = $p[$n]) {
+			$_ | .{process{if ($_) {$_} else {*Die "Invalid empty '$n'."}}}
+		}
+	}
+	foreach($_ in *get $PSBoundParameters Variable) {
 		if ($null -eq ($$ = $PSCmdlet.GetVariableValue($_)) -or '' -eq $$) {*Die "Missing variable '$_'." 13}
-	}}
-	if ($_ = $PSBoundParameters['Environment']) {foreach($_ in $_) {
+	}
+	foreach($_ in *get $PSBoundParameters Environment) {
 		if (!([Environment]::GetEnvironmentVariable($_))) {*Die "Missing environment variable '$_'." 13}
-	}}
-	if ($_ = $PSBoundParameters['Property']) {foreach($_ in $_) {
+	}
+	foreach($_ in *get $PSBoundParameters Property) {
 		if ('' -eq (Get-BuildProperty $_ '')) {*Die "Missing property '$_'." 13}
-	}}
-	if ($_ = $PSBoundParameters['Path']) {foreach($_ in $_) {
+	}
+	foreach($_ in *get $PSBoundParameters Path) {
 		if (!(Test-Path -LiteralPath $_)) {*Die "Missing path '$_'." 13}
-	}}
+	}
 }
 
 #.ExternalHelp Help.xml
