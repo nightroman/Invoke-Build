@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+`Show-BuildGraph.ps1` - use viz-3.5.0
+
 ## v5.11.1
 
 `requires` / `Test-BuildAsset`
