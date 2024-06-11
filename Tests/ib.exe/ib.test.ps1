@@ -1,6 +1,15 @@
 
 if ($env:GITHUB_ACTION) {return task skip_GITHUB_ACTION}
 
+Enter-Build {
+	$env_pwsh = $env:pwsh
+	$env:pwsh = $null
+}
+
+Exit-Build {
+	$env:pwsh = $env_pwsh
+}
+
 task helpText {
 	$r = exec { ib.exe -h }
 	equals $r[0] 'The following commands and options are supported:'
@@ -39,6 +48,15 @@ task pwsh -If (Get-Command pwsh -ErrorAction 0) {
 	($r = exec { ib.exe --pwsh version } | Out-String)
 	assert ($r -match 'PSVersion=([\d\.]+)')
 	assert ([version]$Matches[1]).Major 7
+}
+
+task pwsh_fake {
+	$r = Use-BuildEnv @{pwsh = 'pwsh_fake'} {
+		$ErrorActionPreference = 2
+		ib.exe 2>&1
+	}
+	"$r"
+	assert ($r -like "*'pwsh_fake'*The system cannot find the file specified.")
 }
 
 task param {

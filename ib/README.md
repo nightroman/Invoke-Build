@@ -44,6 +44,8 @@ The following commands and options are supported:
     --pwsh
       On Windows tells to run by pwsh (the default is powershell).
       On other platforms pwsh is used and required in any case.
+
+    If the environment variable `pwsh` is defined it is used as pwsh.
 ```
 
 ## shell script ib

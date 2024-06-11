@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.11.2
+
+Like `ib.cmd`, the dotnet tool `ib` uses the environment variable `pwsh`.
+
 `Show-BuildGraph.ps1` - use viz-3.5.0
 
 ## v5.11.1

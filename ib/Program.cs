@@ -63,6 +63,8 @@ class Program
     --pwsh
       On Windows tells to run by pwsh (the default is powershell).
       On other platforms pwsh is used and required in any case.
+
+    If the environment variable `pwsh` is defined it is used as pwsh.
 ";
         try
         {
@@ -73,7 +75,8 @@ class Program
                 return 0;
             }
 
-            var app = options.UsePwsh || Environment.OSVersion.Platform != PlatformID.Win32NT ? "pwsh" : "powershell";
+            var app = Environment.GetEnvironmentVariable("pwsh")
+                ?? (options.UsePwsh || Environment.OSVersion.Platform != PlatformID.Win32NT ? "pwsh" : "powershell");
 
             var root = Path.GetDirectoryName(typeof(Program).Assembly.Location);
             var ib = Path.Combine(root, "../../../InvokeBuild/Invoke-Build.ps1");
