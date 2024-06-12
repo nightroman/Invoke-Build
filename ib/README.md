@@ -45,7 +45,7 @@ The following commands and options are supported:
       On Windows tells to run by pwsh (the default is powershell).
       On other platforms pwsh is used and required in any case.
 
-    If the environment variable `pwsh` is defined it is used as pwsh.
+    If the environment variable pwsh is defined it is used as pwsh.
 ```
 
 ## shell script ib
@@ -59,8 +59,8 @@ Unlike with the tool `ib`, Invoke-Build has to be installed, either as the
 module in a standard location or as scripts with the directory added to the
 path.
 
-`ib.cmd` invokes `powershell` by default or `pwsh` if the environment
-environment `pwsh` is defined and points to the executable.
+If the environment variable `pwsh` is defined it is used as `pwsh` by `ib.cmd`.
+Otherwise, `ib.cmd` uses `powershell`.
 
 ## PowerShell alias ib
 
