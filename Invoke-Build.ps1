@@ -292,6 +292,11 @@ function *Echo {
 	Write-Build 3 "exec {$(if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {"$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n"} else {${*t}})}"
 	Write-Build 8 "cd $global:pwd"
 	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
+		${*p} = ${*v}.Parent
+		if (${*p} -is [System.Management.Automation.Language.MemberExpressionAst]) {
+			if (${*p} -is [System.Management.Automation.Language.InvokeMemberExpressionAst]) {continue}
+			${*v} = ${*p}
+		}
 		if (${*v}.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
 			${*t} = "${*v}" -replace '^@', '$'
 			Write-Build 8 "${*t}: $(& ([scriptblock]::Create(${*t})))"

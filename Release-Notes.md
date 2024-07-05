@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.11.3
+
+`exec -Echo`: echo properties, #221
+
 ## v5.11.2
 
 Like `ib.cmd`, the dotnet tool `ib` uses the environment variable `pwsh`.

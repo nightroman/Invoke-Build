@@ -5,6 +5,8 @@
 
 Import-Module .\Tools
 
+$PSv3 = $PSVersionTable.PSVersion.Major -ge 3
+
 task ExecWorksCode0 {
 	$r = exec {
 		if (Test-Unix) {
@@ -81,7 +83,7 @@ task ExecShouldUseGlobalLastExitCode {
 }
 
 # New switch Echo, #176 #179
-task Echo1 -If ($PSVersionTable.PSVersion.Major -ge 3) {
+task Echo1 -If $PSv3 {
 	# different kind variables
 	$env:SOME_VAR = 'SOME_VAR'
 	$script:foo = 'foo'
@@ -140,7 +142,7 @@ task ErrorMessage {
 }
 
 # #192
-task Echo2 -If ($PSVersionTable.PSVersion.Major -ge 3) {
+task Echo2 -If $PSv3 {
 	function *Write { $args[1] }
 
 	#! 1 line, make 1 leading and trailing space
@@ -210,4 +212,31 @@ task StdErrBadCommand {
 	catch {
 		assert ("$_" -like "*The term 'BadCommand'*")
 	}
+}
+
+# Echo properties, #221
+task EchoProperties -If $PSv3 {
+	Set-Alias Write-Build Write-Build-Fake
+	function Write-Build-Fake($Color, $Text) {$Text}
+
+	$v1 = '_v1'
+	$v2 = [pscustomobject]@{p1 = '_v2'; p2 = 'bug'}
+	$v2 | Add-Member -Name m1 -MemberType ScriptMethod -Value {'bug'}
+
+	$r = exec -Echo {
+		# printed
+		$null = $v1
+		$null = $v2.p1
+
+		# not printed
+		$assign1 = 42
+		$v2.p2 = 'bug'
+		$null = $v2.m1()
+	}
+
+	equals $r.Count 4
+	assert $r[0].StartsWith('exec {')
+	assert $r[1].StartsWith('cd ')
+	equals $r[2] '$v1: _v1'
+	equals $r[3] '$v2.p1: _v2'
 }
