@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+`Show-BuildGraph.ps1` - use viz-3.7.0
+
 ## v5.11.3
 
 `exec -Echo`: echo properties, #221
