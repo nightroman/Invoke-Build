@@ -14,7 +14,8 @@
 - [Paket](Paket) Build script with automatic bootstrapping using `paket`.
 - [Param](Param) How to create tasks which perform similar actions with some differences defined by parameters.
 - [StdErr](StdErr) Dealing with standard error output issues.
-- [SubTasks](SubTasks) Sub tasks in child scripts technique.
+- [SubCases](SubCases) Sub tasks in child scripts technique (1).
+- [SubTasks](SubTasks) Sub tasks in child scripts technique (2).
 
 ## Custom tasks
 
