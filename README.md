@@ -132,7 +132,6 @@ In order to get help for internal commands:
 [issues]: https://github.com/nightroman/Invoke-Build/issues
 
 Questions, suggestions, and reports are welcome at [discussions] and [issues].
-Or just hit me up on Twitter [@romkuzmin](https://twitter.com/romkuzmin)
 
 ## Credits
 
