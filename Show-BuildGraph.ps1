@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.7
+.VERSION 1.0.8
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -102,7 +102,7 @@ else {
 		$jsUrl = 'file:///' + $app.Source.Replace('\', '/')
 	}
 	else {
-		$jsUrl = 'https://github.com/mdaines/viz-js/releases/download/release-viz-3.7.0/viz-standalone.js'
+		$jsUrl = 'https://github.com/mdaines/viz-js/releases/download/release-viz-3.9.0/viz-standalone.js'
 	}
 }
 
