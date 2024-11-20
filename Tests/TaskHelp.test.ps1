@@ -66,7 +66,7 @@ task Test {
 
 # Use this repo build script, test code and tree processing.
 # 2024-02-29 v2 started to fail, skip.
-task UndocumentedStuff -If ($PSVersionTable.PSVersion.Major -ge 3) {
+task UndocumentedStuff {
 	# call by WhatIf
 	Invoke-Build -File ../.build.ps1 -WhatIf
 
@@ -190,12 +190,10 @@ task IfInputsOutputs {
 
 	# call and test
 	$r = Show-TaskHelp t1 z.ps1 -Format {$args[0]}
-	if ($PSVersionTable.PSVersion.Major -ge 3) {
-		equals $r.Parameters.Count 3
-		equals $r.Parameters[0].Name If
-		equals $r.Parameters[1].Name Inputs
-		equals $r.Parameters[2].Name Outputs
-	}
+	equals $r.Parameters.Count 3
+	equals $r.Parameters[0].Name If
+	equals $r.Parameters[1].Name Inputs
+	equals $r.Parameters[2].Name Outputs
 
 	Remove-Item z.ps1
 }

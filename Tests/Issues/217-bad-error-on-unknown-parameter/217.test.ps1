@@ -16,17 +16,11 @@ task UnknownParameter {
 
 	# parameter positions after IB
 	$b1, $b2, $b3 = Get-ParameterPosition
-	if ($PSVersionTable.PSVersion.Major -eq 2) {
-		equals $b1 $a1
-		equals $b2 $a2
-		equals $b3 $a3
-	}
-	else {
-		# shifted +2 on every call
-		equals $b1 ($a1 + 2)
-		equals $b2 ($a2 + 2)
-		equals $b3 ($a3 + 2)
-	}
+
+	# shifted +2 on every call
+	equals $b1 ($a1 + 2)
+	equals $b2 ($a2 + 2)
+	equals $b3 ($a3 + 2)
 }
 
 function Get-ParameterPosition {

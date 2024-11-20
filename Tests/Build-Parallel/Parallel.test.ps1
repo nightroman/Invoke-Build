@@ -209,7 +209,7 @@ task OmittedBuildParameterFile {
 # Covers #27, [IB] was not found before loading IB.
 task ParallelEmptyRun {
 	($r = Invoke-PowerShell -NoProfile -Command 'Build-Parallel.ps1 -Result r; $r.GetType().Name')
-	equals $r $(if ($PSVersionTable.PSVersion.Major -eq 2) {'Hashtable'} else {'PSCustomObject'})
+	equals $r PSCustomObject
 }
 
 # Covers #93 with the new switch FailHard.

@@ -235,9 +235,12 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandatory=1)][scriptblock]$Script) {
 	${private:*e} = @{}
 	${private:*s} = $Script
+	function *set($n, $v) {
+		[Environment]::SetEnvironmentVariable($n, $(if ($null -eq $v) {[System.Management.Automation.Language.NullString]::Value} else {$v}))
+	}
 	foreach($_ in $Env.GetEnumerator()) {
 		${*e}[$_.Key] = [Environment]::GetEnvironmentVariable($_.Key)
-		[Environment]::SetEnvironmentVariable($_.Key, $_.Value)
+		*set $_.Key $_.Value
 	}
 	Remove-Variable Env, Script
 	try {
@@ -245,7 +248,7 @@ function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandat
 	}
 	finally {
 		foreach($_ in ${*e}.GetEnumerator()) {
-			[Environment]::SetEnvironmentVariable($_.Key, $_.Value)
+			*set $_.Key $_.Value
 		}
 	}
 }

@@ -5,8 +5,6 @@
 
 Import-Module .\Tools
 
-$PSv3 = $PSVersionTable.PSVersion.Major -ge 3
-
 task ExecWorksCode0 {
 	$r = exec {
 		if (Test-Unix) {
@@ -83,7 +81,7 @@ task ExecShouldUseGlobalLastExitCode {
 }
 
 # New switch Echo, #176 #179
-task Echo1 -If $PSv3 {
+task Echo1 {
 	# different kind variables
 	$env:SOME_VAR = 'SOME_VAR'
 	$script:foo = 'foo'
@@ -142,7 +140,7 @@ task ErrorMessage {
 }
 
 # #192
-task Echo2 -If $PSv3 {
+task Echo2 {
 	function *Write { $args[1] }
 
 	#! 1 line, make 1 leading and trailing space
@@ -215,7 +213,7 @@ task StdErrBadCommand {
 }
 
 # Echo properties, #221
-task EchoProperties -If $PSv3 {
+task EchoProperties {
 	Set-Alias Write-Build Write-Build-Fake
 	function Write-Build-Fake($Color, $Text) {$Text}
 

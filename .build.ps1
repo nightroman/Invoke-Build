@@ -86,7 +86,7 @@ task module version, markdown, help, {
 	CompanyName = 'Roman Kuzmin'
 	Copyright = '(c) Roman Kuzmin'
 	Description = 'Build and test automation in PowerShell'
-	PowerShellVersion = '2.0'
+	PowerShellVersion = '3.0'
 	AliasesToExport = 'Invoke-Build', 'Build-Checkpoint', 'Build-Parallel'
 	PrivateData = @{
 		PSData = @{
@@ -114,7 +114,7 @@ task nuget module, {
 	# summary and description
 	$text = @'
 Invoke-Build is a build and test automation tool which invokes tasks defined in
-PowerShell v2.0+ scripts. It is similar to psake but arguably easier to use and
+PowerShell v3.0+ scripts. It is similar to psake but arguably easier to use and
 more powerful. It is complete, bug free, well covered by tests.
 '@
 

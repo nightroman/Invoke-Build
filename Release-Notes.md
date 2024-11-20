@@ -1,6 +1,14 @@
 # Invoke-Build Release Notes
 
-`Show-BuildGraph.ps1` - use viz-3.9.0
+## v5.12.0
+
+Stop supporting and testing PowerShell v2.0 (unlikely practical).
+
+Fix `Use-BuildEnv` potential issues in PowerShell 7.5.
+
+Fix `ib` dotnet tool similar potential issues.
+
+`Show-BuildGraph.ps1` - use viz-3.11.0
 
 ## v5.11.3
 

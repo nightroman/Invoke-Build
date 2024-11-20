@@ -75,8 +75,9 @@ class Program
                 return 0;
             }
 
-            var app = Environment.GetEnvironmentVariable("pwsh")
-                ?? (options.UsePwsh || Environment.OSVersion.Platform != PlatformID.Win32NT ? "pwsh" : "powershell");
+            var app = Environment.GetEnvironmentVariable("pwsh");
+            if (string.IsNullOrEmpty(app))
+                app = options.UsePwsh || Environment.OSVersion.Platform != PlatformID.Win32NT ? "pwsh" : "powershell";
 
             var root = Path.GetDirectoryName(typeof(Program).Assembly.Location);
             var ib = Path.Combine(root, "../../../InvokeBuild/Invoke-Build.ps1");

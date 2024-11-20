@@ -30,7 +30,7 @@ task Show-BuildTree {
 }
 
 # used to out funny parameters and environment
-task WhatIf -If ($PSVersionTable.PSVersion.Major -ne 2) {
+task WhatIf {
 	($r = Invoke-Build -WhatIf | Out-String)
 	$r = Remove-Ansi ($r -replace ' ' -replace '\r?\n', '|')
 	assert ($r.Contains('|Parameters:|[Object]Count|[Object]Keys|[Object]Values|Environment:|Count,Keys,Values|'))
@@ -78,7 +78,7 @@ task Show-BuildGraph -If (!(Test-Unix) -and !$env:GITHUB_ACTION) {
 }
 
 # used to generate just `values`
-task New-VSCodeTask -If ($PSVersionTable.PSVersion.Major -ne 2) {
+task New-VSCodeTask {
 	New-VSCodeTask.ps1
 	$r = (Get-Content .vscode/tasks.json | Out-String) -replace '\s+', ' '
 	assert ($r.Contains('"label": "count"'))
