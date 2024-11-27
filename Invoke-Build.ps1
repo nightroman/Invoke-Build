@@ -31,12 +31,12 @@ function *Die($M, $C=0) {
 	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
 }
 
-function Get-BuildFile($Path) {
+function Get-BuildFile($Path, [switch]$Here) {
 	do {
 		if (($f = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $f}
 		if ($f) {return $($f | Sort-Object)[0]}
 		if (($c = $env:InvokeBuildGetFile) -and ($f = & $c $Path)) {return $f}
-	} while($Path = Split-Path $Path)
+	} while(!$Here -and ($Path = Split-Path $Path))
 }
 
 if ($MyInvocation.InvocationName -eq '.') {return}
@@ -101,7 +101,11 @@ if ($BuildTask -eq '**') {
 }
 
 if ($BuildFile) {
-	if (![System.IO.File]::Exists(($BuildFile = *Path $BuildFile))) {throw "Missing script '$BuildFile'."}
+	if (![System.IO.File]::Exists(($BuildFile = *Path $BuildFile))) {
+		if (![System.IO.Directory]::Exists($BuildFile)) {throw "Missing script '$BuildFile'."}
+		if (!($_ = Get-BuildFile $BuildFile -Here)) {throw "Missing script in '$BuildFile'."}
+		$BuildFile = $_
+	}
 }
 elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
 	throw 'Missing default script.'

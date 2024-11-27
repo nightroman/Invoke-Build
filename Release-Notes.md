@@ -1,5 +1,10 @@
 # Invoke-Build Release Notes
 
+## v5.12.1
+
+`Invoke-Build` parameter `File` accepts directory paths as well.
+The usual build script resolution applies but without parents.
+
 ## v5.12.0
 
 Stop supporting and testing PowerShell v2.0 (unlikely practical).

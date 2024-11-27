@@ -17,11 +17,6 @@ $BuildRoot = '..'
 Set-Alias ask Confirm-Build
 Set-StrictMode -Version Latest
 
-# Synopsis: Run all other tasks with checkpoints.
-task . -if {'.' -eq $BuildTask} {
-	Build-Checkpoint -Auto $HOME\z.releaseInvokeBuild.clixml @{Task='*'; File=$BuildFile}
-}
-
 # Synopsis: It should be the main branch with no changes.
 task status -if {ask} {
 	assert ('main' -ceq (exec { git branch --show-current })) 'Please checkout main.'
@@ -74,4 +69,9 @@ task clean_and_browse -if {ask} {
 	Start-Process https://www.powershellgallery.com/packages/InvokeBuild
 	Start-Process https://www.nuget.org/packages/Invoke-Build/
 	Start-Process https://www.nuget.org/packages/ib/
+}
+
+# Synopsis: Run all tasks with checkpoints.
+task . -if {'.' -eq $BuildTask} {
+	Build-Checkpoint -Auto $HOME\z.releaseInvokeBuild.clixml @{Task='*'; File=$BuildFile}
 }

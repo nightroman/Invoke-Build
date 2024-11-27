@@ -166,10 +166,10 @@
 		current directory or a directory specified by the parameter File.
 '@
 		File = @'
-		A build script which adds tasks by the command 'task' (Add-BuildTask).
+		The script which adds tasks using the command 'task' (Add-BuildTask).
 
-		If the file is omitted then Invoke-Build looks for *.build.ps1 files in
-		the current location and takes the first in Sort-Object order.
+		If File is omitted then Invoke-Build looks for *.build.ps1 files in the
+		current location and takes the first in Sort-Object order.
 
 		If the file is not found then a command set by the environment variable
 		InvokeBuildGetFile is invoked with the directory path as an argument.
@@ -177,13 +177,16 @@
 
 		If the file is still not found then parent directories are searched.
 
+		DIRECTORY PATH
+
+		File accepts directory paths as well. The build script is resolved as
+		described above for the specified directory without searching parents.
+
 		INLINE SCRIPT
 
-		'File' is a script block which is normally used in order to assemble a
-		build on the fly without creating and using an extra build script file.
-
-		$BuildFile is the calling script (or null, e.g. in jobs).
-		The default $BuildRoot is its directory (or the current location).
+		File also accepts script blocks. In this case $BuildFile is the calling
+		script, if any, or null. The default $BuildRoot is $BuildFile directory
+		or the current location.
 
 		Script parameters, parallel, and persistent builds are not supported.
 '@

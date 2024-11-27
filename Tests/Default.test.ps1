@@ -6,16 +6,19 @@
 task TwoCandidates {
 	remove z
 	$null = mkdir z
-	Push-Location z
 
+	Push-Location z
 	Set-Content 1.build.ps1 'task t1'
 	Set-Content 2.build.ps1 'task t2'
 	$tasks = Invoke-Build ??
-
-	Pop-Location
-	remove z
-
 	assert ($tasks.Contains('t1'))
+	Pop-Location
+
+	# case: -File is folder
+	$tasks = Invoke-Build ?? z
+	assert ($tasks.Contains('t1'))
+
+	remove z
 }
 
 task ParentHasManyCandidates {
@@ -25,15 +28,17 @@ task ParentHasManyCandidates {
 
 	Push-Location z
 	$tasks = Invoke-Build ??
-	Pop-Location
-
 	assert ($tasks.Contains('AllTestScripts'))
+	Pop-Location
 
 	Push-Location z/1
 	$tasks = Invoke-Build ??
+	assert ($tasks.Contains('AllTestScripts'))
 	Pop-Location
 
-	assert ($tasks.Contains('AllTestScripts'))
+	# case: -File is folder
+	try { throw Invoke-Build ?? z }
+	catch { assert ($_ -like "Missing script in '*\Tests\z'.") }
 
 	remove z
 }
@@ -48,41 +53,42 @@ task ParentHasOneCandidate {
 
 	Push-Location z/1
 	$tasks = Invoke-Build ??
-	Pop-Location
-
 	assert $tasks.Contains('SingleScript')
+	Pop-Location
 
 	Push-Location z/1/2
 	$tasks = Invoke-Build ??
-	Pop-Location
-
 	assert $tasks.Contains('SingleScript')
+	Pop-Location
 
 	remove z
 }
 
 task InvokeBuildGetFile {
 	remove z
-	$null = mkdir z
 	$null = mkdir z/1
 
 	# register the hook by the environment variable
 	$saved = $env:InvokeBuildGetFile
 	$env:InvokeBuildGetFile = "$BuildRoot/z/1/InvokeBuildGetFile.ps1"
+	try {
+		# make the hook script which gets this script as a build file
+		Set-Content -LiteralPath $env:InvokeBuildGetFile "'$BuildFile'"
 
-	# make the hook script which gets this script as a build file
-	Set-Content -LiteralPath $env:InvokeBuildGetFile "'$BuildFile'"
+		# invoke and test the script returned by the hook
+		Push-Location z
+		$tasks = Invoke-Build ??
+		assert $tasks.Contains('InvokeBuildGetFile')
+		Pop-Location
 
-	# invoke (remove the test script, if any)
-	Push-Location z
-	$tasks = Invoke-Build ??
-	Pop-Location
-
-	# restore the hook
-	$env:InvokeBuildGetFile = $saved
-
-	# test: the script returned by the hook is invoked
-	assert $tasks.Contains('InvokeBuildGetFile')
+		# case: -File is folder
+		$tasks = Invoke-Build ?? z
+		assert $tasks.Contains('InvokeBuildGetFile')
+	}
+	finally {
+		# restore the hook
+		$env:InvokeBuildGetFile = $saved
+	}
 
 	remove z
 }
