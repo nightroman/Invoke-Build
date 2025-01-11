@@ -7,6 +7,7 @@
 - [Bootstrap](Bootstrap) How to install the module automatically.
 - [Confirm](Confirm) How to use `Confirm-Build` to confirm some tasks.
 - [Direct](Direct) How to make build scripts invokable directly.
+- [Direct-2](Direct-2) How to make build scripts invokable directly (variant 2).
 - [Dynamic](Dynamic) How to use a dynamic script with dynamic tasks.
 - [Header](Header) How to define custom task headers and footers.
 - [Import](Import) How to share and import tasks from external task scripts including exported by modules.

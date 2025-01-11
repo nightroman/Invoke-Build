@@ -1,5 +1,7 @@
 # Directly invokable build scripts
 
+See also [Direct-2](../Direct-2)
+
 Build scripts are normally invoked by the engine `Invoke-Build`, not directly.
 If this is inconvenient then decorate a script to make it directly invokable.
 Add `Tasks` as the first parameter and the code block redirecting the call:

@@ -80,7 +80,7 @@ task module version, markdown, help, {
 	[System.IO.File]::WriteAllText("$dir\InvokeBuild.psd1", @"
 @{
 	ModuleVersion = '$script:Version'
-	ModuleToProcess = 'InvokeBuild.psm1'
+	RootModule = 'InvokeBuild.psm1'
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
 	Author = 'Roman Kuzmin'
 	CompanyName = 'Roman Kuzmin'
