@@ -26,6 +26,7 @@ Custom tasks may be defined literally and via custom parameters, see [Repeat](Re
 - [File](File) shows the custom task `file`, an incremental task with simplified syntax, somewhat similar to Rake's `file`.
 - [Repeat](Repeat) shows the custom task `repeat` which is invoked periodically in a build script (schedule) with such tasks.
 - [Repeat2](Repeat2) shows the alternative way with using the special command `repeat` which turns tasks into repeatable.
+- [RepeatRedis](RepeatRedis) is similar to `Repeat2` but it uses Redis for task records instead of CLIXML files.
 - [Retry](Retry) shows the custom task `retry` which retries its action on failures several times depending on parameters.
 
 ## Known issues
