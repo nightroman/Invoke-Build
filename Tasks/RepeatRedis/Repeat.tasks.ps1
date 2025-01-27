@@ -15,12 +15,19 @@
 		- If -- task condition
 
 	Script scope names:
-		Alias: repeat -- makes repeat-tasks parameters
-		Variables: $db -- Redis database, used internally but may be used by tasks as well
-		Functions: New-Repeat, Test-Repeat, Complete-Repeat -- used internally
+		Alias:
+			repeat
+			-- Makes repeat parameters, designed for tasks.
+		Functions:
+			Write-TaskLog, New-Repeat, Test-Repeat, Complete-Repeat
+			-- Write-TaskLog may be used by tasks, others are internal.
+		Variables:
+			$db
+			-- Redis database, used internally and may be used by tasks.
+			(FarNet.Redis cmdlets will use this variable automatically)
 
 .Parameter RedisTaskPrefix
-		Specifies Redis prefix for task strings.
+		Specifies Redis prefix for task keys.
 
 .Parameter RedisConfiguration
 		Optional Redis configuration string.
@@ -42,6 +49,15 @@ if (!$WhatIf) {
 # "DSL" for scripts.
 Set-Alias repeat New-Repeat
 
+# Adds a message to the task log (Redis list).
+function Write-TaskLog(
+	[Parameter(Position=0, Mandatory=1)]
+	[string]$Message
+)
+{
+	Set-RedisList ($RedisTaskPrefix + $Task.Name) -RightPush $Message
+}
+
 # Creates repeat-task parameters.
 function New-Repeat(
 	[Parameter(Position=0, Mandatory=1)]
@@ -62,7 +78,7 @@ function New-Repeat(
 }
 
 # Works as tasks `If`. The original condition is processed first. If it is true
-# then the Redis task key is tested. If it exists then the task is skipped.
+# then the Redis task key is tested, the task is skipped with some time to live.
 function Test-Repeat {
 	$_ = $Task.Data.If
 	if ($_ -is [scriptblock]) {
@@ -74,11 +90,16 @@ function Test-Repeat {
 	}
 }
 
-# Works as tasks `Done`, on success sets Redis task string and time to live.
+# Works as tasks `Done`, logs task completion status and time to Redis, on
+# failure logs the error, on success sets time to live to the task period.
 function Complete-Repeat {
-	$key = $RedisTaskPrefix + $Task.Name
-	$now = [datetime]::Now.ToString('s')
-	if (!$Task.Error) {
-		Set-RedisString $key $now -TimeToLive $Task.Data.Span
+	$now = [datetime]::UtcNow.ToString('s')
+	if ($Task.Error) {
+		Write-TaskLog ($Task.Error | Out-String)
+		Write-TaskLog "[fail] $now"
+	}
+	else {
+		Write-TaskLog "[done] $now"
+		Set-RedisKey ($RedisTaskPrefix + $Task.Name) -TimeToLive $Task.Data.Span
 	}
 }
