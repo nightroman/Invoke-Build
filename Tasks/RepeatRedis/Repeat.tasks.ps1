@@ -71,8 +71,8 @@ function New-Repeat(
 {
 	@{
 		Jobs = $Jobs
-		If = {Test-Repeat}
-		Done = {Complete-Repeat}
+		If = ${function:Test-Repeat}
+		Done = ${function:Complete-Repeat}
 		Data = @{If = $If; Span = $Span}
 	}
 }
