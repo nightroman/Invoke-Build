@@ -120,8 +120,8 @@ if ($_.get_Count()) {
 	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
 	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
 	foreach($p in $_.get_Values()) {
-		if ($c -contains ($_ = $p.Name)) {continue}
-		if ($r -contains $_) {throw "Script uses reserved parameter '$_'."}
+		if (($_ = $p.Name) -in $c) {continue}
+		if ($_ -in $r) {throw "Script uses reserved parameter '$_'."}
 		foreach ($a in $p.Attributes) {
 			if ($a -is [System.Management.Automation.ParameterAttribute] -and $a.Position -ge 0) {
 				$a.Position += 2
@@ -179,7 +179,7 @@ function Add-BuildTask(
 	$2 = @()
 	foreach($j in $1) {
 		$r, $null = *Job $j
-		if ($2 -contains $r) {${*}.Doubles += ,($Name, $r)}
+		if ($r -in $2) {${*}.Doubles += ,($Name, $r)}
 		$2 += $r
 	}
 }
@@ -386,7 +386,7 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	*Write $Color ($Text -split '\r\n|[\r\n]')
 }
 
-if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText') {
+if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText' -and !$env:MSBuildLoadMicrosoftTargetsReadOnly) {
 	function *Write($C, $T) {
 		$f = "`e[$((30,34,32,36,31,35,33,37,90,94,92,96,91,95,93,97)[$C])m{0}`e[0m"
 		foreach($_ in $T) {
@@ -448,7 +448,7 @@ function *Job($J) {
 }
 
 function *Unsafe($N, $J) {
-	if ($J -contains $N) {return 1}
+	if ($N -in $J) {return 1}
 	foreach($_ in $J) {
 		$r, $null = *Job $_
 		if ($r -ne $N -and ($t = ${*}.All[$r]) -and $t.If -and (*Unsafe $N $t.Jobs)) {
@@ -479,7 +479,7 @@ function *Check($J, $T, $P=@()) {
 			$_ = "Missing task '$_'."
 			*Fin $(if ($T) {*Msg "Task '$($T.Name)': $_" $T} else {$_}) 5
 		}
-		if ($P -contains $r) {
+		if ($r -in $P) {
 			*Fin (*Msg "Task '$($T.Name)': Cyclic reference to '$_'." $T) 5
 		}
 		*Check $r.Jobs $r ($P + $r)

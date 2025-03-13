@@ -96,7 +96,7 @@ $Help = @(&{
 $CommonParameters = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
 $Parameters = (Get-Command $BuildFile).Parameters
 foreach($name in @($Parameters.get_Keys())) {
-	if ($CommonParameters -contains $name) {
+	if ($name -in $CommonParameters) {
 		$null = $Parameters.Remove($name)
 	}
 }

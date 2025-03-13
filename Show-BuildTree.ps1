@@ -106,7 +106,7 @@ try {
 	if ($_Task -eq '*') {
 		$_Task = :task foreach($_ in $tasks.get_Keys()) {
 			foreach($task in $tasks.get_Values()) {
-				if ($task.Jobs -contains $_ -or $task.Jobs -contains "?$_") {
+				if ($_ -in $task.Jobs -or "?$_" -in $task.Jobs) {
 					continue task
 				}
 			}

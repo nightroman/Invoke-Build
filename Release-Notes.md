@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.12.2
+
+Disable ANSI rendering when called by MSBuild.
+
 ## v5.12.1
 
 `Invoke-Build` parameter `File` accepts directory paths as well.
