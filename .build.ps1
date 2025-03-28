@@ -190,7 +190,7 @@ task test {
 	$resultPath = "$BuildRoot\Invoke-Build-Test.log"
 	$samplePath = "$HOME\data\Invoke-Build-Test.$($PSVersionTable.PSVersion.Major).log"
 	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?( )? *', '00:00:00.0000000$1'
-	[System.IO.File]::WriteAllText($resultPath, $output, [System.Text.Encoding]::UTF8)
+	[System.IO.File]::WriteAllText($resultPath, $output)
 
 	# compare outputs
 	Assert-SameFile $samplePath $resultPath $env:MERGE
