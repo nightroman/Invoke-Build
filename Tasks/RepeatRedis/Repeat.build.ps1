@@ -20,7 +20,7 @@ param(
 )
 
 # Import helpers and specify Redis prefix for tasks.
-. .\Repeat.tasks.ps1 temp:repeat:test-repeat-tasks:
+. .\Repeat.tasks.ps1 zoo:repeat:test-repeat-tasks:
 
 # Synopsis: Repeat every minute, write task log, optionally fail.
 task task1 (repeat 0:1 {

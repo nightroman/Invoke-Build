@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.13.0
+
+New helper `Get-BuildVersion`.
+
 ## v5.12.2
 
 Disable ANSI rendering when called by MSBuild.

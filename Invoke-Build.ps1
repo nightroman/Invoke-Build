@@ -236,6 +236,17 @@ function Get-BuildSynopsis([Parameter(Mandatory=1)]$Task, $Hash=${*}.H) {
 }
 
 #.ExternalHelp Help.xml
+function Get-BuildVersion([Parameter(Mandatory=1)][string]$Path, [Parameter(Mandatory=1)]$Regex) {
+	trap {*Die $_ 5}
+	foreach($_ in [System.IO.File]::ReadAllLines($PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path))) {
+		if ($_ -match $Regex) {
+			return $Matches[1]
+		}
+	}
+	throw "Cannot find version in '$Path'."
+}
+
+#.ExternalHelp Help.xml
 function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandatory=1)][scriptblock]$Script) {
 	${private:*e} = @{}
 	${private:*s} = $Script

@@ -65,6 +65,7 @@ $OK = $(
 	'Get-BuildFile'
 	'Get-BuildProperty'
 	'Get-BuildSynopsis'
+	'Get-BuildVersion'
 	'Invoke-BuildExec'
 	'Remove-BuildItem'
 	'Set-BuildFooter'

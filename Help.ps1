@@ -42,6 +42,7 @@
 		Confirm-Build
 		Get-BuildError
 		Get-BuildSynopsis
+		Get-BuildVersion
 		Resolve-MSBuild
 		Set-BuildFooter
 		Set-BuildHeader
@@ -768,6 +769,35 @@
 		@{ text = 'Set-BuildFooter' }
 		@{ text = 'Set-BuildHeader' }
 	)
+}
+
+### Get-BuildVersion
+@{
+	command = 'Get-BuildVersion'
+	synopsis = 'Gets version string from file.'
+
+	description = @'
+	It finds the first file line matching Regex and returns its first capturing
+	group string.
+'@
+
+	parameters = @{
+		Path = @'
+		The file with version strings, like change log, release notes, etc.
+'@
+		Regex = @'
+		[string] or [regex] defining version as its first capturing group.
+'@
+	}
+
+	outputs = @{
+		type = 'String'
+	}
+
+	examples = @{code={
+		# Get version from file
+		Get-BuildVersion Release-Notes.md '##\s+v(\d+\.\d+\.\d+)'
+	}}
 }
 
 ### Invoke-BuildExec

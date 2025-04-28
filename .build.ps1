@@ -46,10 +46,9 @@ task help {
 	Convert-Helps Help.ps1 Help.xml
 }
 
-# Synopsis: Set $script:Version from Release-Notes.
+# Synopsis: Set $Script:Version.
 task version {
-	($script:Version = switch -Regex -File Release-Notes.md {'##\s+v(\d+\.\d+\.\d+)' {$Matches[1]; break}})
-	assert $script:Version
+	($Script:Version = Get-BuildVersion Release-Notes.md '##\s+v(\d+\.\d+\.\d+)')
 }
 
 # Synopsis: Make the module folder.
@@ -74,12 +73,12 @@ task module version, markdown, help, {
 	# copy Invoke-Build.ps1 with version comment
 	$text = Get-Content Invoke-Build.ps1 -Raw
 	assert ($text -match '^<#\n')
-	[System.IO.File]::WriteAllText("$dir\Invoke-Build.ps1", ("<# Invoke-Build $script:Version" + $text.Substring(2)))
+	[System.IO.File]::WriteAllText("$dir\Invoke-Build.ps1", ("<# Invoke-Build $Version" + $text.Substring(2)))
 
 	# make manifest
 	[System.IO.File]::WriteAllText("$dir\InvokeBuild.psd1", @"
 @{
-	ModuleVersion = '$script:Version'
+	ModuleVersion = '$Version'
 	RootModule = 'InvokeBuild.psm1'
 	GUID = 'a0319025-5f1f-47f0-ae8d-9c7e151a5aae'
 	Author = 'Roman Kuzmin'
@@ -127,7 +126,7 @@ more powerful. It is complete, bug free, well covered by tests.
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
 		<id>Invoke-Build</id>
-		<version>$script:Version</version>
+		<version>$Version</version>
 		<authors>Roman Kuzmin</authors>
 		<owners>Roman Kuzmin</owners>
 		<projectUrl>https://github.com/nightroman/Invoke-Build</projectUrl>
@@ -151,14 +150,14 @@ task pushRelease version, {
 	assert (!$changes) "Please, commit changes."
 
 	exec { git push }
-	exec { git tag -a "v$script:Version" -m "v$script:Version" }
-	exec { git push origin "v$script:Version" }
+	exec { git tag -a "v$Version" -m "v$Version" }
+	exec { git push origin "v$Version" }
 }
 
 # Synopsis: Push NuGet package.
 task pushNuGet nuget, {
 	if (!($NuGetApiKey = property NuGetApiKey '')) { $NuGetApiKey = Read-Host NuGetApiKey }
-	exec { nuget push "Invoke-Build.$script:Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
+	exec { nuget push "Invoke-Build.$Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
 }
 
 # Synopsis: Push PSGallery package.
