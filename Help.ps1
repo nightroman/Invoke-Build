@@ -687,6 +687,10 @@
 		Specifies the default value. If it is omitted or null then the variable
 		must exist with a not empty value. Otherwise an error is thrown.
 '@
+		Boolean = @'
+		Treats values like 1 and 0 as $true and $false, including strings with
+		extra spaces. Others are converted by [System.Convert]::ToBoolean().
+'@
 	}
 
 	outputs = @(

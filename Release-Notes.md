@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.13.1
+
+Add `property -Boolean`, #225
+
 ## v5.13.0
 
 New helper `Get-BuildVersion`.

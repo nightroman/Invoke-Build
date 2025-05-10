@@ -211,13 +211,14 @@ function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 }
 
 #.ExternalHelp Help.xml
-function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value) {
+function Get-BuildProperty([Parameter(Mandatory=1)][string]$Name, $Value, [switch]$Boolean) {
 	${*n} = $Name
 	${*v} = $Value
 	Remove-Variable Name, Value
-	if (($null -ne ($_ = $PSCmdlet.GetVariableValue(${*n})) -and '' -ne $_) -or ($_ = [Environment]::GetEnvironmentVariable(${*n}))) {return $_}
-	if ($null -eq ${*v}) {*Die "Missing property '${*n}'." 13}
-	${*v}
+	$_ = if (($null -ne ($_ = $PSCmdlet.GetVariableValue(${*n})) -and '' -ne $_) -or ($_ = [Environment]::GetEnvironmentVariable(${*n}))) {$_}
+	elseif ($null -eq ${*v}) {*Die "Missing property '${*n}'." 13}
+	else {${*v}}
+	if ($Boolean) {if (1 -eq $_) {$true} elseif (0 -eq $_) {$false} else {[System.Convert]::ToBoolean($_)}} else {$_}
 }
 
 #.ExternalHelp Help.xml

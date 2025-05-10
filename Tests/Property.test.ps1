@@ -55,3 +55,47 @@ task EmptyStringAsNotDefined {
 	$_170410_105214 = 'var-value'
 	equals (property _170410_105214) var-value
 }
+
+task BooleanEnvironmentVariable {
+	$env:Value = $null
+	Remove-Variable Value -ErrorAction 0
+
+	$env:Value = ' 1 '; equals (property Value -Boolean) $true
+	$env:Value = ' 0 '; equals (property Value -Boolean) $false
+	$env:Value = ' TRUE '; equals (property Value -Boolean) $true
+	$env:Value = ' FALSE '; equals (property Value -Boolean) $false
+
+	$env:Value = ' '; equals (property Value -Boolean) $false
+	$env:Value = ''; try {property Value -Boolean; throw} catch {equals "$_" "Missing property 'Value'."}
+	$env:Value = $null; try {property Value -Boolean; throw} catch {equals "$_" "Missing property 'Value'."}
+
+	$env:Value = $null
+}
+
+task BooleanSessionVariable {
+	$env:Value = $null
+	Remove-Variable Value -ErrorAction 0
+
+	$Value = ' 1 '; equals (property Value -Boolean) $true
+	$Value = ' 0 '; equals (property Value -Boolean) $false
+	$Value = ' TRUE '; equals (property Value -Boolean) $true
+	$Value = ' FALSE '; equals (property Value -Boolean) $false
+
+	$Value = ' '; equals (property Value -Boolean) $false
+	$Value = ''; try {property Value -Boolean; throw} catch {equals "$_" "Missing property 'Value'."}
+	$Value = $null; try {property Value -Boolean; throw} catch {equals "$_" "Missing property 'Value'."}
+}
+
+task BooleanDefaultValue {
+	$env:Value = $null
+	Remove-Variable Value -ErrorAction 0
+
+	equals (property Value ' 1 ' -Boolean) $true
+	equals (property Value ' 0 ' -Boolean) $false
+	equals (property Value ' TRUE ' -Boolean) $true
+	equals (property Value ' FALSE ' -Boolean) $false
+
+	equals (property Value '' -Boolean) $false
+	equals (property Value ' ' -Boolean) $false
+	try {property Value $null -Boolean; throw} catch {equals "$_" "Missing property 'Value'."}
+}
