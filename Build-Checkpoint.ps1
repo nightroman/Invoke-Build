@@ -85,7 +85,15 @@ ${*checkpoint}.XCheck = {
 		User = *Run ${*}.Data['Checkpoint.Export']
 		Task = $BuildTask
 		File = $BuildFile
-		Prm1 = ${*}.SP
+		Prm1 = $(
+			$r = @{}
+			foreach($_ in ${*}.DP.get_Values()) {
+				if ($_.IsSet) {
+					$r[$_.Name] = $_.Value
+				}
+			}
+			$r
+		)
 		Prm2 = $(
 			$r = @{}
 			foreach($_ in ${*}.DP.get_Keys()) {

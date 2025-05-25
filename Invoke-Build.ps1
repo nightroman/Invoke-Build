@@ -42,8 +42,12 @@ function Get-BuildFile($Path, [switch]$Here) {
 if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
-$p = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
-$c, $r, $a = $null
+function *BB($F, $R) {
+	@{File=$F; Root=$R; DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
+}
+
+#!! ${*}
+${private:*p} = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
 New-Variable * -Description IB ([PSCustomObject]@{
 	All = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
 	Tasks = [System.Collections.Generic.List[object]]@()
@@ -60,20 +64,15 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	Summary = $PSBoundParameters['Summary']
 	CD = $OriginalLocation = *Path
 	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
-	SP = @{}
-	P = $p
+	BB = [System.Collections.Generic.List[object]]@()
+	B1 = $null
+	P = ${*p}
 	A = 1
 	B = 0
 	Q = 0
 	H = @{}
-	EnterBuild = $null
-	ExitBuild = $null
-	EnterTask = $null
-	ExitTask = $null
-	EnterJob = $null
-	ExitJob = $null
-	Header = if ($p) {$p.Header} else {{Write-Build 11 "Task $($args[0])"}}
-	Footer = if ($p) {$p.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
+	Header = if (${*p}) {${*p}.Header} else {{Write-Build 11 "Task $($args[0])"}}
+	Footer = if (${*p}) {${*p}.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
 	Data = @{}
 	XBuild = $null
 	XCheck = $null
@@ -91,7 +90,7 @@ if ($_ = $PSBoundParameters['Result']) {
 }
 $BuildTask = $PSBoundParameters['Task']
 if ($BuildFile -is [scriptblock]) {
-	$BuildFile = $BuildFile.File
+	${*}.BB.Add((*BB $BuildFile $(if ($BuildFile = $BuildFile.File) {Split-Path $BuildFile} else {${*}.CD})))
 	return
 }
 if ($BuildTask -eq '**') {
@@ -112,28 +111,43 @@ elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
 }
 ${*}.File = $BuildFile
 
-if (!($_ = (Get-Command $BuildFile -ErrorAction 1).Parameters)) {
-	& $BuildFile
-	throw 'Invalid script.'
-}
-if ($_.get_Count()) {
-	$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
-	$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
-	foreach($p in $_.get_Values()) {
-		if (($_ = $p.Name) -in $c) {continue}
-		if ($_ -in $r) {throw "Script uses reserved parameter '$_'."}
-		foreach ($a in $p.Attributes) {
-			if ($a -is [System.Management.Automation.ParameterAttribute] -and $a.Position -ge 0) {
-				$a.Position += 2
-			}
-		}
-		${*}.DP.Add($_, (New-Object System.Management.Automation.RuntimeDefinedParameter $_, $p.ParameterType, $p.Attributes))
+#!! param
+function *DP($Path) {
+	if (!($p = (Get-Command $Path -ErrorAction 1).Parameters)) {
+		& $Path
+		throw 'Invalid script.'
 	}
-	${*}.DP
+	$b = *BB $Path (Split-Path $Path)
+	if ($p.get_Count()) {
+		$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
+		$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
+		:param foreach($p in $p.get_Values()) {
+			if (($n = $p.Name) -in $c) {continue}
+			if ($n -in $r) {throw "Script uses reserved parameter '$n'."}
+			foreach ($a in $p.Attributes) {
+				if ($a -is [System.Management.Automation.ParameterAttribute] -and $a.Position -ge 0) {
+					$a.Position += 2
+				}
+				elseif($a -is [System.Management.Automation.ValidateScriptAttribute] -and $n -eq 'Extends') {
+					foreach($s in & $a.ScriptBlock) {
+						try {*DP (Join-Path (Split-Path $Path) $s)}
+						catch {throw "Parameter 'Extends': $_"}
+					}
+					continue param
+				}
+			}
+			$_ = New-Object System.Management.Automation.RuntimeDefinedParameter $n, $p.ParameterType, $p.Attributes
+			$b.DP.Add($n, $_)
+			try {${*}.DP.Add($n, $_)}
+			catch {throw "Cannot add parameter '$n' of '$Path': $_"}
+		}
+	}
+	${*}.BB.Add($b)
 }
-
-} end {
-
+*DP $BuildFile
+${*}.DP
+}
+end {
 #.ExternalHelp Help.xml
 function Add-BuildTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
@@ -173,6 +187,7 @@ function Add-BuildTask(
 		Done = $Done
 		Partial = $Partial
 		InvocationInfo = $Source
+		B1 = ${*}.B1
 	}
 	if (!$Jobs) {return}
 	$1.AddRange(@($Jobs))
@@ -438,12 +453,10 @@ function *Fin([Parameter()]$M, $C=0) {
 	*Die $M $C
 }
 
-function *Run($_) {
-	if ($_) {
-		*SL
-		. $_ @args
-	}
-}
+function *Run($_) {if ($_) {
+	*SL
+	. $_ @args
+}}
 
 function *At($I) {
 	$I.InvocationInfo.PositionMessage.Trim()
@@ -499,11 +512,11 @@ function *Check($J, $T, $P=@()) {
 }
 
 filter *Help {
-	$r = 1 | Select-Object Name, Jobs, Synopsis
-	$r.Name = $_.Name
-	$r.Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
-	$r.Synopsis = Get-BuildSynopsis $_
-	$r
+	[PSCustomObject]@{
+		Name = $_.Name
+		Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
+		Synopsis = Get-BuildSynopsis $_
+	}
 }
 
 function *Root($A) {
@@ -592,6 +605,7 @@ function *Task {
 		return
 	}
 
+	$BuildRoot = $Task.B1.Root
 	$Task.Started = [DateTime]::Now
 	if ((${private:*x} = $Task.If) -is [scriptblock]) {
 		*SL
@@ -613,7 +627,7 @@ function *Task {
 
 	${private:*i} = , [int]($null -ne $Task.Inputs)
 	try {
-		. *Run ${*}.EnterTask
+		. *Run $Task.B1.EnterTask
 		foreach($_ in $Task.Jobs) {
 			if ($_ -is [string]) {
 				try {
@@ -642,7 +656,7 @@ function *Task {
 			}
 
 			try {
-				. *Run ${*}.EnterJob
+				. *Run $Task.B1.EnterJob
 				*SL
 				if (0 -eq ${*i}[0]) {
 					& $Job
@@ -668,7 +682,7 @@ function *Task {
 				throw
 			}
 			finally {
-				. *Run ${*}.ExitJob
+				. *Run $Task.B1.ExitJob
 			}
 		}
 	}
@@ -684,7 +698,7 @@ function *Task {
 			& ${*}.Footer ${*p}
 		}
 		*Run $Task.Done
-		. *Run ${*}.ExitTask
+		. *Run $Task.B1.ExitTask
 	}
 }
 
@@ -713,15 +727,10 @@ function Write-Warning([Parameter()]$Message) {
 }
 
 $ErrorActionPreference = 1
-foreach($_ in ${*}.DP.get_Values()) {
-	if ($_.IsSet) {
-		${*}.SP[$_.Name] = $_.Value
-	}
-}
+Remove-Variable Task, File, Result, Safe, Summary
 if (${*}.Q = $BuildTask -eq '?' -or $BuildTask -eq '??') {
 	$WhatIf = $true
 }
-Remove-Variable Task, File, Result, Safe, Summary, p, c, r, a
 
 ${*}.Error = $null
 try {
@@ -734,18 +743,33 @@ try {
 		exit
 	}
 
-	function Enter-Build([Parameter()][scriptblock]$Script) {${*}.EnterBuild = $Script}
-	function Exit-Build([Parameter()][scriptblock]$Script) {${*}.ExitBuild = $Script}
-	function Enter-BuildTask([Parameter()][scriptblock]$Script) {${*}.EnterTask = $Script}
-	function Exit-BuildTask([Parameter()][scriptblock]$Script) {${*}.ExitTask = $Script}
-	function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.EnterJob = $Script}
-	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.ExitJob = $Script}
+	function Enter-Build([Parameter()][scriptblock]$Script) {${*}.B1.EnterBuild = $Script}
+	function Exit-Build([Parameter()][scriptblock]$Script) {${*}.B1.ExitBuild = $Script}
+	function Enter-BuildTask([Parameter()][scriptblock]$Script) {${*}.B1.EnterTask = $Script}
+	function Exit-BuildTask([Parameter()][scriptblock]$Script) {${*}.B1.ExitTask = $Script}
+	function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.B1.EnterJob = $Script}
+	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.B1.ExitJob = $Script}
 	function Set-BuildData([Parameter()]$Key, $Value) {${*}.Data[$Key] = $Value}
 
-	*SL ($BuildRoot = if ($BuildFile) {Split-Path $BuildFile} else {${*}.CD})
+	#!! load
 	New-Variable Task @{Name = $BuildFile} -Option Constant
-	$_ = ${*}.SP
-	${private:**} = @(. ${*}.File @_)
+	${private:**} = @(
+		foreach(${private:*b} in ${*}.BB) {
+			${*}.B1 = ${*b}
+			${private:*s} = @{}
+			foreach(${private:*p} in ${*b}.DP.get_Values()) {
+				if (${*p}.IsSet) {
+					${*s}[${*p}.Name] = ${*p}.Value
+				}
+			}
+			$BuildRoot = ${*b}.Root
+			*SL
+			$_ = ${*s}
+			. ${*b}.File @_
+			if (![System.IO.Directory]::Exists(($_ = *Path $BuildRoot))) {*Fin "Missing build root '$BuildRoot'." 13}
+			${*b}.Root = $_
+		}
+	)
 	foreach($_ in ${**}) {
 		Write-Warning "Unexpected output: $_."
 		if ($_ -is [scriptblock]) {*Fin "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)" 6}
@@ -784,12 +808,9 @@ try {
 		exit
 	}
 
-	New-Variable BuildRoot (*Path $BuildRoot) -Option Constant -Force
-	if (![System.IO.Directory]::Exists($BuildRoot)) {*Fin "Missing build root '$BuildRoot'." 13}
-
 	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
 	foreach($_ in ${*}.Redefined) {
-		Write-Build 8 "Redefined task '$($_.Name)'."
+		if (($_ = $_.Name) -ne '.') {Write-Build 8 "Redefined task '$_'."}
 	}
 	foreach($_ in ${*}.Doubles) {
 		if (${*}.All[$_[1]].If -isnot [scriptblock]) {
@@ -797,9 +818,13 @@ try {
 		}
 	}
 
+	#!! build
 	${*}.A = 0
 	try {
-		. *Run ${*}.EnterBuild
+		foreach($_ in ${*}.BB) {
+			$BuildRoot = $_.Root
+			. *Run $_.EnterBuild
+		}
 		if (${*}.XBuild) {. ${*}.XBuild}
 		if (${*}.XCheck) {& ${*}.XCheck}
 		foreach($_ in $BuildTask) {
@@ -808,7 +833,10 @@ try {
 	}
 	finally {
 		${*}.Task = $null
-		. *Run ${*}.ExitBuild
+		for($$ = ${*}.BB.Count; --$$ -ge 0) {
+			$BuildRoot = ${*}.BB[$$].Root
+			. *Run ${*}.BB[$$].ExitBuild
+		}
 	}
 	${*}.B = 1
 	exit

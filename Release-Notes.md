@@ -1,5 +1,16 @@
 # Invoke-Build Release Notes
 
+## v5.14.0
+
+**New feature: Build script inheritance**\
+*(Consider it as preview in v5.14.x)*
+
+Build script parameters `Extends` with `ValidateScript` attributes tell to
+dot-source scripts and replace `Extends` with inherited base parameters.
+
+Documentation and examples of multilevel and multiple inheritance:\
+<https://github.com/nightroman/Invoke-Build/tree/main/Tasks/Extends>
+
 ## v5.13.1
 
 Add `property -Boolean`, #225

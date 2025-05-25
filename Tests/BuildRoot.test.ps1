@@ -59,30 +59,24 @@ task Invalid {
 		$BuildRoot = ":"
 		task root
 	}
-	($r = try {Invoke-Build root $file} catch {$_})
-
-	$e = $r[-1]
-	assert ($e.CategoryInfo.Category -eq 'ObjectNotFound')
-	equals $e.FullyQualifiedErrorId Invoke-Build.ps1
-	equals $e.InvocationInfo.ScriptName $BuildFile
-	assert ("$e" -match 'Missing build root ''.*?[\\/]:''.')
+	try {throw Invoke-Build root $file}
+	catch {equals "$_" "Missing build root ':'."}
 }
 
-task Constant1 {
+# v5.14.0 User may change $BuildRoot any time, even after loading, IB restores it.
+task MayChangeRoot {
 	$file = {
-		task root {
-			$script:BuildRoot = 'z'
+		$original = $BuildRoot
+		Enter-Build {
+			$BuildRoot = '..'
+		}
+		task root1 {
+			equals $original $BuildRoot
+			$BuildRoot = '..'
+		}
+		task root2 {
+			equals $original $BuildRoot
 		}
 	}
-	($r = try {Invoke-Build root $file} catch {$_})
-	equals $r[-1].FullyQualifiedErrorId VariableNotWritable
-}
-
-task Constant2 {
-	$file = {
-		Enter-Build {$BuildRoot = 'z'}
-		task root
-	}
-	($r = try {Invoke-Build root $file} catch {$_})
-	equals $r[-1].FullyQualifiedErrorId VariableNotWritable
+	Invoke-Build * $file
 }

@@ -68,6 +68,7 @@ task ExposedFunctions {
 	$known = @'
 *Amend
 *At
+*BB
 *Check
 *Die
 *Echo

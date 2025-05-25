@@ -180,6 +180,11 @@ task loop {
 # Requires PowerShelf/Assert-SameFile.ps1
 task test {
 	assert ($PSVersionTable['Platform'] -ne 'Unix') 'WSL: cd Tests; ib'
+	trap {
+		# dump errors
+		Write-Build Magenta "ps: Import-Clixml $HOME\data\Invoke-Build-Test.Error.clixml -First 5"
+		@($Error) | Export-Clixml $HOME\data\Invoke-Build-Test.Error.clixml
+	}
 
 	# invoke tests, get output and result
 	$output = Invoke-Build . Tests\.build.ps1 -Result result -Summary | Out-String -Width:200

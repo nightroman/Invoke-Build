@@ -38,7 +38,6 @@
 
 .Parameter NoCode
 		Tells to skip code analysis for parameters and environment.
-		It is used as true for PowerShell v2.
 
 .Parameter Format
 		Specifies the custom task help formatter.
@@ -101,10 +100,7 @@ foreach($name in @($Parameters.get_Keys())) {
 	}
 }
 
-# amend options
-$NoCode = $NoCode -or $PSVersionTable.PSVersion.Major -le 2
-
-# globals
+# global
 $Hash = @{}
 $BuildJobs = @()
 $MapParameter = @{}

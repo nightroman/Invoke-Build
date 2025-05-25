@@ -9,6 +9,7 @@
 - [Direct](Direct) How to make build scripts invokable directly.
 - [Direct-2](Direct-2) How to make build scripts invokable directly (variant 2).
 - [Dynamic](Dynamic) How to use a dynamic script with dynamic tasks.
+- [Extends](Extends) Build script inheritance extends dot-sourcing.
 - [Header](Header) How to define custom task headers and footers.
 - [Import](Import) How to share and import tasks from external task scripts including exported by modules.
 - [Inline](Inline) How to assemble a whole build inline as a script block without creating an extra script.

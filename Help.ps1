@@ -185,9 +185,10 @@
 
 		INLINE SCRIPT
 
-		File also accepts script blocks. In this case $BuildFile is the calling
-		script, if any, or null. The default $BuildRoot is $BuildFile directory
-		or the current location.
+		File also accepts a script block composed as build script. In this
+		case $BuildFile is this script block. $BuildRoot is `$BuildFile.File`
+		directory, or $OriginalLocation when `$BuildFile.File` is null, e.g.
+		on using [scriptblock]::Create() instead of {...}.
 
 		Script parameters, parallel, and persistent builds are not supported.
 '@
