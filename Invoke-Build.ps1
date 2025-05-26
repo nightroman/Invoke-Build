@@ -130,8 +130,8 @@ function *DP($Path) {
 				}
 				elseif($a -is [System.Management.Automation.ValidateScriptAttribute] -and $n -eq 'Extends') {
 					foreach($s in & $a.ScriptBlock) {
-						try {*DP (Join-Path (Split-Path $Path) $s)}
-						catch {throw "Parameter 'Extends': $_"}
+						if (![System.IO.Path]::IsPathRooted($s)) {$s = Join-Path (Split-Path $Path) $s}
+						try {*DP $s} catch {throw "Parameter 'Extends': $_"}
 					}
 					continue param
 				}
@@ -171,7 +171,10 @@ function Add-BuildTask(
 		return
 	}
 	if ($Name[0] -eq '?') {throw 'Invalid task name.'}
-	if ($_ = ${*}.All[$Name]) {${*}.Redefined += $_}
+	if ($_ = ${*}.All[$Name]) {
+		${*}.Redefined += $_
+		${*}.All.Remove($Name)
+	}
 	${*}.All[$Name] = [PSCustomObject]@{
 		Name = $Name
 		Error = $null

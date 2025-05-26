@@ -36,6 +36,11 @@ task Multiple {
 	Invoke-Build * ..\..\Tasks\Extends\Multiple -Base1 b1 -More1 m1 -Test1 t1
 }
 
+# v5.14.2 Cover position of redefined task.
+task Help {
+	Invoke-Build ? ..\..\Tasks\Extends\Multilevel\Test.build.ps1 | Out-String
+}
+
 task WhatIf {
 	Invoke-Build MoreTask1 ..\..\Tasks\Extends\Multilevel\More\More.build.ps1 -WhatIf
 }

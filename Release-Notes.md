@@ -1,5 +1,10 @@
 # Invoke-Build Release Notes
 
+## v5.14.2
+
+- Amend `Extends` path resolution.
+- Amend redefined task position.
+
 ## v5.14.1
 
 `Invoke-Build -WhatIf` and `Show-TaskHelp` support `Extends`.
