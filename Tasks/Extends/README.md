@@ -8,14 +8,15 @@ dot-source scripts and replace `Extends` with inherited base parameters.
 Multiple and multilevel inheritance is supported, `ValidateScript` may specify
 any number of scripts and these scripts may use `Extends` as well.
 
-See examples of both inheritance hierarchies below.
+See examples of both inheritance trees below.
 
 ## Inheritance vs dot-sourcing
 
 ### Similarity
 
-`Extends` dot-sources base scripts internally in the same way as manually dot-sourced.
-This adds dot-sourced script tasks and parameter variables to the current script scope.
+`Extends` dot-sources base scripts internally in the same way as manually
+dot-sourced. This adds dot-sourced script tasks and parameter and script
+variables to the current script scope.
 
 ### Differences
 
@@ -37,7 +38,7 @@ The default is usually `$PSScriptRoot`.
 
 - Inheritance
 
-    Each script in the inherited tree has it own default or altered `$BuildRoot`.
+    Each script in the inheritance tree has it own default or altered `$BuildRoot`.
 
 - Dot-sourcing
 
@@ -49,7 +50,7 @@ Scripts may define Enter/Exit blocks for build, script tasks, task jobs.
 
 - Inheritance
 
-    Each script in the inherited tree has it own build blocks.
+    Each script in the inheritance tree has it own build blocks.
 
 - Dot-sourcing
 
@@ -60,14 +61,14 @@ Scripts may define Enter/Exit blocks for build, script tasks, task jobs.
 [Multilevel](Multilevel) shows multilevel inheritance:
 
 - `Test.build.ps1`
-    - `More\More.build.ps1`
-        - `..\Base\Base.build.ps1`
+    - `More.build.ps1`
+        - `Base.build.ps1`
 
 **Test.build.ps1**
 
 ```powershell
 param(
-    # Replaced with parameters from "More.build.ps1" (and "Base.build.ps1", recursively).
+    # Replaced with parameters from "Base.build.ps1" and "More.build.ps1" recursively.
     [ValidateScript({"More\More.build.ps1"})]
     $Extends,
 
@@ -78,14 +79,14 @@ param(
 
 # Own task.
 task TestTask1 MoreTask1, {
-    "TestTask1 Base1=$Base1 Base2=$Base2 More1=$More1 More2=$More2 Test1=$Test1 Test2=$Test2"
+    ...
 }
 
-# Redefine dot.
+# Redefined dot.
 task . TestTask1
 ```
 
-The original parameters and tasks are transformed (logically):
+After resolving and removing `Extends`:
 
 ```powershell
 param(
@@ -97,25 +98,26 @@ param(
     $More1,
     $More2 = 'more2'
 
-    # own parameters
+    # from "Test.build.ps1"
     $Test1,
     $Test2 = 'test2'
 )
 
+# from "Base.build.ps1"
 task BaseTask1 {
-    "BaseTask1 Base1=$Base1 Base2=$Base2"
+    ...
 }
-
 task . BaseTask1
 
+# from "More.build.ps1"
 task MoreTask1 BaseTask1, {
-    "MoreTask1 Base1=$Base1 Base2=$Base2 More1=$More1 More2=$More2"
+    ...
 }
 
+# from "Test.build.ps1"
 task TestTask1 MoreTask1, {
-    "TestTask1 Base1=$Base1 Base2=$Base2 More1=$More1 More2=$More2 Test1=$Test1 Test2=$Test2"
+    ...
 }
-
 task . TestTask1
 ```
 
@@ -133,8 +135,8 @@ redefined accidentally.
 [Multiple](Multiple) shows multiple inheritance:
 
 - `Test.build.ps1`
-    - `Base\Base.build.ps1`
-    - `More\More.build.ps1`
+    - `Base.build.ps1`
+    - `More.build.ps1`
 
 **Test.build.ps1**
 
@@ -151,11 +153,11 @@ param(
 
 # Own task.
 task TestTask1 BaseTask1, MoreTask1, {
-    "TestTask1 Base1=$Base1 Base2=$Base2 More1=$More1 More2=$More2 Test1=$Test1 Test2=$Test2"
+    ...
 }
 ```
 
-The original parameters and tasks are transformed (logically):
+After resolving and removing `Extends`:
 
 ```powershell
 param(
@@ -167,22 +169,24 @@ param(
     $More1,
     $More2 = 'more2'
 
-    # own parameters
+    # from "Test.build.ps1"
     $Test1,
     $Test2 = 'test2'
 )
 
+# from "Base.build.ps1"
 task BaseTask1 {
-    "BaseTask1 Base1=$Base1 Base2=$Base2"
+    ...
 }
-
 task . BaseTask1
 
+# from "More.build.ps1"
 task MoreTask1 {
-    "MoreTask1 More1=$More1 More2=$More2"
+    ...
 }
 
+# from "Test.build.ps1"
 task TestTask1 BaseTask1, MoreTask1, {
-    "TestTask1 Base1=$Base1 Base2=$Base2 More1=$More1 More2=$More2 Test1=$Test1 Test2=$Test2"
+    ...
 }
 ```
