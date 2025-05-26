@@ -21,13 +21,16 @@
 		Task: [object[]] Tasks to do.
 			Name: [string] Task name.
 			Synopsis: [string] Task synopsis, may be null.
+
 		Jobs: [object[]] Jobs to do.
 			Name: [string] Task name.
 			Location: [string] Task location as "<file>:<line>".
+
 		Parameters: [object[]] Tasks parameters, may be empty.
 			Name: [string] Parameter name.
 			Type: [string] Parameter type.
 			Description: [string] Parameter help, may be null or empty.
+
 		Environment: [string[]] Tasks environment variables, may be empty.
 
 .Parameter Task
@@ -47,71 +50,54 @@
 #>
 
 param(
-	[Parameter(Position=0)][string[]]$Task
+	[Parameter(Position=0)]
+	[string[]]$Task
 	,
-	[Parameter(Position=1)]$File
+	[Parameter(Position=1)]
+	[string]$File
 	,
-	[object]$Format = 'Format-TaskHelp'
+	[object]$Format = $(if ($Format = $PSCmdlet.GetVariableValue('Format')) {$Format} else {'Format-TaskHelp'})
 	,
-	[switch]$NoCode
+	[switch]$NoCode = $PSCmdlet.GetVariableValue('NoCode')
 )
 
-trap {$PSCmdlet.ThrowTerminatingError($_)}
-$ErrorActionPreference = 1
+$ErrorActionPreference = 1; trap {$PSCmdlet.ThrowTerminatingError($_)}
 
-if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -eq 'Invoke-Build.ps1') {
-	$all = ${*}.All
-	Remove-Variable Task
-}
-else {
-	$BuildTask = $Task
-	$BuildFile = $File
-	. Invoke-Build
-
-	### resolve file
-	if ($BuildFile) {
-		$BuildFile = *Path $BuildFile
-		if (![System.IO.File]::Exists($BuildFile)) {*Fin "Missing file '$BuildFile'." 5}
-	}
-	else {
-		$BuildFile = Get-BuildFile (*Path)
-		if (!$BuildFile) {*Fin 'Missing default script.' 5}
-	}
-
-	### resolve task
-	$all = Invoke-Build ?? $BuildFile
-	if (!$BuildTask -or '.' -eq $BuildTask) {
-		$BuildTask = if ($all['.']) {'.'} else {$all.Item(0).Name}
-	}
+# recall by IB
+if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -ne 'Invoke-Build.ps1') {
+	Invoke-Build $Task $File -WhatIf
+	return
 }
 
-### get script parameter help
-$Help = @(&{
+$All = ${*}.All
+$BB = ${*}.BB
+$DP = ${*}.DP
+Remove-Variable Task
+
+### script parameters help
+
+function get_help($File) {
 	Set-StrictMode -Off
-	if ($r = Get-Help $BuildFile) {if ($r = $r.parameters) {if ($r = $r.parameter) {$r}}}
-})
-
-### get script parameters
-$CommonParameters = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable'
-$Parameters = (Get-Command $BuildFile).Parameters
-foreach($name in @($Parameters.get_Keys())) {
-	if ($name -in $CommonParameters) {
-		$null = $Parameters.Remove($name)
-	}
+	@(if ($r = Get-Help $File) {if ($r = $r.parameters) {if ($r = $r.parameter) {$r}}})
 }
 
-# global
+$Help = @(
+	foreach($b in $BB) {
+		get_help $b.File
+	}
+)
+
 $Hash = @{}
 $BuildJobs = @()
 $MapParameter = @{}
 $MapEnvironment = @{}
 
-# collect jobs to do in $BuildJobs
+# collect jobs in $BuildJobs
 function Add-TaskJob($Jobs, $Task) {
 	foreach($job in $Jobs) {
 		$job, $null = *Job $job
 		if ($job -is [string]) {
-			$task2 = $all[$job]
+			$task2 = $All[$job]
 			Add-TaskJob $task2.Jobs $task2
 		}
 		else {
@@ -161,7 +147,7 @@ function Add-VariablePath($Path) {
 		$name = $Path
 	}
 	if (!$prefix -or $prefix -eq 'script') {
-		if ($Parameters.ContainsKey($name)) {
+		if ($DP.ContainsKey($name)) {
 			$MapParameter[$name] = 1
 		}
 	}
@@ -180,14 +166,14 @@ function Add-BlockVariable($Block) {
 
 function Add-TaskVariable($Jobs) {
 	foreach($job in $Jobs) {
-		$task = $all[$job]
+		$task = $All[$job]
 		$info = Get-TaskComment $task
 
 		foreach($name in $info.Environment) {
 			$MapEnvironment[$name] = 1
 		}
 		foreach($name in $info.Parameters) {
-			if ($Parameters.ContainsKey($name)) {
+			if ($DP.ContainsKey($name)) {
 				$MapParameter[$name] = 1
 			}
 			else {
@@ -223,10 +209,10 @@ function Format-TaskHelp($TaskHelp) {
 
 	if ($TaskHelp.Parameters) {
 		Write-Build White Parameters:
-		foreach($param in $TaskHelp.Parameters) {
-			Write-Build Gray ('    [{0}] {1}' -f $param.Type, $param.Name)
-			if ($param.Description) {
-				Write-Build Gray ('        {0}' -f $param.Description)
+		foreach($p in $TaskHelp.Parameters) {
+			Write-Build Gray ('    [{0}] {1}' -f $p.Type, $p.Name)
+			if ($p.Description) {
+				Write-Build Gray ('        {0}' -f $p.Description)
 			}
 		}
 	}
@@ -238,16 +224,16 @@ function Format-TaskHelp($TaskHelp) {
 }
 
 ### .Task
-$TaskHelp = 1 | Select-Object Task, Jobs, Synopsis, Location, Parameters, Environment
+$TaskHelp = [pscustomobject]@{Task=$null; Jobs=$null; Synopsis=$null; Location=$null; Parameters=$null; Environment=$null}
 $TaskHelp.Task = @(
 	foreach($job in $BuildTask) {
 		$job, $null = *Job $job
-		$task = $all[$job]
+		$task = $All[$job]
 		if (!$task) {*Fin "Missing task '$job' in '$BuildFile'." 5}
-		$r = 1 | Select-Object Name, Synopsis
-		$r.Name = $task.Name
-		$r.Synopsis = Get-BuildSynopsis $task $Hash
-		$r
+		[pscustomobject]@{
+			Name = $task.Name
+			Synopsis = Get-BuildSynopsis $task $Hash
+		}
 	}
 )
 
@@ -255,11 +241,11 @@ $TaskHelp.Task = @(
 Add-TaskJob $BuildTask
 $TaskHelp.Jobs = @(
 	foreach($name in $BuildJobs) {
-		$task = $all[$name]
-		$r = 1 | Select-Object Name, Location
-		$r.Name = $task.Name
-		$r.Location = '{0}:{1}' -f $task.InvocationInfo.ScriptName, $task.InvocationInfo.ScriptLineNumber
-		$r
+		$task = $All[$name]
+		[pscustomobject]@{
+			Name = $task.Name
+			Location = '{0}:{1}' -f $task.InvocationInfo.ScriptName, $task.InvocationInfo.ScriptLineNumber
+		}
 	}
 )
 
@@ -270,27 +256,20 @@ $TaskHelp.Environment = @($MapEnvironment.get_Keys() | Sort-Object)
 # make parameter objects with help
 $TaskHelp.Parameters = @()
 foreach($name in $MapParameter.get_Keys()) {
-	$param = $Parameters[$name]
-	$r = 1 | Select-Object Name, Type, Description
-	$r.Name = $name
-
-	$type = $param.ParameterType.Name
-	if ($type -eq 'SwitchParameter') {
-		$r.Type = 'switch'
-	}
-	else {
-		$r.Type = $type
-	}
-
-	$r.Description = foreach($_ in $Help) {
-		if ($_.name -eq $name -and $_.PSObject.Properties['description']) {
-			($_.description | Out-String).Trim()
-			break
+	$p = $DP[$name]
+	$r = [pscustomobject]@{
+		Name = $name
+		Type = $(if (($type = $p.ParameterType.Name) -eq 'SwitchParameter') {'switch'} else {$type})
+		Description = foreach($_ in $Help) {
+			if ($_.name -eq $name -and $_.PSObject.Properties['description']) {
+				($_.description | Out-String).Trim()
+				break
+			}
 		}
 	}
 	$TaskHelp.Parameters += $r
 }
 $TaskHelp.Parameters = @($TaskHelp.Parameters | Sort-Object {$_.Type -eq 'switch'}, Name)
 
-# finish
+### format
 & $Format $TaskHelp

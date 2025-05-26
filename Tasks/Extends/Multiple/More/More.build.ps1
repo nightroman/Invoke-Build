@@ -1,4 +1,12 @@
-﻿
+﻿<#
+.Synopsis
+	More build.
+.Parameter More1
+		Parameter More1.
+.Parameter More2
+		Parameter More2.
+#>
+
 param(
 	$More1,
 	$More2 = 'more2'
@@ -8,6 +16,9 @@ param(
 # Tasks
 #
 
+# Synopsis: MoreTask1.
+# Parameters: More1, More2
+# Environment: MoreEnv
 task MoreTask1 {
 	"MoreTask1 More1=$More1 More2=$More2"
 }

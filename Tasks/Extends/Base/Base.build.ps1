@@ -1,4 +1,12 @@
-﻿
+﻿<#
+.Synopsis
+	Base build.
+.Parameter Base1
+		Parameter Base1.
+.Parameter Base2
+		Parameter Base2.
+#>
+
 param(
 	$Base1,
 	$Base2 = 'base2'
@@ -8,10 +16,14 @@ param(
 # Tasks
 #
 
+# Synopsis: BaseTask1.
+# Parameters: Base1, Base2
+# Environment: BaseEnv
 task BaseTask1 {
 	"BaseTask1 Base1=$Base1 Base2=$Base2"
 }
 
+# Synopsis: Base dot-task.
 task . BaseTask1
 
 #

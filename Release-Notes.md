@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.14.1
+
+`Invoke-Build -WhatIf` and `Show-TaskHelp` support `Extends`.
+
 ## v5.14.0
 
 **New feature: Build script inheritance**\

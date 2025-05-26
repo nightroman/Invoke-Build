@@ -1,4 +1,14 @@
-﻿
+﻿<#
+.Synopsis
+	More build.
+.Parameter More1
+		Parameter More1.
+.Parameter More2
+		Parameter More2.
+.Parameter MoreX
+		Parameter MoreX.
+#>
+
 param(
 	# Replaced with parameters from "..\..\Base\Base.build.ps1".
 	[ValidateScript({"..\..\Base\Base.build.ps1"})]
@@ -6,12 +16,19 @@ param(
 
 	# Own parameters.
 	$More1,
-	$More2 = 'more2'
+	$More2 = 'more2',
+	$MoreX = 'moreX'
 )
 
-# Own task.
+#
+# Tasks
+#
+
+# Synopsis: MoreTask1 2025-05-25-1251.
+# Parameters: MoreX
+# Environment: MoreEnv
 task MoreTask1 BaseTask1, {
-	"MoreTask1 Base1=$Base1 Base2=$Base2 More1=$More1 More2=$More2"
+	"MoreTask1 More1=$More1 More2=$More2"
 }
 
 #
