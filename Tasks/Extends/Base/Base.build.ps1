@@ -8,6 +8,7 @@
 #>
 
 param(
+	$Configuration = 'Debug',
 	$Base1,
 	$Base2 = 'base2'
 )
@@ -31,7 +32,7 @@ task . BaseTask1
 #
 
 Enter-Build {
-	"Base Enter-Build BuildRoot=$BuildRoot"
+	"Base Enter-Build BuildRoot=$BuildRoot - $Configuration"
 }
 
 Exit-Build {

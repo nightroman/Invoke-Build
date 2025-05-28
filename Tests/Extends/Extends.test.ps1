@@ -12,14 +12,6 @@
 
 Set-StrictMode -Version 3
 
-task same-parameter-name {
-	try { throw Invoke-Build same-parameter-name.build.ps1 }
-	catch {
-		"$_"
-		assert ("$_" -like "Cannot add parameter 'Base1' of '*\same-parameter-name.build.ps1': *")
-	}
-}
-
 # Should result in dot-task redefined in Test.
 # Redefined for dot-task is omitted in v5.14.0.
 task All {

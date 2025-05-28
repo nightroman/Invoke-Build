@@ -24,7 +24,8 @@ variables to the current script scope.
 
 - Inheritance
 
-    Replaces `Extends` with base parameters and propagates them on dot-sourcing.
+    Replaces `Extends` with base parameters, exposes them as dynamic parameters
+    of `Invoke-Build`, passes input values in dot-sourced scripts.
 
 - Dot-sourcing
 
@@ -55,6 +56,14 @@ Scripts may define Enter/Exit blocks for build, script tasks, task jobs.
 - Dot-sourcing
 
     Build blocks are the same for all scripts.
+
+## Common parameters
+
+Scripts in the inheritance tree may have common parameters (same names).
+Ideally, same names should have same types and attributes in all scripts.
+
+The engine does not check this though. On tree traversal last found parameters
+with same names win, i.e. become dynamic parameters of the root script.
 
 ## Multilevel inheritance example
 
@@ -91,6 +100,7 @@ After resolving and removing `Extends`:
 ```powershell
 param(
     # from "Base.build.ps1"
+    $Configuration,
     $Base1,
     $Base2 = 'base2'
 
@@ -162,6 +172,7 @@ After resolving and removing `Extends`:
 ```powershell
 param(
     # from "Base.build.ps1"
+    $Configuration,
     $Base1,
     $Base2 = 'base2'
 

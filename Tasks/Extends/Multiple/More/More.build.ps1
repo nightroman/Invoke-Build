@@ -8,6 +8,7 @@
 #>
 
 param(
+	$Configuration = 'Release',
 	$More1,
 	$More2 = 'more2'
 )
@@ -28,7 +29,7 @@ task MoreTask1 {
 #
 
 Enter-Build {
-	"More Enter-Build BuildRoot=$BuildRoot"
+	"More Enter-Build BuildRoot=$BuildRoot - $Configuration"
 }
 
 Exit-Build {

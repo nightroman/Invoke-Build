@@ -15,6 +15,7 @@ param(
 	$Extends,
 
 	# Own parameters.
+	$Configuration = 'Release',
 	$More1,
 	$More2 = 'more2',
 	$MoreX = 'moreX'
@@ -36,7 +37,7 @@ task MoreTask1 BaseTask1, {
 #
 
 Enter-Build {
-	"More Enter-Build BuildRoot=$BuildRoot"
+	"More Enter-Build BuildRoot=$BuildRoot - $Configuration"
 }
 
 Exit-Build {

@@ -137,9 +137,8 @@ function *DP($Path) {
 				}
 			}
 			$_ = New-Object System.Management.Automation.RuntimeDefinedParameter $n, $p.ParameterType, $p.Attributes
-			$b.DP.Add($n, $_)
-			try {${*}.DP.Add($n, $_)}
-			catch {throw "Cannot add parameter '$n' of '$Path': $_"}
+			$b.DP[$n] = $_
+			${*}.DP[$n] = $_
 		}
 	}
 	${*}.BB.Add($b)
