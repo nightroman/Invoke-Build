@@ -57,14 +57,17 @@ Scripts may define Enter/Exit blocks for build, script tasks, task jobs.
 
     Build blocks are the same for all scripts.
 
-## Shared script parameters
+## Shared build script parameters
 
 Same name parameters in different scripts in the inheritance tree are treated
-as shared. Ideally, they should have same types and attributes in all scripts.
+as shared.
 
-The engine does not require this, though. On the inheritance tree traversal
-the last processed parameter with the same name wins, i.e. becomes the root
-script dynamic parameter.
+Ideally, shared parameters should be defined in all scripts using same types
+and attributes, even same default values perhaps.
+
+This is not always needed or possible. So the engine does not check anything.
+On the inheritance tree traversal the last processed parameter with the same
+name wins, i.e. becomes the root script dynamic parameter.
 
 Examples below use the same `Configuration` and show some subtleties.
 
