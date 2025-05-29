@@ -57,13 +57,16 @@ Scripts may define Enter/Exit blocks for build, script tasks, task jobs.
 
     Build blocks are the same for all scripts.
 
-## Common parameters
+## Shared script parameters
 
-Scripts in the inheritance tree may have common parameters (same names).
-Ideally, same names should have same types and attributes in all scripts.
+Same name parameters in different scripts in the inheritance tree are treated
+as shared. Ideally, they should have same types and attributes in all scripts.
 
-The engine does not check this though. On tree traversal last found parameters
-with same names win, i.e. become dynamic parameters of the root script.
+The engine does not require this, though. On the inheritance tree traversal
+the last processed parameter with the same name wins, i.e. becomes the root
+script dynamic parameter.
+
+Examples below use the same `Configuration` and show some subtleties.
 
 ## Multilevel inheritance example
 
@@ -99,8 +102,8 @@ After resolving and removing `Extends`:
 
 ```powershell
 param(
-    # from "Base.build.ps1"
-    $Configuration,
+    # from "Base.build.ps1" (but "Release" comes from "More.build.ps1")
+    $Configuration = "Release",
     $Base1,
     $Base2 = 'base2'
 
@@ -131,14 +134,22 @@ task TestTask1 MoreTask1, {
 task . TestTask1
 ```
 
-**Redefined tasks**
+**Redefined task**
 
-Note, the default dot-task in `Base.build.ps1` is redefined in `Test.build.ps1`
-and the usual semi-warning message "Redefined task ..." is omitted for this
-special task.
+The default dot-task of `Base.build.ps1` is redefined in `Test.build.ps1`.
+The usual build message "Redefined task ..." is omitted because dot-tasks
+are expected to be redefined.
 
-These messages still show for other redefined tasks because they may be
-redefined accidentally.
+"Redefined task ..." messages would still show for other redefined tasks
+because they may be redefined accidentally.
+
+**Shared parameter**
+
+Parameter `Configuration` is defined in `Base.build.ps1` (defaut value "Debug")
+and `More.build.ps1` (default value "Release").
+
+The second definition becomes the final shared parameter, so that the default
+value "Release" takes over in this case.
 
 ## Multiple inheritance example
 
@@ -171,8 +182,8 @@ After resolving and removing `Extends`:
 
 ```powershell
 param(
-    # from "Base.build.ps1"
-    $Configuration,
+    # from "Base.build.ps1" (but "Release" comes from "More.build.ps1")
+    $Configuration = "Release",
     $Base1,
     $Base2 = 'base2'
 
