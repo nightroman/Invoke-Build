@@ -1,13 +1,13 @@
-﻿# SubCases
+﻿# Sub cases technique
 
 Inspired by [#222](https://github.com/nightroman/Invoke-Build/issues/222).
 
 **File structure**
 
 - `root.build.ps1`
-- `case1`
+- `case1/`
     - `case1.tasks.ps1`
-- `case2`
+- `case2/`
     - `case2.tasks.ps1`
 
 **Build parameters**

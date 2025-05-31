@@ -9,15 +9,11 @@ The "build system" consists of the root script [root.build.ps1](root.build.ps1)
 and child build scripts, two in this demo:
 [deploy/deploy.build.ps1](deploy/deploy.build.ps1) and [src/build.build.ps1](src/build.build.ps1):
 
-```
-|   root.build.ps1
-|
-+---deploy
-|       deploy.build.ps1
-|
-\---src
-        build.build.ps1
-```
+- `root.build.ps1`
+- `deploy/`
+    - `deploy.build.ps1`
+- `src/`
+    - `build.build.ps1`
 
 The root build script is designed for direct calls, see [Direct](../../Direct).
 It contains the usual tasks and two special tasks `build` and `deploy` which call child build scripts.
