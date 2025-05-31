@@ -83,7 +83,7 @@ function get_help($File) {
 
 $Help = @(
 	foreach($b in $BB) {
-		get_help $b.File
+		get_help $b.FS
 	}
 )
 

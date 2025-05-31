@@ -42,8 +42,8 @@ function Get-BuildFile($Path, [switch]$Here) {
 if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
-function *BB($F, $R) {
-	@{File=$F; Root=$R; DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
+function *BB($FS, $PX, $F) {
+	@{FS=$FS; PX=$PX; BR=if ($F) {Split-Path $F} else {${*}.CD}; DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
 }
 
 #!! ${*}
@@ -90,7 +90,7 @@ if ($_ = $PSBoundParameters['Result']) {
 }
 $BuildTask = $PSBoundParameters['Task']
 if ($BuildFile -is [scriptblock]) {
-	${*}.BB.Add((*BB $BuildFile $(if ($BuildFile = $BuildFile.File) {Split-Path $BuildFile} else {${*}.CD})))
+	${*}.BB.Add((*BB $BuildFile '' ($BuildFile = $BuildFile.File)))
 	return
 }
 if ($BuildTask -eq '**') {
@@ -112,12 +112,12 @@ elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
 ${*}.File = $BuildFile
 
 #!! param
-function *DP($Path) {
-	if (!($p = (Get-Command $Path -ErrorAction 1).Parameters)) {
-		& $Path
+function *DP($FS, $PX) {
+	if (!($p = (Get-Command $FS -ErrorAction 1).Parameters)) {
+		& $FS
 		throw 'Invalid script.'
 	}
-	$b = *BB $Path (Split-Path $Path)
+	$b = *BB $FS $PX $FS
 	if ($p.get_Count()) {
 		$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
 		$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
@@ -130,8 +130,13 @@ function *DP($Path) {
 				}
 				elseif($a -is [System.Management.Automation.ValidateScriptAttribute] -and $n -eq 'Extends') {
 					foreach($s in & $a.ScriptBlock) {
-						if (![System.IO.Path]::IsPathRooted($s)) {$s = Join-Path (Split-Path $Path) $s}
-						try {*DP $s} catch {throw "Parameter 'Extends': $_"}
+						$x = ''
+						if (($_ = $s.IndexOf('::')) -ge 0) {
+							$x = $s.Substring(0, $_ + 2)
+							$s = $s.Substring($_ + 2)
+						}
+						if (![System.IO.Path]::IsPathRooted($s)) {$s = Join-Path $b.BR $s}
+						try {*DP $s $x} catch {throw "Parameter 'Extends': $_"}
 					}
 					continue param
 				}
@@ -143,7 +148,7 @@ function *DP($Path) {
 	}
 	${*}.BB.Add($b)
 }
-*DP $BuildFile
+*DP $BuildFile ''
 ${*}.DP
 }
 end {
@@ -170,6 +175,9 @@ function Add-BuildTask(
 		return
 	}
 	if ($Name[0] -eq '?') {throw 'Invalid task name.'}
+	$B1 = ${*}.B1
+	$PX = $B1.PX
+	$Name = $PX+$Name
 	if ($_ = ${*}.All[$Name]) {
 		${*}.Redefined += $_
 		${*}.All.Remove($Name)
@@ -189,15 +197,18 @@ function Add-BuildTask(
 		Done = $Done
 		Partial = $Partial
 		InvocationInfo = $Source
-		B1 = ${*}.B1
+		B1 = $B1
 	}
 	if (!$Jobs) {return}
-	$1.AddRange(@($Jobs))
 	$2 = @()
-	foreach($j in $1) {
-		$r, $null = *Job $j
-		if ($r -in $2) {${*}.Doubles += ,($Name, $r)}
-		$2 += $r
+	foreach($j in $Jobs) {
+		$r, $s = *Job $j
+		if ($r -is [string]) {
+			$r = $PX+$r
+			if ($r -in $2) {${*}.Doubles += ,($Name, $r)} else {$2 += $r}
+			if ($s) {$r = "?$r"}
+		}
+		$1.Add($r)
 	}
 }
 
@@ -607,7 +618,7 @@ function *Task {
 		return
 	}
 
-	$BuildRoot = $Task.B1.Root
+	$BuildRoot = $Task.B1.BR
 	$Task.Started = [DateTime]::Now
 	if ((${private:*x} = $Task.If) -is [scriptblock]) {
 		*SL
@@ -764,12 +775,12 @@ try {
 					${*s}[${*p}.Name] = ${*p}.Value
 				}
 			}
-			$BuildRoot = ${*b}.Root
+			$BuildRoot = ${*b}.BR
 			*SL
 			$_ = ${*s}
-			. ${*b}.File @_
+			. ${*b}.FS @_
 			if (![System.IO.Directory]::Exists(($_ = *Path $BuildRoot))) {*Fin "Missing build root '$BuildRoot'." 13}
-			${*b}.Root = $_
+			${*b}.BR = $_
 		}
 	)
 	foreach($_ in ${**}) {
@@ -824,7 +835,7 @@ try {
 	${*}.A = 0
 	try {
 		foreach($_ in ${*}.BB) {
-			$BuildRoot = $_.Root
+			$BuildRoot = $_.BR
 			. *Run $_.EnterBuild
 		}
 		if (${*}.XBuild) {. ${*}.XBuild}
@@ -836,7 +847,7 @@ try {
 	finally {
 		${*}.Task = $null
 		for($$ = ${*}.BB.Count; --$$ -ge 0) {
-			$BuildRoot = ${*}.BB[$$].Root
+			$BuildRoot = ${*}.BB[$$].BR
 			. *Run ${*}.BB[$$].ExitBuild
 		}
 	}

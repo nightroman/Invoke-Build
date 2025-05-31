@@ -49,3 +49,14 @@ task ShowHelpNoCode {
 	$r = $r.Parameters.ForEach('name') -join '//'
 	equals $r Base1//Base2//MoreX
 }
+
+task Prefixes {
+	Invoke-Build Build ..\..\Tasks\Extends\Prefixes
+}
+
+task Checkpoint {
+    Build-Checkpoint z.clixml -Preserve @{Task='Build'; File="..\..\Tasks\Extends\Prefixes"; Configuration='Test'}
+    $r = Import-Clixml z.clixml
+    $r.Done
+    remove z.clixml
+}
