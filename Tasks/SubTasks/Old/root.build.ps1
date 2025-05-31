@@ -1,6 +1,6 @@
 <#
 .Synopsis
-	Example root build script with sub tasks in child scripts.
+	Root build script with base scripts.
 
 .Parameter Tasks
 		Specifies root tasks or special `build` or `deploy`.
@@ -58,17 +58,10 @@ dynamicparam {
 }
 
 end {
-	# Bootstrap and call Invoke-Build
 	if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
 		$ErrorActionPreference = 1
-
-		# bootstrap (omitted)
-		# ...
-
 		#! for dynamic parameters
 		$DynamicParamTasks = $Tasks
-
-		# call Invoke-Build
 		return Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
 	}
 
