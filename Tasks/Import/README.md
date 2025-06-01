@@ -58,3 +58,7 @@ then get them from the module by the pattern `*.tasks` and import in a loop:
 Import-Module MyModule
 foreach($file in Get-Command *.tasks -Module MyModule) {. $file}
 ```
+
+## See Also
+
+- [Extends](../Extends)
