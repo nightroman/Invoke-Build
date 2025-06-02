@@ -487,12 +487,10 @@ function *Job($J) {
 
 function *Unsafe($N, $J) {
 	if ($N -in $J) {return 1}
-	foreach($_ in $J) {
-		$r, $null = *Job $_
-		if ($r -ne $N -and ($t = ${*}.All[$r]) -and $t.If -and (*Unsafe $N $t.Jobs)) {
-			return 1
-		}
-	}
+	foreach($_ in $J) {if ($_ -is [string]) {
+		$_ = $_.TrimStart('?')
+		if ($_ -ne $N -and ($t = ${*}.All[$_]) -and $t.If -and (*Unsafe $N $t.Jobs)) {return 1}
+	}}
 }
 
 function *Amend($X, $J, $B) {
@@ -511,8 +509,8 @@ function *Amend($X, $J, $B) {
 }
 
 function *Check($J, $T, $P=@()) {
-	foreach($_ in $J) { if ($_ -is [string]) {
-		$_, $null = *Job $_
+	foreach($_ in $J) {if ($_ -is [string]) {
+		$_ = $_.TrimStart('?')
 		if (!($r = ${*}.All[$_])) {
 			$_ = "Missing task '$_'."
 			*Fin $(if ($T) {*Msg "Task '$($T.Name)': $_" $T} else {$_}) 5
@@ -533,15 +531,9 @@ filter *Help {
 }
 
 function *Root($A) {
-	*Check $A.get_Keys()
-	$h = @{}
-	foreach($_ in $A.get_Values()) {foreach($_ in $_.Jobs) {
-		if ($_ -is [string]) {
-			$_, $null = *Job $_
-			$h[$_] = 1
-		}
-	}}
-	foreach($_ in $A.get_Keys()) {if (!$h[$_]) {$_}}
+	*Check ($t = $A.get_Keys())
+	$j = foreach($_ in $A.get_Values()) {foreach($_ in $_.Jobs) {if ($_ -is [string]) {$_.TrimStart('?')}}}
+	foreach($_ in $t) {if ($_ -notin $j) {$_}}
 }
 
 function *Err($T) {

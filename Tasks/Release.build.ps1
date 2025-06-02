@@ -63,12 +63,10 @@ task push_release -if {ask} {
 	Invoke-Build pushRelease
 }
 
-# Synopsis: Finish and browse package pages.
+# Synopsis: Finish and browse.
 task clean_and_browse -if {ask} {
 	Invoke-Build clean
 	Start-Process https://www.powershellgallery.com/packages/InvokeBuild
-	Start-Process https://www.nuget.org/packages/Invoke-Build/
-	Start-Process https://www.nuget.org/packages/ib/
 }
 
 # Synopsis: Run all tasks with checkpoints.

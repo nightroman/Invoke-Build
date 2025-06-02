@@ -13,9 +13,9 @@
 
 ## Special parameter "Extends"
 
-The build script parameter `Extends` with `ValidateScript` attribute tells to
-dot-source scripts, replace `Extends` with base parameters, and optionally
-rename base tasks with a custom prefix.
+The build script parameter `Extends` with `ValidateScript` tells to
+dot-source base scripts, replace `Extends` with base parameters, and
+optionally rename base tasks.
 
 Multiple and multilevel inheritance is supported, `ValidateScript` may specify
 any number of scripts and these scripts may use `Extends` recursively.

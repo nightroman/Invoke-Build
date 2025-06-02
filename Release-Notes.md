@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.14.5
+
+Minor tweaks.
+
 ## v5.14.4
 
 Support task prefixes on `Extends`, [#229](https://github.com/nightroman/Invoke-Build/issues/229)
