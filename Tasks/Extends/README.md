@@ -97,6 +97,18 @@ For example, the path `"main::.\src\.build.ps1"` tells to extend the script
 `.\src\.build.ps1` and rename its tasks using the prefix `main::`, so that
 the original task `Build` becomes `main::Build`.
 
+## The default task
+
+By design, special dot-tasks (default tasks) are not renamed when `Extends`
+specifies prefixes. When several scripts add dot-tasks, each new redefines
+old, so that the last added dot-task becomes the build default.
+
+"Redefined task ..." messages are omitted for dot-tasks, these tasks are
+expected to be redefined.
+
+Avoid referencing dot-tasks by other tasks.
+Default tasks should be treated as volatile.
+
 ## Examples
 
 ### Multilevel inheritance example
@@ -165,22 +177,12 @@ task TestTask1 MoreTask1, {
 task . TestTask1
 ```
 
-**Redefined task**
+The parameter `Configuration` is defined in `Base.build.ps1` (default "Debug")
+and `More.build.ps1` (default "Release"). The last definition becomes the final
+parameter, so that the default "Release" takes over in this case.
 
 The default dot-task of `Base.build.ps1` is redefined in `Test.build.ps1`.
-The usual build message "Redefined task ..." is omitted because dot-tasks
-are expected to be redefined.
-
-"Redefined task ..." messages would still show for other redefined tasks
-because they may be redefined accidentally.
-
-**Shared parameter**
-
-Parameter `Configuration` is defined in `Base.build.ps1` (defaut value "Debug")
-and `More.build.ps1` (default value "Release").
-
-The second definition becomes the final shared parameter, so that the default
-value "Release" takes over in this case.
+The usual build message "Redefined task ..." is omitted for dot-tasks.
 
 ### Multiple inheritance example
 

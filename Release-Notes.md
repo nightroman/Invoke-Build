@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.14.6
+
+Do not rename dot-tasks on `Extends`.
+
 ## v5.14.5
 
 Minor tweaks.
