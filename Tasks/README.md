@@ -1,4 +1,4 @@
-# Samples, patterns, techniques
+# Examples, patterns, techniques
 
 ## Featured
 
@@ -20,6 +20,7 @@
 - [Paket](Paket) Build script with automatic bootstrapping using `paket`.
 - [Param](Param) How to create tasks which perform similar actions with some differences defined by parameters.
 - [StdErr](StdErr) Dealing with standard error output issues.
+- [Steps][Steps] Tasks as steps, interactive, persistent, ...
 - [SubCases](SubCases) Sub cases in child scripts technique.
 - [SubTasks](SubTasks) Sub tasks in child scripts technique.
 

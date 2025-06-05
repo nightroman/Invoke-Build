@@ -15,10 +15,10 @@ task parameters {
 # used to show just `values`
 task question {
 	($r = Invoke-Build ? | Format-Table -AutoSize | Out-String)
-	assert ($r -like '*count  {}*')
-	assert ($r -like '*keys   {}*')
-	assert ($r -like '*values {}*')
-	assert ($r -like '*.      {count, keys, values, {}}*')
+	assert ($r -match '(?m)^count  \s{8} {}\s*$')
+	assert ($r -match '(?m)^keys   \s{8} {}\s*$')
+	assert ($r -match '(?m)^values \s{8} {}\s*$')
+	assert ($r -match '(?m)^.      \s{8} {count, keys, values, {}}\s*$')
 }
 
 # used to fail

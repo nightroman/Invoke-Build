@@ -2,29 +2,28 @@
 .Synopsis
 	Steps to release Invoke-Build.
 
-.Example
-	> Invoke-Build . Release.build.ps1
-	Start or resume persistent release steps.
+.Description
+	Example of "Run all tasks".
+	Example of "Confirm tasks".
 #>
 
 param(
-	# persistent data
 	$NuGetApiKey,
 	$PSGalleryApiKey
 )
 
-$BuildRoot = '..'
-Set-Alias ask Confirm-Build
+$BuildRoot = '../..'
+$Ask = @{If = {Confirm-Build}}
 Set-StrictMode -Version Latest
 
 # Synopsis: It should be the main branch with no changes.
-task status -if {ask} {
+task status @Ask {
 	assert ('main' -ceq (exec { git branch --show-current })) 'Please checkout main.'
-	assert ($null -ceq (exec { git status --short })) 'Please commit changes.'
+	assert (!(exec { git status --short })) 'Please commit changes.'
 }
 
 # Synopsis: Run Invoke-Build tests.
-task test_IB -if {ask} test_ib_tool, {
+task test_IB @Ask test_ib_tool, {
 	Invoke-Build
 }
 
@@ -44,32 +43,30 @@ task PSGalleryApiKey {
 }
 
 # Synopsis: Push the Invoke-Build package.
-task push_NuGet -if {ask} NuGetApiKey, {
+task push_NuGet @Ask NuGetApiKey, {
 	Invoke-Build pushNuGet
 }
 
 # Synopsis: Push the InvokeBuild module.
-task push_PSGallery -if {ask} PSGalleryApiKey, {
+task push_PSGallery @Ask PSGalleryApiKey, {
 	Invoke-Build pushPSGallery
 }
 
 # Synopsis: Push the ib package.
-task push_ib_tool -if {ask} {
+task push_ib_tool @Ask {
 	Invoke-Build pushNuGet ib/ib.build.ps1
 }
 
 # Synopsis: Push and tag commits.
-task push_release -if {ask} {
+task push_release @Ask {
 	Invoke-Build pushRelease
 }
 
 # Synopsis: Finish and browse.
-task clean_and_browse -if {ask} {
+task clean_and_browse @Ask {
 	Invoke-Build clean
 	Start-Process https://www.powershellgallery.com/packages/InvokeBuild
 }
 
-# Synopsis: Run all tasks with checkpoints.
-task . -if {'.' -eq $BuildTask} {
-	Build-Checkpoint -Auto $HOME\z.releaseInvokeBuild.clixml @{Task='*'; File=$BuildFile}
-}
+# Synopsis: All tasks.
+task . @(${*}.All.Keys)

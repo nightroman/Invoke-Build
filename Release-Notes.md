@@ -1,5 +1,12 @@
 # Invoke-Build Release Notes
 
+## v5.14.7
+
+Task help (`Invoke-Build ?`) columns order: `Name`, `Synopsis`, `Jobs`.\
+(`Jobs` used to be the second, perhaps due to some old formatting issues.)
+
+New demo case [Tasks/Steps](https://github.com/nightroman/Invoke-Build/tree/main/Tasks/Steps).
+
 ## v5.14.6
 
 Do not rename dot-tasks on `Extends`.

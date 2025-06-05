@@ -525,8 +525,8 @@ function *Check($J, $T, $P=@()) {
 filter *Help {
 	[PSCustomObject]@{
 		Name = $_.Name
-		Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
 		Synopsis = Get-BuildSynopsis $_
+		Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
 	}
 }
 

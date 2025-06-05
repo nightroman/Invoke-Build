@@ -182,7 +182,7 @@ task test {
 	assert ($PSVersionTable['Platform'] -ne 'Unix') 'WSL: cd Tests; ib'
 	trap {
 		# dump errors
-		Write-Build Magenta "ps: Import-Clixml $HOME\data\Invoke-Build-Test.Error.clixml -First 5"
+		Write-Warning "ERRORS:`nImport-Clixml $HOME\data\Invoke-Build-Test.Error.clixml -First 5"
 		@($Error) | Export-Clixml $HOME\data\Invoke-Build-Test.Error.clixml
 	}
 
