@@ -32,24 +32,24 @@ task test_ib_tool {
 	Invoke-Build . ib/ib.build.ps1
 }
 
-# Synopsis: Get and keep the API key.
-task NuGetApiKey {
-	$script:NuGetApiKey = Read-Host NuGetApiKey
-}
-
-# Synopsis: Get and keep the API key.
-task PSGalleryApiKey {
-	$script:PSGalleryApiKey = Read-Host PSGalleryApiKey
-}
-
 # Synopsis: Push the Invoke-Build package.
 task push_NuGet @Ask NuGetApiKey, {
 	Invoke-Build pushNuGet
 }
 
+# Synopsis: Get and keep the API key.
+task NuGetApiKey -If {!$NuGetApiKey} {
+	$script:NuGetApiKey = Read-Host NuGetApiKey
+}
+
 # Synopsis: Push the InvokeBuild module.
 task push_PSGallery @Ask PSGalleryApiKey, {
 	Invoke-Build pushPSGallery
+}
+
+# Synopsis: Get and keep the API key.
+task PSGalleryApiKey -If {!$PSGalleryApiKey} {
+	$script:PSGalleryApiKey = Read-Host PSGalleryApiKey
 }
 
 # Synopsis: Push the ib package.

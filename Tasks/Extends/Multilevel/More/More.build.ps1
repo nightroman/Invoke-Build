@@ -21,6 +21,8 @@ param(
 	$MoreX = 'moreX'
 )
 
+Write-Information "More BuildRoots $BuildRoots"
+
 #
 # Tasks
 #

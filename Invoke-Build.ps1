@@ -42,8 +42,8 @@ function Get-BuildFile($Path, [switch]$Here) {
 if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
-function *BB($FS, $PX, $F) {
-	@{FS=$FS; PX=$PX; BR=if ($F) {Split-Path $F} else {${*}.CD}; DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
+function *BB($FS, $PX, $F, $BR) {
+	@{FS=$FS; PX=$PX; BR=@(if ($F) {Split-Path $F} else {${*}.CD}; $BR); DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
 }
 
 #!! ${*}
@@ -90,7 +90,7 @@ if ($_ = $PSBoundParameters['Result']) {
 }
 $BuildTask = $PSBoundParameters['Task']
 if ($BuildFile -is [scriptblock]) {
-	${*}.BB.Add((*BB $BuildFile '' ($BuildFile = $BuildFile.File)))
+	${*}.BB.Add((*BB $BuildFile '' ($BuildFile = $BuildFile.File) @()))
 	return
 }
 if ($BuildTask -eq '**') {
@@ -112,12 +112,12 @@ elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
 ${*}.File = $BuildFile
 
 #!! param
-function *DP($FS, $PX) {
+function *DP($FS, $PX, $BR) {
 	if (!($p = (Get-Command $FS -ErrorAction 1).Parameters)) {
 		& $FS
 		throw 'Invalid script.'
 	}
-	$b = *BB $FS $PX $FS
+	$b = *BB $FS $PX $FS $BR
 	if ($p.get_Count()) {
 		$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
 		$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
@@ -135,8 +135,8 @@ function *DP($FS, $PX) {
 							$x = $s.Substring(0, $_ + 2)
 							$s = $s.Substring($_ + 2)
 						}
-						if (![System.IO.Path]::IsPathRooted($s)) {$s = Join-Path $b.BR $s}
-						try {*DP $s $x} catch {throw "Parameter 'Extends': $_"}
+						$s = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($b.BR[0], $s))
+						try {*DP $s $x $b.BR} catch {throw "Parameter 'Extends': $_"}
 					}
 					continue param
 				}
@@ -148,7 +148,7 @@ function *DP($FS, $PX) {
 	}
 	${*}.BB.Add($b)
 }
-*DP $BuildFile ''
+*DP $BuildFile '' @()
 ${*}.DP
 }
 end {
@@ -610,7 +610,7 @@ function *Task {
 		return
 	}
 
-	$BuildRoot = $Task.B1.BR
+	$BuildRoot = $Task.B1.BR[0]
 	$Task.Started = [DateTime]::Now
 	if ((${private:*x} = $Task.If) -is [scriptblock]) {
 		*SL
@@ -767,14 +767,16 @@ try {
 					${*s}[${*p}.Name] = ${*p}.Value
 				}
 			}
-			$BuildRoot = ${*b}.BR
+			$BuildRoots = @(${*b}.BR)
+			$BuildRoot = $BuildRoots[0]
 			*SL
 			$_ = ${*s}
 			. ${*b}.FS @_
 			if (![System.IO.Directory]::Exists(($_ = *Path $BuildRoot))) {*Fin "Missing build root '$BuildRoot'." 13}
-			${*b}.BR = $_
+			${*b}.BR[0] = $_
 		}
 	)
+	Remove-Variable BuildRoots
 	foreach($_ in ${**}) {
 		Write-Warning "Unexpected output: $_."
 		if ($_ -is [scriptblock]) {*Fin "Dangling scriptblock at $($_.File):$($_.StartPosition.StartLine)" 6}
@@ -827,7 +829,7 @@ try {
 	${*}.A = 0
 	try {
 		foreach($_ in ${*}.BB) {
-			$BuildRoot = $_.BR
+			$BuildRoot = $_.BR[0]
 			. *Run $_.EnterBuild
 		}
 		if (${*}.XBuild) {. ${*}.XBuild}
@@ -839,7 +841,7 @@ try {
 	finally {
 		${*}.Task = $null
 		for($$ = ${*}.BB.Count; --$$ -ge 0) {
-			$BuildRoot = ${*}.BB[$$].BR
+			$BuildRoot = ${*}.BB[$$].BR[0]
 			. *Run ${*}.BB[$$].ExitBuild
 		}
 	}

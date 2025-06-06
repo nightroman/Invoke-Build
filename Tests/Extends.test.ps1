@@ -14,8 +14,13 @@ Set-StrictMode -Version 3
 
 # Should result in dot-task redefined in Test.
 # Redefined for dot-task is omitted in v5.14.0.
+# Covers BuildRoots and [System.IO.Path]::GetFullPath()
 task All {
-	Invoke-Build * ..\Tasks\Extends\Multilevel -Base1 b1 -More1 m1 -Test1 t1
+	Invoke-Build * ..\Tasks\Extends\Multilevel -Base1 b1 -More1 m1 -Test1 t1 -InformationVariable iv
+	equals $iv.Count 3
+	assert ($iv[0] -match '^Base BuildRoots .*?[\\/]Extends[\\/]Base .*?[\\/]Extends[\\/]Multilevel[\\/]More .*?[\\/]Extends[\\/]Multilevel$')
+	assert ($iv[1] -match '^More BuildRoots .*?[\\/]Extends[\\/]Multilevel[\\/]More .*?[\\/]Extends[\\/]Multilevel$')
+	assert ($iv[2] -match '^Test BuildRoots .*?[\\/]Extends[\\/]Multilevel$')
 }
 
 # Should trigger Enter/Exit-Build of More, even with no tasks from More.

@@ -9,6 +9,8 @@ param(
 	$Test2 = 'test2'
 )
 
+Write-Information "Test BuildRoots $BuildRoots"
+
 # Own task.
 task TestTask1 MoreTask1, {
 	"TestTask1 Base1=$Base1 Base2=$Base2 More1=$More1 More2=$More2 Test1=$Test1 Test2=$Test2"

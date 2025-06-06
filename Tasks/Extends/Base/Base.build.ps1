@@ -13,6 +13,8 @@ param(
 	$Base2 = 'base2'
 )
 
+Write-Information "Base BuildRoots $BuildRoots"
+
 #
 # Tasks
 #

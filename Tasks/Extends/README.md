@@ -6,6 +6,7 @@
 - [Inheritance vs dot-sourcing](#inheritance-vs-dot-sourcing)
 - [Shared build parameters](#shared-build-parameters)
 - [Renamed build tasks](#renamed-build-tasks)
+- [Build roots](#build-roots)
 - [Examples](#examples)
     - [Multilevel inheritance](#multilevel-inheritance-example)
     - [Multiple inheritance](#multiple-inheritance-example)
@@ -58,6 +59,8 @@ The default is usually `$PSScriptRoot`.
 
     The default or altered `$BuildRoot` is the same for all scripts.
 
+See [Build roots](#build-roots) for more.
+
 **Build blocks**
 
 Scripts may define Enter / Exit blocks for build, tasks, jobs.
@@ -108,6 +111,24 @@ expected to be redefined.
 
 Avoid referencing dot-tasks by other tasks.
 Default tasks should be treated as volatile.
+
+## Build roots
+
+Each script in the inheritance tree has it own default `$BuildRoot`. The engine
+sets this location current before invoking tasks, jobs, build blocks. Scripts
+may alter the default build root during loading by the top level script code.
+
+Turns out, with `$Extends` base scripts may need to set their `$BuildRoot` to
+one of the extended locations. In order to support this, the engine provides
+the variable `$BuildRoots`, in addition to `$BuildRoot`. `$BuildRoots` exists
+just on loading, unlike always available `$BuildRoot`.
+
+`$BuildRoots` is an array of extended script roots:
+
+- `$BuildRoots[0]` is `$BuildRoot` of the current script.
+- `$BuildRoots[1]` is `$BuildRoot` of the first extended script, if any.
+- ...
+- `$BuildRoots[-1]` is `$BuildRoot` of the root script, which is invoked.
 
 ## Examples
 
