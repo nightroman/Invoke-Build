@@ -42,8 +42,9 @@ function Get-BuildFile($Path, [switch]$Here) {
 if ($MyInvocation.InvocationName -eq '.') {return}
 trap {*Die $_ 5}
 
-function *BB($FS, $PX, $F, $BR) {
-	@{FS=$FS; PX=$PX; BR=@(if ($F) {Split-Path $F} else {${*}.CD}; $BR); DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
+function *BB($FS, $PX, $BR) {
+	$_ = if ($FS -is [string]) {$FS} else {$FS.File}
+	@{FS=$FS; PX=$PX; BR=@(if ($_) {Split-Path $_} else {${*}.CD}; $BR); DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
 }
 
 #!! ${*}
@@ -90,7 +91,8 @@ if ($_ = $PSBoundParameters['Result']) {
 }
 $BuildTask = $PSBoundParameters['Task']
 if ($BuildFile -is [scriptblock]) {
-	${*}.BB.Add((*BB $BuildFile '' ($BuildFile = $BuildFile.File) @()))
+	${*}.BB.Add((*BB $BuildFile '' @()))
+	$BuildFile = $BuildFile.File
 	return
 }
 if ($BuildTask -eq '**') {
@@ -113,11 +115,8 @@ ${*}.File = $BuildFile
 
 #!! param
 function *DP($FS, $PX, $BR) {
-	if (!($p = (Get-Command $FS -ErrorAction 1).Parameters)) {
-		& $FS
-		throw 'Invalid script.'
-	}
-	$b = *BB $FS $PX $FS $BR
+	if (!($p = (Get-Command $FS -ErrorAction 1).Parameters)) {throw & $FS}
+	$b = *BB $FS $PX $BR
 	if ($p.get_Count()) {
 		$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
 		$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'

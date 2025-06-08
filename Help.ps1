@@ -23,12 +23,12 @@
 
 	Known issue #4. Specify script switches after Task and File.
 
-	The following parameter names are reserved for the engine:
+	These parameters are reserved for Invoke-Build:
 	Task, File, Result, Safe, Summary, WhatIf
 
 	COMMANDS AND HELP
 
-	The following commands are available for build scripts:
+	Commands available for build scripts:
 
 		task      (Add-BuildTask)
 		exec      (Invoke-BuildExec)
@@ -51,7 +51,7 @@
 		Write-Warning [1]
 
 	[1] Write-Warning is redefined internally in order to count warnings in
-	a build script and nested scripts. Warnings in modules are not counted.
+	a build script and others called. Warnings in modules are not counted.
 
 	To get commands help, dot-source Invoke-Build and then call help:
 
@@ -62,9 +62,11 @@
 
 		Invoke-Build
 		Build-Parallel
+		Build-Checkpoint
 
-	These aliases are for the scripts Invoke-Build.ps1 and Build-Parallel.ps1.
-	Use them for calling nested builds, i.e. omit script extensions and paths.
+	Aliases are for scripts from the package. Use aliases for calling nested
+	builds, i.e. omit ".ps1" extensions, to avoid accidentally calling other
+	scripts with same names in the path.
 
 	PUBLIC VARIABLES
 
@@ -76,14 +78,15 @@
 		$Task - current task
 		$Job - current job
 
-	$BuildRoot may be changed by scripts on loading in order to set a custom
-	build root directory. Other variables should not be changed.
+	All variables except $BuildRoot are for reading and should not be changed.
+	$BuildRoot may be changed on loading by top level script code, in order to
+	alter the default build directory, and should not be changed after loading.
 
 	$Task is available for script blocks defined by task parameters If, Inputs,
 	Outputs, and Jobs and by blocks Enter|Exit-BuildTask, Enter|Exit-BuildJob,
 	Set-BuildHeader, Set-BuildFooter.
 
-		$Task properties:
+		$Task properties for reading:
 
 		- Name - [string], task name
 		- Jobs - [object[]], task jobs
@@ -94,12 +97,14 @@
 		- Error - task error or null
 		- Elapsed - [TimeSpan], task duration
 
-	$Task is also defined in the script scope. It has the only property Name
-	which is set to $BuildFile, the build script path.
+		Other properties should not be used by scripts.
+
+	$Task also exists in the script scope with the only property Name getting
+	$BuildFile, the build script path.
 
 	BUILD BLOCKS
 
-	Scripts may define special script blocks. They are invoked:
+	Scripts may define special build blocks invoked as:
 
 		Enter-Build {} - before the first task
 		Exit-Build {} - after the last task
@@ -107,21 +112,22 @@
 		Enter-BuildTask {} - before each task
 		Exit-BuildTask {} - after each task
 
-		Enter-BuildJob {} - before each task action
-		Exit-BuildJob {} - after each task action
+		Enter-BuildJob {} - before each task script job
+		Exit-BuildJob {} - after each task script job
 
 		Set-BuildHeader {param($Path)} - to write task headers
 		Set-BuildFooter {param($Path)} - to write task footers
 
 	Blocks are not called on WhatIf.
-	Nested builds do not inherit parent blocks.
+	Nested builds do not inherit Enter/Exit blocks.
+	Nested builds inherit Set-BuildHeader and Set-BuildFooter.
 	If Enter-X is called then Exit-X is also called, even on failures.
 
 	Enter-Build and Exit-Build are invoked in the script scope. Enter-Build is
-	suitable for initialization and it can output text unlike the build script.
+	suitable for initialization and it may output text unlike top level code.
 
 	Enter-BuildTask, Exit-BuildTask, Enter-BuildJob, and Exit-BuildJob are
-	invoked in the same scope, the parent of task action blocks.
+	invoked in the same scope, the parent of task script blocks.
 
 	PRIVATE STUFF
 
@@ -130,9 +136,9 @@
 
 	parameters = @{
 		Task = @'
-		One or more tasks to be invoked. If it is not specified, null, empty,
-		or equal to '.' then the task '.' is invoked if it exists, otherwise
-		the first added task is invoked.
+		One or more tasks to invoke. If it is omitted, empty, or equal to '.'
+		then the task '.' is invoked if it exists, otherwise the first added
+		task is invoked.
 
 		Names with wildcard characters are reserved for special cases.
 
@@ -143,7 +149,7 @@
 
 		SPECIAL TASKS
 
-		? - Tells to list tasks with brief information and check for errors.
+		? - Tells to show tasks synopses, jobs, and check for issues.
 		Task synopses are defined in preceding comments as
 
 			# Synopsis: ...
@@ -167,7 +173,7 @@
 		current directory or a directory specified by the parameter File.
 '@
 		File = @'
-		The script which adds tasks using the command 'task' (Add-BuildTask).
+		The build script adding tasks by 'task' (Add-BuildTask).
 
 		If File is omitted then Invoke-Build looks for *.build.ps1 files in the
 		current location and takes the first in Sort-Object order.
@@ -186,9 +192,9 @@
 		INLINE SCRIPT
 
 		File also accepts a script block composed as build script. In this
-		case $BuildFile is this script block. $BuildRoot is `$BuildFile.File`
-		directory, or $OriginalLocation when `$BuildFile.File` is null, e.g.
-		on using [scriptblock]::Create() instead of {...}.
+		case $BuildFile is a file defining the script block. $BuildRoot is
+		its directory or $OriginalLocation when $BuildFile is null on
+		[scriptblock]::Create() used instead of usual {...}.
 
 		Script parameters, parallel, and persistent builds are not supported.
 '@
@@ -224,7 +230,7 @@
 		Warnings is a list of objects:
 
 			Message - warning message
-			File - current $BuildFile
+			File - script emitting the warning
 			Task - current $Task or null for other warnings
 
 		Do not change these data and do not use not documented members.
@@ -233,8 +239,8 @@
 		Tells to catch a build failure, store an error as the property Error of
 		Result and return quietly. A caller should use Result and check Error.
 
-		Some exceptions are possible even in the safe mode. They show serious
-		errors, not build failures. For example, a build script is missing.
+		Exceptions are still thrown if the build cannot start, for example:
+		build script is missing, invalid, has no tasks.
 
 		When Safe is used together with the special task ** (invoke *.test.ps1)
 		then task failures stop current test scripts, not the whole testing.
@@ -248,8 +254,7 @@
 		parameters and environment variables. See Show-TaskHelp for details.
 
 		If a script does anything but adding tasks then it should check for
-		$WhatIf and skip the real actions in order to support WhatIf calls.
-		Alternatively, use the Enter-Build block for pre-build actions.
+		$WhatIf and skip actions on true. Consider using Enter-Build instead.
 '@
 	}
 
@@ -260,8 +265,8 @@
 		Build log which includes task records and engine messages, warnings,
 		errors, and output from build script tasks and special blocks.
 
-		The script itself should not output anything. Unexpected script output
-		causes warnings, in the future it may be treated as an error.
+		The script top level code should not output anything. Unexpected script
+		outputs now emit warnings but in the future they may change to errors.
 '@
 		}
 	)
@@ -748,8 +753,7 @@
 		automatic variable $Task.
 '@
 		Hash = @'
-		A hashtable for caching. Build scripts do not have to specify it, the
-		internal cache is used by default. It is designed for external tools.
+		The cache used by external tools. Scripts may omit this parameter.
 '@
 	}
 
@@ -811,14 +815,14 @@
 	synopsis = '(exec) Invokes an application and checks $LastExitCode.'
 
 	description = @'
-	Scripts use its alias 'exec'. It invokes the specified script block which
-	is supposed to call an executable. Then $LastExitCode is checked. If it
-	does not fit to the specified values (0 by default) an error is thrown.
+	Scripts use its alias 'exec'. It invokes the script block which is supposed
+	to call an executable. Then $LastExitCode is checked. If it does not match
+	the specified codes (0 by default) an error is thrown.
 
 	If you have any issues with standard error output of the invoked app, try
 	using `exec` with -ErrorAction Continue, SilentlyContinue, or Ignore. This
 	does not affect failures of `exec`, they still depend on the app exit code.
-	But this may work around some known PowerShell issues with standard errors.
+	This works around PowerShell standard errors issues.
 '@
 
 	parameters = @{
