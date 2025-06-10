@@ -25,6 +25,7 @@ param(
 
 # Ensure IB works in the strict mode.
 Set-StrictMode -Version Latest
+$ProgressPreference = 0
 
 # Synopsis: Convert markdown files to HTML.
 # <http://johnmacfarlane.net/pandoc/>

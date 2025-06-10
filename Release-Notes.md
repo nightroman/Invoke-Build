@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+`Show-BuildGraph.ps1` - use viz-3.13.0
+
 ## v5.14.9
 
 Update help, tidy up code.
