@@ -69,3 +69,7 @@ task Checkpoint {
 task Dot {
 	Invoke-Build -File ..\Tasks\Extends\Prefixes -WhatIf
 }
+
+task Next {
+	Invoke-Build . ..\Tasks\Extends\Prefixes\Next
+}

@@ -1,5 +1,9 @@
 # Invoke-Build Release Notes
 
+## v5.14.10
+
+Ensure "Extends" prefixes rules, [#232](https://github.com/nightroman/Invoke-Build/issues/232)
+
 `Show-BuildGraph.ps1` - use viz-3.13.0
 
 ## v5.14.9

@@ -7,6 +7,10 @@ param(
 	$Configuration = 'Debug'
 )
 
+# Synopsis: Name with prefix.
+task my::Task {
+}
+
 # Synopsis: Should work.
 task Required {
 	"Base $Configuration"

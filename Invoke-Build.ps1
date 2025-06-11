@@ -176,7 +176,7 @@ function Add-BuildTask(
 	if ($Name[0] -eq '?') {throw 'Invalid task name.'}
 	$B1 = ${*}.B1
 	$PX = $B1.PX
-	if ($Name -ne '.') {$Name = $PX+$Name}
+	if ($PX -and !$Name.Contains('::') -and $Name -ne '.') {$Name = $PX+$Name}
 	if ($_ = ${*}.All[$Name]) {
 		${*}.Redefined += $_
 		${*}.All.Remove($Name)
@@ -203,7 +203,7 @@ function Add-BuildTask(
 	foreach($j in $Jobs) {
 		$r, $s = *Job $j
 		if ($r -is [string]) {
-			if ($r -ne '.') {$r = $PX+$r}
+			if ($PX -and !$r.Contains('::') -and $r -ne '.') {$r = $PX+$r}
 			if ($r -in $2) {${*}.Doubles += ,($Name, $r)} else {$2 += $r}
 			if ($s) {$r = "?$r"}
 		}
