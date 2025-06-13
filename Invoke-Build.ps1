@@ -50,7 +50,7 @@ function *BB($FS, $PX, $BR) {
 #!! ${*}
 ${private:*p} = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
 New-Variable * -Description IB ([PSCustomObject]@{
-	All = [System.Collections.Specialized.OrderedDictionary]([System.StringComparer]::OrdinalIgnoreCase)
+	All = [ordered]@{}
 	Tasks = [System.Collections.Generic.List[object]]@()
 	Errors = [System.Collections.Generic.List[object]]@()
 	Warnings = [System.Collections.Generic.List[object]]@()

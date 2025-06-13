@@ -71,9 +71,9 @@ task Show-BuildDgml {
 task Show-BuildGraph -If (!(Test-Unix) -and !$env:GITHUB_ACTION) {
 	Show-BuildGraph.ps1 -Dot -NoShow -Output z.dot
 	$r = Get-Content z.dot | Out-String
-	assert ($r.Contains('4 -> 1'))
-	assert ($r.Contains('4 -> 2'))
-	assert ($r.Contains('4 -> 3'))
+	assert ($r.Contains('3 -> 0'))
+	assert ($r.Contains('3 -> 1'))
+	assert ($r.Contains('3 -> 2'))
 	remove z.dot
 }
 

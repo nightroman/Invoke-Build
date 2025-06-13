@@ -1,5 +1,13 @@
 # Invoke-Build Release Notes
 
+## v5.14.11
+
+Use `[ordered]` accelerator.
+
+`Show-BuildGraph.ps1`
+- New switch `Cluster` supporting `$Extends`
+- See real example, [build graph with clusters](https://github.com/nightroman/Invoke-Build/wiki/Show-Build-Graph#farnet)
+
 ## v5.14.10
 
 Ensure "Extends" prefixes rules, [#232](https://github.com/nightroman/Invoke-Build/issues/232)

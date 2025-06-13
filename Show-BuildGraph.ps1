@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.10
+.VERSION 1.1.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -53,6 +53,10 @@
 .Parameter Parameters
 		Build script parameters needed in special cases when they alter tasks.
 
+.Parameter Cluster
+		Tells to show build script task clusters, useful when several scripts
+		make the build, either by dot-sourcing or using parameters $Extends.
+
 .Parameter Dot
 		Tells to use Graphviz dot. By default it creates a SVG file.
 		For different formats use Output with the format extension.
@@ -78,6 +82,8 @@ param(
 	[string]$Code = 'graph [rankdir=LR]'
 	,
 	[hashtable]$Parameters
+	,
+	[switch]$Cluster
 	,
 	[switch]$Dot
 	,
@@ -142,38 +148,73 @@ function escape_text($text) {
 	$text.Replace('\', '\\').Replace('"', '\"')
 }
 
+function do_task {
+	$name = $it.Name
+	$id = $map[$name]
+	$attr = 'label="{0}"' -f (escape_text $name)
+
+	$tooltip = if ($synopsis = Get-BuildSynopsis $it $docs) {$synopsis} else {$name}
+	$attr += ' tooltip="{0}"' -f (escape_text $tooltip)
+
+	$hasScript = foreach($job in $it.Jobs) {if ($job -is [scriptblock]) {$true}}
+	if ($hasScript) {
+		if ($it.Inputs -or !(-9).Equals($it.If)) {
+			$attr += ' shape=note'
+		}
+		else {
+			$attr += ' shape=box'
+		}
+	}
+
+	'{0} [{1}]' -f $id, $attr
+}
+
 $text = @(
 	### begin
 	'digraph {'
 	$Code
 
-	### nodes
-	$id = 0
+	### tasks
+	$$ = -1
 	$map = @{}
-	foreach($it in $all.get_Values()) {
-		++$id
-		$name = $it.Name
-		$map[$name] = $id
-		$attr = 'label="{0}"' -f (escape_text $name)
+	foreach($name in $all.get_Keys()) {
+		$map[$name] = ++$$
+	}
 
-		$tooltip = if ($synopsis = Get-BuildSynopsis $it $docs) {$synopsis} else {$name}
-		$attr += ' tooltip="{0}"' -f (escape_text $tooltip)
-
-		$hasScript = foreach($job in $it.Jobs) {if ($job -is [scriptblock]) {$true}}
-		if ($hasScript) {
-			if ($it.Inputs -or !(-9).Equals($it.If)) {
-				$attr += ' shape=note'
+	### nodes
+	if ($Cluster) {
+		$graphs = @{}
+		foreach($it in $all.get_Values()) {
+			$file = $it.InvocationInfo.ScriptName
+			if ($tasks = $graphs[$file]) {
+				$tasks.Add($it)
 			}
 			else {
-				$attr += ' shape=box'
+				$graphs[$file] = [System.Collections.Generic.List[object]]$it
 			}
 		}
 
-		'{0} [{1}]' -f $id, $attr
+		$$ = -1
+		foreach($file in $graphs.get_Keys() | Sort-Object) {
+			++$$
+			$tasks = $graphs[$file]
+			"subgraph cluster_$($$) {"
+			'style=dotted;'
+			"label=`"$([System.IO.Path]::GetFileName($file))`";"
+			foreach($it in $tasks) {
+				. do_task
+			}
+			'}'
+		}
+	}
+	else {
+		foreach($it in $all.get_Values()) {
+			. do_task
+		}
 	}
 
 	### edges
-	$id = 0
+	$id = -1
 	foreach($it in $all.get_Values()) {
 		++$id
 		$jobNumber = 0
