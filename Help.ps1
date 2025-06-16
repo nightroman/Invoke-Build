@@ -167,7 +167,8 @@
 		Tasks ? and ?? set $WhatIf to true. Properly designed build scripts
 		should not perform anything significant if $WhatIf is set to true.
 
-		* - Tells to invoke all tasks, for example when tasks are tests.
+		* - Tells to invoke all tasks, e.g. tests, step sequences, etc.
+		The dot-task and tasks added by other scripts are not included.
 
 		** - Invokes * for all files *.test.ps1 found recursively in the
 		current directory or a directory specified by the parameter File.
@@ -1351,11 +1352,23 @@ If it is omitted, the current task or script name is used.
 
 	The parameter $data is the output of Checkpoint.Export exported to clixml
 	and then imported from clixml.
+
+	OMITTED OR SCRIPT CHECKPOINT
+
+	Omitted or script Checkpoint and no other parameters is the special
+	case. The engine builds all tasks of the default or specified script
+	with checkpoints.
+
+	The checkpoint path is the script path with added ".clixml". The persistent
+	build starts if the checkpoint does not exist, otherwise resumes with the
+	existing checkpoint.
 '@
 	parameters = @{
 		Checkpoint = @'
 		Specifies the checkpoint file (clixml). The checkpoint file is removed
 		after successful builds unless the switch Preserve is specified.
+
+		See DESCRIPTION / OMITTED OR SCRIPT CHECKPOINT for the special case.
 '@
 		Build = @'
 		Specifies the build and script parameters. WhatIf is not supported.

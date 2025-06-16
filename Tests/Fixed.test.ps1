@@ -186,8 +186,8 @@ task Fix29Resume {
 
 # v3.0.0
 task InvalidCheckpointOnResume {
-	($r = try {Build-Checkpoint $BuildFile -Resume} catch {$_})
-	equals "$r" 'Invalid checkpoint file?'
+	try { throw Build-Checkpoint ..\LICENSE -Resume }
+	catch { $_; equals "$_" 'Invalid checkpoint file?' }
 }
 
 # Synopsis: #34, VSTS expects $LASTEXITCODE 0 on success

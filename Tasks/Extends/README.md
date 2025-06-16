@@ -8,6 +8,7 @@
 - [Renamed build tasks](#renamed-build-tasks)
 - [Build roots](#build-roots)
 - [Examples](#examples)
+    - [Building FarNet Showcase](#building-farnet-showcase)
     - [Multilevel inheritance](#multilevel-inheritance-example)
     - [Multiple inheritance](#multiple-inheritance-example)
     - [Renamed tasks](#renamed-tasks-example)
@@ -131,6 +132,14 @@ just on loading, unlike always available `$BuildRoot`.
 - `$BuildRoots[-1]` is `$BuildRoot` of the root script, which is invoked.
 
 ## Examples
+
+### Building FarNet Showcase
+
+[Building FarNet Showcase]: https://github.com/nightroman/Invoke-Build/wiki/Building-FarNet-Showcase
+
+See [Building FarNet Showcase] for the real and complex example of using
+inheritance features like multilevel and multiple inheritance, renaming
+tasks with prefixes, visualising build graphs with task clusters, etc.
 
 ### Multilevel inheritance example
 

@@ -89,7 +89,9 @@ try {
 	. Invoke-Build
 
 	# get tasks
-	$tasks = Invoke-Build ?? $_File @_Parameters
+	Set-Alias *What *What2
+	function *What2 {${*}.All; $BuildTask}
+	$tasks, $_Task = Invoke-Build $_Task $_File @_Parameters -WhatIf
 
 	# references
 	$references = @{}
@@ -100,26 +102,6 @@ try {
 		foreach($it in $tasks.get_Values()) {foreach($job in $it.Jobs) {if ($job -is [string]) {
 			$references[$tasks[$job]][$it.Name] = 0
 		}}}
-	}
-
-	# resolve task
-	if ($_Task -eq '*') {
-		$_Task = :task foreach($_ in $tasks.get_Keys()) {
-			foreach($task in $tasks.get_Values()) {
-				if ($_ -in $task.Jobs -or "?$_" -in $task.Jobs) {
-					continue task
-				}
-			}
-			$_
-		}
-	}
-	elseif (!$_Task -or '.' -eq $_Task) {
-		$_Task = if ($tasks['.']) {'.'} else {$tasks.Item(0).Name}
-	}
-
-	# test tasks
-	foreach($name in $_Task) {
-		if (!$tasks[$name]) {throw "Missing task '$name'."}
 	}
 
 	# show trees

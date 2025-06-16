@@ -85,6 +85,7 @@ task ExposedFunctions {
 *SL
 *Task
 *Unsafe
+*What
 *Write
 Add-BuildTask
 Assert-Build

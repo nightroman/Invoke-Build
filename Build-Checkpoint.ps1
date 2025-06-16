@@ -14,7 +14,8 @@ specific language governing permissions and limitations under the License.
 #.ExternalHelp Help.xml
 [CmdletBinding(DefaultParameterSetName='Default')]
 param(
-	[Parameter(Position=0, Mandatory=1)]
+	[ValidateNotNullOrEmpty()]
+	[Parameter(Position=0)]
 	[string]$Checkpoint
 	,
 	[Parameter(Position=1)]
@@ -31,95 +32,106 @@ param(
 
 $ErrorActionPreference = 1
 try {
+	$_ = if ($PSBoundParameters.ContainsKey('Checkpoint')) {
+		$Checkpoint = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Checkpoint)
+		if ($Checkpoint.EndsWith('.ps1')) {$Checkpoint}
+	}
+	else {
+		if (($_ = [System.IO.Directory]::GetFiles($PWD, '*.build.ps1')).Length -eq 1) {$_}
+		elseif ($_) {@($_ | Sort-Object)[0]}
+		else {throw 'Missing *.build.ps1'}
+	}
 
-$Checkpoint = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Checkpoint)
+	if ($_) {
+		if ($Build -or $Auto -or $Resume -or $Preserve) {throw 'Omitted or script Checkpoint excludes Build, Auto, Resume, Preserve.'}
+		$Checkpoint = "$_.clixml"
+		$Resume = [System.IO.File]::Exists($Checkpoint)
+		if (!$Resume) {$Build = @{Task = '*'; File = $_}}
+	}
 
-$Build = if ($Build) {@{} + $Build} else {@{}}
-if ($Build['WhatIf']) {throw 'WhatIf is not supported.'}
+	$Build = if ($Build) {@{} + $Build} else {@{}}
+	if ($Build['WhatIf']) {throw 'WhatIf is not supported.'}
 
-${*checkpoint} = @{
-	Checkpoint = $Checkpoint
-	Preserve = $Preserve
-	Result = $Build['Result']
-	Data = $null
-}
-$Build.Remove('Result')
+	${*checkpoint} = @{
+		Checkpoint = $Checkpoint
+		Preserve = $Preserve
+		Result = $Build['Result']
+		Data = $null
+	}
+	$Build.Remove('Result')
 
-$Auto = $PSCmdlet.ParameterSetName -eq 'Auto' -and $Auto
-$Resume = $PSCmdlet.ParameterSetName -eq 'Resume' -and $Resume
+	if ($Auto) {
+		$Resume = [System.IO.File]::Exists($Checkpoint)
+	}
 
-if ($Auto) {
-	$Resume = [System.IO.File]::Exists($Checkpoint)
-}
+	if ($Resume) {
+		if (![System.IO.File]::Exists($Checkpoint)) {throw "Missing checkpoint '$Checkpoint'."}
+		${*checkpoint}.Data = try {Import-Clixml $Checkpoint} catch {throw 'Invalid checkpoint file?'}
 
-if ($Resume) {
-	if (![System.IO.File]::Exists($Checkpoint)) {throw "Missing checkpoint '$Checkpoint'."}
-	${*checkpoint}.Data = try {Import-Clixml $Checkpoint} catch {throw 'Invalid checkpoint file?'}
+		foreach($_ in @($Build.get_Keys())) {
+			if ($_ -ne 'Safe' -and $_ -ne 'Summary') {
+				$Build.Remove($_)
+			}
+		}
+		$Build.Task = ${*checkpoint}.Data.Task
+		$Build.File = ${*checkpoint}.Data.File
+		$Build = $Build + ${*checkpoint}.Data.Prm1
+	}
 
-	foreach($_ in @($Build.get_Keys())) {
-		if ($_ -ne 'Safe' -and $_ -ne 'Summary') {
-			$Build.Remove($_)
+	${*checkpoint}.XBuild = {
+		if (${*checkpoint}.Data) {
+			foreach($_ in ${*checkpoint}.Data.Done) {
+				${*}.All[$_].Elapsed = [TimeSpan]::Zero
+			}
+			foreach($_ in ${*checkpoint}.Data.Prm2.GetEnumerator()) {
+				Set-Variable $_.Key $_.Value -Scope Script
+			}
+			if ($_ = ${*}.Data['Checkpoint.Import']) {
+				. *Run $_ ${*checkpoint}.Data.User
+			}
 		}
 	}
-	$Build.Task = ${*checkpoint}.Data.Task
-	$Build.File = ${*checkpoint}.Data.File
-	$Build = $Build + ${*checkpoint}.Data.Prm1
-}
 
-${*checkpoint}.XBuild = {
-	if (${*checkpoint}.Data) {
-		foreach($_ in ${*checkpoint}.Data.Done) {
-			${*}.All[$_].Elapsed = [TimeSpan]::Zero
-		}
-		foreach($_ in ${*checkpoint}.Data.Prm2.GetEnumerator()) {
-			Set-Variable $_.Key $_.Value -Scope Script
-		}
-		if ($_ = ${*}.Data['Checkpoint.Import']) {
-			. *Run $_ ${*checkpoint}.Data.User
-		}
-	}
-}
-
-${*checkpoint}.XCheck = {
-	Export-Clixml ${*checkpoint}.Checkpoint -InputObject @{
-		User = *Run ${*}.Data['Checkpoint.Export']
-		Task = $BuildTask
-		File = $BuildFile
-		Prm1 = $(
-			$r = @{}
-			foreach($_ in ${*}.DP.get_Values()) {
-				if ($_.IsSet) {
-					$r[$_.Name] = $_.Value
+	${*checkpoint}.XCheck = {
+		Export-Clixml ${*checkpoint}.Checkpoint -InputObject @{
+			User = *Run ${*}.Data['Checkpoint.Export']
+			Task = $BuildTask
+			File = $BuildFile
+			Prm1 = $(
+				$r = @{}
+				foreach($_ in ${*}.DP.get_Values()) {
+					if ($_.IsSet) {
+						$r[$_.Name] = $_.Value
+					}
 				}
-			}
-			$r
-		)
-		Prm2 = $(
-			$r = @{}
-			foreach($_ in ${*}.DP.get_Keys()) {
-				$r[$_] = Get-Variable -Name $_ -Scope Script -ValueOnly
-			}
-			$r
-		)
-		Done = @(
-			foreach($t in ${*}.All.get_Values()) {
-				if ($t.Elapsed -and !$t.Error) {
-					$t.Name
+				$r
+			)
+			Prm2 = $(
+				$r = @{}
+				foreach($_ in ${*}.DP.get_Keys()) {
+					$r[$_] = Get-Variable -Name $_ -Scope Script -ValueOnly
 				}
-			}
-		)
+				$r
+			)
+			Done = @(
+				foreach($t in ${*}.All.get_Values()) {
+					if ($t.Elapsed -and !$t.Error) {
+						$t.Name
+					}
+				}
+			)
+		}
 	}
-}
 
-$_ = $Build
-Remove-Variable Checkpoint, Build, Preserve, Resume, Auto
+	$_ = $Build
+	Remove-Variable Checkpoint, Build, Preserve, Resume, Auto
 
-Set-Alias Invoke-Build (Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1)
-Invoke-Build @_ -Result ${*checkpoint}
+	Set-Alias Invoke-Build (Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1)
+	Invoke-Build @_ -Result ${*checkpoint}
 
-if (!${*checkpoint}.Value.Error -and !${*checkpoint}.Preserve) {
-	[System.IO.File]::Delete(${*checkpoint}.Checkpoint)
-}
+	if (!${*checkpoint}.Value.Error -and !${*checkpoint}.Preserve) {
+		[System.IO.File]::Delete(${*checkpoint}.Checkpoint)
+	}
 }
 catch {
 	if ($_.InvocationInfo.ScriptName -notmatch '\b(Invoke-Build|Build-Checkpoint)\.ps1$') {throw}

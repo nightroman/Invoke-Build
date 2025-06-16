@@ -69,7 +69,7 @@ task InfoTasks {
 	equals $r[0].Name AssertDefault
 	equals $r[0].Jobs '{}'
 	equals $r[0].Synopsis 'Fail with the default message.'
-	equals $r[2].Name .
+	equals $r[2].Name SafeTest
 	equals ($r[2].Jobs -join ', ') '?AssertDefault, ?AssertMessage, {}'
 	equals $r[2].Synopsis 'Call tests and check errors.'
 

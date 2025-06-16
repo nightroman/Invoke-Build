@@ -529,10 +529,12 @@ filter *Help {
 	}
 }
 
-function *Root($A) {
-	*Check ($t = $A.get_Keys())
-	$j = foreach($_ in $A.get_Values()) {foreach($_ in $_.Jobs) {if ($_ -is [string]) {$_.TrimStart('?')}}}
-	foreach($_ in $t) {if ($_ -notin $j) {$_}}
+function *Root {
+	$t = foreach($_ in ${*}.All.get_Values()) {if ($_.InvocationInfo.ScriptName -eq $BuildFile -and $_.Name -ne '.') {$_}}
+	$n = foreach($_ in $t) {$_.Name}
+	*Check $n
+	$j = foreach($_ in $t) {foreach($_ in $_.Jobs) {if ($_ -is [string]) {$_.TrimStart('?')}}}
+	foreach($_ in $n) {if ($_ -notin $j) {$_}}
 }
 
 function *Err($T) {
@@ -720,8 +722,9 @@ Set-Alias Show-TaskHelp (Join-Path $_ Show-TaskHelp.ps1)
 Set-Alias Build-Parallel (Join-Path $_ Build-Parallel.ps1)
 Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
 
+Remove-Variable Task, File, Result, Safe, Summary
 if ($MyInvocation.InvocationName -eq '.') {
-	Remove-Variable Task, File, Result, Safe, Summary, WhatIf
+	Remove-Variable WhatIf
 	return
 }
 
@@ -730,8 +733,11 @@ function Write-Warning([Parameter()]$Message) {
 	${*}.Warnings.Add([PSCustomObject]@{Message = $Message; File = $BuildFile; Task = ${*}.Task; InvocationInfo=$MyInvocation})
 }
 
+function *What {
+	Show-TaskHelp
+}
+
 $ErrorActionPreference = 1
-Remove-Variable Task, File, Result, Safe, Summary
 if (${*}.Q = $BuildTask -eq '?' -or $BuildTask -eq '??') {
 	$WhatIf = $true
 }
@@ -757,13 +763,14 @@ try {
 
 	#!! load
 	New-Variable Task @{Name = $BuildFile} -Option Constant
+	${private:*p} = @(foreach($_ in ${*}.DP.get_Values()) {if ($_.IsSet) {$_}})
 	${private:**} = @(
 		foreach(${private:*b} in ${*}.BB) {
 			${*}.B1 = ${*b}
 			${private:*s} = @{}
-			foreach(${private:*p} in ${*b}.DP.get_Values()) {
-				if (${*p}.IsSet) {
-					${*s}[${*p}.Name] = ${*p}.Value
+			foreach($_ in ${*p}) {
+				if (${*b}.DP.ContainsKey($_.Name)) {
+					${*s}[$_.Name] = $_.Value
 				}
 			}
 			$BuildRoots = @(${*b}.BR)
@@ -801,7 +808,7 @@ try {
 	}
 
 	if ($BuildTask -eq '*') {
-		$BuildTask = *Root ${**}
+		$BuildTask = *Root
 	}
 	else {
 		if (!$BuildTask -or '.' -eq $BuildTask) {
@@ -810,7 +817,7 @@ try {
 		*Check $BuildTask
 	}
 	if ($WhatIf) {
-		Show-TaskHelp
+		*What
 		exit
 	}
 

@@ -1,5 +1,18 @@
 # Invoke-Build Release Notes
 
+## v5.14.12
+
+`Build-Checkpoint`
+- Support omitted or script `Checkpoint`
+
+Amend pseudo task `*`
+- Exclude the default dot-task `.`
+- Exclude tasks from other scripts
+- Update `Show-BuildTree.ps1` logic
+
+Fixed
+- Parameter values on loading extended scripts
+
 ## v5.14.11
 
 Use `[ordered]` accelerator.

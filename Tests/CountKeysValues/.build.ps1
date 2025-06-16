@@ -9,7 +9,7 @@ task keys {}
 
 task values {}
 
-task . count, keys, values, {
+task test count, keys, values, {
 	"param($Count, $Keys, $Values)"
 	$env:Count
 	$env:Keys

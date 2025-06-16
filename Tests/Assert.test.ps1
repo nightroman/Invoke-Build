@@ -40,7 +40,7 @@ task AssertMessage {
 
 # Synopsis: Call tests and check errors.
 # Note use of safe references to failing tasks.
-task . ?AssertDefault, ?AssertMessage, {
+task SafeTest ?AssertDefault, ?AssertMessage, {
 	# Check $ErrorActionPreference and change it.
 	assert ($ErrorActionPreference -eq 'Stop')
 	$ErrorActionPreference = 0

@@ -8,7 +8,7 @@ Import-Module ..\Tools
 
 # used to fail
 task parameters {
-	($r = Invoke-Build -Count c -Keys k -Values v | Out-String)
+	($r = Invoke-Build test -Count c -Keys k -Values v | Out-String)
 	assert ($r -like '*param(c, k, v)*')
 }
 
@@ -18,7 +18,7 @@ task question {
 	assert ($r -match '(?m)^count  \s{8} {}\s*$')
 	assert ($r -match '(?m)^keys   \s{8} {}\s*$')
 	assert ($r -match '(?m)^values \s{8} {}\s*$')
-	assert ($r -match '(?m)^.      \s{8} {count, keys, values, {}}\s*$')
+	assert ($r -match '(?m)^test   \s{8} {count, keys, values, {}}\s*$')
 }
 
 # used to fail
@@ -31,27 +31,27 @@ task Show-BuildTree {
 
 # used to out funny parameters and environment
 task WhatIf {
-	($r = Invoke-Build -WhatIf | Out-String)
+	($r = Invoke-Build test -WhatIf | Out-String)
 	$r = Remove-Ansi ($r -replace ' ' -replace '\r?\n', '|')
 	assert ($r.Contains('|Parameters:|[Object]Count|[Object]Keys|[Object]Values|Environment:|Count,Keys,Values|'))
 }
 
 # used to fail
 task Build-Checkpoint {
-	Build-Checkpoint -Checkpoint z.clixml
+	Build-Checkpoint -Checkpoint z.clixml @{Task='test'}
 }
 
 # used to build all except `values` instead of just `.`
 task Build-JustTask {
-	($r = Build-JustTask.ps1 . | Out-String)
-	assert ($r -like '*Task /./count skipped.*')
-	assert ($r -like '*Task /./keys skipped.*')
-	assert ($r -like '*Task /./values skipped.*')
+	($r = Build-JustTask.ps1 test | Out-String)
+	assert ($r -like '*Task /test/count skipped.*')
+	assert ($r -like '*Task /test/keys skipped.*')
+	assert ($r -like '*Task /test/values skipped.*')
 }
 
 # used to fail
 task Build-Parallel {
-	($r = Build-Parallel.ps1 @{Count='c'; Keys='k'; Values='v'} | Out-String)
+	($r = Build-Parallel.ps1 @{Task='test'; Count='c'; Keys='k'; Values='v'} | Out-String)
 	assert ($r -like '*param(c, k, v)*')
 	assert ($r -like '*Tasks: 4 tasks, 0 errors, 0 warnings*')
 }
@@ -63,7 +63,7 @@ task Show-BuildDgml {
 	assert ($r.Contains('<Node Id="count" Category="Script" />'))
 	assert ($r.Contains('<Node Id="keys" Category="Script" />'))
 	assert ($r.Contains('<Node Id="values" Category="Script" />'))
-	assert ($r.Contains('<Node Id="." Category="Script" />'))
+	assert ($r.Contains('<Node Id="test" Category="Script" />'))
 	remove z.dgml
 }
 
@@ -84,6 +84,6 @@ task New-VSCodeTask {
 	assert ($r.Contains('"label": "count"'))
 	assert ($r.Contains('"label": "keys"'))
 	assert ($r.Contains('"label": "values"'))
-	assert ($r.Contains('"label": "."'))
+	assert ($r.Contains('"label": "test"'))
 	remove .vscode
 }

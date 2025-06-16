@@ -49,18 +49,18 @@ task UpstreamTree {
 		task t1 {}
 		# Synopsis: t2
 		task t2 {}
-		# Synopsis: dot
-		task . t1, t2, {}
+		# Synopsis: bar
+		task bar t1, t2, {}
 		task root {}
 	}
 
 	# with -Task * resolved gets two trees
 	($r = Show-BuildTree * z.ps1 -Upstream)
 	Assert-Same $r @'
-. # dot
-    t1 (.) # t1
+bar # bar
+    t1 (bar) # t1
         {}
-    t2 (.) # t2
+    t2 (bar) # t2
         {}
     {}
 
