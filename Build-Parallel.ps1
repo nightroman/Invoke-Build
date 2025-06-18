@@ -50,7 +50,7 @@ if ($Result) {
 if (!$Build) {return}
 
 # get and source the engine
-$ib = Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1
+$ib = Join-Path $PSScriptRoot Invoke-Build.ps1
 try {. $ib} catch {$PSCmdlet.ThrowTerminatingError($_)}
 
 ### make works, check scripts

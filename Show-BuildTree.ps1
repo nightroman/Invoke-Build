@@ -76,8 +76,7 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	# task jobs
 	foreach($_ in $Task.Jobs) {
 		if ($_ -is [string]) {
-			$r, $s = *Job $_
-			ShowTaskTree $tasks[$r] $Docs $Step
+			ShowTaskTree $tasks[$_.TrimStart('?')] $Docs $Step
 		}
 		else {
 			$tab + '    {}'

@@ -22,135 +22,20 @@ param(
 )
 
 dynamicparam {
+Set-Alias assert Assert-Build
+Set-Alias equals Assert-BuildEquals
+Set-Alias exec Invoke-BuildExec
+Set-Alias property Get-BuildProperty
+Set-Alias remove Remove-BuildItem
+Set-Alias requires Test-BuildAsset
+Set-Alias task Add-BuildTask
+Set-Alias use Use-BuildAlias
+Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
+$_ = Split-Path $_
+Set-Alias Show-TaskHelp (Join-Path $_ Show-TaskHelp.ps1)
+Set-Alias Build-Parallel (Join-Path $_ Build-Parallel.ps1)
+Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
 
-function *Path($P) {
-	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($P)
-}
-
-function *Die($M, $C=0) {
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
-}
-
-function Get-BuildFile($Path, [switch]$Here) {
-	do {
-		if (($f = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $f}
-		if ($f) {return $($f | Sort-Object)[0]}
-		if (($c = $env:InvokeBuildGetFile) -and ($f = & $c $Path)) {return $f}
-	} while(!$Here -and ($Path = Split-Path $Path))
-}
-
-if ($MyInvocation.InvocationName -eq '.') {return}
-trap {*Die $_ 5}
-
-function *BB($FS, $PX, $BR) {
-	$_ = if ($FS -is [string]) {$FS} else {$FS.File}
-	@{FS=$FS; PX=$PX; BR=@(if ($_) {Split-Path $_} else {${*}.CD}; $BR); DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
-}
-
-#!! ${*}
-${private:*p} = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
-New-Variable * -Description IB ([PSCustomObject]@{
-	All = [ordered]@{}
-	Tasks = [System.Collections.Generic.List[object]]@()
-	Errors = [System.Collections.Generic.List[object]]@()
-	Warnings = [System.Collections.Generic.List[object]]@()
-	Redefined = @()
-	Doubles = @()
-	Started = [DateTime]::Now
-	Elapsed = $null
-	Error = 'Invalid arguments.'
-	Task = $null
-	File = $BuildFile = $PSBoundParameters['File']
-	Safe = $PSBoundParameters['Safe']
-	Summary = $PSBoundParameters['Summary']
-	CD = $OriginalLocation = *Path
-	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
-	BB = [System.Collections.Generic.List[object]]@()
-	B1 = $null
-	P = ${*p}
-	A = 1
-	B = 0
-	Q = 0
-	H = @{}
-	Header = if (${*p}) {${*p}.Header} else {{Write-Build 11 "Task $($args[0])"}}
-	Footer = if (${*p}) {${*p}.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
-	Data = @{}
-	XBuild = $null
-	XCheck = $null
-})
-if ($_ = $PSBoundParameters['Result']) {
-	if ($_ -is [string]) {
-		New-Variable $_ ${*} -Scope 1 -Force
-	}
-	elseif ($_ -is [hashtable]) {
-		${*}.XBuild = $_['XBuild']
-		${*}.XCheck = $_['XCheck']
-		$_.Value = ${*}
-	}
-	else {throw 'Invalid parameter Result.'}
-}
-$BuildTask = $PSBoundParameters['Task']
-if ($BuildFile -is [scriptblock]) {
-	${*}.BB.Add((*BB $BuildFile '' @()))
-	$BuildFile = $BuildFile.File
-	return
-}
-if ($BuildTask -eq '**') {
-	if (![System.IO.Directory]::Exists(($_ = *Path $BuildFile))) {throw "Missing directory '$_'."}
-	$BuildFile = @(Get-ChildItem -LiteralPath $_ -Filter *.test.ps1 -Recurse -Force)
-	return
-}
-
-if ($BuildFile) {
-	if (![System.IO.File]::Exists(($BuildFile = *Path $BuildFile))) {
-		if (![System.IO.Directory]::Exists($BuildFile)) {throw "Missing script '$BuildFile'."}
-		if (!($_ = Get-BuildFile $BuildFile -Here)) {throw "Missing script in '$BuildFile'."}
-		$BuildFile = $_
-	}
-}
-elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
-	throw 'Missing default script.'
-}
-${*}.File = $BuildFile
-
-#!! param
-function *DP($FS, $PX, $BR) {
-	if (!($p = (Get-Command $FS -ErrorAction 1).Parameters)) {throw & $FS}
-	$b = *BB $FS $PX $BR
-	if ($p.get_Count()) {
-		$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
-		$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
-		:param foreach($p in $p.get_Values()) {
-			if (($n = $p.Name) -in $c) {continue}
-			if ($n -in $r) {throw "Script uses reserved parameter '$n'."}
-			foreach ($a in $p.Attributes) {
-				if ($a -is [System.Management.Automation.ParameterAttribute] -and $a.Position -ge 0) {
-					$a.Position += 2
-				}
-				elseif($a -is [System.Management.Automation.ValidateScriptAttribute] -and $n -eq 'Extends') {
-					foreach($s in & $a.ScriptBlock) {
-						$x = ''
-						if (($_ = $s.IndexOf('::')) -ge 0) {
-							$x = $s.Substring(0, $_ + 2)
-							$s = $s.Substring($_ + 2)
-						}
-						$s = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($b.BR[0], $s))
-						try {*DP $s $x $b.BR} catch {throw "Parameter 'Extends': $_"}
-					}
-					continue param
-				}
-			}
-			$_ = New-Object System.Management.Automation.RuntimeDefinedParameter $n, $p.ParameterType, $p.Attributes
-			$b.DP[$n] = $_
-			${*}.DP[$n] = $_
-		}
-	}
-	${*}.BB.Add($b)
-}
-*DP $BuildFile '' @()
-${*}.DP
-}
-end {
 #.ExternalHelp Help.xml
 function Add-BuildTask(
 	[Parameter(Position=0, Mandatory=1)][string]$Name,
@@ -230,11 +115,25 @@ B:$(if ($null -ne $B) {" $B [$($B.GetType())]"})
 }
 
 #.ExternalHelp Help.xml
+function Confirm-Build([Parameter()][string]$Query, [string]$Caption=$Task.Name) {
+	$PSCmdlet.ShouldContinue($Query, $Caption)
+}
+
+#.ExternalHelp Help.xml
 function Get-BuildError([Parameter(Mandatory=1)][string]$Task) {
 	if (!($_ = ${*}.All[$Task])) {
 		*Die "Missing task '$Task'." 5
 	}
 	$_.Error
+}
+
+#.ExternalHelp Help.xml
+function Get-BuildFile($Path, [switch]$Here) {
+	do {
+		if (($f = [System.IO.Directory]::GetFiles($Path, '*.build.ps1')).Length -eq 1) {return $f}
+		if ($f) {return $($f | Sort-Object)[0]}
+		if (($c = $env:InvokeBuildGetFile) -and ($f = & $c $Path)) {return $f}
+	} while(!$Here -and ($Path = Split-Path $Path))
 }
 
 #.ExternalHelp Help.xml
@@ -275,28 +174,6 @@ function Get-BuildVersion([Parameter(Mandatory=1)][string]$Path, [Parameter(Mand
 }
 
 #.ExternalHelp Help.xml
-function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandatory=1)][scriptblock]$Script) {
-	${private:*e} = @{}
-	${private:*s} = $Script
-	function *set($n, $v) {
-		[Environment]::SetEnvironmentVariable($n, $(if ($null -eq $v) {[System.Management.Automation.Language.NullString]::Value} else {$v}))
-	}
-	foreach($_ in $Env.GetEnumerator()) {
-		${*e}[$_.Key] = [Environment]::GetEnvironmentVariable($_.Key)
-		*set $_.Key $_.Value
-	}
-	Remove-Variable Env, Script
-	try {
-		& ${*s}
-	}
-	finally {
-		foreach($_ in ${*e}.GetEnumerator()) {
-			*set $_.Key $_.Value
-		}
-	}
-}
-
-#.ExternalHelp Help.xml
 function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]$ExitCode=0, [string]$ErrorMessage, [switch]$Echo, [switch]$StdErr) {
 	${private:*c} = $Command
 	${private:*x} = $ExitCode
@@ -332,24 +209,6 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 	}
 }
 
-function *Echo {
-	${*c} = $args[0]
-	${*t} = "${*c}".Replace("`t", '    ')
-	Write-Build 3 "exec {$(if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {"$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n"} else {${*t}})}"
-	Write-Build 8 "cd $global:pwd"
-	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
-		${*p} = ${*v}.Parent
-		if (${*p} -is [System.Management.Automation.Language.MemberExpressionAst]) {
-			if (${*p} -is [System.Management.Automation.Language.InvokeMemberExpressionAst]) {continue}
-			${*v} = ${*p}
-		}
-		if (${*v}.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
-			${*t} = "${*v}" -replace '^@', '$'
-			Write-Build 8 "${*t}: $(& ([scriptblock]::Create(${*t})))"
-		}
-	}
-}
-
 #.ExternalHelp Help.xml
 function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 	if ($Path -match '^[.*/\\]*$') {*Die 'Not allowed paths.' 5}
@@ -366,6 +225,16 @@ function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 	catch {
 		*Die $_
 	}
+}
+
+#.ExternalHelp Help.xml
+function Set-BuildFooter([Parameter()][scriptblock]$Script) {
+	${*}.Footer = $Script
+}
+
+#.ExternalHelp Help.xml
+function Set-BuildHeader([Parameter()][scriptblock]$Script) {
+	${*}.Header = $Script
 }
 
 #.ExternalHelp Help.xml
@@ -410,19 +279,42 @@ function Use-BuildAlias([Parameter(Mandatory=1)][string]$Path, [string[]]$Name) 
 }
 
 #.ExternalHelp Help.xml
-function Set-BuildFooter([Parameter()][scriptblock]$Script) {${*}.Footer = $Script}
-
-#.ExternalHelp Help.xml
-function Set-BuildHeader([Parameter()][scriptblock]$Script) {${*}.Header = $Script}
-
-#.ExternalHelp Help.xml
-function Confirm-Build([Parameter()][string]$Query, [string]$Caption=$Task.Name) {
-	$PSCmdlet.ShouldContinue($Query, $Caption)
+function Use-BuildEnv([Parameter(Mandatory=1)][hashtable]$Env, [Parameter(Mandatory=1)][scriptblock]$Script) {
+	${private:*e} = @{}
+	${private:*s} = $Script
+	function *set($n, $v) {
+		[Environment]::SetEnvironmentVariable($n, $(if ($null -eq $v) {[System.Management.Automation.Language.NullString]::Value} else {$v}))
+	}
+	foreach($_ in $Env.GetEnumerator()) {
+		${*e}[$_.Key] = [Environment]::GetEnvironmentVariable($_.Key)
+		*set $_.Key $_.Value
+	}
+	Remove-Variable Env, Script
+	try {
+		& ${*s}
+	}
+	finally {
+		foreach($_ in ${*e}.GetEnumerator()) {
+			*set $_.Key $_.Value
+		}
+	}
 }
 
 #.ExternalHelp Help.xml
 function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	*Write $Color ($Text -split '\r\n|[\r\n]')
+}
+
+function *Die($M, $C=0) {
+	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
+}
+
+function *Msg($M, $I) {
+	"$M`n$(*At $I)"
+}
+
+function *Path($P) {
+	$PSCmdlet.GetUnresolvedProviderPathFromPSPath($P)
 }
 
 if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText' -and !$env:MSBuildLoadMicrosoftTargetsReadOnly) {
@@ -453,43 +345,138 @@ else {
 	}
 }
 
-function *My {
-	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
+if ($MyInvocation.InvocationName -eq '.') {return}
+trap {*Die $_ 5}
+
+#!! init
+${private:*p} = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
+New-Variable * -Description IB ([PSCustomObject]@{
+	All = [ordered]@{}
+	Tasks = [System.Collections.Generic.List[object]]@()
+	Errors = [System.Collections.Generic.List[object]]@()
+	Warnings = [System.Collections.Generic.List[object]]@()
+	Redefined = @()
+	Doubles = @()
+	Started = [DateTime]::Now
+	Elapsed = $null
+	Error = 'Invalid arguments.'
+	Task = $null
+	File = $BuildFile = $PSBoundParameters['File']
+	Safe = $PSBoundParameters['Safe']
+	Summary = $PSBoundParameters['Summary']
+	CD = $OriginalLocation = *Path
+	DP = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
+	BB = [System.Collections.Generic.List[object]]@()
+	B1 = $null
+	P = ${*p}
+	A = 1
+	B = 0
+	Q = 0
+	H = @{}
+	Header = if (${*p}) {${*p}.Header} else {{Write-Build 11 "Task $($args[0])"}}
+	Footer = if (${*p}) {${*p}.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
+	Data = @{}
+	XBuild = $null
+	XCheck = $null
+})
+
+if ($_ = $PSBoundParameters['Result']) {
+	if ($_ -is [string]) {
+		New-Variable $_ ${*} -Scope 1 -Force
+	}
+	elseif ($_ -is [hashtable]) {
+		${*}.XBuild = $_['XBuild']
+		${*}.XCheck = $_['XCheck']
+		$_.Value = ${*}
+	}
+	else {throw 'Invalid parameter Result.'}
 }
 
-function *SL($P=$BuildRoot) {
-	Set-Location -LiteralPath $P -ErrorAction 1
+function *BB($FS, $PX, $BR) {
+	$_ = if ($FS -is [string]) {$FS} else {$FS.File}
+	@{FS=$FS; PX=$PX; BR=@(if ($_) {Split-Path $_} else {${*}.CD}; $BR); DP=@{}; EnterBuild=$null; ExitBuild=$null; EnterTask=$null; ExitTask=$null; EnterJob=$null; ExitJob=$null}
 }
 
-function *Fin([Parameter()]$M, $C=0) {
-	*Die $M $C
+$BuildTask = $PSBoundParameters['Task']
+if ($BuildFile -is [scriptblock]) {
+	${*}.BB.Add((*BB $BuildFile '' @()))
+	$BuildFile = $BuildFile.File
+	return
 }
 
-function *Run($_) {if ($_) {
-	*SL
-	. $_ @args
-}}
-
-function *At($I) {
-	$I.InvocationInfo.PositionMessage.Trim()
+if ($BuildTask -eq '**') {
+	if (![System.IO.Directory]::Exists(($_ = *Path $BuildFile))) {throw "Missing directory '$_'."}
+	$BuildFile = @(Get-ChildItem -LiteralPath $_ -Filter *.test.ps1 -Recurse -Force)
+	return
 }
 
-function *Msg($M, $I) {
-	"$M`n$(*At $I)"
+if ($BuildFile) {
+	if (![System.IO.File]::Exists(($BuildFile = *Path $BuildFile))) {
+		if (![System.IO.Directory]::Exists($BuildFile)) {throw "Missing script '$BuildFile'."}
+		if (!($_ = Get-BuildFile $BuildFile -Here)) {throw "Missing script in '$BuildFile'."}
+		$BuildFile = $_
+	}
+}
+elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
+	throw 'Missing default script.'
+}
+${*}.File = $BuildFile
+
+#!! param
+function *DP($FS, $PX, $BR) {
+	if (!($p = (Get-Command $FS -ErrorAction 1).Parameters)) {throw & $FS}
+	$b = *BB $FS $PX $BR
+	if ($p.get_Count()) {
+		$c = 'Verbose', 'Debug', 'ErrorAction', 'WarningAction', 'ErrorVariable', 'WarningVariable', 'OutVariable', 'OutBuffer', 'PipelineVariable', 'InformationAction', 'InformationVariable', 'ProgressAction'
+		$r = 'Task', 'File', 'Result', 'Safe', 'Summary', 'WhatIf'
+		:param foreach($p in $p.get_Values()) {
+			if (($n = $p.Name) -in $c) {continue}
+			if ($n -in $r) {throw "Script uses reserved parameter '$n'."}
+			foreach ($a in $p.Attributes) {
+				if ($a -is [System.Management.Automation.ParameterAttribute] -and $a.Position -ge 0) {
+					$a.Position += 2
+				}
+				elseif($a -is [System.Management.Automation.ValidateScriptAttribute] -and $n -eq 'Extends') {
+					foreach($s in & $a.ScriptBlock) {
+						$x = ''
+						if (($_ = $s.IndexOf('::')) -ge 0) {
+							$x = $s.Substring(0, $_ + 2)
+							$s = $s.Substring($_ + 2)
+						}
+						$s = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($b.BR[0], $s))
+						try {*DP $s $x $b.BR} catch {throw "Parameter 'Extends': $_"}
+					}
+					continue param
+				}
+			}
+			$_ = New-Object System.Management.Automation.RuntimeDefinedParameter $n, $p.ParameterType, $p.Attributes
+			$b.DP[$n] = $_
+			${*}.DP[$n] = $_
+		}
+	}
+	${*}.BB.Add($b)
+}
+*DP $BuildFile '' @()
+${*}.DP
+}
+end {
+Remove-Variable Task, File, Result, Safe, Summary
+if ($MyInvocation.InvocationName -eq '.') {
+	Remove-Variable WhatIf
+	return
 }
 
-function *Job($J) {
-	if ($J -is [string]) {if ($J[0] -eq '?') {$J.Substring(1), 1} else {$J}}
-	elseif ($J -is [scriptblock]) {$J}
-	else {*Fin 'Invalid job.' 5}
-}
+function Enter-Build([Parameter()][scriptblock]$Script) {${*}.B1.EnterBuild = $Script}
+function Exit-Build([Parameter()][scriptblock]$Script) {${*}.B1.ExitBuild = $Script}
+function Enter-BuildTask([Parameter()][scriptblock]$Script) {${*}.B1.EnterTask = $Script}
+function Exit-BuildTask([Parameter()][scriptblock]$Script) {${*}.B1.ExitTask = $Script}
+function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.B1.EnterJob = $Script}
+function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.B1.ExitJob = $Script}
+function Set-BuildData([Parameter()]$Key, $Value) {${*}.Data[$Key] = $Value}
 
-function *Unsafe($N, $J) {
-	if ($N -in $J) {return 1}
-	foreach($_ in $J) {if ($_ -is [string]) {
-		$_ = $_.TrimStart('?')
-		if ($_ -ne $N -and ($t = ${*}.All[$_]) -and $t.If -and (*Unsafe $N $t.Jobs)) {return 1}
-	}}
+function Write-Warning([Parameter()]$Message) {
+	$PSCmdlet.WriteWarning($Message)
+	${*}.Warnings.Add([PSCustomObject]@{Message = $Message; File = $BuildFile; Task = ${*}.Task; InvocationInfo=$MyInvocation})
 }
 
 function *Amend($X, $J, $B) {
@@ -507,6 +494,10 @@ function *Amend($X, $J, $B) {
 	}
 }
 
+function *At($I) {
+	$I.InvocationInfo.PositionMessage.Trim()
+}
+
 function *Check($J, $T, $P=@()) {
 	foreach($_ in $J) {if ($_ -is [string]) {
 		$_ = $_.TrimStart('?')
@@ -521,20 +512,22 @@ function *Check($J, $T, $P=@()) {
 	}}
 }
 
-filter *Help {
-	[PSCustomObject]@{
-		Name = $_.Name
-		Synopsis = Get-BuildSynopsis $_
-		Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
+function *Echo {
+	${*c} = $args[0]
+	${*t} = "${*c}".Replace("`t", '    ')
+	Write-Build 3 "exec {$(if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {"$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n"} else {${*t}})}"
+	Write-Build 8 "cd $global:pwd"
+	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
+		${*p} = ${*v}.Parent
+		if (${*p} -is [System.Management.Automation.Language.MemberExpressionAst]) {
+			if (${*p} -is [System.Management.Automation.Language.InvokeMemberExpressionAst]) {continue}
+			${*v} = ${*p}
+		}
+		if (${*v}.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
+			${*t} = "${*v}" -replace '^@', '$'
+			Write-Build 8 "${*t}: $(& ([scriptblock]::Create(${*t})))"
+		}
 	}
-}
-
-function *Root {
-	$t = foreach($_ in ${*}.All.get_Values()) {if ($_.InvocationInfo.ScriptName -eq $BuildFile -and $_.Name -ne '.') {$_}}
-	$n = foreach($_ in $t) {$_.Name}
-	*Check $n
-	$j = foreach($_ in $t) {foreach($_ in $_.Jobs) {if ($_ -is [string]) {$_.TrimStart('?')}}}
-	foreach($_ in $n) {if ($_ -notin $j) {$_}}
 }
 
 function *Err($T) {
@@ -542,6 +535,18 @@ function *Err($T) {
 	Write-Build 12 "ERROR: $(if (*My) {$_} else {*Msg $_ $_})"
 	if ($T) {$T.Error = $_}
 }
+
+function *Fin([Parameter()]$M, $C=0) {
+	*Die $M $C
+}
+
+function *Help {process{
+	[PSCustomObject]@{
+		Name = $_.Name
+		Synopsis = Get-BuildSynopsis $_
+		Jobs = foreach($j in $_.Jobs) {if ($j -is [string]) {$j} else {'{}'}}
+	}
+}}
 
 function *IO {
 	if ((${private:*i} = $Task.Inputs) -is [scriptblock]) {
@@ -599,6 +604,33 @@ function *IO {
 		}
 	}
 	2, 'Skipping up-to-date output.'
+}
+
+function *Job($J) {
+	if ($J -is [string]) {if ($J[0] -eq '?') {$J.Substring(1), 1} else {$J}}
+	elseif ($J -is [scriptblock]) {$J}
+	else {*Fin 'Invalid job.' 5}
+}
+
+function *My {
+	$_.InvocationInfo.ScriptName -eq $MyInvocation.ScriptName
+}
+
+function *Root {
+	$t = foreach($_ in ${*}.All.get_Values()) {if ($_.InvocationInfo.ScriptName -eq $BuildFile -and $_.Name -ne '.') {$_}}
+	$n = foreach($_ in $t) {$_.Name}
+	*Check $n
+	$j = foreach($_ in $t) {foreach($_ in $_.Jobs) {if ($_ -is [string]) {$_.TrimStart('?')}}}
+	foreach($_ in $n) {if ($_ -notin $j) {$_}}
+}
+
+function *Run($_) {if ($_) {
+	*SL
+	. $_ @args
+}}
+
+function *SL($P=$BuildRoot) {
+	Set-Location -LiteralPath $P -ErrorAction 1
 }
 
 function *Task {
@@ -708,29 +740,12 @@ function *Task {
 	}
 }
 
-Set-Alias assert Assert-Build
-Set-Alias equals Assert-BuildEquals
-Set-Alias exec Invoke-BuildExec
-Set-Alias property Get-BuildProperty
-Set-Alias remove Remove-BuildItem
-Set-Alias requires Test-BuildAsset
-Set-Alias task Add-BuildTask
-Set-Alias use Use-BuildAlias
-Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
-$_ = Split-Path $_
-Set-Alias Show-TaskHelp (Join-Path $_ Show-TaskHelp.ps1)
-Set-Alias Build-Parallel (Join-Path $_ Build-Parallel.ps1)
-Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
-
-Remove-Variable Task, File, Result, Safe, Summary
-if ($MyInvocation.InvocationName -eq '.') {
-	Remove-Variable WhatIf
-	return
-}
-
-function Write-Warning([Parameter()]$Message) {
-	$PSCmdlet.WriteWarning($Message)
-	${*}.Warnings.Add([PSCustomObject]@{Message = $Message; File = $BuildFile; Task = ${*}.Task; InvocationInfo=$MyInvocation})
+function *Unsafe($N, $J) {
+	if ($N -in $J) {return 1}
+	foreach($_ in $J) {if ($_ -is [string]) {
+		$_ = $_.TrimStart('?')
+		if ($_ -ne $N -and ($t = ${*}.All[$_]) -and $t.If -and (*Unsafe $N $t.Jobs)) {return 1}
+	}}
 }
 
 function *What {
@@ -753,17 +768,9 @@ try {
 		exit
 	}
 
-	function Enter-Build([Parameter()][scriptblock]$Script) {${*}.B1.EnterBuild = $Script}
-	function Exit-Build([Parameter()][scriptblock]$Script) {${*}.B1.ExitBuild = $Script}
-	function Enter-BuildTask([Parameter()][scriptblock]$Script) {${*}.B1.EnterTask = $Script}
-	function Exit-BuildTask([Parameter()][scriptblock]$Script) {${*}.B1.ExitTask = $Script}
-	function Enter-BuildJob([Parameter()][scriptblock]$Script) {${*}.B1.EnterJob = $Script}
-	function Exit-BuildJob([Parameter()][scriptblock]$Script) {${*}.B1.ExitJob = $Script}
-	function Set-BuildData([Parameter()]$Key, $Value) {${*}.Data[$Key] = $Value}
-
 	#!! load
 	New-Variable Task @{Name = $BuildFile} -Option Constant
-	${private:*p} = @(foreach($_ in ${*}.DP.get_Values()) {if ($_.IsSet) {$_}})
+	${*p} = @(foreach($_ in ${*}.DP.get_Values()) {if ($_.IsSet) {$_}})
 	${private:**} = @(
 		foreach(${private:*b} in ${*}.BB) {
 			${*}.B1 = ${*b}

@@ -79,7 +79,7 @@ $KO = (Get-ChildItem *-Build* -Name | Sort-Object) -join ','
 equals $OK $KO
 
 # expected internal functions
-$OK = '*Amend,*At,*Check,*Die,*Echo,*Err,*Fin,*Help,*IO,*Job,*Msg,*My,*Path,*Root,*Run,*SL,*Task,*Unsafe,*Write'
+$OK = '*Die,*Msg,*Path,*Write'
 $KO = (Get-ChildItem [*]* -Name | Sort-Object) -join ','
 equals $OK $KO
 
@@ -140,7 +140,7 @@ if (!(Test-Unix)) {
 	$r = (Get-Alias MSBuild).Definition
 	assert ($r -like '?:\*\Microsoft.NET\Framework*\v4.0.30319\MSBuild')
 
-	use (Split-Path $MyInvocation.MyCommand.Path) Dot-test.ps1
+	use $PSScriptRoot Dot-test.ps1
 	($r = (Get-Alias Dot-test.ps1).Definition)
 	equals $r $MyInvocation.MyCommand.Path
 

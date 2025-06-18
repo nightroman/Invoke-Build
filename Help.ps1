@@ -41,6 +41,7 @@
 
 		Confirm-Build
 		Get-BuildError
+		Get-BuildFile
 		Get-BuildSynopsis
 		Get-BuildVersion
 		Resolve-MSBuild
@@ -176,12 +177,11 @@
 		File = @'
 		The build script adding tasks by 'task' (Add-BuildTask).
 
-		If File is omitted then Invoke-Build looks for *.build.ps1 files in the
-		current location and takes the first in Sort-Object order.
+		If File is omitted then Invoke-Build searches for the first like
+		*.build.ps1 in the current location in Sort-Object order.
 
-		If the file is not found then a command set by the environment variable
-		InvokeBuildGetFile is invoked with the directory path as an argument.
-		This command may return the full path of a special build script.
+		If this file is not found then `$env:InvokeBuildGetFile` is called with
+		a directory path argument in order to get its custom build script path.
 
 		If the file is still not found then parent directories are searched.
 
@@ -624,6 +624,38 @@
 
 	links = @(
 		@{ text = 'Add-BuildTask' }
+	)
+}
+
+### Get-BuildFile
+@{
+	command = 'Get-BuildFile'
+	synopsis = 'Gets the found build script path.'
+
+	description = @'
+ 	It gets the build script path for the specified or current location, the
+ 	first like *.build.ps1 in Sort-Object order.
+
+	If this file is not found then `$env:InvokeBuildGetFile` is called with a
+	directory path argument in order to get its custom build script path.
+
+	If the file is still not found then parent directories are searched.
+'@
+
+	parameters = @{
+		Path = @'
+		Specifies the directory path, defaults to the current location.
+'@
+		Here = @'
+		Tells not to search in parent directories.
+'@
+	}
+
+	outputs = @(
+		@{
+			type = 'String'
+			description = 'The found build script path or null.'
+		}
 	)
 }
 

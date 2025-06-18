@@ -1,5 +1,14 @@
 # Invoke-Build Release Notes
 
+## v5.14.13
+
+Housekeeping. Put functions in order, exclude most of internals from loading on
+dot-sourcing `Invoke-Build`, tweak satellite scripts.
+
+`Get-BuildFile` is officially documented.
+
+`Show-BuildGraph.ps1` uses viz-3.14.0.
+
 ## v5.14.12
 
 `Build-Checkpoint`

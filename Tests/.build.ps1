@@ -215,6 +215,7 @@ task ShowHelp -If (!$env:GITHUB_ACTION) {
 		'Assert-Build'
 		'Assert-BuildEquals'
 		'Get-BuildError'
+		'Get-BuildFile'
 		'Get-BuildProperty'
 		'Get-BuildSynopsis'
 		'Invoke-BuildExec'

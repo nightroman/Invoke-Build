@@ -126,8 +126,7 @@ try {
 	$_ = $Build
 	Remove-Variable Checkpoint, Build, Preserve, Resume, Auto
 
-	Set-Alias Invoke-Build (Join-Path (Split-Path $MyInvocation.MyCommand.Path) Invoke-Build.ps1)
-	Invoke-Build @_ -Result ${*checkpoint}
+	& (Join-Path $PSScriptRoot Invoke-Build.ps1) @_ -Result ${*checkpoint}
 
 	if (!${*checkpoint}.Value.Error -and !${*checkpoint}.Preserve) {
 		[System.IO.File]::Delete(${*checkpoint}.Checkpoint)

@@ -95,9 +95,8 @@ $MapEnvironment = @{}
 # collect jobs in $BuildJobs
 function Add-TaskJob($Jobs, $Task) {
 	foreach($job in $Jobs) {
-		$job, $null = *Job $job
 		if ($job -is [string]) {
-			$task2 = $All[$job]
+			$task2 = $All[$job.TrimStart('?')]
 			Add-TaskJob $task2.Jobs $task2
 		}
 		else {
@@ -227,9 +226,7 @@ function Format-TaskHelp($TaskHelp) {
 $TaskHelp = [pscustomobject]@{Task=$null; Jobs=$null; Synopsis=$null; Location=$null; Parameters=$null; Environment=$null}
 $TaskHelp.Task = @(
 	foreach($job in $BuildTask) {
-		$job, $null = *Job $job
-		$task = $All[$job]
-		if (!$task) {*Fin "Missing task '$job' in '$BuildFile'." 5}
+		$task = $All[$job.TrimStart('?')]
 		[pscustomobject]@{
 			Name = $task.Name
 			Synopsis = Get-BuildSynopsis $task $Hash
