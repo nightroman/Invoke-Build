@@ -4,7 +4,7 @@
 
 Support "Extends" with and without prefixes used together, [#234](https://github.com/nightroman/Invoke-Build/issues/234)
 
-Start creating GitHub releases.
+Start creating GitHub releases, [#230](https://github.com/nightroman/Invoke-Build/issues/230)
 
 ## v5.14.13
 
