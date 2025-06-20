@@ -1,5 +1,11 @@
 # Invoke-Build Release Notes
 
+## v5.14.14
+
+Support "Extends" with and without prefixes used together, [#234](https://github.com/nightroman/Invoke-Build/issues/234)
+
+Start creating GitHub releases.
+
 ## v5.14.13
 
 Housekeeping. Put functions in order, exclude most of internals from loading on

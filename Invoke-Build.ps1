@@ -88,7 +88,7 @@ function Add-BuildTask(
 	foreach($j in $Jobs) {
 		$r, $s = *Job $j
 		if ($r -is [string]) {
-			if ($PX -and !$r.Contains('::') -and $r -ne '.') {$r = $PX+$r}
+			if ($PX -and !$r.Contains('::') -and $r -ne '.' -and (!($t = ${*}.All[$r]) -or $t.B1 -eq $B1)) {$r = $PX+$r}
 			if ($r -in $2) {${*}.Doubles += ,($Name, $r)} else {$2 += $r}
 			if ($s) {$r = "?$r"}
 		}
@@ -433,10 +433,7 @@ function *DP($FS, $PX, $BR) {
 			if (($n = $p.Name) -in $c) {continue}
 			if ($n -in $r) {throw "Script uses reserved parameter '$n'."}
 			foreach ($a in $p.Attributes) {
-				if ($a -is [System.Management.Automation.ParameterAttribute] -and $a.Position -ge 0) {
-					$a.Position += 2
-				}
-				elseif($a -is [System.Management.Automation.ValidateScriptAttribute] -and $n -eq 'Extends') {
+				if ($a -is [System.Management.Automation.ValidateScriptAttribute]) {if ($n -eq 'Extends') {
 					foreach($s in & $a.ScriptBlock) {
 						$x = ''
 						if (($_ = $s.IndexOf('::')) -ge 0) {
@@ -447,7 +444,10 @@ function *DP($FS, $PX, $BR) {
 						try {*DP $s $x $b.BR} catch {throw "Parameter 'Extends': $_"}
 					}
 					continue param
-				}
+				}}
+				elseif ($a -is [System.Management.Automation.ParameterAttribute]) {if ($a.Position -ge 0) {
+					$a.Position += 2
+				}}
 			}
 			$_ = New-Object System.Management.Automation.RuntimeDefinedParameter $n, $p.ParameterType, $p.Attributes
 			$b.DP[$n] = $_

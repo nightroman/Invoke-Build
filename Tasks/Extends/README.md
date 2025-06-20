@@ -17,12 +17,10 @@
 
 The build script parameter `Extends` with `ValidateScript` tells to
 dot-source base scripts, replace `Extends` with base parameters, and
-optionally rename base tasks.
+optionally rename base tasks with prefixes.
 
 Multiple and multilevel inheritance is supported, `ValidateScript` may specify
 any number of scripts and these scripts may use `Extends` recursively.
-
-See examples of both inheritance trees below.
 
 ## Inheritance vs dot-sourcing
 
@@ -91,8 +89,8 @@ Examples below use the same parameter `Configuration` and show subtleties.
 ## Renamed build tasks
 
 Build scripts in the inheritance tree are expected to have tasks with same
-names, e.g. `Build`, `Clean`, `Test`, etc. Unlike script parameters, tasks
-cannot be "shared". But they may be optionally renamed.
+names, e.g. `Build`, `Clean`, `Test`, etc. Tasks may be optionally renamed
+with prefixes, to avoid collisions or just for clarity.
 
 In order to rename inherited tasks with a custom prefix, `ValidateScript` of
 `Extends` should return the script path with this prefix separated by `::`.
@@ -100,6 +98,10 @@ In order to rename inherited tasks with a custom prefix, `ValidateScript` of
 For example, the path `"main::.\src\.build.ps1"` tells to extend the script
 `.\src\.build.ps1` and rename its tasks using the prefix `main::`, so that
 the original task `Build` becomes `main::Build`.
+
+Tasks with existing prefixes, i.e. names containing `::` are not renamed.
+The idea is having some tasks with known stable names used as common in
+extended scripts.
 
 ## The default task
 
@@ -119,10 +121,10 @@ Each script in the inheritance tree has it own default `$BuildRoot`. The engine
 sets this location current before invoking tasks, jobs, build blocks. Scripts
 may alter the default build root during loading by the top level script code.
 
-Turns out, with `$Extends` base scripts may need to set their `$BuildRoot` to
-one of the extended locations. In order to support this, the engine provides
-the variable `$BuildRoots`, in addition to `$BuildRoot`. `$BuildRoots` exists
-just on loading, unlike always available `$BuildRoot`.
+Some base scripts may need to set their `$BuildRoot` to one of the extended.
+In order to support this, the engine provides the variable `$BuildRoots`, in
+addition to `$BuildRoot`. Unlike always available `$BuildRoot`, `$BuildRoots`
+exists on loading only.
 
 `$BuildRoots` is an array of extended script roots:
 

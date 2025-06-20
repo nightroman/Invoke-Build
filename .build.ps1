@@ -146,14 +146,49 @@ more powerful. It is complete, bug free, well covered by tests.
 }
 
 # Synopsis: Push with a version tag.
-task pushRelease version, {
+task pushAndTag version, {
 	$changes = exec { git status --short }
 	assert (!$changes) "Please, commit changes."
 
 	exec { git push }
-	exec { git tag -a "v$Version" -m "v$Version" }
-	exec { git push origin "v$Version" }
+
+	$tag = "v$Version"
+	exec { git tag -a $tag -m $tag }
+	exec { git push origin $tag }
 }
+
+function last_release_notes {
+	$text = Get-Content -Raw Release-Notes.md
+	$re = [regex]'##\s+v(\d+\.\d+\.\d+)'
+	$m1 = $re.Match($text)
+	$m2 = $m1.NextMatch()
+	assert ($m1.Success -and $m2.Success)
+	$st = $m1.Index + $m1.Length
+	$text.Substring($st, $m2.Index - $st)
+}
+
+# Synopsis: Create release from tag.
+task newRelease version, {
+	$tag = "v$Version"
+	$url = "https://api.github.com/repos/nightroman/Invoke-Build/releases"
+	$headers = [ordered]@{
+		Accept = "application/vnd.github+json"
+		Authorization = "Bearer $env:GITHUB_TOKEN"
+		"X-GitHub-Api-Version" = "2022-11-28"
+	}
+	$body = [ordered]@{
+		tag_name = $tag
+		name = $tag
+		body = last_release_notes
+	} | ConvertTo-Json
+
+	if (Confirm-Build $body) {
+		$null = Invoke-RestMethod -Method Post -Uri $url -Headers $headers -Body $body -ContentType application/json
+	}
+}
+
+# Synopsis: Push, make tag, make release.
+task pushRelease pushAndTag, newRelease
 
 # Synopsis: Push NuGet package.
 task pushNuGet nuget, {

@@ -14,10 +14,6 @@ Set-StrictMode -Version 3
 
 [string]$DemoRoot = Resolve-Path ..\..\Tasks\Extends
 
-task v5.14.12.parameters {
-	Invoke-Build test1 1.build.ps1 -Platform Win32
-}
-
 # Should result in dot-task redefined in Test.
 # Redefined for dot-task is omitted in v5.14.0.
 # Covers BuildRoots and [System.IO.Path]::GetFullPath()
@@ -78,4 +74,12 @@ task Dot {
 
 task Next {
 	Invoke-Build . $DemoRoot\Prefixes\Next
+}
+
+task v5.14.12.parameters {
+	Invoke-Build test1 v5.14.12.parameters\1.build.ps1 -Platform Win32
+}
+
+task v5.14.14.prefixes {
+	Invoke-Build main v5.14.14.prefixes\1.build.ps1
 }
