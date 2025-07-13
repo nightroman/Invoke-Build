@@ -27,7 +27,7 @@ param(
 if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
 	$ErrorActionPreference = 1
 	if (!(Get-Command Invoke-Build -ErrorAction 0)) {
-		Write-Host 'Installing module InvokeBuild...'
+		Write-Host InvokeBuild installing...
 		Install-Module InvokeBuild -Scope CurrentUser -Force
 		Import-Module InvokeBuild
 	}
