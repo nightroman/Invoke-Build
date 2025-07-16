@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.1.1
+.VERSION 1.2.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Graphviz
@@ -16,8 +16,8 @@
 .Description
 	Requirements:
 	- Invoke-Build command is available for calls
-	- Internet connection for using online viz-standalone.js
-	- or viz-standalone.js in the path, https://github.com/mdaines/viz.js
+	- Internet connection for using online viz-global.js
+	- or viz-global.js in the path, https://github.com/mdaines/viz.js
 	- or, when -Dot, dot in $env:Graphviz or in the path, http://graphviz.org
 
 	The script calls Invoke-Build to get the build tasks, makes the DOT graph,
@@ -29,7 +29,7 @@
 
 	EXAMPLES
 
-	# Make and show HTML using viz-standalone.js (local or online)
+	# Make and show HTML using viz-global.js (local or online)
 	Show-BuildGraph
 
 	# Make and show SVG using dot
@@ -103,12 +103,12 @@ if ($Dot) {
 	}
 }
 else {
-	$app = Get-Command viz-standalone.js -CommandType Application -ErrorAction 0
+	$app = Get-Command viz-global.js -CommandType Application -ErrorAction 0
 	if ($app) {
 		$jsUrl = 'file:///' + $app.Source.Replace('\', '/')
 	}
 	else {
-		$jsUrl = 'https://github.com/mdaines/viz-js/releases/download/release-viz-3.14.0/viz-standalone.js'
+		$jsUrl = 'https://github.com/mdaines/viz-js/releases/download/release-viz-3.15.0/viz-global.js'
 	}
 }
 

@@ -1,5 +1,7 @@
 # Invoke-Build Release Notes
 
+`Show-BuildGraph.ps1` uses viz-3.15.0 and its new `viz-global.js` replacing `viz-standalone.js`
+
 ## v5.14.14
 
 Support "Extends" with and without prefixes used together, [#234](https://github.com/nightroman/Invoke-Build/issues/234)
