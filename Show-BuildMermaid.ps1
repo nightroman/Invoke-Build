@@ -145,7 +145,7 @@ $text = @(
 <title>$([System.IO.Path]::GetFileNameWithoutExtension($Output)) tasks</title>
 </head>
 <body>
-<pre class="mermaid">
+<pre class="mermaid" hidden>
 "@
 
 	$text
@@ -153,8 +153,9 @@ $text = @(
 	@'
 </pre>
 <script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/+esm';
   mermaid.initialize({ startOnLoad: true });
+  document.querySelector('.mermaid').hidden = false;
 </script>
 </body>
 </html>

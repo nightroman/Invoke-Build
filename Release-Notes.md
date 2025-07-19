@@ -1,6 +1,8 @@
 # Invoke-Build Release Notes
 
-`Show-BuildGraph.ps1` uses viz-3.15.0 and its new `viz-global.js` replacing `viz-standalone.js`
+`Show-BuildGraph.ps1` - use viz-3.15.0 and its new `viz-global.js` replacing `viz-standalone.js`
+
+`Show-BuildMermaid.ps1` - hide mermaid text on loading
 
 ## v5.14.14
 
