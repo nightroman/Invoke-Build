@@ -193,8 +193,8 @@ function Add-TaskVariable($Jobs) {
 function Format-TaskHelp($TaskHelp) {
 	Write-Build White Task:
 	foreach($r in $TaskHelp.Task) {
-		if ($r.Synopsis) {
-			Write-Build Gray ('    {0} - {1}' -f $r.Name, $r.Synopsis)
+		if ($synopsis = $r.Synopsis) {
+			Write-Build Gray ('    {0} - {1}' -f $r.Name, $synopsis)
 		}
 		else {
 			Write-Build Gray ('    {0}' -f $r.Name)
@@ -203,7 +203,12 @@ function Format-TaskHelp($TaskHelp) {
 
 	Write-Build White Jobs:
 	foreach($r in $TaskHelp.Jobs) {
-		Write-Build Gray ('    {0} - {1}' -f $r.Name, $r.Location)
+		if ($synopsis = Get-BuildSynopsis ($All[$r.Name]) $Hash) {
+			Write-Build Gray ('    {0} - {1} At {2}' -f $r.Name, $synopsis, $r.Location)
+		}
+		else {
+			Write-Build Gray ('    {0} - At {1}' -f $r.Name, $r.Location)
+		}
 	}
 
 	if ($TaskHelp.Parameters) {

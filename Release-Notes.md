@@ -1,14 +1,18 @@
 # Invoke-Build Release Notes
 
+## v5.14.15
+
+Show jobs synopses on `-WhatIf`, #235
+
 `Show-BuildGraph.ps1` - use viz-3.15.0 and its new `viz-global.js` replacing `viz-standalone.js`
 
 `Show-BuildMermaid.ps1` - hide mermaid text on loading
 
 ## v5.14.14
 
-Support "Extends" with and without prefixes used together, [#234](https://github.com/nightroman/Invoke-Build/issues/234)
+Support "Extends" with and without prefixes used together, #234
 
-Start creating GitHub releases, [#230](https://github.com/nightroman/Invoke-Build/issues/230)
+Start creating GitHub releases, #230
 
 ## v5.14.13
 
@@ -42,7 +46,7 @@ Use `[ordered]` accelerator.
 
 ## v5.14.10
 
-Ensure "Extends" prefixes rules, [#232](https://github.com/nightroman/Invoke-Build/issues/232)
+Ensure "Extends" prefixes rules, #232
 
 `Show-BuildGraph.ps1` - use viz-3.13.0
 
@@ -52,7 +56,7 @@ Update help, tidy up code.
 
 ## v5.14.8
 
-Add build variable `$BuildRoots`, [#231](https://github.com/nightroman/Invoke-Build/issues/231)
+Add build variable `$BuildRoots`, #231
 
 ## v5.14.7
 
@@ -71,11 +75,11 @@ Minor tweaks.
 
 ## v5.14.4
 
-Support task prefixes on `Extends`, [#229](https://github.com/nightroman/Invoke-Build/issues/229)
+Support task prefixes on `Extends`, #229
 
 ## v5.14.3
 
-Support common parameters on `Extends`, [#228](https://github.com/nightroman/Invoke-Build/issues/228)
+Support common parameters on `Extends`, #228
 
 ## v5.14.2
 
@@ -440,7 +444,7 @@ Add help for `Set-BuildHeader`, `Set-BuildFooter`.
 
 ## v5.3.0
 
-Add the robust helper `remove`, the alternative to `Remove-Item`, see [#123](https://github.com/nightroman/Invoke-Build/issues/123)
+Add the robust helper `remove`, the alternative to `Remove-Item`, see #123
 
 Tools
 
@@ -452,12 +456,12 @@ Tools
 
 ## v5.2.0
 
-- **New:** Alternative syntax of task parameters, kind of inline splatting, [#119](https://github.com/nightroman/Invoke-Build/issues/119)
-- Add "missing output" message to incremental task processing, [#120](https://github.com/nightroman/Invoke-Build/issues/120)
+- **New:** Alternative syntax of task parameters, kind of inline splatting, #119
+- Add "missing output" message to incremental task processing, #120
 
 Tools
 
-- *Invoke-TaskFromVSCode.ps1* should save the file on invoking, [#118](https://github.com/nightroman/Invoke-Build/issues/118)
+- *Invoke-TaskFromVSCode.ps1* should save the file on invoking, #118
 - Improve *Invoke-TaskFromVSCode.ps1* error info in some cases
 - Support `viz.js` in *Show-BuildGraph.ps1*
 
@@ -468,12 +472,12 @@ Tools
 
 ## v5.1.0
 
-New internal tool, [#117](https://github.com/nightroman/Invoke-Build/issues/117)
+New internal tool, #117
 
 - The new tool *Show-TaskHelp.ps1* is included to packages.
 - `Invoke-Build ... -WhatIf` uses the new `Show-TaskHelp`.
 
-New external tool, [#116](https://github.com/nightroman/Invoke-Build/issues/116)
+New external tool, #116
 
 - *Show-BuildDgml.ps1* generates build graphs as DGML for Visual Studio.
 
@@ -539,7 +543,7 @@ Tidy up help.
 
 ## v4.0.1
 
-- Support colored output in AppVeyor, [#103](https://github.com/nightroman/Invoke-Build/issues/103).
+- Support colored output in AppVeyor, #103
 - Deprecate `use VisualStudio`.
 
 ## v4.0.0
@@ -726,7 +730,7 @@ Invoke-Build is cross-platform with PowerShell v6.0.0-alpha.
 
 Build script parameters are specified as Invoke-Build dynamic parameters.
 The parameter `Parameters` was removed. This change is breaking in some
-cases, see [#29](https://github.com/nightroman/Invoke-Build/issues/29).
+cases, (#29).
 
 Avoided cryptic errors on invoking scripts with invalid syntax and on resuming
 builds with an invalid checkpoint file.
