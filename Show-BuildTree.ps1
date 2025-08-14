@@ -42,12 +42,12 @@ param(
 	[switch]$Upstream
 )
 
-$ErrorActionPreference = 1
+$ErrorActionPreference = 1; trap {$PSCmdlet.ThrowTerminatingError($_)}
 
 $private:_Task = $Task
 $private:_File = $File
 $private:_Parameters = if ($Parameters) {$Parameters} else {@{}}
-$private:_Upstream = $Upstream
+${*Upstream} = $Upstream
 Remove-Variable Task, File, Parameters, Upstream
 
 # Shows the task tree.
@@ -84,17 +84,11 @@ function ShowTaskTree($Task, $Docs, $Step = 0) {
 	}
 }
 
-try {
-	. Invoke-Build
-
-	# get tasks
-	Set-Alias *What *What2
-	function *What2 {${*}.All; $BuildTask}
-	$tasks, $_Task = Invoke-Build $_Task $_File @_Parameters -WhatIf
-
+function ShowBuildTree {
 	# references
+	$tasks = ${*}.All
 	$references = @{}
-	if ($_Upstream) {
+	if (${*Upstream}) {
 		foreach($it in $tasks.get_Values()) {
 			$references[$it] = @{}
 		}
@@ -105,11 +99,10 @@ try {
 
 	# show trees
 	$docs = @{}
-	foreach($name in $_Task) {
+	foreach($name in $BuildTask) {
 		ShowTaskTree $tasks[$name] $docs
 	}
 }
-catch {
-	if ($_.InvocationInfo.ScriptName -ne $MyInvocation.MyCommand.Path) {throw}
-	$PSCmdlet.ThrowTerminatingError($_)
-}
+
+Set-Alias *What ShowBuildTree
+Invoke-Build $_Task $_File @_Parameters -WhatIf

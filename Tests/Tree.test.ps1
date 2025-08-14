@@ -79,8 +79,8 @@ task CyclicReference {
 		task . task1
 	}
 
-	($r = try {Show-BuildTree . z.ps1} catch {$_})
-	assert ("$r" -like "Task 'task2': Cyclic reference to 'task1'.*At *z.ps1:3 *")
+	try { throw Show-BuildTree . z.ps1 }
+	catch { ($r = "$_"); assert ($r -like "Task 'task2': Cyclic reference to 'task1'.*At *z.ps1:3 *") }
 
 	Remove-Item z.ps1
 }
@@ -92,16 +92,16 @@ task MissingReference {
 		task . task1, {}
 	}
 
-	($r = try {Show-BuildTree . z.ps1} catch {$_})
-	assert ("$r" -like "Task 'task1': Missing task 'missing'.*At *z.ps1:2 *")
+	try { throw Show-BuildTree . z.ps1 }
+	catch { ($r = "$_"); assert ($r -like "Task 'task1': Missing task 'missing'.*At *z.ps1:2 *") }
 
 	Remove-Item z.ps1
 }
 
 # Synopsis: Test missing task.
 task MissingTask {
-	($r = try {Show-BuildTree missing} catch {$_})
-	equals "$r" "Missing task 'missing'."
+	try { throw Show-BuildTree missing $BuildFile }
+	catch { ($r = "$_"); equals $r "File '$BuildFile': Missing task 'missing'." }
 }
 
 # Synopsis: Test -Parameters.

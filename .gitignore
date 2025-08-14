@@ -1,7 +1,8 @@
 .vscode/
 z/
+*.build.ps1.clixml
 *.clixml
-*.htm
+*.html
 *.log
 *.nupkg
 Help.xml

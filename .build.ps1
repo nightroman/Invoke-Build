@@ -30,13 +30,13 @@ $ProgressPreference = 0
 # Synopsis: Convert markdown files to HTML.
 # <http://johnmacfarlane.net/pandoc/>
 task markdown {
-	function Convert-Markdown($Name) {pandoc.exe --standalone --from=gfm "--output=$Name.htm" "--metadata=pagetitle=$Name" "$Name.md"}
+	function Convert-Markdown($Name) {pandoc.exe --standalone --from=gfm "--output=$Name.html" "--metadata=pagetitle=$Name" "$Name.md"}
 	exec { Convert-Markdown README }
 }
 
 # Synopsis: Remove temp files.
 task clean {
-	remove z, *\z, *\z.*, README.htm, Invoke-Build.*.nupkg, Tests\New-VSCodeTask\.vscode\tasks.json
+	remove z, *\z, *\z.*, README.html, Invoke-Build.*.nupkg, Tests\New-VSCodeTask\.vscode\tasks.json
 	remove ib\bin, ib\obj, ib\ib.*.nupkg
 }
 
@@ -67,7 +67,7 @@ task module version, markdown, help, {
 		'Help.xml'
 		'Resolve-MSBuild.ps1'
 		'Show-TaskHelp.ps1'
-		'README.htm'
+		'README.html'
 		'LICENSE'
 	)
 
@@ -101,7 +101,7 @@ task module version, markdown, help, {
 "@)
 
 	# test line endings
-	(Get-ChildItem $dir -Recurse -File -Exclude *.xml, *.htm).ForEach{
+	(Get-ChildItem $dir -Recurse -File -Exclude *.xml, *.html).ForEach{
 		assert (!(Get-Content $_ -Raw).Contains("`r")) "Unexpected line ending CR: $_"
 	}
 }

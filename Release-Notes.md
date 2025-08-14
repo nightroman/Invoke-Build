@@ -1,4 +1,20 @@
 # Invoke-Build Release Notes
+[issues]: https://github.com/nightroman/Invoke-Build/issues
+
+## v5.14.16
+
+`requires` (`Test-BuildAsset`) uses `ValidateNotNullOrEmpty` , #238\
+*Potentially but unlikely breaking, see the issue.*
+
+Removed undocumented alias `Show-TaskHelp`.\
+Use `Invoke-Build -WhatIf` or `Show-TaskHelp.ps1`.\
+*Breaking if the undocumented alias was used.*
+
+Simplified `Show-BuildTree.ps1`, #236
+
+Improved "Missing task" errors, #237
+
+Added more details to `about_InvokeBuild.help.txt`.
 
 ## v5.14.15
 

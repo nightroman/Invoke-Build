@@ -94,28 +94,29 @@ task PropertyEnvironment {
 
 task NullArgument1 {
 	try { throw requires -Variable $null }
-	catch { assert ($_ -like '*The argument is null.*') }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Variable'. The argument is null or empty.*") }
 
 	try { throw requires -Environment $null }
-	catch { assert ($_ -like '*The argument is null.*') }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Environment'. The argument is null or empty.*") }
 
 	try { throw requires -Property $null }
-	catch { assert ($_ -like '*The argument is null.*') }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Property'. The argument is null or empty.*") }
 
 	try { throw requires -Path $null }
-	catch { assert ($_ -like '*The argument is null.*') }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Path'. The argument is null or empty.*") }
 }
 
+#! Mind Core/Desktop diff messages.
 task NullArgument2 {
 	try { throw requires -Variable host, $null }
-	catch { assert ("Invalid empty 'Variable'." -eq $_) }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Variable'. The argument is null* empty*") }
 
 	try { throw requires -Environment path, $null }
-	catch { assert ("Invalid empty 'Environment'." -eq $_) }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Environment'. The argument is null* empty*") }
 
 	try { throw requires -Property host, $null }
-	catch { assert ("Invalid empty 'Property'." -eq $_) }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Property'. The argument is null* empty*") }
 
 	try { throw requires -Path ., $null }
-	catch { assert ("Invalid empty 'Path'." -eq $_) }
+	catch { assert ($_ -like "Cannot validate argument on parameter 'Path'. The argument is null* empty*") }
 }

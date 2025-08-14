@@ -1,10 +1,10 @@
 ﻿<#
 .Synopsis
-	Test Extends, Show-TaskHelp, Invoke-Build -WhatIf.
+	Test Extends, Show-TaskHelp.ps1, Invoke-Build -WhatIf.
 
 .Description
 	2025-05-25-1251 MoreTask1 deliberately omits known used parameters and environment in comments.
-	But `Show-TaskHelp` and `Invoke-Build -WhatIf` should discover them by BaseTask1.
+	But `Show-TaskHelp.ps1` and `Invoke-Build -WhatIf` should discover them by BaseTask1.
 	- Base1, Base2, BaseEnv ~ BaseTask1 help
 	- More1, More2 ~ code
 	- MoreX, MoreEnv ~ comment
@@ -50,7 +50,7 @@ task ShowHelp {
 }
 
 # More1 and More2 are not shown, -NoCode.
-# Cover default parameters // v5.14.1 Show-TaskHelp recalls itself by IB
+# Cover default parameters // v5.14.1 Show-TaskHelp.ps1 recalls itself by IB
 task ShowHelpNoCode {
 	$r = Show-TaskHelp.ps1 MoreTask1 $DemoRoot\Multilevel\More\More.build.ps1 -NoCode -Format {$args[0]}
 	$r = $r.Parameters.ForEach('name') -join '//'

@@ -22,6 +22,9 @@ param(
 )
 
 dynamicparam {
+trap {*Die $_ 5}
+function *Die($M, $C=0) {$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))}
+
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
 Set-Alias exec Invoke-BuildExec
@@ -30,11 +33,9 @@ Set-Alias remove Remove-BuildItem
 Set-Alias requires Test-BuildAsset
 Set-Alias task Add-BuildTask
 Set-Alias use Use-BuildAlias
-Set-Alias Invoke-Build ($_ = $MyInvocation.MyCommand.Path)
-$_ = Split-Path $_
-Set-Alias Show-TaskHelp (Join-Path $_ Show-TaskHelp.ps1)
-Set-Alias Build-Parallel (Join-Path $_ Build-Parallel.ps1)
-Set-Alias Resolve-MSBuild (Join-Path $_ Resolve-MSBuild.ps1)
+Set-Alias Invoke-Build ([System.IO.Path]::Combine($PSScriptRoot, 'Invoke-Build.ps1'))
+Set-Alias Build-Parallel ([System.IO.Path]::Combine($PSScriptRoot, 'Build-Parallel.ps1'))
+Set-Alias Resolve-MSBuild ([System.IO.Path]::Combine($PSScriptRoot, 'Resolve-MSBuild.ps1'))
 
 #.ExternalHelp Help.xml
 function Add-BuildTask(
@@ -239,27 +240,26 @@ function Set-BuildHeader([Parameter()][scriptblock]$Script) {
 
 #.ExternalHelp Help.xml
 function Test-BuildAsset(
-	[ValidateNotNull()][string[]][Parameter(Position=0)]$Variable,
-	[ValidateNotNull()][string[]]$Environment,
-	[ValidateNotNull()][string[]]$Property,
-	[ValidateNotNull()][string[]]$Path
+	[ValidateNotNullOrEmpty()][string[]][Parameter(Position=0)]$Variable,
+	[ValidateNotNullOrEmpty()][string[]]$Environment,
+	[ValidateNotNullOrEmpty()][string[]]$Property,
+	[ValidateNotNullOrEmpty()][string[]]$Path
 ) {
+	${*v} = $Variable
+	${*e} = $Environment
+	${*p} = $Property
+	${*f} = $Path
 	Remove-Variable Variable, Environment, Property, Path
-	function *get($p, $n) {
-		if ($_ = $p[$n]) {
-			$_ | .{process{if ($_) {$_} else {*Die "Invalid empty '$n'."}}}
-		}
-	}
-	foreach($_ in *get $PSBoundParameters Variable) {
+	foreach($_ in ${*v}) {
 		if ($null -eq ($$ = $PSCmdlet.GetVariableValue($_)) -or '' -eq $$) {*Die "Missing variable '$_'." 13}
 	}
-	foreach($_ in *get $PSBoundParameters Environment) {
+	foreach($_ in ${*e}) {
 		if (!([Environment]::GetEnvironmentVariable($_))) {*Die "Missing environment variable '$_'." 13}
 	}
-	foreach($_ in *get $PSBoundParameters Property) {
+	foreach($_ in ${*p}) {
 		if ('' -eq (Get-BuildProperty $_ '')) {*Die "Missing property '$_'." 13}
 	}
-	foreach($_ in *get $PSBoundParameters Path) {
+	foreach($_ in ${*f}) {
 		if (!(Test-Path -LiteralPath $_)) {*Die "Missing path '$_'." 13}
 	}
 }
@@ -305,10 +305,6 @@ function Write-Build([ConsoleColor]$Color, [string]$Text) {
 	*Write $Color ($Text -split '\r\n|[\r\n]')
 }
 
-function *Die($M, $C=0) {
-	$PSCmdlet.ThrowTerminatingError((New-Object System.Management.Automation.ErrorRecord ([Exception]"$M"), $null, $C, $null))
-}
-
 function *Msg($M, $I) {
 	"$M`n$(*At $I)"
 }
@@ -345,10 +341,8 @@ else {
 	}
 }
 
+### init
 if ($MyInvocation.InvocationName -eq '.') {return}
-trap {*Die $_ 5}
-
-#!! init
 ${private:*p} = if ($_ = $PSCmdlet.SessionState.PSVariable.Get('*')) {if ($_.Description -eq 'IB') {$_.Value}}
 New-Variable * -Description IB ([PSCustomObject]@{
 	All = [ordered]@{}
@@ -422,7 +416,7 @@ elseif (!($BuildFile = Get-BuildFile ${*}.CD)) {
 }
 ${*}.File = $BuildFile
 
-#!! param
+### param
 function *DP($FS, $PX, $BR) {
 	if (!($p = (Get-Command $FS -ErrorAction 1).Parameters)) {throw & $FS}
 	$b = *BB $FS $PX $BR
@@ -503,7 +497,7 @@ function *Check($J, $T, $P=@()) {
 		$_ = $_.TrimStart('?')
 		if (!($r = ${*}.All[$_])) {
 			$_ = "Missing task '$_'."
-			*Fin $(if ($T) {*Msg "Task '$($T.Name)': $_" $T} else {$_}) 5
+			*Fin $(if ($T) {*Msg "Task '$($T.Name)': $_" $T} else {"File '$BuildFile': $_"}) 5
 		}
 		if ($r -in $P) {
 			*Fin (*Msg "Task '$($T.Name)': Cyclic reference to '$_'." $T) 5
@@ -749,7 +743,7 @@ function *Unsafe($N, $J) {
 }
 
 function *What {
-	Show-TaskHelp
+	& $PSScriptRoot/Show-TaskHelp.ps1
 }
 
 $ErrorActionPreference = 1
@@ -768,7 +762,7 @@ try {
 		exit
 	}
 
-	#!! load
+	### load
 	New-Variable Task @{Name = $BuildFile} -Option Constant
 	${*p} = @(foreach($_ in ${*}.DP.get_Values()) {if ($_.IsSet) {$_}})
 	${private:**} = @(
@@ -838,7 +832,7 @@ try {
 		}
 	}
 
-	#!! build
+	### build
 	${*}.A = 0
 	try {
 		foreach($_ in ${*}.BB) {

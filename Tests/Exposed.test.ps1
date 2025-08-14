@@ -32,7 +32,6 @@ property
 remove
 requires
 Resolve-MSBuild
-Show-TaskHelp
 task
 use
 '@ -split '\r?\n'

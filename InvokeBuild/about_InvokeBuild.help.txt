@@ -22,21 +22,33 @@ LONG DESCRIPTION
     Import the installed module:
 
         Import-Module InvokeBuild
+        $ModuleBase = (Get-Module InvokeBuild).ModuleBase # for help
 
     Or import from the specified location:
 
-        Import-Module <path>\InvokeBuild.psd1
+        $ModuleBase = <folder with Invoke-Build.ps1> # for import and help
+        Import-Module $ModuleBase
 
-    Get help for the engine:
+    Get help for Invoke-Build and see available build commands:
 
-        help <path>\Invoke-Build.ps1 -full
+        help $ModuleBase\Invoke-Build.ps1 -full
 
     Get help for build commands:
 
-        . <path>\Invoke-Build.ps1
+        . $ModuleBase\Invoke-Build.ps1
         help task -full
         help exec -full
         ...
 
-    The package contains the build engine with a few helpers, all you need
-    for running build scripts. There are various related tools, see README.
+HELPER SCRIPTS
+
+    The helper scripts Resolve-MSBuild.ps1 and Show-TaskHelp.ps1 are included
+    to the package but not exposed as aliases. Call them directly. Either add
+    the folder to the path or use the folder path $ModuleBase, see above.
+
+MORE HELPERS
+
+    The repository provides more helper scripts and tools, see README.
+    On Windows you can open README.html from the package like this:
+
+        Invoke-Item $ModuleBase\README.html

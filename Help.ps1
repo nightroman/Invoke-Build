@@ -252,7 +252,7 @@
 '@
 		WhatIf = @'
 		Tells to show tasks and jobs to be invoked and some analysis of used
-		parameters and environment variables. See Show-TaskHelp for details.
+		parameters and environment variables. See Show-TaskHelp.ps1 for more.
 
 		If a script does anything but adding tasks then it should check for
 		$WhatIf and skip actions on true. Consider using Enter-Build instead.
