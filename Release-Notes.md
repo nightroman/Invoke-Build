@@ -1,5 +1,6 @@
 # Invoke-Build Release Notes
-[issues]: https://github.com/nightroman/Invoke-Build/issues
+
+[Issues](https://github.com/nightroman/Invoke-Build/issues) [Releases](https://github.com/nightroman/Invoke-Build/releases) [Discussions](https://github.com/nightroman/Invoke-Build/discussions)
 
 ## v5.14.16
 
