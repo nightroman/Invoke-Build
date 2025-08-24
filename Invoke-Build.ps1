@@ -61,8 +61,16 @@ function Add-BuildTask(
 	}
 	if ($Name[0] -eq '?') {throw 'Invalid task name.'}
 	$B1 = ${*}.B1
-	$PX = $B1.PX
-	if ($PX -and !$Name.Contains('::') -and $Name -ne '.') {$Name = $PX+$Name}
+	if ($PX = $B1.PX) {
+		filter PX {
+			$r = $_.TrimStart('?')
+			if (!$r.Contains('::') -and $r -ne '.' -and !${*}.All[$r]) {$r = $PX+$r}
+			if ($_[0] -eq '?') {"?$r"} else {$r}
+		}
+		$Name = $Name | PX
+		if ($After) {$After = $After | PX}
+		if ($Before) {$Before = $Before | PX}
+	}
 	if ($_ = ${*}.All[$Name]) {
 		${*}.Redefined += $_
 		${*}.All.Remove($Name)
@@ -84,17 +92,15 @@ function Add-BuildTask(
 		InvocationInfo = $Source
 		B1 = $B1
 	}
-	if (!$Jobs) {return}
-	$2 = @()
-	foreach($j in $Jobs) {
+	if ($Jobs) {$2 = @(); foreach($j in $Jobs) {
 		$r, $s = *Job $j
 		if ($r -is [string]) {
-			if ($PX -and !$r.Contains('::') -and $r -ne '.' -and (!($t = ${*}.All[$r]) -or $t.B1 -eq $B1)) {$r = $PX+$r}
+			if ($PX) {$r = $r | PX}
 			if ($r -in $2) {${*}.Doubles += ,($Name, $r)} else {$2 += $r}
 			if ($s) {$r = "?$r"}
 		}
 		$1.Add($r)
-	}
+	}}
 }
 
 #.ExternalHelp Help.xml
