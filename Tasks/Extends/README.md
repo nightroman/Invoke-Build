@@ -5,7 +5,7 @@
 - [Special parameter "Extends"](#special-parameter-extends)
 - [Inheritance vs dot-sourcing](#inheritance-vs-dot-sourcing)
 - [Shared build parameters](#shared-build-parameters)
-- [Renamed build tasks](#renamed-build-tasks)
+- [Extending with prefix](#extending-with-prefix)
 - [Build roots](#build-roots)
 - [Examples](#examples)
     - [Building FarNet Showcase](#building-farnet-showcase)
@@ -86,11 +86,11 @@ name wins, i.e. becomes the root script dynamic parameter.
 
 Examples below use the same parameter `Configuration` and show subtleties.
 
-## Renamed build tasks
+## Extending with prefix
 
-Build scripts in the inheritance tree are expected to have tasks with same
-names, e.g. `Build`, `Clean`, `Test`, etc. Tasks may be optionally renamed
-with prefixes, to avoid collisions or just for clarity.
+Scripts in the inheritance tree are expected to have tasks with same names,
+e.g. `Build`, `Clean`, `Test`, etc. Tasks may be renamed with prefixes, to
+avoid collisions or for clarity.
 
 In order to rename inherited tasks with a custom prefix, `ValidateScript` of
 `Extends` should return the script path with this prefix separated by `::`.
@@ -99,21 +99,38 @@ For example, the path `"main::.\src\.build.ps1"` tells to extend the script
 `.\src\.build.ps1` and rename its tasks using the prefix `main::`, so that
 the original task `Build` becomes `main::Build`.
 
-Tasks with existing prefixes, i.e. names containing `::` are not renamed.
-The idea is having some tasks with known stable names used as common in
-extended scripts.
+### Not renamed tasks
 
-## The default task
+**Already added tasks**
 
-By design, special dot-tasks (default tasks) are not renamed when `Extends`
-specifies prefixes. When several scripts add dot-tasks, each new redefines
-old, so that the last added dot-task becomes the build default.
+A task `X` is not renamed on adding if another task named `X` is already added
+(another script with `X` is extended without a prefix). In this case the new
+task `X` redefines the old.
 
-"Redefined task ..." messages are omitted for dot-tasks, these tasks are
-expected to be redefined.
+> [!NOTE]
+> Extending without a prefix is not recommended as such, unless a script is
+designed as a common tasks library.
 
-Avoid referencing dot-tasks by other tasks.
-Default tasks should be treated as volatile.
+**Tasks with prefixes**
+
+Tasks with `::` in names are not renamed. The idea is having some tasks with
+known stable names, regardless of extending their script with a prefix or not.
+
+> [!NOTE]
+> This is yet another way to design a script as a common task library, to name
+its tasks with some prefix right away.
+
+**The default task**
+
+The dot-task (default) is not renamed. When several scripts add dot-tasks, each
+new redefines old, so that the last added dot-task becomes the build default.
+
+"Redefined task" messages are omitted for dot-tasks, these tasks are expected
+to be redefined.
+
+> [!NOTE]
+> Avoid referencing dot-tasks by other tasks. Default tasks should be treated as
+volatile.
 
 ## Build roots
 
