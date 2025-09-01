@@ -2,6 +2,10 @@
 
 [Issues](https://github.com/nightroman/Invoke-Build/issues) [Releases](https://github.com/nightroman/Invoke-Build/releases) [Discussions](https://github.com/nightroman/Invoke-Build/discussions)
 
+## v5.14.18
+
+Add `Write-Build` alias `print`, #240
+
 ## v5.14.17
 
 Apply `Extends` prefixes to `After` and `Before` references, #239

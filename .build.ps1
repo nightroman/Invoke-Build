@@ -58,7 +58,7 @@ task module version, markdown, help, {
 
 	# copy the module folder
 	$dir = "$BuildRoot\z\InvokeBuild"
-	Copy-Item InvokeBuild $dir -Recurse
+	Copy-Item Content $dir -Recurse
 
 	# copy files without Invoke-Build.ps1
 	Copy-Item -Destination $dir $(
@@ -88,6 +88,9 @@ task module version, markdown, help, {
 	Description = 'Build and test automation in PowerShell'
 	PowerShellVersion = '3.0'
 	AliasesToExport = 'Invoke-Build', 'Build-Checkpoint', 'Build-Parallel'
+	VariablesToExport = @()
+	FunctionsToExport = @()
+	CmdletsToExport = @()
 	PrivateData = @{
 		PSData = @{
 			Tags = 'Build', 'Test', 'Automation'

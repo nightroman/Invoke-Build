@@ -28,6 +28,7 @@ function *Die($M, $C=0) {$PSCmdlet.ThrowTerminatingError((New-Object System.Mana
 Set-Alias assert Assert-Build
 Set-Alias equals Assert-BuildEquals
 Set-Alias exec Invoke-BuildExec
+Set-Alias print Write-Build
 Set-Alias property Get-BuildProperty
 Set-Alias remove Remove-BuildItem
 Set-Alias requires Test-BuildAsset
@@ -373,8 +374,8 @@ New-Variable * -Description IB ([PSCustomObject]@{
 	B = 0
 	Q = 0
 	H = @{}
-	Header = if (${*p}) {${*p}.Header} else {{Write-Build 11 "Task $($args[0])"}}
-	Footer = if (${*p}) {${*p}.Footer} else {{Write-Build 11 "Done $($args[0]) $($Task.Elapsed)"}}
+	Header = if (${*p}) {${*p}.Header} else {{print 11 "Task $($args[0])"}}
+	Footer = if (${*p}) {${*p}.Footer} else {{print 11 "Done $($args[0]) $($Task.Elapsed)"}}
 	Data = @{}
 	XBuild = $null
 	XCheck = $null
@@ -515,8 +516,8 @@ function *Check($J, $T, $P=@()) {
 function *Echo {
 	${*c} = $args[0]
 	${*t} = "${*c}".Replace("`t", '    ')
-	Write-Build 3 "exec {$(if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {"$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n"} else {${*t}})}"
-	Write-Build 8 "cd $global:pwd"
+	print 3 "exec {$(if (${*t} -match '((?:\r\n|[\r\n]) *)\S') {"$(${*t}.TrimEnd().Replace($matches[1], "`n    "))`n"} else {${*t}})}"
+	print 8 "cd $global:pwd"
 	foreach(${*v} in ${*c}.Ast.FindAll({$args[0] -is [System.Management.Automation.Language.VariableExpressionAst]}, $true)) {
 		${*p} = ${*v}.Parent
 		if (${*p} -is [System.Management.Automation.Language.MemberExpressionAst]) {
@@ -525,14 +526,14 @@ function *Echo {
 		}
 		if (${*v}.Parent -isnot [System.Management.Automation.Language.AssignmentStatementAst]) {
 			${*t} = "${*v}" -replace '^@', '$'
-			Write-Build 8 "${*t}: $(& ([scriptblock]::Create(${*t})))"
+			print 8 "${*t}: $(& ([scriptblock]::Create(${*t})))"
 		}
 	}
 }
 
 function *Err($T) {
 	${*}.Errors.Add([PSCustomObject]@{Error = $_; File = $BuildFile; Task = $T})
-	Write-Build 12 "ERROR: $(if (*My) {$_} else {*Msg $_ $_})"
+	print 12 "ERROR: $(if (*My) {$_} else {*Msg $_ $_})"
 	if ($T) {$T.Error = $_}
 }
 
@@ -639,7 +640,7 @@ function *Task {
 	New-Variable Task (${*}.Task = ${*}.All[${*n}]) -Option Constant
 
 	if ($Task.Elapsed) {
-		Write-Build 8 "Done ${*p}"
+		print 8 "Done ${*p}"
 		return
 	}
 
@@ -652,14 +653,14 @@ function *Task {
 		}
 		catch {
 			*Err $Task
-			Write-Build 8 (*At $Task)
+			print 8 (*At $Task)
 			${*}.Tasks.Add($Task)
 			$Task.Elapsed = [TimeSpan]::Zero
 			throw
 		}
 	}
 	if (!${*x}) {
-		Write-Build 8 "Task ${*p} skipped."
+		print 8 "Task ${*p} skipped."
 		return
 	}
 
@@ -687,7 +688,7 @@ function *Task {
 					*Err $Task
 					throw
 				}
-				Write-Build 8 ${*i}[1]
+				print 8 ${*i}[1]
 			}
 			if (${*i}[0]) {
 				continue
@@ -716,7 +717,7 @@ function *Task {
 			}
 			catch {
 				*Err $Task
-				Write-Build 8 (*At $Task)
+				print 8 (*At $Task)
 				throw
 			}
 			finally {
@@ -828,9 +829,9 @@ try {
 		exit
 	}
 
-	Write-Build 11 "Build $($BuildTask -join ', ') $BuildFile"
+	print 11 "Build $($BuildTask -join ', ') $BuildFile"
 	foreach($_ in ${*}.Redefined) {
-		if (($_ = $_.Name) -ne '.') {Write-Build 8 "Redefined task '$_'."}
+		if (($_ = $_.Name) -ne '.') {print 8 "Redefined task '$_'."}
 	}
 	foreach($_ in ${*}.Doubles) {
 		if (${*}.All[$_[1]].If -isnot [scriptblock]) {
@@ -882,18 +883,18 @@ finally {
 		$t = ${*}.Tasks
 		$e = ${*}.Errors
 		if (${*}.Summary) {
-			Write-Build 11 'Build summary:'
+			print 11 'Build summary:'
 			foreach($_ in $t) {
 				'{0,-16} {1} - {2}:{3}' -f $_.Elapsed, $_.Name, $_.InvocationInfo.ScriptName, $_.InvocationInfo.ScriptLineNumber
 				if ($_ = $_.Error) {
-					Write-Build 12 "ERROR: $(if (*My) {$_} else {*Msg $_ $_})"
+					print 12 "ERROR: $(if (*My) {$_} else {*Msg $_ $_})"
 				}
 			}
 		}
 		if ($w = ${*}.Warnings) {
 			foreach($_ in $w) {
 				"WARNING: $(if ($_.Task) {"/$($_.Task.Name) "})$($_.InvocationInfo.ScriptName):$($_.InvocationInfo.ScriptLineNumber)"
-				Write-Build 14 $_.Message
+				print 14 $_.Message
 			}
 		}
 		if ($_ = ${*}.P) {
@@ -906,7 +907,7 @@ finally {
 		elseif ($e) {14, 'Build completed with errors'}
 		elseif ($w) {14, 'Build succeeded with warnings'}
 		else {10, 'Build succeeded'}
-		Write-Build $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings $((${*}.Elapsed = [DateTime]::Now - ${*}.Started))"
+		print $c "$m. $($t.Count) tasks, $($e.Count) errors, $($w.Count) warnings $((${*}.Elapsed = [DateTime]::Now - ${*}.Started))"
 	}
 }
 }

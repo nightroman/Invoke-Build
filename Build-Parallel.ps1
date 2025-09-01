@@ -133,7 +133,7 @@ try {
 			$work = $works[$iWork++]
 			$stage.Add($work)
 
-			Write-Build Cyan "Start $($work.Title)"
+			print Cyan "Start $($work.Title)"
 			$work.Job = $work.PS.BeginInvoke()
 		}
 		if (!$stage) {break}
@@ -169,7 +169,7 @@ try {
 
 	### finish works
 	foreach($work in $works) {
-		Write-Build Cyan "Build $($work.Title):"
+		print Cyan "Build $($work.Title):"
 
 		### get error and dispose
 		$runtime = $false
@@ -223,16 +223,16 @@ try {
 
 		### result
 		if ($_) {
-			Write-Build Cyan "Build $($work.Title) FAILED."
+			print Cyan "Build $($work.Title) FAILED."
 			$_ = if ($_ -is [System.Management.Automation.ErrorRecord] -and $runtime) {*Msg $_ $_} else {"$_"}
-			Write-Build Red "ERROR: $_"
+			print Red "ERROR: $_"
 			$failures += @{
 				File = $work.Title
 				Error = $_
 			}
 		}
 		else {
-			Write-Build Cyan "Build $($work.Title) succeeded."
+			print Cyan "Build $($work.Title) succeeded."
 		}
 	}
 
@@ -263,7 +263,7 @@ finally {
 	elseif ($warnings) {14, 'Builds succeeded with warnings'}
 	else {10, 'Builds succeeded'}
 
-	Write-Build $color @"
+	print $color @"
 Tasks: $($info.Tasks.Count) tasks, $errors errors, $warnings warnings
 $text. $($Build.Count) builds, $($failures.Count) failed $($info.Elapsed)
 "@

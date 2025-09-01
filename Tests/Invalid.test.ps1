@@ -32,7 +32,7 @@ task NoTasks {
 	$e = 0
 	($r = try {Invoke-Build . {} -Result result} catch {$e = $_})
 	$r = Remove-Ansi $r
-	Write-Build Magenta ($e | Out-String)
+	print Magenta ($e | Out-String)
 
 	# caught error
 	assert ($e.CategoryInfo.Category -eq 'InvalidData')

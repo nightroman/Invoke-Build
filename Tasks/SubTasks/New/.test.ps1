@@ -1,6 +1,4 @@
 
-if ($PSVersionTable.PSVersion.Major -lt 5) { return task forV5x }
-
 # top level task
 task test_root {
 	($r = Invoke-Build root -RootParam1 RootParam1)

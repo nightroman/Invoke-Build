@@ -191,39 +191,39 @@ function Add-TaskVariable($Jobs) {
 }
 
 function Format-TaskHelp($TaskHelp) {
-	Write-Build White Task:
+	print White Task:
 	foreach($r in $TaskHelp.Task) {
 		if ($synopsis = $r.Synopsis) {
-			Write-Build Gray ('    {0} - {1}' -f $r.Name, $synopsis)
+			print Gray ('    {0} - {1}' -f $r.Name, $synopsis)
 		}
 		else {
-			Write-Build Gray ('    {0}' -f $r.Name)
+			print Gray ('    {0}' -f $r.Name)
 		}
 	}
 
-	Write-Build White Jobs:
+	print White Jobs:
 	foreach($r in $TaskHelp.Jobs) {
 		if ($synopsis = Get-BuildSynopsis ($All[$r.Name]) $Hash) {
-			Write-Build Gray ('    {0} - {1} At {2}' -f $r.Name, $synopsis, $r.Location)
+			print Gray ('    {0} - {1} At {2}' -f $r.Name, $synopsis, $r.Location)
 		}
 		else {
-			Write-Build Gray ('    {0} - At {1}' -f $r.Name, $r.Location)
+			print Gray ('    {0} - At {1}' -f $r.Name, $r.Location)
 		}
 	}
 
 	if ($TaskHelp.Parameters) {
-		Write-Build White Parameters:
+		print White Parameters:
 		foreach($p in $TaskHelp.Parameters) {
-			Write-Build Gray ('    [{0}] {1}' -f $p.Type, $p.Name)
+			print Gray ('    [{0}] {1}' -f $p.Type, $p.Name)
 			if ($p.Description) {
-				Write-Build Gray ('        {0}' -f $p.Description)
+				print Gray ('        {0}' -f $p.Description)
 			}
 		}
 	}
 
 	if ($TaskHelp.Environment) {
-		Write-Build White Environment:
-		Write-Build Gray ('    {0}' -f ($TaskHelp.Environment -join ', '))
+		print White Environment:
+		print Gray ('    {0}' -f ($TaskHelp.Environment -join ', '))
 	}
 }
 

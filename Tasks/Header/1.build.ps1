@@ -4,17 +4,17 @@
 Set-BuildHeader {
 	param($Path)
 	# separator line
-	Write-Build Green ('=' * 79)
+	print Green ('=' * 79)
 	# default header + synopsis
-	Write-Build Green "Task $Path : $(Get-BuildSynopsis $Task)"
+	print Green "Task $Path : $(Get-BuildSynopsis $Task)"
 	# task location in a script
-	Write-Build Green "At $($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
+	print Green "At $($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
 }
 
 # Define footers similar to default but change the color to DarkGray.
 Set-BuildFooter {
 	param($Path)
-	Write-Build DarkGray "Done $Path, $($Task.Elapsed)"
+	print DarkGray "Done $Path, $($Task.Elapsed)"
 }
 
 # Synopsis: Some task description 1.

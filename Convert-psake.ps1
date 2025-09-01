@@ -177,7 +177,7 @@ Set-Alias TaskTearDown Write-TaskTearDown
 function Write-FormatTaskName([string]$format) {
 	$format = $format.Replace("'", "''")
 	'# TODO: Custom task headers, see the repository Tasks/Header for details.'
-	"Set-BuildHeader { param(`$Path) Write-Build Cyan ('$format' -f `$Path) }"
+	"Set-BuildHeader { param(`$Path) print Cyan ('$format' -f `$Path) }"
 }
 
 function Write-Property([scriptblock]$properties) {

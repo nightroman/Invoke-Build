@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Import a build and set build blocks.
@@ -11,7 +10,7 @@ Invoke-Build Test {
 	# set build block
 	Set-BuildHeader {
 		param($Path)
-		Write-Build Cyan "Task $Path"
-		Write-Build Magenta "# Synopsis: $(Get-BuildSynopsis $Task)"
+		print Cyan "Task $Path"
+		print Magenta "# Synopsis: $(Get-BuildSynopsis $Task)"
 	}
 }

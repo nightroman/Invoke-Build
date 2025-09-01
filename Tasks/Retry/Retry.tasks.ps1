@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Defines the custom task "retry" and the function "Invoke-RetryAction".
@@ -99,7 +98,7 @@ function Invoke-RetryAction(
 			if (${*RetryTimeout} -gt 0 -and ${*time}.Elapsed.TotalSeconds -gt ${*RetryTimeout}) {throw}
 
 			# wait and retry
-			Write-Build Yellow "$($Task.Name) error: $_"
+			print Yellow "$($Task.Name) error: $_"
 			"Waiting for ${*RetryInterval} seconds..."
 			Start-Sleep -Seconds ${*RetryInterval}
 			"Retrying..."

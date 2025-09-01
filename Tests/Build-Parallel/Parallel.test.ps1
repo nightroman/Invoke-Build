@@ -67,7 +67,7 @@ task Many {
 	}
 	catch {
 		$message = "$_"
-		Write-Build Magenta $message
+		print Magenta $message
 	}
 
 	# Joined results
@@ -116,7 +116,7 @@ task Timeout {
 	catch {
 		$message = "$_"
 	}
-	Write-Build Magenta $message
+	print Magenta $message
 
 	# Check the error message.
 	assert ((Format-LF $message) -like (Format-LF @'

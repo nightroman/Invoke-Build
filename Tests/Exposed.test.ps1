@@ -3,7 +3,6 @@
 	Exposed aliases, functions, variables.
 #>
 
-if ($PSVersionTable.PSVersion.Major -lt 5) {return task forV5x}
 Import-Module .\Tools
 
 # Synopsis: Invoke-Build should expose only documented aliases.
@@ -28,6 +27,7 @@ Build-Parallel
 equals
 exec
 Invoke-Build
+print
 property
 remove
 requires

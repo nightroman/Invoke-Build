@@ -1,5 +1,4 @@
-﻿if ($PSVersionTable.PSVersion.Major -eq 2) {return task skipV2}
-
+﻿
 # Default task of case1 with default parameters.
 task case1 {
 	($r = Invoke-Build -Case case1)

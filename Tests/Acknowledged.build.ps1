@@ -27,7 +27,7 @@ task footer_lost_color_workaround {
 
 # Synopsis: Some colored output for other tests.
 task output_with_color {
-	Write-Build Magenta 'Output from output_with_color'
+	print Magenta 'Output from output_with_color'
 }
 
 # Synopsis: Colored output of a build started by Start-Job.

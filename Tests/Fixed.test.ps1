@@ -501,7 +501,7 @@ task OriginalLocation {
 }
 
 # Issue #185, pass the job in *-BuildJob
-task JobAttributes -if ($PSVersionTable.PSVersion.Major -ge 5) {
+task JobAttributes {
 	$log = @{log = ''}
 	function Write-Host($text) {
 		$log.log += $text
@@ -510,10 +510,10 @@ task JobAttributes -if ($PSVersionTable.PSVersion.Major -ge 5) {
 	equals $log.log init1init2kill1kill2
 }
 
-# Write-Build: render lines separately. #193
+# print: render lines separately. #193
 task WriteAnsi {
 	$text = "line1`rline2`nline3`r`nline4"
-	$r = (Write-Build 0 $text) -join '|'
+	$r = (print 0 $text) -join '|'
 
 	if ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText') {
 		equals $r "`e[30mline1`e[0m|`e[30mline2`e[0m|`e[30mline3`e[0m|`e[30mline4`e[0m"

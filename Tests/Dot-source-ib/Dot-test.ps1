@@ -154,5 +154,5 @@ if (!(Test-Unix)) {
 # Write-Warning works as usual
 Write-Warning 'Ignore this warning.'
 
-# done, use Write-Build
-Write-Build Green Succeeded
+# done
+print Green Succeeded

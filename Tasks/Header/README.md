@@ -10,10 +10,10 @@ and footers as
 
 where `<task-path>` is a task name with its parent (calling) tasks.
 
-The commands `Set-BuildHeader` and `Set-BuildFooter` are used in order to set a
-different format and print additional information like task synopses, locations
-in build scripts, start times, and etc. Colored lines are written by
-`Write-Build`.
+The commands `Set-BuildHeader` and `Set-BuildFooter` are used in order to
+set a different format and print additional information like task synopses,
+locations in build scripts, start times, and etc. Color lines are written by
+`print` (`Write-Build`).
 
 Synopses are defined as the special comments `# Synopsis: ...` before tasks.
 Each synopsis is one line of text with short task description. It is normally

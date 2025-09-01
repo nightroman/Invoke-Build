@@ -104,8 +104,6 @@ task test-fail {
 	try {Invoke-TaskFromISE.ps1} catch {$r = $_}
 	equals "$r" Oops!
 	equals $psISE.Editor.CaretLine ($line + 1)
-	#! v2: 18. Enough to test in v5+.
-	if ($PSVersionTable.PSVersion.Major -ge 5) {
-		equals $psISE.Editor.CaretColumn 13
-	}
+	#! v2: 18
+	equals $psISE.Editor.CaretColumn 13
 }

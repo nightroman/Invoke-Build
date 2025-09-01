@@ -8,8 +8,8 @@ Import-Module .\Tools
 # Define headers as task path, synopsis, and location, e.g. for Ctrl+Click in VSCode
 Set-BuildHeader {
     param($Path)
-    Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
-	Write-Build DarkGray "$($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
+    print Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
+	print DarkGray "$($Task.InvocationInfo.ScriptName):$($Task.InvocationInfo.ScriptLineNumber)"
 }
 
 # Synopsis: Run the sample and test its output.

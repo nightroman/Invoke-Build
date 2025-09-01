@@ -35,6 +35,7 @@
 		assert    (Assert-Build)
 		equals    (Assert-BuildEquals)
 		remove    (Remove-BuildItem)
+		print     (Write-Build)
 		property  (Get-BuildProperty)
 		requires  (Test-BuildAsset)
 		use       (Use-BuildAlias)
@@ -48,7 +49,6 @@
 		Set-BuildFooter
 		Set-BuildHeader
 		Use-BuildEnv
-		Write-Build
 		Write-Warning [1]
 
 	[1] Write-Warning is redefined internally in order to count warnings in
@@ -363,6 +363,7 @@
 		@{ text = 'assert    (Assert-Build)' }
 		@{ text = 'equals    (Assert-BuildEquals)' }
 		@{ text = 'remove    (Remove-BuildItem)' }
+		@{ text = 'print     (Write-Build' }
 		@{ text = 'property  (Get-BuildProperty)' }
 		@{ text = 'requires  (Test-BuildAsset)' }
 		@{ text = 'use       (Use-BuildAlias)' }
@@ -373,7 +374,6 @@
 		@{ text = 'Resolve-MSBuild' }
 		@{ text = 'Set-BuildFooter' }
 		@{ text = 'Set-BuildHeader' }
-		@{ text = 'Write-Build' }
 	)
 }
 
@@ -798,7 +798,7 @@
 		# Headers: print task paths as usual and synopses in addition
 		Set-BuildHeader {
 			param($Path)
-			Write-Build Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
+			print Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
 		}
 
 		# Synopsis: This task prints its own synopsis.
@@ -945,7 +945,7 @@
 	description = @'
 	This build block is used in order to change the default task footer format.
 	Use the automatic variable $Task in order to get the current task data.
-	Use Write-Build in order to write with colors.
+	Use Write-Build (print) in order to write with colors.
 '@
 
 	parameters = @{
@@ -963,7 +963,7 @@
 		# Use the usual footer format but change the color
 		Set-BuildFooter {
 			param($Path)
-			Write-Build DarkGray "Done $Path $($Task.Elapsed)"
+			print DarkGray "Done $Path $($Task.Elapsed)"
 		}
 
 		# Synopsis: Data for footers in addition to $Path and $Task.Elapsed
@@ -978,7 +978,7 @@
 	links = @(
 		@{ text = 'Get-BuildSynopsis' }
 		@{ text = 'Set-BuildHeader' }
-		@{ text = 'Write-Build' }
+		@{ text = 'Write-Build (print)' }
 	)
 }
 
@@ -990,7 +990,7 @@
 	description = @'
 	This build block is used in order to change the default task header format.
 	Use the automatic variable $Task in order to get the current task data.
-	Use Write-Build in order to write with colors.
+	Use Write-Build (print) in order to write with colors.
 '@
 
 	parameters = @{
@@ -1004,7 +1004,7 @@
 		# Headers: write task paths as usual and synopses in addition
 		Set-BuildHeader {
 			param($Path)
-			Write-Build Cyan "Task $Path --- $(Get-BuildSynopsis $Task)"
+			print Cyan "Task $Path --- $(Get-BuildSynopsis $Task)"
 		}
 
 		# Synopsis: Data for headers in addition to $Path and Get-BuildSynopsis
@@ -1019,7 +1019,7 @@
 	links = @(
 		@{ text = 'Get-BuildSynopsis' }
 		@{ text = 'Set-BuildFooter' }
-		@{ text = 'Write-Build' }
+		@{ text = 'Write-Build (print)' }
 	)
 }
 
@@ -1158,7 +1158,7 @@ If it is omitted, the current task or script name is used.
 ### Write-Build
 @{
 	command = 'Write-Build'
-	synopsis = 'Writes text using colors if they are supported.'
+	synopsis = '(print) Writes text using colors if they are supported.'
 
 	description = @'
 	This function is used in order to output colored text in a console or other

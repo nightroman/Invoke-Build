@@ -214,8 +214,8 @@ task StdErrBadCommand {
 
 # Echo properties, #221
 task EchoProperties {
-	Set-Alias Write-Build Write-Build-Fake
-	function Write-Build-Fake($Color, $Text) {$Text}
+	Set-Alias print print2
+	function print2($Color, $Text) {$Text}
 
 	$v1 = '_v1'
 	$v2 = [pscustomobject]@{p1 = '_v2'; p2 = 'bug'}

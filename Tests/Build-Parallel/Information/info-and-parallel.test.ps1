@@ -1,5 +1,4 @@
-﻿if ($PSVersionTable.PSVersion.Major -lt 5) {return task v5}
-
+﻿
 # info is not shown by default
 task default {
 	($r = Invoke-PowerShell -Command 'Build-Parallel @{}' | Out-String)

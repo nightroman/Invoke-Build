@@ -55,7 +55,7 @@ Enter-Build {
 }
 
 # Set custom task headers.
-Set-BuildHeader { Write-Build 11 "Task $($args[0]) *".PadRight(79, '*') }
+Set-BuildHeader { print 11 "Task $($args[0]) *".PadRight(79, '*') }
 
 # Synopsis: "Invoke-Build ?[?]" info tasks.
 # 1) show tasks with brief information

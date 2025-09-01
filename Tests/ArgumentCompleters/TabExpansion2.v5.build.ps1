@@ -15,16 +15,14 @@ task CompleteTask {
 	equals $r markdown
 }
 
+#! ensure both folders and files
 task CompleteFile {
-	Set-Location ..\..
-	($r = Invoke-Complete 'Invoke-Build Test i')
+	Set-Location ..
+	($r = Invoke-Complete 'Invoke-Build Test a')
 
-	$folder1, $folder2, $files = $r
-	equals $folder1 ib
-	equals $folder2 InvokeBuild
-
-	assert ($files.Count -ge 4)
-	foreach($$ in $files) {
-		assert ($$ -like 'i*.ps1')
-	}
+	$1, $2, $3, $4 = $r
+	equals $1 ArgumentCompleters
+	equals $2 Acknowledged.build.ps1
+	equals $3 Alter.test.ps1
+	equals $4 Assert.test.ps1
 }
