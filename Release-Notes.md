@@ -2,6 +2,8 @@
 
 [Issues](https://github.com/nightroman/Invoke-Build/issues) [Releases](https://github.com/nightroman/Invoke-Build/releases) [Discussions](https://github.com/nightroman/Invoke-Build/discussions)
 
+`Show-BuildGraph.ps1` - viz-3.17.0
+
 ## v5.14.18
 
 Add `Write-Build` alias `print`, #240
