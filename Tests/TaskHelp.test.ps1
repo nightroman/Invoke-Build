@@ -68,10 +68,10 @@ task Test {
 # 2024-02-29 v2 started to fail, skip.
 task UndocumentedStuff {
 	# call by WhatIf
-	Invoke-Build -File ../.build.ps1 -WhatIf
+	Invoke-Build -File ../1.build.ps1 -WhatIf
 
 	# test default task call with code
-	$r = Show-TaskHelp.ps1 '' ../.build.ps1 -Format {$args[0]}
+	$r = Show-TaskHelp.ps1 '' ../1.build.ps1 -Format {$args[0]}
 	equals $r.Task.Count 1
 	equals $r.Task[0].Name .
 	equals $r.Task[0].Synopsis 'The default task: make, test, clean.'
@@ -88,7 +88,7 @@ task UndocumentedStuff {
 	equals $r.Environment.Count 0
 
 	# test a task with code and environment variable
-	$r = Show-TaskHelp.ps1 test ../.build.ps1 -Format {$args[0]}
+	$r = Show-TaskHelp.ps1 test ../1.build.ps1 -Format {$args[0]}
 	equals $r.Task.Count 1
 	equals $r.Task[0].Name test
 	equals $r.Task[0].Synopsis 'Test and check expected output.'
@@ -106,7 +106,7 @@ task UndocumentedStuff {
 	equals $r.Environment[0] MERGE
 
 	# call with -NoCode
-	$r = Show-TaskHelp.ps1 test ../.build.ps1 -Format {$args[0]} -NoCode
+	$r = Show-TaskHelp.ps1 test ../1.build.ps1 -Format {$args[0]} -NoCode
 	equals $r.Parameters.Count 0
 	equals $r.Environment.Count 0
 }

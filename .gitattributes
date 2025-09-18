@@ -1,9 +1,10 @@
 * text=auto
 
 *.cmd text eol=crlf
+*.md text eol=lf
 *.sh text eol=lf
 
-.build.ps1 text eol=lf
+1.build.ps1 text eol=lf
 about_InvokeBuild.help.txt text eol=lf
 Build-Checkpoint.ps1 text eol=lf
 Build-Parallel.ps1 text eol=lf

@@ -187,7 +187,7 @@ task OmittedBuildParameterFile {
 	$null = mkdir z
 
 	# new build script; its default task calls two parallel builds in the same script
-	Set-Content z/.build.ps1 {
+	Set-Content z/1.build.ps1 {
 		task t1 { 'out 1' }
 		task t2 { 'out 2'; Start-Sleep 1 }
 		task . { Build-Parallel @{Task='t1'}, @{Task='t2'} }

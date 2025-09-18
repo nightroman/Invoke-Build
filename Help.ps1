@@ -1,12 +1,12 @@
 ﻿<#
 .Synopsis
-	Help script (https://github.com/nightroman/Helps)
+	Help script, https://github.com/nightroman/Helps
 #>
 
 ### Invoke-Build.ps1
 @{
 	command = 'Invoke-Build.ps1'
-	synopsis = 'Invoke-Build - Build Automation in PowerShell'
+	synopsis = 'Invokes build script tasks.'
 
 	description = @'
 	The command invokes so called tasks defined in a PowerShell script.
@@ -377,6 +377,216 @@
 	)
 }
 
+### Build-Checkpoint.ps1
+@{
+	command = 'Build-Checkpoint.ps1'
+	synopsis = 'Invokes persistent builds with checkpoints.'
+	description = @'
+	This command invokes the build and saves build state checkpoints after each
+	completed task. If the build is interrupted then it may be resumed later
+	with the saved checkpoint file.
+
+	The built-in Export-Clixml and Import-Clixml are used for saving checkpoints.
+	Keep in mind that not all data types are suitable for this serialization.
+
+	CUSTOM EXPORT AND IMPORT
+
+	By default, the command saves and restores build tasks, script path, and
+	all parameters declared by the build script. Tip: consider declaring some
+	script variables as artificial parameters in order to make them persistent.
+
+	If this is not enough for saving and restoring the build state then use
+	custom export and import blocks. The export block is called on writing
+	checkpoints, i.e. on each task. The import block is called on resuming
+	once, before the task to be resumed.
+
+	The export block is set by `Set-BuildData Checkpoint.Export`, e.g.
+
+		Set-BuildData Checkpoint.Export {
+			$script:var1
+			$script:var2
+		}
+
+	The import block is set by `Set-BuildData Checkpoint.Import`, e.g.
+
+		Set-BuildData Checkpoint.Import {
+			param($data)
+			$var1, $var2 = $data
+		}
+
+	The import block is called in the script scope. Thus, $var1 and $var2 are
+	script variables right away. We may but do not have to use the prefix.
+
+	The parameter $data is the output of Checkpoint.Export exported to clixml
+	and then imported from clixml.
+
+	OMITTED OR SCRIPT CHECKPOINT
+
+	Omitted or script Checkpoint and no other parameters is the special
+	case. The engine builds all tasks of the default or specified script
+	with checkpoints.
+
+	The checkpoint path is the script path with added ".clixml". The persistent
+	build starts if the checkpoint does not exist, otherwise resumes with the
+	existing checkpoint.
+'@
+	parameters = @{
+		Checkpoint = @'
+		Specifies the checkpoint file (clixml). The checkpoint file is removed
+		after successful builds unless the switch Preserve is specified.
+
+		See DESCRIPTION / OMITTED OR SCRIPT CHECKPOINT for the special case.
+'@
+		Build = @'
+		Specifies the build and script parameters. WhatIf is not supported.
+
+		When the build resumes by Resume or Auto then fields Task, File, and
+		script parameters are ignored and restored from the checkpoint file.
+		But fields Result, Safe, Summary are used as usual build parameters.
+'@
+		Preserve = @'
+		Tells to preserve the checkpoint file on successful builds.
+'@
+		Resume = @'
+		Tells to resume the build from the existing checkpoint file.
+'@
+		Auto = @'
+		Tells to start a new build if the checkpoint file is not found or
+		resume the build from the found checkpoint file.
+'@
+	}
+	outputs = @{
+		type = 'Text'
+		description = 'Output of the invoked build.'
+	}
+	examples = @(
+		@{code={
+	# Invoke a persistent sequence of steps defined as tasks.
+	Build-Checkpoint temp.clixml @{Task = '*'; File = 'Steps.build.ps1'}
+
+	# Given the above failed, resume at the failed step.
+	Build-Checkpoint temp.clixml -Resume
+		}}
+	)
+	links = @(
+		@{ text = 'Invoke-Build' }
+	)
+}
+
+### Build-Parallel.ps1
+@{
+	command = 'Build-Parallel.ps1'
+	synopsis = 'Invokes parallel builds by Invoke-Build.'
+
+	description = @'
+	This script invokes several build scripts simultaneously by Invoke-Build.
+	Number of parallel builds is set to the number of processors by default.
+
+	NOTE: Avoid using Build-Parallel in scenarios with PowerShell classes.
+	Known issues: https://github.com/nightroman/Invoke-Build/issues/180
+
+	VERBOSE STREAM
+
+	Verbose messages are propagated to the caller if Verbose is set to true in
+	build parameters. They are written all together before the build output.
+
+		Build-Parallel @(
+			@{File=...; Task=...; Verbose=$true}
+			...
+		)
+
+	INFORMATION STREAM
+
+	Information messages are propagated to the caller if InformationAction is
+	set to Continue in build parameters. They are written all together before
+	the build output.
+
+		Build-Parallel @(
+			@{File=...; Task=...; InformationAction='Continue'}
+			...
+		)
+
+	In addition or instead, information messages are collected in the variable
+	specified by InformationVariable in build parameters.
+
+		Build-Parallel @(
+			@{File=...; Task=...; InformationVariable='info'}
+			...
+		)
+
+		# information messages
+		$info
+'@
+
+	parameters = @{
+		Build = @'
+		Build parameters defined as hashtables with these keys/data:
+
+			Task, File, ... - Invoke-Build.ps1 and script parameters
+			Log - Tells to write build output to the specified file
+
+		Any number of builds is allowed, including 0 and 1. The maximum number
+		of parallel builds is the number of processors by default. It can be
+		changed by the parameter MaximumBuilds.
+'@
+		Result = @'
+		Tells to output build results using a variable. It is either a name of
+		variable to be created for results or any object with the property
+		Value to be assigned ([ref], [hashtable]).
+
+		Result properties:
+
+			Tasks - tasks (*)
+			Errors - errors (*)
+			Warnings - warnings (*)
+			Started - start time
+			Elapsed - build duration
+
+		(*) see: help Invoke-Build -Parameter Result
+'@
+		Timeout = @'
+		Maximum overall build time in milliseconds.
+'@
+		MaximumBuilds = @{default = 'Number of processors.'; description = @'
+		Maximum number of builds invoked at the same time.
+'@}
+		FailHard = @'
+		Tells to abort all builds if any build fails.
+'@
+		ShowParameter = @'
+		Tells to show the specified parameter values in build titles.
+'@
+	}
+
+	outputs = @{
+		type = 'Text'
+		description = 'Output of invoked builds and other log messages.'
+	}
+
+	examples = @(
+		@{
+			code = {
+	Build-Parallel @(
+		@{File='Project1.build.ps1'}
+		@{File='Project2.build.ps1'; Task='MakeHelp'}
+		@{File='Project2.build.ps1'; Task='Build', 'Test'}
+		@{File='Project3.build.ps1'; Log='C:\TEMP\Project3.log'}
+		@{File='Project4.build.ps1'; Configuration='Release'}
+	)
+			}
+			remarks = @'
+	Five parallel builds are invoked with various combinations of parameters.
+	Note that it is fine to invoke the same build script more than once if
+	build flows specified by different tasks do not conflict.
+'@
+		}
+	)
+
+	links = @(
+		@{ text = 'Invoke-Build' }
+	)
+}
+
 ### Add-BuildTask
 @{
 	command = 'Add-BuildTask'
@@ -599,249 +809,6 @@
 	)
 }
 
-### Get-BuildError
-@{
-	command = 'Get-BuildError'
-	synopsis = 'Gets the specified task error.'
-
-	description = @'
-	The specified task is usually safe referenced in the build (?name) and a
-	caller (usually a downstream task) gets its potential error for analysis.
-'@
-
-	parameters = @{
-		Task = @'
-		Name of the task which error is requested.
-'@
-	}
-
-	outputs = @(
-		@{
-			type = 'Error'
-			description = 'An error or null if the task has not failed.'
-		}
-	)
-
-	links = @(
-		@{ text = 'Add-BuildTask' }
-	)
-}
-
-### Get-BuildFile
-@{
-	command = 'Get-BuildFile'
-	synopsis = 'Gets the found build script path.'
-
-	description = @'
- 	It gets the build script path for the specified or current location, the
- 	first like *.build.ps1 in Sort-Object order.
-
-	If this file is not found then `$env:InvokeBuildGetFile` is called with a
-	directory path argument in order to get its custom build script path.
-
-	If the file is still not found then parent directories are searched.
-'@
-
-	parameters = @{
-		Path = @'
-		Specifies the directory path, defaults to the current location.
-'@
-		Here = @'
-		Tells not to search in parent directories.
-'@
-	}
-
-	outputs = @(
-		@{
-			type = 'String'
-			description = 'The found build script path or null.'
-		}
-	)
-}
-
-### Assert-Build
-@{
-	command = 'Assert-Build'
-	synopsis = '(assert) Checks for a condition.'
-
-	description = @'
-	Scripts use its alias 'assert'. This command checks for a condition and
-	if it is not true throws an error with the default or specified message.
-'@
-
-	parameters = @{
-		Condition = @'
-		The condition.
-'@
-		Message = @'
-		An optional message describing the assertion condition.
-'@
-	}
-
-	links = @(
-		@{ text = 'Assert-BuildEquals' }
-	)
-}
-
-### Assert-BuildEquals
-@{
-	command = 'Assert-BuildEquals'
-	synopsis = '(equals) Verifies that two specified objects are equal.'
-
-	description = @'
-	Scripts use its alias 'equals'. This command verifies that two specified
-	objects are equal using [Object]::Equals(). If objects are not equal the
-	command fails with a message showing object values and types.
-'@
-
-	parameters = @{
-		A = 'The first object.'
-		B = 'The second object.'
-	}
-
-	links = @(
-		@{ text = 'Assert-Build' }
-	)
-}
-
-### Get-BuildProperty
-@{
-	command = 'Get-BuildProperty'
-	synopsis = '(property) Gets the session or environment variable or the default.'
-
-	description = @'
-	Scripts use its alias 'property'. The command returns:
-
-		- session variable value if it is not $null or ''
-		- environment variable if it is not $null or ''
-		- default value if it is not $null
-		- error
-'@
-
-	parameters = @{
-		Name = @'
-		Specifies the session or environment variable name.
-'@
-		Value = @'
-		Specifies the default value. If it is omitted or null then the variable
-		must exist with a not empty value. Otherwise an error is thrown.
-'@
-		Boolean = @'
-		Treats values like 1 and 0 as $true and $false, including strings with
-		extra spaces. Others are converted by [System.Convert]::ToBoolean().
-'@
-	}
-
-	outputs = @(
-		@{
-			type = 'Object'
-			description = 'Requested property value.'
-		}
-	)
-
-	examples = @(
-		@{code={
-	# Inherit an existing value or throw an error
-
-	$OutputPath = property OutputPath
-		}}
-
-		@{code={
-	# Get an existing value or use the default
-
-	$WarningLevel = property WarningLevel 4
-		}}
-	)
-
-	links = @(
-		@{ text = 'Test-BuildAsset' }
-	)
-}
-
-### Get-BuildSynopsis
-@{
-	command = 'Get-BuildSynopsis'
-	synopsis = 'Gets the task synopsis.'
-
-	description = @'
-	Gets the specified task synopsis if it is available.
-
-	Task synopses are defined in preceding comments as
-
-		# Synopsis: ...
-
-	or
-
-		<#
-		.Synopsis
-		...
-		#>
-
-	This function may be used in Set-BuildHeader for printing task synopses.
-'@
-
-	parameters = @{
-		Task = @'
-		The task object. During the build, the current task is available as the
-		automatic variable $Task.
-'@
-		Hash = @'
-		The cache used by external tools. Scripts may omit this parameter.
-'@
-	}
-
-	outputs = @{
-		type = 'String'
-	}
-
-	examples = @{code={
-		# Headers: print task paths as usual and synopses in addition
-		Set-BuildHeader {
-			param($Path)
-			print Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
-		}
-
-		# Synopsis: This task prints its own synopsis.
-		task Task1 {
-			'My synopsis : ' + (Get-BuildSynopsis $Task)
-		}
-	}}
-
-	links = @(
-		@{ text = 'Set-BuildFooter' }
-		@{ text = 'Set-BuildHeader' }
-	)
-}
-
-### Get-BuildVersion
-@{
-	command = 'Get-BuildVersion'
-	synopsis = 'Gets version string from file.'
-
-	description = @'
-	It finds the first file line matching Regex and returns its first capturing
-	group string.
-'@
-
-	parameters = @{
-		Path = @'
-		The file with version strings, like change log, release notes, etc.
-'@
-		Regex = @'
-		[string] or [regex] defining version as its first capturing group.
-'@
-	}
-
-	outputs = @{
-		type = 'String'
-	}
-
-	examples = @{code={
-		# Get version from file
-		Get-BuildVersion Release-Notes.md '##\s+v(\d+\.\d+\.\d+)'
-	}}
-}
-
 ### Invoke-BuildExec
 @{
 	command = 'Invoke-BuildExec'
@@ -904,6 +871,51 @@
 	)
 }
 
+### Assert-Build
+@{
+	command = 'Assert-Build'
+	synopsis = '(assert) Checks for a condition.'
+
+	description = @'
+	Scripts use its alias 'assert'. This command checks for a condition and
+	if it is not true throws an error with the default or specified message.
+'@
+
+	parameters = @{
+		Condition = @'
+		The condition.
+'@
+		Message = @'
+		An optional message describing the assertion condition.
+'@
+	}
+
+	links = @(
+		@{ text = 'Assert-BuildEquals' }
+	)
+}
+
+### Assert-BuildEquals
+@{
+	command = 'Assert-BuildEquals'
+	synopsis = '(equals) Verifies that two specified objects are equal.'
+
+	description = @'
+	Scripts use its alias 'equals'. This command verifies that two specified
+	objects are equal using [Object]::Equals(). If objects are not equal the
+	command fails with a message showing object values and types.
+'@
+
+	parameters = @{
+		A = 'The first object.'
+		B = 'The second object.'
+	}
+
+	links = @(
+		@{ text = 'Assert-Build' }
+	)
+}
+
 ### Remove-BuildItem
 @{
 	command = 'Remove-BuildItem'
@@ -937,89 +949,88 @@
 	)
 }
 
-### Set-BuildFooter
+### Write-Build
 @{
-	command = 'Set-BuildFooter'
-	synopsis = 'Tells how to write task footers.'
+	command = 'Write-Build'
+	synopsis = '(print) Writes text using colors if they are supported.'
 
 	description = @'
-	This build block is used in order to change the default task footer format.
-	Use the automatic variable $Task in order to get the current task data.
-	Use Write-Build (print) in order to write with colors.
+	This function is used in order to output colored text in a console or other
+	hosts with colors. Unlike Write-Host it is suitable for redirected output.
+
+	Write-Build is designed for tasks and build blocks, not script functions.
+
+	With PowerShell 7.2+ and $PSStyle.OutputRendering ANSI, Write-Build uses
+	ANSI escape sequences.
 '@
 
 	parameters = @{
-		Script = @'
-		The script like {param($Path) ...} which is used in order to write task
-		footers. The parameter Path includes the parent and current task names.
-
-		In order to omit task footers, set an empty block:
-
-			Set-BuildFooter {}
-'@
+		Color = @{
+			required = $true
+			description = '[System.ConsoleColor] value or its string representation.'
+		}
+		Text = @{
+			required = $true
+			description = 'Text written using colors if they are supported.'
+		}
 	}
 
-	examples = @{code={
-		# Use the usual footer format but change the color
-		Set-BuildFooter {
-			param($Path)
-			print DarkGray "Done $Path $($Task.Elapsed)"
-		}
-
-		# Synopsis: Data for footers in addition to $Path and $Task.Elapsed
-		task Task1 {
-			'Task name     : ' + $Task.Name
-			'Start time    : ' + $Task.Started
-			'Location path : ' + $Task.InvocationInfo.ScriptName
-			'Location line : ' + $Task.InvocationInfo.ScriptLineNumber
-		}
-	}}
-
-	links = @(
-		@{ text = 'Get-BuildSynopsis' }
-		@{ text = 'Set-BuildHeader' }
-		@{ text = 'Write-Build (print)' }
-	)
+	outputs = @{
+		type = 'String'
+	}
 }
 
-### Set-BuildHeader
+### Get-BuildProperty
 @{
-	command = 'Set-BuildHeader'
-	synopsis = 'Tells how to write task headers.'
+	command = 'Get-BuildProperty'
+	synopsis = '(property) Gets the session or environment variable or the default.'
 
 	description = @'
-	This build block is used in order to change the default task header format.
-	Use the automatic variable $Task in order to get the current task data.
-	Use Write-Build (print) in order to write with colors.
+	Scripts use its alias 'property'. The command returns:
+
+		- session variable value if it is not $null or ''
+		- environment variable if it is not $null or ''
+		- default value if it is not $null
+		- error
 '@
 
 	parameters = @{
-		Script = @'
-		The script like {param($Path) ...} which is used in order to write task
-		headers. The parameter Path includes the parent and current task names.
+		Name = @'
+		Specifies the session or environment variable name.
+'@
+		Value = @'
+		Specifies the default value. If it is omitted or null then the variable
+		must exist with a not empty value. Otherwise an error is thrown.
+'@
+		Boolean = @'
+		Treats values like 1 and 0 as $true and $false, including strings with
+		extra spaces. Others are converted by [System.Convert]::ToBoolean().
 '@
 	}
 
-	examples = @{code={
-		# Headers: write task paths as usual and synopses in addition
-		Set-BuildHeader {
-			param($Path)
-			print Cyan "Task $Path --- $(Get-BuildSynopsis $Task)"
+	outputs = @(
+		@{
+			type = 'Object'
+			description = 'Requested property value.'
 		}
+	)
 
-		# Synopsis: Data for headers in addition to $Path and Get-BuildSynopsis
-		task Task1 {
-			'Task name     : ' + $Task.Name
-			'Start time    : ' + $Task.Started
-			'Location path : ' + $Task.InvocationInfo.ScriptName
-			'Location line : ' + $Task.InvocationInfo.ScriptLineNumber
-		}
-	}}
+	examples = @(
+		@{code={
+	# Inherit an existing value or throw an error
+
+	$OutputPath = property OutputPath
+		}}
+
+		@{code={
+	# Get an existing value or use the default
+
+	$WarningLevel = property WarningLevel 4
+		}}
+	)
 
 	links = @(
-		@{ text = 'Get-BuildSynopsis' }
-		@{ text = 'Set-BuildFooter' }
-		@{ text = 'Write-Build (print)' }
+		@{ text = 'Test-BuildAsset' }
 	)
 }
 
@@ -1155,35 +1166,234 @@ If it is omitted, the current task or script name is used.
 	}
 }
 
-### Write-Build
+### Get-BuildError
 @{
-	command = 'Write-Build'
-	synopsis = '(print) Writes text using colors if they are supported.'
+	command = 'Get-BuildError'
+	synopsis = 'Gets the specified task error.'
 
 	description = @'
-	This function is used in order to output colored text in a console or other
-	hosts with colors. Unlike Write-Host it is suitable for redirected output.
-
-	Write-Build is designed for tasks and build blocks, not script functions.
-
-	With PowerShell 7.2+ and $PSStyle.OutputRendering ANSI, Write-Build uses
-	ANSI escape sequences.
+	The specified task is usually safe referenced in the build (?name) and a
+	caller (usually a downstream task) gets its potential error for analysis.
 '@
 
 	parameters = @{
-		Color = @{
-			required = $true
-			description = '[System.ConsoleColor] value or its string representation.'
+		Task = @'
+		Name of the task which error is requested.
+'@
+	}
+
+	outputs = @(
+		@{
+			type = 'Error'
+			description = 'An error or null if the task has not failed.'
 		}
-		Text = @{
-			required = $true
-			description = 'Text written using colors if they are supported.'
+	)
+
+	links = @(
+		@{ text = 'Add-BuildTask' }
+	)
+}
+
+### Get-BuildFile
+@{
+	command = 'Get-BuildFile'
+	synopsis = 'Gets the found build script path.'
+
+	description = @'
+ 	It gets the build script path for the specified or current location, the
+ 	first like *.build.ps1 in Sort-Object order.
+
+	If this file is not found then `$env:InvokeBuildGetFile` is called with a
+	directory path argument in order to get its custom build script path.
+
+	If the file is still not found then parent directories are searched.
+'@
+
+	parameters = @{
+		Path = @'
+		Specifies the directory path, defaults to the current location.
+'@
+		Here = @'
+		Tells not to search in parent directories.
+'@
+	}
+
+	outputs = @(
+		@{
+			type = 'String'
+			description = 'The found build script path or null.'
 		}
+	)
+}
+
+### Get-BuildSynopsis
+@{
+	command = 'Get-BuildSynopsis'
+	synopsis = 'Gets the task synopsis.'
+
+	description = @'
+	Gets the specified task synopsis if it is available.
+
+	Task synopses are defined in preceding comments as
+
+		# Synopsis: ...
+
+	or
+
+		<#
+		.Synopsis
+		...
+		#>
+
+	This function may be used in Set-BuildHeader for printing task synopses.
+'@
+
+	parameters = @{
+		Task = @'
+		The task object. During the build, the current task is available as the
+		automatic variable $Task.
+'@
+		Hash = @'
+		The cache used by external tools. Scripts may omit this parameter.
+'@
 	}
 
 	outputs = @{
 		type = 'String'
 	}
+
+	examples = @{code={
+		# Headers: print task paths as usual and synopses in addition
+		Set-BuildHeader {
+			param($Path)
+			print Cyan "Task $Path : $(Get-BuildSynopsis $Task)"
+		}
+
+		# Synopsis: This task prints its own synopsis.
+		task Task1 {
+			'My synopsis : ' + (Get-BuildSynopsis $Task)
+		}
+	}}
+
+	links = @(
+		@{ text = 'Set-BuildFooter' }
+		@{ text = 'Set-BuildHeader' }
+	)
+}
+
+### Get-BuildVersion
+@{
+	command = 'Get-BuildVersion'
+	synopsis = 'Gets version string from file.'
+
+	description = @'
+	It finds the first file line matching Regex and returns its first capturing
+	group string.
+'@
+
+	parameters = @{
+		Path = @'
+		The file with version strings, like change log, release notes, etc.
+'@
+		Regex = @'
+		[string] or [regex] defining version as its first capturing group.
+'@
+	}
+
+	outputs = @{
+		type = 'String'
+	}
+
+	examples = @{code={
+		# Get version from file
+		Get-BuildVersion Release-Notes.md '##\s+v(\d+\.\d+\.\d+)'
+	}}
+}
+
+### Set-BuildFooter
+@{
+	command = 'Set-BuildFooter'
+	synopsis = 'Tells how to write task footers.'
+
+	description = @'
+	This build block is used in order to change the default task footer format.
+	Use the automatic variable $Task in order to get the current task data.
+	Use Write-Build (print) in order to write with colors.
+'@
+
+	parameters = @{
+		Script = @'
+		The script like {param($Path) ...} which is used in order to write task
+		footers. The parameter Path includes the parent and current task names.
+
+		In order to omit task footers, set an empty block:
+
+			Set-BuildFooter {}
+'@
+	}
+
+	examples = @{code={
+		# Use the usual footer format but change the color
+		Set-BuildFooter {
+			param($Path)
+			print DarkGray "Done $Path $($Task.Elapsed)"
+		}
+
+		# Synopsis: Data for footers in addition to $Path and $Task.Elapsed
+		task Task1 {
+			'Task name     : ' + $Task.Name
+			'Start time    : ' + $Task.Started
+			'Location path : ' + $Task.InvocationInfo.ScriptName
+			'Location line : ' + $Task.InvocationInfo.ScriptLineNumber
+		}
+	}}
+
+	links = @(
+		@{ text = 'Get-BuildSynopsis' }
+		@{ text = 'Set-BuildHeader' }
+		@{ text = 'Write-Build (print)' }
+	)
+}
+
+### Set-BuildHeader
+@{
+	command = 'Set-BuildHeader'
+	synopsis = 'Tells how to write task headers.'
+
+	description = @'
+	This build block is used in order to change the default task header format.
+	Use the automatic variable $Task in order to get the current task data.
+	Use Write-Build (print) in order to write with colors.
+'@
+
+	parameters = @{
+		Script = @'
+		The script like {param($Path) ...} which is used in order to write task
+		headers. The parameter Path includes the parent and current task names.
+'@
+	}
+
+	examples = @{code={
+		# Headers: write task paths as usual and synopses in addition
+		Set-BuildHeader {
+			param($Path)
+			print Cyan "Task $Path --- $(Get-BuildSynopsis $Task)"
+		}
+
+		# Synopsis: Data for headers in addition to $Path and Get-BuildSynopsis
+		task Task1 {
+			'Task name     : ' + $Task.Name
+			'Start time    : ' + $Task.Started
+			'Location path : ' + $Task.InvocationInfo.ScriptName
+			'Location line : ' + $Task.InvocationInfo.ScriptLineNumber
+		}
+	}}
+
+	links = @(
+		@{ text = 'Get-BuildSynopsis' }
+		@{ text = 'Set-BuildFooter' }
+		@{ text = 'Write-Build (print)' }
+	)
 }
 
 ### Use-BuildEnv
@@ -1225,215 +1435,5 @@ If it is omitted, the current task or script name is used.
 
 	links = @(
 		@{ text = 'Invoke-BuildExec' }
-	)
-}
-
-### Build-Parallel.ps1
-@{
-	command = 'Build-Parallel.ps1'
-	synopsis = 'Invokes parallel builds by Invoke-Build'
-
-	description = @'
-	This script invokes several build scripts simultaneously by Invoke-Build.
-	Number of parallel builds is set to the number of processors by default.
-
-	NOTE: Avoid using Build-Parallel in scenarios with PowerShell classes.
-	Known issues: https://github.com/nightroman/Invoke-Build/issues/180
-
-	VERBOSE STREAM
-
-	Verbose messages are propagated to the caller if Verbose is set to true in
-	build parameters. They are written all together before the build output.
-
-		Build-Parallel @(
-			@{File=...; Task=...; Verbose=$true}
-			...
-		)
-
-	INFORMATION STREAM
-
-	Information messages are propagated to the caller if InformationAction is
-	set to Continue in build parameters. They are written all together before
-	the build output.
-
-		Build-Parallel @(
-			@{File=...; Task=...; InformationAction='Continue'}
-			...
-		)
-
-	In addition or instead, information messages are collected in the variable
-	specified by InformationVariable in build parameters.
-
-		Build-Parallel @(
-			@{File=...; Task=...; InformationVariable='info'}
-			...
-		)
-
-		# information messages
-		$info
-'@
-
-	parameters = @{
-		Build = @'
-		Build parameters defined as hashtables with these keys/data:
-
-			Task, File, ... - Invoke-Build.ps1 and script parameters
-			Log - Tells to write build output to the specified file
-
-		Any number of builds is allowed, including 0 and 1. The maximum number
-		of parallel builds is the number of processors by default. It can be
-		changed by the parameter MaximumBuilds.
-'@
-		Result = @'
-		Tells to output build results using a variable. It is either a name of
-		variable to be created for results or any object with the property
-		Value to be assigned ([ref], [hashtable]).
-
-		Result properties:
-
-			Tasks - tasks (*)
-			Errors - errors (*)
-			Warnings - warnings (*)
-			Started - start time
-			Elapsed - build duration
-
-		(*) see: help Invoke-Build -Parameter Result
-'@
-		Timeout = @'
-		Maximum overall build time in milliseconds.
-'@
-		MaximumBuilds = @{default = 'Number of processors.'; description = @'
-		Maximum number of builds invoked at the same time.
-'@}
-		FailHard = @'
-		Tells to abort all builds if any build fails.
-'@
-		ShowParameter = @'
-		Tells to show the specified parameter values in build titles.
-'@
-	}
-
-	outputs = @{
-		type = 'Text'
-		description = 'Output of invoked builds and other log messages.'
-	}
-
-	examples = @(
-		@{
-			code = {
-	Build-Parallel @(
-		@{File='Project1.build.ps1'}
-		@{File='Project2.build.ps1'; Task='MakeHelp'}
-		@{File='Project2.build.ps1'; Task='Build', 'Test'}
-		@{File='Project3.build.ps1'; Log='C:\TEMP\Project3.log'}
-		@{File='Project4.build.ps1'; Configuration='Release'}
-	)
-			}
-			remarks = @'
-	Five parallel builds are invoked with various combinations of parameters.
-	Note that it is fine to invoke the same build script more than once if
-	build flows specified by different tasks do not conflict.
-'@
-		}
-	)
-
-	links = @(
-		@{ text = 'Invoke-Build' }
-	)
-}
-
-### Build-Checkpoint.ps1
-@{
-	command = 'Build-Checkpoint.ps1'
-	synopsis = 'Invokes persistent builds with checkpoints.'
-	description = @'
-	This command invokes the build and saves build state checkpoints after each
-	completed task. If the build is interrupted then it may be resumed later
-	with the saved checkpoint file.
-
-	The built-in Export-Clixml and Import-Clixml are used for saving checkpoints.
-	Keep in mind that not all data types are suitable for this serialization.
-
-	CUSTOM EXPORT AND IMPORT
-
-	By default, the command saves and restores build tasks, script path, and
-	all parameters declared by the build script. Tip: consider declaring some
-	script variables as artificial parameters in order to make them persistent.
-
-	If this is not enough for saving and restoring the build state then use
-	custom export and import blocks. The export block is called on writing
-	checkpoints, i.e. on each task. The import block is called on resuming
-	once, before the task to be resumed.
-
-	The export block is set by `Set-BuildData Checkpoint.Export`, e.g.
-
-		Set-BuildData Checkpoint.Export {
-			$script:var1
-			$script:var2
-		}
-
-	The import block is set by `Set-BuildData Checkpoint.Import`, e.g.
-
-		Set-BuildData Checkpoint.Import {
-			param($data)
-			$var1, $var2 = $data
-		}
-
-	The import block is called in the script scope. Thus, $var1 and $var2 are
-	script variables right away. We may but do not have to use the prefix.
-
-	The parameter $data is the output of Checkpoint.Export exported to clixml
-	and then imported from clixml.
-
-	OMITTED OR SCRIPT CHECKPOINT
-
-	Omitted or script Checkpoint and no other parameters is the special
-	case. The engine builds all tasks of the default or specified script
-	with checkpoints.
-
-	The checkpoint path is the script path with added ".clixml". The persistent
-	build starts if the checkpoint does not exist, otherwise resumes with the
-	existing checkpoint.
-'@
-	parameters = @{
-		Checkpoint = @'
-		Specifies the checkpoint file (clixml). The checkpoint file is removed
-		after successful builds unless the switch Preserve is specified.
-
-		See DESCRIPTION / OMITTED OR SCRIPT CHECKPOINT for the special case.
-'@
-		Build = @'
-		Specifies the build and script parameters. WhatIf is not supported.
-
-		When the build resumes by Resume or Auto then fields Task, File, and
-		script parameters are ignored and restored from the checkpoint file.
-		But fields Result, Safe, Summary are used as usual build parameters.
-'@
-		Preserve = @'
-		Tells to preserve the checkpoint file on successful builds.
-'@
-		Resume = @'
-		Tells to resume the build from the existing checkpoint file.
-'@
-		Auto = @'
-		Tells to start a new build if the checkpoint file is not found or
-		resume the build from the found checkpoint file.
-'@
-	}
-	outputs = @{
-		type = 'Text'
-		description = 'Output of the invoked build.'
-	}
-	examples = @(
-		@{code={
-	# Invoke a persistent sequence of steps defined as tasks.
-	Build-Checkpoint temp.clixml @{Task = '*'; File = 'Steps.build.ps1'}
-
-	# Given the above failed, resume at the failed step.
-	Build-Checkpoint temp.clixml -Resume
-		}}
-	)
-	links = @(
-		@{ text = 'Invoke-Build' }
 	)
 }

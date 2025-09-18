@@ -33,7 +33,7 @@ $BeforeConditional = 'To do.'
 $AfterConditional = 'To do.'
 $Conditional = 'To do.'
 
-# Test of the default parameter value (called from .build.ps1)
+# Test of the default parameter value (called from 1.build.ps1)
 task TestDefaultParameter {
 	equals $Configuration Release
 }

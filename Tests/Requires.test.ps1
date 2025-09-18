@@ -4,7 +4,7 @@
 #>
 
 task ImportSample {
-	($r = Invoke-Build . ../Tasks/Import/.build.ps1)
+	($r = Invoke-Build . ../Tasks/Import/1.build.ps1)
 	assert ($r -contains 'MyVar1 = var1')
 	assert ($r -contains 'MyEnv1 = env1')
 	assert ($r -contains 'MyProp1 = prop1')

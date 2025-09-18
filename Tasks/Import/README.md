@@ -10,7 +10,7 @@ This sample demonstrates:
 - How to import tasks from a module which provides tasks.
 - How to use `requires` in imported scripts.
 
-The build script `.build.ps1` imports tasks from external task scripts.
+The build script `1.build.ps1` imports tasks from external task scripts.
 
 ## Example 1. Import from conventional task scripts
 

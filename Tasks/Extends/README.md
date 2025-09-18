@@ -95,8 +95,8 @@ avoid collisions or for clarity.
 In order to rename inherited tasks with a custom prefix, `ValidateScript` of
 `Extends` should return the script path with this prefix separated by `::`.
 
-For example, the path `"main::.\src\.build.ps1"` tells to extend the script
-`.\src\.build.ps1` and rename its tasks using the prefix `main::`, so that
+For example, the path `"main::.\src\1.build.ps1"` tells to extend the script
+`.\src\1.build.ps1` and rename its tasks using the prefix `main::`, so that
 the original task `Build` becomes `main::Build`.
 
 ### Not renamed tasks

@@ -205,34 +205,6 @@ task TestStartJob -If {$Host.Name -ne 'FarHost'} {
 	assert ($info.StartsWith('Build succeeded. 5 tasks'))
 }
 
-# Synopsis: Show full help.
-task ShowHelp -If (!$env:GITHUB_ACTION) {
-	@(
-		'Invoke-Build'
-		'Build-Checkpoint'
-		'Build-Parallel'
-		'Add-BuildTask'
-		'Assert-Build'
-		'Assert-BuildEquals'
-		'Get-BuildError'
-		'Get-BuildFile'
-		'Get-BuildProperty'
-		'Get-BuildSynopsis'
-		'Invoke-BuildExec'
-		'Remove-BuildItem'
-		'Resolve-MSBuild'
-		'Set-BuildFooter'
-		'Set-BuildHeader'
-		'Test-BuildAsset'
-		'Use-BuildAlias'
-		'Write-Build'
-	) | .{process{
-		'#'*77
-		Get-Help -Full $_
-	}} |
-	Out-String -Width 80
-}
-
 # Synopsis: This task calls all test tasks.
 task Tests Dummy1, Dummy2, AllTestScripts, Conditional, Dynamic, TestDefaultParameter, TestExitCode, TestSelfAlias, TestStartJob
 
@@ -246,4 +218,4 @@ task . ParamsValues2, ParamsValues1, {
 	"In default, action 2"
 },
 # Tasks can be referenced between or after actions.
-Tests, InfoTasks, ShowHelp
+Tests, InfoTasks

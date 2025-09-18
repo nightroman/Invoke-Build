@@ -83,12 +83,12 @@ task FullPathsFirstDefaultIncludeExclude {
 
 # Synopsis: Test relative paths..
 task RelativePaths {
-	New-VSCodeTask .\.build.ps1 ..\..\Invoke-Build.ps1 -Merge ''
+	New-VSCodeTask .\1.build.ps1 ..\..\Invoke-Build.ps1 -Merge ''
 
 	$data = Import-Json .vscode\tasks.json
 	$r = $data.tasks[0]
 	$r.command
- 	equals $r.command "& '../../Invoke-Build.ps1' -Task Build -File './.build.ps1'"
+ 	equals $r.command "& '../../Invoke-Build.ps1' -Task Build -File './1.build.ps1'"
 }
 
 # Synopsis: Case with the local Invoke-Build.ps1.

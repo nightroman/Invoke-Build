@@ -211,7 +211,7 @@ task loop {
 		${*}.Tasks.Clear()
 		${*}.Errors.Clear()
 		${*}.Warnings.Clear()
-		Invoke-Build . Tests\.build.ps1
+		Invoke-Build . Tests\1.build.ps1
 	}
 }
 
@@ -226,7 +226,7 @@ task test {
 	}
 
 	# invoke tests, get output and result
-	$output = Invoke-Build . Tests\.build.ps1 -Result result | Out-String -Width:200
+	$output = Invoke-Build . Tests\1.build.ps1 -Result result | Out-String -Width:200
 	if ($NoTestDiff) {return}
 
 	# process and save the output
@@ -252,9 +252,26 @@ task core {
 	exec {pwsh -NoProfile -Command Invoke-Build test $diff}
 }
 
-# Synopsis: Gets dependencies
+# Synopsis: Get dependencies.
 task boot {
 	Save-Script Invoke-PowerShell -Path . -Force
+}
+
+# Synopsis: Generate help.
+task docs {
+	$text = $(
+		'# Invoke-Build Commands'
+		''
+		foreach($_ in ./Help.ps1) {
+			$name = $_.Command
+			Convert-HelpToDocs.ps1 $name "Docs/help/$name.md"
+			"- [$name]($name.md) - $($_.Synopsis)"
+		}
+
+		Convert-HelpToDocs.ps1 Resolve-MSBuild.ps1 Docs/help/Resolve-MSBuild.ps1.md
+		"- [Resolve-MSBuild.ps1](Resolve-MSBuild.ps1.md) - $((Get-Help Resolve-MSBuild.ps1).Synopsis)"
+	) -join "`n"
+	Set-Content Docs/help/README.md $text -NoNewline
 }
 
 # Synopsis: The default task: make, test, clean.

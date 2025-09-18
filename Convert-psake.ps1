@@ -9,7 +9,7 @@
 	The script converts the specified psake script to Invoke-Build script code.
 	In order to save the code to a file, use Set-Content, for example:
 
-		Convert-psake default.ps1 | Set-Content .build.ps1 [-Encoding ...]
+		Convert-psake default.ps1 | Set-Content 1.build.ps1 [-Encoding ...]
 
 	The converted script should be reviewed before using it. Task actions are
 	copied as they are without conversion. $psake, "assert", "exec", and other
@@ -120,11 +120,11 @@
 	or "Out-File" is not recommended due to potentially breaking line wrapping.
 
 .Example
-	Convert-psake default.ps1 | Set-Content .build.ps1
+	Convert-psake default.ps1 | Set-Content 1.build.ps1
 	Simple conversion with default options.
 
 .Example
-	Convert-psake default.ps1 -Invoke -Synopsis | Set-Content .build.ps1 -Encoding UTF8
+	Convert-psake default.ps1 -Invoke -Synopsis | Set-Content 1.build.ps1 -Encoding UTF8
 	This command uses some options.
 
 .Link

@@ -17,4 +17,4 @@ jobs:
         run: ./Invoke-Build.ps1 boot
       - name: test
         shell: powershell
-        run: ./Invoke-Build.ps1 . Tests/.build.ps1
+        run: ./Invoke-Build.ps1 . Tests/1.build.ps1

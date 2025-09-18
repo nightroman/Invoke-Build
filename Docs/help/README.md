@@ -1,0 +1,23 @@
+# Invoke-Build Commands
+
+- [Invoke-Build.ps1](Invoke-Build.ps1.md) - Invokes build script tasks.
+- [Build-Checkpoint.ps1](Build-Checkpoint.ps1.md) - Invokes persistent builds with checkpoints.
+- [Build-Parallel.ps1](Build-Parallel.ps1.md) - Invokes parallel builds by Invoke-Build.
+- [Add-BuildTask](Add-BuildTask.md) - (task) Defines and adds a task.
+- [Invoke-BuildExec](Invoke-BuildExec.md) - (exec) Invokes an application and checks $LastExitCode.
+- [Assert-Build](Assert-Build.md) - (assert) Checks for a condition.
+- [Assert-BuildEquals](Assert-BuildEquals.md) - (equals) Verifies that two specified objects are equal.
+- [Remove-BuildItem](Remove-BuildItem.md) - (remove) Removes specified items.
+- [Write-Build](Write-Build.md) - (print) Writes text using colors if they are supported.
+- [Get-BuildProperty](Get-BuildProperty.md) - (property) Gets the session or environment variable or the default.
+- [Test-BuildAsset](Test-BuildAsset.md) - (requires) Checks for required build assets.
+- [Use-BuildAlias](Use-BuildAlias.md) - (use) Sets framework or directory tool aliases.
+- [Confirm-Build](Confirm-Build.md) - Prompts to confirm an operation.
+- [Get-BuildError](Get-BuildError.md) - Gets the specified task error.
+- [Get-BuildFile](Get-BuildFile.md) - Gets the found build script path.
+- [Get-BuildSynopsis](Get-BuildSynopsis.md) - Gets the task synopsis.
+- [Get-BuildVersion](Get-BuildVersion.md) - Gets version string from file.
+- [Set-BuildFooter](Set-BuildFooter.md) - Tells how to write task footers.
+- [Set-BuildHeader](Set-BuildHeader.md) - Tells how to write task headers.
+- [Use-BuildEnv](Use-BuildEnv.md) - Invokes script with temporary changed environment variables.
+- [Resolve-MSBuild.ps1](Resolve-MSBuild.ps1.md) - Finds the specified or latest MSBuild.

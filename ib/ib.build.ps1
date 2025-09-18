@@ -12,7 +12,7 @@ Set-StrictMode -Version Latest
 
 # Synopsis: Remove files.
 task clean {
-	Invoke-Build clean ../.build.ps1
+	Invoke-Build clean ../1.build.ps1
 }
 
 # Synopsis: Set $Script:Version.
@@ -22,7 +22,7 @@ task version {
 
 # Synopsis: Copy module files.
 task content -If (!(Test-Path content)) {
-	Invoke-Build module ..\.build.ps1
+	Invoke-Build module ../1.build.ps1
 }
 
 # Synopsis: Make NuGet package.

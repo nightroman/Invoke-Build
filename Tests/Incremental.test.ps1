@@ -109,23 +109,23 @@ task TestPartIncrementalOneOutOfDate PartIncrementalOneOutOfDate, {
 }
 
 # 2+ outputs are up-to-date. Inputs is an array.
-task FullIncrementalTwoUpToDate -Inputs Incremental.test.ps1, .build.ps1 -Outputs $new1, $new2 {
+task FullIncrementalTwoUpToDate -Inputs Incremental.test.ps1, 1.build.ps1 -Outputs $new1, $new2 {
 	throw 'Unexpected.'
 }
 
 # 2+ outputs are up-to-date. Inputs is a script.
-task PartIncrementalTwoUpToDate -Partial -Inputs {'Incremental.test.ps1'; '.build.ps1'} -Outputs {$new1; $new2} {
+task PartIncrementalTwoUpToDate -Partial -Inputs {'Incremental.test.ps1'; '1.build.ps1'} -Outputs {$new1; $new2} {
 	throw 'Unexpected.'
 }
 
 # One output item is missing.
 # All input items are piped (2). Inputs is a script.
 $FullIncrementalTwoMissing = 0
-task FullIncrementalTwoMissing -Inputs {'Incremental.test.ps1'; '.build.ps1'} -Outputs 'missing', $new2 {
+task FullIncrementalTwoMissing -Inputs {'Incremental.test.ps1'; '1.build.ps1'} -Outputs 'missing', $new2 {
 	++$script:FullIncrementalTwoMissing
 	equals $Inputs.Count 2
 	equals $Inputs[0] "$BuildRoot$(Get-Separator)Incremental.test.ps1"
-	equals $Inputs[1] "$BuildRoot$(Get-Separator).build.ps1"
+	equals $Inputs[1] "$BuildRoot$(Get-Separator)1.build.ps1"
 	equals $Outputs.Count 2
 	equals $Outputs[0] 'missing'
 	equals $Outputs[1] $new2
@@ -137,10 +137,10 @@ task TestFullIncrementalTwoMissing FullIncrementalTwoMissing, {
 # One output item is missing.
 # Only items with missing output are piped (1). Inputs is an array.
 $PartIncrementalTwoMissing = 0
-task PartIncrementalTwoMissing -Partial -Inputs Incremental.test.ps1, .build.ps1 -Outputs {$new1, 'missing'} {
+task PartIncrementalTwoMissing -Partial -Inputs Incremental.test.ps1, 1.build.ps1 -Outputs {$new1, 'missing'} {
 	++$script:PartIncrementalTwoMissing
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot$(Get-Separator).build.ps1"
+	equals $Inputs[0] "$BuildRoot$(Get-Separator)1.build.ps1"
 	equals $Outputs.Count 1
 	equals $Outputs[0] 'missing'
 }
@@ -151,11 +151,11 @@ task TestPartIncrementalTwoMissing PartIncrementalTwoMissing, {
 # One output item is out-of-date.
 # All input items are piped (2).
 $FullIncrementalTwoOutOfDate = 0
-task FullIncrementalTwoOutOfDate -Inputs {'Incremental.test.ps1'; '.build.ps1'} -Outputs $new1, $old2 {
+task FullIncrementalTwoOutOfDate -Inputs {'Incremental.test.ps1'; '1.build.ps1'} -Outputs $new1, $old2 {
 	++$script:FullIncrementalTwoOutOfDate
 	equals $Inputs.Count 2
 	equals $Inputs[0] "$BuildRoot$(Get-Separator)Incremental.test.ps1"
-	equals $Inputs[1] "$BuildRoot$(Get-Separator).build.ps1"
+	equals $Inputs[1] "$BuildRoot$(Get-Separator)1.build.ps1"
 	equals $Outputs.Count 2
 	equals $Outputs[0] $new1
 	equals $Outputs[1] $old2
@@ -168,16 +168,16 @@ task TestFullIncrementalTwoOutOfDate FullIncrementalTwoOutOfDate, {
 # Only items with out-of-date output are piped (1).
 $PartIncrementalTwoOutOfDate = 0
 task PartIncrementalTwoOutOfDate -Partial -Inputs {
-	'Incremental.test.ps1'; '.build.ps1'
+	'Incremental.test.ps1'; '1.build.ps1'
 } -Outputs {
 	$new1, $old2
 } {process{
 	++$script:PartIncrementalTwoOutOfDate
 	equals $Inputs.Count 1
-	equals $Inputs[0] "$BuildRoot$(Get-Separator).build.ps1"
+	equals $Inputs[0] "$BuildRoot$(Get-Separator)1.build.ps1"
 	equals $Outputs.Count 1
 	equals $Outputs[0] $old2
-	assert($_ -eq "$BuildRoot$(Get-Separator).build.ps1")
+	assert($_ -eq "$BuildRoot$(Get-Separator)1.build.ps1")
 	assert($2 -eq $old2)
 }}
 task TestPartIncrementalTwoOutOfDate PartIncrementalTwoOutOfDate, {
@@ -193,8 +193,8 @@ task TestInputsFails ?IncrementalInputsFails, ?PartialInputsFails, {
 }
 
 # The outputs script fails.
-task IncrementalOutputsFails -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
-task PartialOutputsFails -Partial -Inputs {'.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
+task IncrementalOutputsFails -Inputs {'1.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
+task PartialOutputsFails -Partial -Inputs {'1.build.ps1'} -Outputs {throw 'Throw in output.'} {throw}
 task TestOutputsFails ?IncrementalOutputsFails, ?PartialOutputsFails, {
 	Test-Error (Get-BuildError IncrementalOutputsFails) "Throw in output.*At *$(Get-Separator)Incremental.test.ps1:*"
 	Test-Error (Get-BuildError PartialOutputsFails) "Throw in output.*At *$(Get-Separator)Incremental.test.ps1:*"
@@ -203,7 +203,7 @@ task TestOutputsFails ?IncrementalOutputsFails, ?PartialOutputsFails, {
 # Error: incremental output is empty
 task IncrementalOutputsIsEmpty {
 	$file = {
-		task t1 -Inputs {'.build.ps1'} -Outputs {} {throw}
+		task t1 -Inputs {'1.build.ps1'} -Outputs {} {throw}
 	}
 	($r = try {Invoke-Build t1 $file} catch {$_})
 	$e = $r[-1]
@@ -216,7 +216,7 @@ task IncrementalOutputsIsEmpty {
 # Error: partial inputs and outputs have different number of items
 task InputsOutputsMismatch {
 	$file = {
-		task t1 -Partial -Inputs {'.build.ps1'} -Outputs {} {throw}
+		task t1 -Partial -Inputs {'1.build.ps1'} -Outputs {} {throw}
 	}
 	($r = try {Invoke-Build t1 $file} catch {$_})
 	$e = $r[-1]

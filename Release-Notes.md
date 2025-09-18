@@ -260,7 +260,7 @@ Tweak getting variable expressions.
 
 Amend `exec -echo` output, use `cd ...`.
 
-Add [Release.build.ps1](Tasks/Release.build.ps1).
+Add `Release.build.ps1`.
 
 ## v5.9.2
 

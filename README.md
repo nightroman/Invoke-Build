@@ -116,16 +116,20 @@ In order to get help for internal commands:
     help exec -full
     ...
 
+See also online [Invoke-Build Help](https://github.com/nightroman/Invoke-Build/blob/main/Docs/help/README.md)
+
 ## Online resources
 
-- [Basic Concepts](https://github.com/nightroman/Invoke-Build/wiki/Concepts): Why build scripts may have advantages over normal scripts.
-- [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial): Take a look in order to get familiar with build scripts.
-- [Step by Step Tutorial](https://github.com/nightroman/Invoke-Build/tree/main/Tasks/01-step-by-step-tutorial): From "Hello world" to featured scripts.
-- [Invoke-Build.template](https://github.com/nightroman/Invoke-Build.template): Create scripts by `dotnet new ib`.
-- [Project Wiki](https://github.com/nightroman/Invoke-Build/wiki): Detailed tutorials, helpers, notes, and etc.
-- [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects): Build scripts used in various projects.
-- [Tasks](https://github.com/nightroman/Invoke-Build/tree/main/Tasks): Samples, patterns, and various techniques.
-- [Design Notes](https://github.com/nightroman/Invoke-Build/wiki/Design-Notes): Technical details for contributors.
+- [Basic Concepts](https://github.com/nightroman/Invoke-Build/wiki/Concepts) Why build scripts may have advantages over normal scripts.
+- [Script Tutorial](https://github.com/nightroman/Invoke-Build/wiki/Script-Tutorial) Take a look in order to get familiar with build scripts.
+- [Step by Step Tutorial](https://github.com/nightroman/Invoke-Build/tree/main/Tasks/01-step-by-step-tutorial) From "Hello world" to featured scripts.
+- [Invoke-Build.template](https://github.com/nightroman/Invoke-Build.template) Create scripts by `dotnet new ib`.
+- [Project Wiki](https://github.com/nightroman/Invoke-Build/wiki) Detailed tutorials, helpers, notes, and etc.
+- [Examples](https://github.com/nightroman/Invoke-Build/wiki/Build-Scripts-in-Projects) Build scripts used in various projects.
+- [Tasks](https://github.com/nightroman/Invoke-Build/tree/main/Tasks) Samples, patterns, and various techniques.
+- [Design Notes](https://github.com/nightroman/Invoke-Build/wiki/Design-Notes) Technical details for contributors.
+- [Invoke-Build Docs](https://github.com/nightroman/Invoke-Build/blob/main/Docs/README.md) Full documentation.
+- [Invoke-Build Help](https://github.com/nightroman/Invoke-Build/blob/main/Docs/help/README.md) Commands help.
 - [Release Notes](https://github.com/nightroman/Invoke-Build/blob/main/Release-Notes.md)
 
 [discussions]: https://github.com/nightroman/Invoke-Build/discussions
