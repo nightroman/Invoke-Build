@@ -1,5 +1,3 @@
-#Requires -Version 3.0
-
 <#
 .Synopsis
 	Converts psake build scripts to Invoke-Build.
@@ -128,7 +126,7 @@
 	This command uses some options.
 
 .Link
-	https://github.com/nightroman/Invoke-Build/wiki/Convert~psake
+	https://github.com/nightroman/Invoke-Build/blob/main/Docs/Convert-psake.md
 #>
 
 param(

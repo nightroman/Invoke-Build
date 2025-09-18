@@ -2,6 +2,10 @@
 
 [Issues](https://github.com/nightroman/Invoke-Build/issues) [Releases](https://github.com/nightroman/Invoke-Build/releases) [Discussions](https://github.com/nightroman/Invoke-Build/discussions)
 
+## v5.14.19
+
+Wiki moved to /Docs, updated help links.
+
 `Show-BuildGraph.ps1` - viz-3.17.0
 
 ## v5.14.18
@@ -69,7 +73,7 @@ Use `[ordered]` accelerator.
 
 `Show-BuildGraph.ps1`
 - New switch `Cluster` supporting `$Extends`
-- See real example, [build graph with clusters](https://github.com/nightroman/Invoke-Build/wiki/Show-Build-Graph#farnet)
+- See real example, [build graph with clusters](https://github.com/nightroman/Invoke-Build/blob/main/Docs/Show-Build-Graph.md#farnet)
 
 ## v5.14.10
 
@@ -764,4 +768,4 @@ builds with an invalid checkpoint file.
 
 ## v2 releases
 
-Previous release notes: [V2 Release Notes](https://github.com/nightroman/Invoke-Build/wiki/V2-Release-Notes)
+Older release notes: [V2 Release Notes](https://github.com/nightroman/Invoke-Build/blob/main/Docs/V2-Release-Notes.md)

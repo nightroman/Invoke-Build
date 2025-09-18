@@ -80,4 +80,4 @@ task . {
 ## See Also
 
 - [Confirm](../Confirm)
-- [Persistent Builds](https://github.com/nightroman/Invoke-Build/wiki/Persistent-Builds)
+- [Persistent Builds](https://github.com/nightroman/Invoke-Build/blob/main/Docs/Persistent-Builds.md)

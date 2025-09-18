@@ -113,7 +113,7 @@ task how_to_get_ib_directory {
 	- Invoke AfterTargets always (unlike IB).
 
 	https://github.com/nightroman/Invoke-Build/issues/51
-	https://github.com/nightroman/Invoke-Build/wiki/Comparison-with-MSBuild
+	https://github.com/nightroman/Invoke-Build/blob/main/Docs/Comparison-with-MSBuild.md
 #>
 task condition_and_targets {
 	Set-Content z.proj @'

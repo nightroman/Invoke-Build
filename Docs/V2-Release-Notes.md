@@ -600,9 +600,6 @@ Finishing touches on dynamic parameters of *Build.ps1*.
 
 Updated the wiki with information about recently added features.
 
-* [Build.ps1](https://github.com/nightroman/Invoke-Build/wiki/Build.ps1)
-* [TabExpansion2](https://github.com/nightroman/Invoke-Build/wiki/TabExpansion2)
-
 ## v2.4.0
 
 **Dynamic build script parameters in Build.ps1**

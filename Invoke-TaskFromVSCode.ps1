@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.8
+.VERSION 1.0.9
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Task, VSCode
@@ -20,13 +20,13 @@
 	- VSCode PowerShell
 
 	How to use:
-	https://github.com/nightroman/Invoke-Build/wiki/Invoke-Task-from-VSCode
+	https://github.com/nightroman/Invoke-Build/blob/main/Docs/Invoke-Task-from-VSCode.md
 
 .Parameter Console
 		Tells to invoke the task in an external console.
 
 .Link
-	https://github.com/nightroman/Invoke-Build/wiki/Invoke-Task-from-VSCode
+	https://github.com/nightroman/Invoke-Build/blob/main/Docs/Invoke-Task-from-VSCode.md
 #>
 
 param(

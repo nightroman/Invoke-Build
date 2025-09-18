@@ -154,7 +154,7 @@ exists on loading only.
 
 ### Building FarNet Showcase
 
-[Building FarNet Showcase]: https://github.com/nightroman/Invoke-Build/wiki/Building-FarNet-Showcase
+[Building FarNet Showcase]: https://github.com/nightroman/Invoke-Build/blob/main/Docs/Building-FarNet-Showcase.md
 
 See [Building FarNet Showcase] for the real and complex example of using
 inheritance features like multilevel and multiple inheritance, renaming

@@ -174,8 +174,8 @@ To get a task synopsis during a build, use Get-BuildSynopsis.
         $_ - full path of an input item
         $2 - corresponding output path
     
-    See also wiki topics about incremental tasks:
-    https://github.com/nightroman/Invoke-Build/wiki
+    See also docs about incremental tasks:
+    https://github.com/nightroman/Invoke-Build/blob/main/Docs/README.md
     
     Required?                    false
     Position?                    named
@@ -278,5 +278,4 @@ and values.
 ```text
 Get-BuildError
 Get-BuildSynopsis
-https://github.com/nightroman/Invoke-Build/wiki
 ```

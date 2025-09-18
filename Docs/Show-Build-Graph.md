@@ -53,7 +53,7 @@ ovals.
 Show-BuildGraph
 ```
 
-![Invoke-Build](https://raw.githubusercontent.com/wiki/nightroman/Invoke-Build/images/IB.svg)
+![Invoke-Build](https://raw.githubusercontent.com/nightroman/Invoke-Build/refs/heads/main/Docs/images/IB.svg)
 
 ## Mdbc
 
@@ -68,10 +68,10 @@ shows some more features
 Show-BuildGraph -Number -Code ""
 ```
 
-![Mdbc](https://raw.githubusercontent.com/wiki/nightroman/Invoke-Build/images/Mdbc.svg)
+![Mdbc](https://github.com/nightroman/Invoke-Build/raw/refs/heads/main/Docs/images/Mdbc.svg)
 
 ## Pode
 
 This example shows some more complex graph of [pode.build.ps1](https://github.com/Badgerati/Pode/blob/develop/pode.build.ps1)
 
-![Pode](https://raw.githubusercontent.com/wiki/nightroman/Invoke-Build/images/Pode.svg)
+![Pode](https://github.com/nightroman/Invoke-Build/raw/refs/heads/main/Docs/images/Pode.svg)

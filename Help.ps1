@@ -347,8 +347,7 @@
 	)
 
 	links = @(
-		@{ text = 'Wiki'; URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
-		@{ text = 'Project'; URI = 'https://github.com/nightroman/Invoke-Build' }
+		@{ URI = 'https://github.com/nightroman/Invoke-Build/blob/main/Docs/help/Invoke-Build.ps1.md' }
 		# external
 		@{ text = 'Build-Checkpoint' }
 		@{ text = 'Build-Parallel' }
@@ -708,8 +707,8 @@
 			$_ - full path of an input item
 			$2 - corresponding output path
 
-		See also wiki topics about incremental tasks:
-		https://github.com/nightroman/Invoke-Build/wiki
+		See also docs about incremental tasks:
+		https://github.com/nightroman/Invoke-Build/blob/main/Docs/README.md
 '@
 		Outputs = @'
 		Specifies the output paths of the incremental task, either directly on
@@ -805,7 +804,6 @@
 	links = @(
 		@{ text = 'Get-BuildError' }
 		@{ text = 'Get-BuildSynopsis' }
-		@{ URI = 'https://github.com/nightroman/Invoke-Build/wiki' }
 	)
 }
 

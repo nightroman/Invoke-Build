@@ -385,8 +385,7 @@ finally {
 ## Links
 
 ```text
-Wiki https://github.com/nightroman/Invoke-Build/wiki
-Project https://github.com/nightroman/Invoke-Build
+https://github.com/nightroman/Invoke-Build/blob/main/Docs/help/Invoke-Build.ps1.md
 Build-Checkpoint
 Build-Parallel
 For other commands, at first invoke:
