@@ -1,4 +1,4 @@
-# Invoke-Build Commands
+# Invoke-Build Help
 
 - [Invoke-Build.ps1](Invoke-Build.ps1.md) - Invokes build script tasks.
 - [Build-Checkpoint.ps1](Build-Checkpoint.ps1.md) - Invokes persistent builds with checkpoints.

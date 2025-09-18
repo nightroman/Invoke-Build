@@ -260,7 +260,7 @@ task boot {
 # Synopsis: Generate help.
 task docs {
 	$text = $(
-		'# Invoke-Build Commands'
+		'# Invoke-Build Help'
 		''
 		foreach($_ in ./Help.ps1) {
 			$name = $_.Command
