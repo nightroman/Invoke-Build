@@ -7,21 +7,25 @@ indented text with brief task details.
 
 ## Example
 
-This command invoked for the build script of this project
+For this project build script, this command
 
-    Show-BuildTree NuGet
+```text
+Show-BuildTree pushNuGet
+```
 
-shows the following task tree
+shows this task tree
 
-    NuGet # Make the NuGet package.
-        Version # Set $script:Version.
-            {}
-        Package # Make the package directory z\tools for NuGet.
-            ConvertMarkdown # Convert markdown files to HTML files (using MarkdownDeep).
+```text
+pushNuGet # Push NuGet package.
+    nuget # Make the NuGet package.
+        module # Make the module folder.
+            version # Set $Script:Version.
                 {}
-            Help # Build the PowerShell help file.
+            markdown # Convert markdown files to HTML.
                 {}
-            GitStatus # Warn about not empty git status if .git exists.
+            help # Build the PowerShell help file.
                 {}
             {}
         {}
+    {}
+```
