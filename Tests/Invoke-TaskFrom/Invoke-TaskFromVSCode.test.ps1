@@ -26,28 +26,35 @@ function Use-Context {
 	Set-Variable -Name psEditor -Value $psEditor -Scope 1
 }
 
+function __warning($Message) {
+	Write-Host $Message
+}
+
 task test-file-null {
 	Use-Context
 	$Context.CurrentFile = $null
 
-	($r = try {Invoke-TaskFromVSCode.ps1} catch {$_})
-	equals "$r" 'Cannot get the current file.'
+	Set-Alias Write-Warning __warning
+	Invoke-TaskFromVSCode.ps1 -InformationVariable iv
+	equals $iv[0].ToString() 'No current file.'
 }
 
 task test-file-not-ps1 {
 	Use-Context
 	$Context.CurrentFile.Path = 'test.txt'
 
-	($r = try {Invoke-TaskFromVSCode.ps1} catch {$_})
-	equals "$r" "The current file must be '*.ps1'."
+	Set-Alias Write-Warning __warning
+	Invoke-TaskFromVSCode.ps1 -InformationVariable iv
+	equals $iv[0].ToString() 'No current .ps1 file.'
 }
 
 task test-no-task {
 	Use-Context
 	$Context.CursorPosition.Line = Find-Line test-no-task
 
-	($r = Invoke-TaskFromVSCode.ps1)
-	assert ($r -contains '//.//')
+	Set-Alias Write-Warning __warning
+	Invoke-TaskFromVSCode.ps1 -InformationVariable iv
+	equals $iv[0].ToString() 'No current task.'
 }
 
 task test-t1-first-line {
@@ -81,4 +88,26 @@ task test-fail {
 	$r = ''
 	try {Invoke-TaskFromVSCode.ps1} catch {$r = $_}
 	equals "$r" Oops!
+}
+
+# first redefined emits warning
+task redefined-1 {
+	Use-Context
+	$Context.CursorPosition.Line = Find-Line redefined-1
+
+	Set-Alias Write-Warning __warning
+	($r = Invoke-TaskFromVSCode.ps1 -InformationVariable iv)
+	assert ($r -contains 'Redefined task.')
+	assert ($iv[0].ToString() -like 'Invoking redefined task at *\1.build.ps1:28')
+}
+
+# last redefined has no warning
+task redefined-2 {
+	Use-Context
+	$Context.CursorPosition.Line = Find-Line redefined-2
+
+	Set-Alias Write-Warning __warning
+	($r = Invoke-TaskFromVSCode.ps1 -InformationVariable iv)
+	assert ($r -contains 'Redefined task.')
+	equals $iv.Count 0
 }

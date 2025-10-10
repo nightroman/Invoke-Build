@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.0.9
+.VERSION 1.1.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, Task, VSCode
@@ -10,10 +10,10 @@
 
 <#
 .Synopsis
-	Invokes the current Invoke-Build task from VSCode
+	Invokes the current Invoke-Build task from VSCode.
 
 .Description
-	This script invokes the current task from the build script in VSCode.
+	It invokes the current task from the current build script opened in VSCode.
 
 	Requires:
 	- Invoke-Build
@@ -29,13 +29,12 @@
 	https://github.com/nightroman/Invoke-Build/blob/main/Docs/Invoke-Task-from-VSCode.md
 #>
 
+[CmdletBinding()]
 param(
-	[Parameter()]
 	[switch]$Console
 )
 
-$ErrorActionPreference = 1
-try {
+$ErrorActionPreference = 1; trap {throw $_}
 
 $private:file = $null
 try {
@@ -43,34 +42,70 @@ try {
 	$file = $context.CurrentFile
 }
 catch {}
-if (!$file) {throw 'Cannot get the current file.'}
+
+if (!$file) {
+	return Write-Warning "No current file."
+}
 
 # save if modified, #118
-if ($psEditor.EditorServicesVersion -ge [version]'1.6') {
-	$file.Save()
+$file.Save()
+
+$private:path = $file.Path
+if ($path -notlike '*.ps1') {
+	return Write-Warning "No current .ps1 file."
 }
 
 $private:_Console = $Console
 Remove-Variable Console
 
-$private:path = $file.Path
-if ($path -notlike '*.ps1') {throw "The current file must be '*.ps1'."}
+$goodTasksDic = Invoke-Build ?? $path -Result:Result
+$goodTasks = $goodTasksDic.get_Values()
+$dupeTasks = $Result.Redefined
+$line = $context.CursorPosition.Line
 
-$private:task = '.'
-$private:line = $context.CursorPosition.Line
-foreach($private:t in (Invoke-Build ?? $path).get_Values()) {
-	if ($t.InvocationInfo.ScriptName -ne $path) {continue}
-	if ($t.InvocationInfo.ScriptLineNumber -gt $line) {break}
-	$task = $t.Name
+function __find_caret_task($Tasks, $Path, $Line) {
+	$bestTaskName = ''
+	$bestLineNumber = -1
+	foreach($task in $Tasks) {
+		$ii = $task.InvocationInfo
+
+		# skip different file
+		if ($ii.ScriptName -ne $Path) {
+			continue
+		}
+
+		# stop on any task below the caret
+		if ($ii.ScriptLineNumber -gt $Line) {
+			break
+		}
+
+		# keep the best
+		$bestTaskName = $task.Name
+		$bestLineNumber = $ii.ScriptLineNumber
+	}
+	[pscustomobject]@{Name = $bestTaskName; LineNumber = $bestLineNumber}
+}
+
+$goodTask = __find_caret_task $goodTasks $path $line
+$dupeTask = __find_caret_task $dupeTasks $path $line
+
+# no dupe or good task?
+if (!$dupeTask.Name -and !$goodTask.Name) {
+	return Write-Warning "No current task."
+}
+
+# dupe task and no good task better than dupe?
+if ($dupeTask.Name -and $goodTask.LineNumber -lt $dupeTask.LineNumber) {
+	$ii = $goodTasksDic[$dupeTask.Name].InvocationInfo
+	Write-Warning "Invoking redefined task at $($ii.ScriptName):$($ii.scriptLineNumber)"
+	$goodTask = $dupeTask
 }
 
 if ($_Console) {
-	$command = "Invoke-Build '$($task.Replace("'", "''"))' '$($path.Replace("'", "''"))'"
+	$command = "Invoke-Build '$($goodTask.Name.Replace("'", "''"))' '$($path.Replace("'", "''"))'"
 	$encoded = [Convert]::ToBase64String(([System.Text.Encoding]::Unicode.GetBytes($command)))
 	Start-Process powershell.exe "-NoExit -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded"
 }
 else {
-	Invoke-Build $task $path
+	Invoke-Build $goodTask.Name $path
 }
-
-} catch {if ($_.InvocationInfo.ScriptName -like '*Invoke-TaskFromVSCode.ps1') {$PSCmdlet.ThrowTerminatingError($_)} throw}

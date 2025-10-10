@@ -1,4 +1,3 @@
-
 <#
 .Synopsis
 	Used by Invoke-TaskFromISE.test.ps1 and Invoke-TaskFromVSCode.test.ps1
@@ -19,4 +18,14 @@ task . {
 task fail {
     ## test-fail: caret moves to the next line to `throw`
     $x = 1; throw 'Oops!'
+}
+
+task redefined {
+	## redefined-1
+	throw "Unexpected."
+}
+
+task redefined {
+	## redefined-2
+	"Redefined task."
 }
