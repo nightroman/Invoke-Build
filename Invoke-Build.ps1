@@ -221,11 +221,13 @@ function Invoke-BuildExec([Parameter(Mandatory=1)][scriptblock]$Command, [int[]]
 function Remove-BuildItem([Parameter(Mandatory=1)][string[]]$Path) {
 	if ($Path -match '^[.*/\\]*$') {*Die 'Not allowed paths.' 5}
 	$v = $PSBoundParameters['Verbose']
+	$p = @{Force=$true; Recurse=$true}
+	if ($PSVersionTable.PSVersion -ge ([version]'7.4')) {$p.ProgressAction='Ignore'}
 	try {
 		foreach($_ in $Path) {
 			if (Get-Item $_ -Force -ErrorAction 0) {
 				if ($v) {Write-Verbose "remove: removing $_" -Verbose}
-				Remove-Item $_ -Force -Recurse
+				Remove-Item $_ @p
 			}
 			elseif ($v) {Write-Verbose "remove: skipping $_" -Verbose}
 		}
