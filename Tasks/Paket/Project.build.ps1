@@ -28,7 +28,7 @@ param(
 # Direct call: ensure packages and call the local Invoke-Build
 
 if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
-	$ErrorActionPreference = 1
+	$ErrorActionPreference=1
 	$ib = "$PSScriptRoot/packages/Invoke-Build/tools/Invoke-Build.ps1"
 
 	if (!(Test-Path -LiteralPath $ib)) {

@@ -47,7 +47,7 @@ param(
 
 # bootstrap
 if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
-	$ErrorActionPreference = 1
+	$ErrorActionPreference=1
 	if (!(Get-Command Invoke-Build -ErrorAction 0)) {
 		Write-Host InvokeBuild installing...
 		Install-Module InvokeBuild -Scope CurrentUser -Force

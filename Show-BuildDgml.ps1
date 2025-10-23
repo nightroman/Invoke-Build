@@ -58,7 +58,7 @@ param(
 	[switch]$Number
 )
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 
 ### resolve output
 if ($Output) {

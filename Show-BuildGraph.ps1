@@ -92,7 +92,7 @@ param(
 	[switch]$Number
 )
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 
 ### resolve dot or js
 if ($Dot) {

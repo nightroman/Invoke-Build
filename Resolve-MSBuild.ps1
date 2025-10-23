@@ -261,7 +261,7 @@ function Get-MSBuildAny {
 	}
 }
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 
 if ($Version -match '^(.*?)x86\s*$') {
 	$Version = $Matches[1]

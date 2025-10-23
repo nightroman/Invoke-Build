@@ -30,7 +30,7 @@ param(
 	[switch]$Auto
 )
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 try {
 	$_ = if ($PSBoundParameters.ContainsKey('Checkpoint')) {
 		$Checkpoint = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Checkpoint)

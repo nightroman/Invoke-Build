@@ -34,7 +34,7 @@ param(
 	[switch]$Console
 )
 
-$ErrorActionPreference = 1; trap {throw $_}
+$ErrorActionPreference=1; trap {throw $_}
 
 $private:file = $null
 try {

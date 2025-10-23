@@ -136,7 +136,7 @@ param(
 )
 
 trap {$PSCmdlet.ThrowTerminatingError($_)}
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 Set-StrictMode -Version 3
 
 ### Source

@@ -64,7 +64,7 @@ param(
 	[switch]$Number
 )
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 
 function Escape-Text($Text) {
 	$Text.Replace('"', '#quot;').Replace('<', '#lt;').Replace('>', '#gt;')

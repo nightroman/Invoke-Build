@@ -1,10 +1,16 @@
+.vs/
 .vscode/
+bin/
+obj/
+Debug/
+Release/
 z/
-*.build.ps1.clixml
 *.clixml
 *.html
 *.log
 *.nupkg
 Help.xml
+launchSettings.json
 tasks.json
+*.user
 z.*

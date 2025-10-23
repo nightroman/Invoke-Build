@@ -25,7 +25,7 @@ param(
 	[switch]$Summary
 )
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 try {
 	${*data} = @{
 		Task = $Task

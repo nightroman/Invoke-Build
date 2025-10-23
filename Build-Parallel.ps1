@@ -27,7 +27,7 @@ param(
 	[string[]]$ShowParameter
 )
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 
 # info, result
 $info = [PSCustomObject]@{

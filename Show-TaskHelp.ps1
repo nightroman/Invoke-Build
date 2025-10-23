@@ -61,7 +61,7 @@ param(
 	[switch]$NoCode = $PSCmdlet.GetVariableValue('NoCode')
 )
 
-$ErrorActionPreference = 1; trap {$PSCmdlet.ThrowTerminatingError($_)}
+$ErrorActionPreference=1; trap {$PSCmdlet.ThrowTerminatingError($_)}
 
 # recall by IB
 if ([System.IO.Path]::GetFileName($MyInvocation.ScriptName) -ne 'Invoke-Build.ps1') {

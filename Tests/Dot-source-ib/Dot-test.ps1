@@ -18,7 +18,7 @@ $ErrorActionPreference = 'Continue'
 if ($ErrorActionPreference -ne 'Continue') {throw}
 
 # set error preference to stop
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 
 ### Test assert first of all
 

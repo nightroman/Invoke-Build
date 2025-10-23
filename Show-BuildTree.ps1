@@ -42,7 +42,7 @@ param(
 	[switch]$Upstream
 )
 
-$ErrorActionPreference = 1; trap {$PSCmdlet.ThrowTerminatingError($_)}
+$ErrorActionPreference=1; trap {$PSCmdlet.ThrowTerminatingError($_)}
 
 $private:_Task = $Task
 $private:_File = $File

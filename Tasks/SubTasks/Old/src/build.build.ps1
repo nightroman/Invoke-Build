@@ -10,7 +10,7 @@ param(
 )
 
 if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
-	$ErrorActionPreference = 1
+	$ErrorActionPreference=1
 	return Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters
 }
 

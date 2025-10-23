@@ -59,7 +59,7 @@ dynamicparam {
 
 end {
 	if (!$MyInvocation.ScriptName.EndsWith('Invoke-Build.ps1')) {
-		$ErrorActionPreference = 1
+		$ErrorActionPreference=1
 		#! for dynamic parameters
 		$DynamicParamTasks = $Tasks
 		return Invoke-Build -Task $Tasks -File $MyInvocation.MyCommand.Path @PSBoundParameters

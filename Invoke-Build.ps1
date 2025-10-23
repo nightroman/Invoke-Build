@@ -755,7 +755,7 @@ function *What {
 	& $PSScriptRoot/Show-TaskHelp.ps1
 }
 
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 if (${*}.Q = $BuildTask -eq '?' -or $BuildTask -eq '??') {
 	$WhatIf = $true
 }

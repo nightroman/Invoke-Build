@@ -85,7 +85,7 @@ param(
 )
 
 trap {Write-Error -ErrorRecord $_}
-$ErrorActionPreference = 1
+$ErrorActionPreference=1
 
 # resolve Invoke-Build.ps1
 if (!$InvokeBuild) {
