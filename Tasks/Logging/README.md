@@ -76,10 +76,11 @@ Transcribing is especially sensitive to objects written without `Out-String`.
 Records may have unexpected order or may be completely discarded, sometimes
 together with other records.
 
-Output of native commands is not included.
-Some tricks may work around this and include native output.
+Output of native commands is not included to transcripts.
+But this trick will include it: `<native-command> | Out-Default`.
 
 ## See also
 
 - [Log output · Issue 99](https://github.com/nightroman/Invoke-Build/issues/99)
 - [Limitations of PowerShell transcripts](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/output-missing-from-transcript)
+- [Workaround for Start-Transcript on native processes](https://devblogs.microsoft.com/powershell/workaround-for-start-transcript-on-native-processes/)

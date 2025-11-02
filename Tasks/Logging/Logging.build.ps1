@@ -64,5 +64,5 @@ task native-output-1 {
 
 # Native output is included on transcribing.
 task native-output-2 {
-	(cmd /c dir *.ps1)
+	cmd /c dir *.ps1 | Out-Default
 }
