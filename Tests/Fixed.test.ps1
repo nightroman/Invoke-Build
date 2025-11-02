@@ -515,11 +515,8 @@ task WriteAnsi {
 	$text = "line1`rline2`nline3`r`nline4"
 	$r = (print 0 $text) -join '|'
 
-	if ($PSVersionTable.PSVersion -ge [Version]'7.5.4' -and $PSStyle.OutputRendering -ne 'PlainText') {
-		equals $r 'line1|line2|line3|line4'
-	}
-	#! keep for GHA
-	elseif ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText') {
+	# esc
+	if ($r.Contains("`e[0m")) {
 		equals $r "`e[30mline1`e[0m|`e[30mline2`e[0m|`e[30mline3`e[0m|`e[30mline4`e[0m"
 	}
 	else {

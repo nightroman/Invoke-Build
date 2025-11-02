@@ -32,21 +32,16 @@ task Warnings {
 	# output
 	assert ($r[-5] -cmatch '^WARNING: .*Errors\.test\.ps1:\d+$')
 	assert ($r[-3] -cmatch '^WARNING: /t1 .*Errors\.test\.ps1:\d+$')
-	if ($PSVersionTable.PSVersion -ge [Version]'7.5.4' -and $PSStyle.OutputRendering -ne 'PlainText') {
-		equals $r[-4] demo-file-warning
-		equals $r[-2] demo-task-warning
-		assert ($r[-1] -clike "*Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *")
-	}
-	#! keep for GHA
-	elseif ($PSVersionTable.PSVersion -ge [Version]'7.2' -and $PSStyle.OutputRendering -ne 'PlainText') {
+	assert ($r[-1] -clike "*Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *")
+
+	#! esc
+	if ($r[-2].Contains("`e[0m")) {
 		equals $r[-4] "`e[93mdemo-file-warning`e[0m"
 		equals $r[-2] "`e[93mdemo-task-warning`e[0m"
-		assert ($r[-1] -clike "*Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *")
 	}
 	else {
 		equals $r[-4] demo-file-warning
 		equals $r[-2] demo-task-warning
-		assert ($r[-1] -clike 'Build succeeded with warnings. 1 tasks, 0 errors, 2 warnings *')
 	}
 
 	# result
