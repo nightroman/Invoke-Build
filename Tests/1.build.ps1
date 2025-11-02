@@ -38,6 +38,8 @@ equals (Split-Path $MyPath) $BuildRoot
 
 # This block is called before the first task.
 Enter-Build {
+	$env:IB_TESTING = 1
+
 	# dot-source common functions, import modules, etc.
 	Import-Module .\Tools
 
@@ -52,6 +54,11 @@ Enter-Build {
 
 	# Warnings are shown as usual and also after tasks.
 	Write-Warning 'Ignore this warning.'
+}
+
+# This block is called after the last task.
+Exit-Build {
+	$env:IB_TESTING = ''
 }
 
 # Set custom task headers.
