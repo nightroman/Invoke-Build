@@ -43,4 +43,4 @@ Let's use the term "assets" for script scope variables and functions.
 - The root script parameters and assets are available for case tasks.
 - The case specific assets are available for common root tasks.
 - Cases may change root assets defined before dot-sourcing.
-- See features in action shown by [.test.ps1](.test.ps1).
+- See features in action shown by [1.test.ps1](1.test.ps1).

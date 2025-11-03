@@ -29,38 +29,36 @@ The default encoding is UTF-8 (Core) or ASCII (Desktop), will do for ASCII outpu
 
 ## Out-File
 
-`Out-File` may be used for logging but it is less simple:
+`Out-File` may be used for logging:
 
 ```powershell
 Invoke-Build ... *>&1 | Out-File $myLog -Width $myWidth -Encoding UTF8
 ```
 
-It formats data per the host window width. Too small may cause unwanted
-wrapping or truncation. `-Width $myWidth` is needed.
+It formats data per the host window width. Too small may cause unwanted wrapping or truncation.
 
-Default encoding is `utf8NoBOM` (v6.0+) or `Unicode` (...v5.1).
-`-Encoding UTF8` is needed as the same in all versions.
+Default encoding depends on versions: `utf8NoBOM` (v6.0+), `Unicode` (...v5.1).
 
 ## Tee-Object
 
 Build output is not shown in the console on using the above methods.
-If it is needed then `Tee-Object` may help.
+If it is needed then `Tee-Object` may help:
 
 ```powershell
 Invoke-Build ... *>&1 | Tee-Object $myLog
 ```
 
-It works well in PowerShell Core with no obvious width issues and using UTF-8 encoding.
+It works well in PowerShell Core with no obvious width issues, using UTF-8 by default.
 
-In Windows Desktop edition the output width (Host) and encoding (Unicode) are not configurable.
+In Windows Desktop the output width (Host) and encoding (Unicode) are not configurable.
 
 ## Transcript
 
 `Start-Transcript` in `Enter-Build` and `Stop-Transcript` in `Exit-Build`
 provide yet another way of logging.
 
-Unlike other methods, the build script itself performs logging (transcribing).
-This is different from other methods and may have some advantages.
+Note that the build script itself controls such logging.
+This is different from other methods, with some advantages.
 
 ```powershell
 Enter-Build {
@@ -73,11 +71,11 @@ Exit-Build {
 ```
 
 Transcribing is especially sensitive to objects written without `Out-String`.
-Records may have unexpected order or may be completely discarded, sometimes
-together with other records.
+Records may have unexpected order or may be discarded, sometimes with next
+records.
 
 Output of native commands is not included to transcripts.
-But this trick will include it: `<native-command> | Out-Default`.
+This trick includes native output: `<native-command> | Out-Default`.
 
 ## See also
 

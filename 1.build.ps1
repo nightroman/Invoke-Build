@@ -215,47 +215,6 @@ task loop {
 	}
 }
 
-# Synopsis: Test and check expected output.
-# Requires PowerShelf/Assert-SameFile.ps1
-task test {
-	assert ($PSVersionTable['Platform'] -ne 'Unix') 'WSL: cd Tests; ib'
-
-	# just test
-	if ($NoTestDiff) {
-		return Invoke-Build . Tests\1.build.ps1
-	}
-
-	# test, get output and result
-	if ($PSEdition -eq 'Core') {
-		$output = Invoke-Build . Tests\1.build.ps1 -Result result | Tee-Object \\.\CON | Out-String -Width:200
-	}
-	else {
-		$output = Invoke-Build . Tests\1.build.ps1 -Result result | Out-String -Width:200
-	}
-
-	# process and save the output
-	$resultPath = "$BuildRoot\Invoke-Build-Test.log"
-	$samplePath = "$HOME\data\Invoke-Build-Test.$($PSVersionTable.PSVersion.Major).log"
-	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?( )? *', '00:00:00.0000000$1'
-	[System.IO.File]::WriteAllText($resultPath, $output)
-
-	# compare outputs
-	Assert-SameFile $samplePath $resultPath $env:MERGE
-	Remove-Item $resultPath
-}
-
-# Synopsis: Test Desktop.
-task desktop {
-	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec { powershell -nop -c Invoke-Build test $diff }
-}
-
-# Synopsis: Test Core.
-task core {
-	$diff = if ($NoTestDiff) {'-NoTestDiff'}
-	exec { pwsh -nop -c Invoke-Build test $diff }
-}
-
 # Synopsis: Get dependencies.
 task boot {
 	Save-Script Invoke-PowerShell -Path . -Force
@@ -278,6 +237,40 @@ task docs {
 	Set-Content Docs/help/README.md $text -NoNewline
 }
 
-# Synopsis: The default task: make, test, clean.
-# `core` before `desktop`, better on issues.
-task . help, core, desktop, clean
+# Synopsis: Test Desktop.
+task desktop {
+	$diff = if ($NoTestDiff) {'-NoTestDiff'}
+	exec { powershell -nop -c Invoke-Build test $diff }
+}
+
+# Synopsis: Test Core.
+task core {
+	$diff = if ($NoTestDiff) {'-NoTestDiff'}
+	exec { pwsh -nop -c Invoke-Build test $diff }
+}
+
+# Synopsis: Test and check expected output.
+# Requires PowerShelf/Assert-SameFile.ps1
+task test {
+	$ErrorView='NormalView'
+
+	# test, get output and result
+	Invoke-Build . Tests\1.build.ps1 -Result result | Tee-Object -Variable output
+	if ($NoTestDiff) {
+		return
+	}
+	$output = $output | Out-String -Width:200
+	$output = $output -replace '\d\d:\d\d:\d\d(?:\.\d+)?(\s)?\s*', '00:00:00.0000000$1'
+
+	# process and save the output
+	$samplePath = "$HOME\data\Invoke-Build.$PSEdition.log"
+	$resultPath = "$samplePath.log"
+	[System.IO.File]::WriteAllText($resultPath, $output)
+
+	# compare outputs
+	Assert-SameFile $samplePath $resultPath $env:MERGE
+	Remove-Item $resultPath
+}
+
+# Synopsis: Make, test, clean.
+task . help, desktop, core, clean

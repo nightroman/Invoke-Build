@@ -21,7 +21,7 @@ It contains the usual tasks and two special tasks `build` and `deploy` which cal
 The first parameter `Tasks` specifies either root tasks or the special `build` or `deploy`.
 In the latter case, the second parameter `SubTasks` specifies tasks in the correspondent build script.
 
-See [.test.ps1](.test.ps1) for examples.
+See [1.test.ps1](1.test.ps1) for examples.
 
 ## Dynamic sub parameters
 

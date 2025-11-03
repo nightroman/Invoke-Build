@@ -74,8 +74,8 @@ task UndocumentedStuff {
 	$r = Show-TaskHelp.ps1 '' ../1.build.ps1 -Format {$args[0]}
 	equals $r.Task.Count 1
 	equals $r.Task[0].Name .
-	equals $r.Task[0].Synopsis 'The default task: make, test, clean.'
-	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'help, core, desktop, clean'
+	equals $r.Task[0].Synopsis 'Make, test, clean.'
+	equals (($r.Jobs | Select-Object -ExpandProperty Name) -join ', ') 'help, desktop, core, clean'
 	foreach($job in $r.Jobs) {
 		assert ($job.Location -match '\.build\.ps1:\d+$')
 	}
