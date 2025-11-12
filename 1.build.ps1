@@ -253,6 +253,7 @@ task core {
 # Requires PowerShelf/Assert-SameFile.ps1
 task test {
 	$ErrorView='NormalView'
+	if ($Host.Name -eq 'FarHost') {$NoTestDiff = $true; Write-Warning "Skip test diff in FarHost."}
 
 	# test, get output and result
 	Invoke-Build . Tests\1.build.ps1 -Result result | Tee-Object -Variable output

@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.6.2
+.VERSION 1.7.0
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild
@@ -14,7 +14,7 @@
 
 .Description
 	The script finds the path to the specified or latest version of MSBuild.
-	It is designed for MSBuild 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
+	Designed for MSBuild 18.0, 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
 
 	For MSBuild 15+ the command uses the module VSSetup, see PSGallery.
 	If VSSetup is not installed then the default locations are used.
@@ -29,7 +29,7 @@
 		Specifies the required MSBuild major version. If it is omitted, empty,
 		or *, then the command finds and returns the latest installed version.
 		The optional suffix x86 tells to use 32-bit MSBuild.
-		Versions: 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
+		Versions: 18.0, 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
 
 .Parameter MinimumVersion
 		Specifies the required minimum MSBuild version. If the resolved version
@@ -98,6 +98,7 @@ function Get-MSBuild15VSSetup {
 
 	$items = @(
 		$v = switch($Version) {
+			'18.0' {'[18.0,19.0)'}
 			'17.0' {'[17.0,18.0)'}
 			'16.0' {'[16.0,17.0)'}
 			'15.0' {'[15.0,16.0)'}
@@ -154,14 +155,16 @@ function Get-MSBuild15Guess {
 			"$Program86\Microsoft Visual Studio\Preview"
 		}
 		elseif ($Version -eq '*') {
+			"$Program64\Microsoft Visual Studio\18"
 			"$Program64\Microsoft Visual Studio\2022"
-			"$Program86\Microsoft Visual Studio\2022"
 			"$Program86\Microsoft Visual Studio\2019"
 			"$Program86\Microsoft Visual Studio\2017"
 		}
+		elseif ($Version -eq '18.0') {
+			"$Program64\Microsoft Visual Studio\18"
+		}
 		elseif ($Version -eq '17.0') {
 			"$Program64\Microsoft Visual Studio\2022"
-			"$Program86\Microsoft Visual Studio\2022"
 		}
 		elseif ($Version -eq '16.0') {
 			"$Program86\Microsoft Visual Studio\2019"
@@ -275,6 +278,7 @@ if (!$Version) {
 	$Version = '*'
 }
 
+$v18 = [Version]'18.0'
 $v17 = [Version]'17.0'
 $v16 = [Version]'16.0'
 $v15 = [Version]'15.0'
@@ -293,7 +297,7 @@ else {
 }
 
 $path = ''
-if ($vRequired -eq $v17 -or $vRequired -eq $v16 -or $vRequired -eq $v15) {
+if ($vRequired -eq $v18 -or $vRequired -eq $v17 -or $vRequired -eq $v16 -or $vRequired -eq $v15) {
 	$path = Get-MSBuild15 $Version $Bitness -Latest:$Latest
 }
 elseif ($vRequired -lt $v15) {

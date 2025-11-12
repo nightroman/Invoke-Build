@@ -20,6 +20,7 @@ if (!($Program86 = ${env:ProgramFiles(x86)})) {$Program86 = $Program64}
 $VS2017 = Test-Path "$Program86\Microsoft Visual Studio\2017"
 $VS2019 = Test-Path "$Program86\Microsoft Visual Studio\2019"
 $VS2022 = Test-Path "$Program64\Microsoft Visual Studio\2022"
+$VS2026 = Test-Path "$Program64\Microsoft Visual Studio\18"
 
 # Use the current framework at the script level (used by CurrentFramework).
 use ([System.Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) MSBuild.exe
@@ -188,7 +189,27 @@ task Version.17.0 -If $VS2022 {
 	assert ($r -like '*\Current\bin\MSBuild.exe')
 }
 
-task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, Version.15.0, Version.16.0, Version.17.0, {
+# VS 2026 ~ v18
+task Version.18.0 -If $VS2026 {
+	use 18.0 MSBuild.exe
+	($version = exec { MSBuild.exe /version /nologo })
+	assert ($version -like '18.*')
+	$script:LatestVersion = $version
+
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	if ($Is64) {
+		assert ($r -like '*\Current\bin\amd64\MSBuild.exe')
+	}
+	else {
+		assert ($r -like '*\Current\bin\MSBuild.exe')
+	}
+
+	use 18.0x86 MSBuild.exe
+	($r = Test-MSBuild (Get-Alias MSBuild.exe))
+	assert ($r -like '*\Current\bin\MSBuild.exe')
+}
+
+task Version.Latest Version.2.0, Version.3.5, Version.4.0, Version.12.0, Version.14.0, Version.15.0, Version.16.0, Version.17.0, Version.18.0, {
 	use * MSBuild.exe
 	($r1 = Test-MSBuild (Get-Alias MSBuild.exe))
 	($version = exec { MSBuild.exe /version /nologo })

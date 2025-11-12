@@ -1,6 +1,6 @@
 <#
 .Synopsis
-	Tests of Resolve-MSBuild.ps1
+	Tests Resolve-MSBuild.ps1
 #>
 
 Import-Module .\Tools
@@ -11,6 +11,7 @@ if (!($Program86 = ${env:ProgramFiles(x86)})) {$Program86 = $Program64}
 $VS2017 = Test-Path "$Program86\Microsoft Visual Studio\2017"
 $VS2019 = Test-Path "$Program86\Microsoft Visual Studio\2019"
 $VS2022 = Test-Path "$Program64\Microsoft Visual Studio\2022"
+$VS2026 = Test-Path "$Program64\Microsoft Visual Studio\18"
 $MSBuild14 = Test-Path 'HKLM:\SOFTWARE\Microsoft\MSBuild\ToolsVersions\14.0'
 $VSSetup = Get-Module VSSetup -ListAvailable
 $Is64 = [IntPtr]::Size -eq 8
@@ -75,6 +76,21 @@ task test15VSSetup2022 -If $VS2022 {
 	equals $r $r2
 }
 
+task test15VSSetup2026 -If $VS2026 {
+	if (!$VSSetup) {Write-Warning 'VSSetup is not installed'}
+	$r = Resolve-MSBuild 18.0
+	Test-MSBuild $r
+	assert ($r -like '*\Current\*')
+
+	$r = Resolve-MSBuild 18.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\Current\Bin\MSBuild.exe')
+
+	# with spaces, #148
+	$r2 = Resolve-MSBuild '  18.0  x86  '
+	equals $r $r2
+}
+
 task test15Guess -If $VS2017 {
 	Set-Alias Get-MSBuild15VSSetup Get-MSBuild15VSSetup2
 	function Get-MSBuild15VSSetup2 {}
@@ -110,6 +126,19 @@ task test15Guess2022 -If $VS2022 {
 	assert ($r -like '*\Current\*')
 
 	$r = Resolve-MSBuild 17.0x86
+	Test-MSBuild $r
+	assert ($r -like '*\Current\Bin\MSBuild.exe')
+}
+
+task test15Guess2026 -If $VS2026 {
+	Set-Alias Get-MSBuild15VSSetup Get-MSBuild15VSSetup2
+	function Get-MSBuild15VSSetup2 {}
+
+	$r = Resolve-MSBuild 18.0
+	Test-MSBuild $r
+	assert ($r -like '*\Current\*')
+
+	$r = Resolve-MSBuild 18.0x86
 	Test-MSBuild $r
 	assert ($r -like '*\Current\Bin\MSBuild.exe')
 }

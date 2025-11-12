@@ -2,6 +2,10 @@
 
 [Issues](https://github.com/nightroman/Invoke-Build/issues) [Releases](https://github.com/nightroman/Invoke-Build/releases) [Discussions](https://github.com/nightroman/Invoke-Build/discussions)
 
+## v5.14.21
+
+`Resolve-MSBuild` - support v18, VS 2026.
+
 ## v5.14.20
 
 Ignore progress in `Remove-BuildItem` (`remove`).
