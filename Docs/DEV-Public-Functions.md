@@ -316,6 +316,10 @@ Do not always `Import-Module VSSetup`, check if it is loaded first. Reasons:
 1. It may be loaded from a not standard location. `psake` has such a request from a user.
 2. VSSetup used to have problems with loading twice (due to a global const variable).
 
+**Keep x86 checks for 2022, 18**
+
+`#242`: VS is in "Program Files" but `BuildTools` edition is in "Program Files (x86)".
+
 **Resolve-MSBuild and Preview**
 
 2017 Professional Preview (support many preview editions)
@@ -340,6 +344,7 @@ For 2019 no extra change is needed, "Preview" is found as one of the "editions" 
 
 **Resolve-MSBuild Issues:**
 
+- [#242 Fix detection of VS 2022/2026 Build Tools when VSSetup not present](https://github.com/nightroman/Invoke-Build/pull/242)
 - [#55 Cannot resolve '15.0' with MSBuild version 15](https://github.com/nightroman/Invoke-Build/issues/55)
 - [#57 Added ability to resolve path to Build Tools installed in non-standard directory](https://github.com/nightroman/Invoke-Build/pull/57)
 - [#77 Wrong MSBUILD selected](https://github.com/nightroman/Invoke-Build/issues/77) Introduced explicit product precedence.

@@ -14,7 +14,7 @@ Resolve-MSBuild.ps1 [[-Version] String] [[-MinimumVersion] Version] [-Latest]
 
 ```text
 The script finds the path to the specified or latest version of MSBuild.
-It is designed for MSBuild 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
+Designed for MSBuild 18.0, 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
 
 For MSBuild 15+ the command uses the module VSSetup, see PSGallery.
 If VSSetup is not installed then the default locations are used.
@@ -33,7 +33,7 @@ For MSBuild 2.0-14.0 the information is taken from the registry.
     Specifies the required MSBuild major version. If it is omitted, empty,
     or *, then the command finds and returns the latest installed version.
     The optional suffix x86 tells to use 32-bit MSBuild.
-    Versions: 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
+    Versions: 18.0, 17.0, 16.0, 15.0, 14.0, 12.0, 4.0, 3.5, 2.0.
     
     Required?                    false
     Position?                    1

@@ -21,7 +21,7 @@ scripts inherit lower scripts using the special parameters `Extends` (v5.14).
 - [ReleaseFarNet.build.ps1](https://github.com/nightroman/FarNet/blob/main/Zoo/ReleaseFarNet.build.ps1)
     - `DC::` [Docs.build.ps1](https://github.com/nightroman/FarNet/blob/main/Docs/Docs.build.ps1)
     - `GH::` [Code.build.ps1](https://github.com/nightroman/FarNet/blob/main/Code.build.ps1)
-        - `PS::` [PowerShellFar.build.ps1](https://github.com/nightroman/FarNet/blob/main/PowerShellFar/PowerShellFar.build.ps1)
+        - `PS::` [1.build.ps1](https://github.com/nightroman/FarNet/blob/main/PowerShellFar/1.build.ps1)
         - `FN::` [FarNet.build.ps1](https://github.com/nightroman/FarNet/blob/main/FarNet/FarNet.build.ps1)
             - `FA::` [FarNetApi.build.ps1](https://github.com/nightroman/FarNet/blob/main/FarNet/FarNet/FarNetApi.build.ps1)
             - `FM::` [FarNetMan.build.ps1](https://github.com/nightroman/FarNet/blob/main/FarNet/FarNetMan/FarNetMan.build.ps1)
