@@ -14,7 +14,7 @@ if (!(Test-Path Variable:\BuildJustTask)) {
 
 # Show the result flags on exiting.
 Exit-Build {
-	$BuildJustTask.GetEnumerator() | Sort-Object Key | Out-String
+	$BuildJustTask.GetEnumerator() | Sort-Object Key | Out-String -Width 80
 }
 
 task t1 {$BuildJustTask.t1 = 1}

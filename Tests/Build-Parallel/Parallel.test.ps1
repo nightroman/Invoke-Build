@@ -159,7 +159,8 @@ task ParallelMissingEngine -If (!$env:GITHUB_ACTION) {
 & 'z/Build-Parallel.ps1' @{bar=1}
 "@
 
-	($r = Invoke-PowerShell -NoProfile -Command $command | Out-String)
+	#! do not out, hard to diff
+	$r = Invoke-PowerShell -nop -c $command | Out-String
 	assert ($r -like "*Invoke-Build.ps1'*@{bar=1}*CommandNotFoundException*")
 	remove z
 }

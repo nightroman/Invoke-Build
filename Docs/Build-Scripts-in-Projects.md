@@ -65,7 +65,7 @@ script is for testing, generating the index, and other routine tasks.
 
 ## PowerShell/PSReadLine
 
-- [PSReadline.build.ps1](https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine.build.ps1)
+- [PSReadLine.build.ps1](https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine.build.ps1)
 
 A bash inspired readline implementation for PowerShell.
 

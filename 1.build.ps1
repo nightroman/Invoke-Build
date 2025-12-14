@@ -195,14 +195,12 @@ task pushRelease pushAndTag, newRelease
 
 # Synopsis: Push NuGet package.
 task pushNuGet nuget, {
-	if (!($NuGetApiKey = property NuGetApiKey '')) { $NuGetApiKey = Read-Host NuGetApiKey }
-	exec { nuget push "Invoke-Build.$Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
+	exec { nuget push "Invoke-Build.$Version.nupkg" -Source nuget.org -ApiKey (property NuGetApiKey) }
 }
 
 # Synopsis: Push PSGallery package.
 task pushPSGallery module, {
-	if (!($PSGalleryApiKey = property PSGalleryApiKey '')) { $PSGalleryApiKey = Read-Host NuGetApiKey }
-	Publish-Module -Path z/InvokeBuild -NuGetApiKey $PSGalleryApiKey
+	Publish-Module -Path z/InvokeBuild -NuGetApiKey (property NuGetApiKeyPS)
 }
 
 # Synopsis: Calls tests infinitely. NOTE: normal scripts do not use ${*}.

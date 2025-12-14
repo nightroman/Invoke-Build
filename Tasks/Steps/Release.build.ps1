@@ -7,14 +7,9 @@
 	Example of "Confirm tasks".
 #>
 
-param(
-	$NuGetApiKey,
-	$PSGalleryApiKey
-)
-
+Set-StrictMode -Version 3
 $BuildRoot = '../..'
 $Ask = @{If = {Confirm-Build}}
-Set-StrictMode -Version Latest
 
 # Synopsis: It should be the main branch with no changes.
 task status @Ask {
@@ -29,32 +24,22 @@ task test_IB @Ask test_ib_tool, {
 
 # Synopsis: Test the ib dotnet tool.
 task test_ib_tool {
-	Invoke-Build . ib/ib.build.ps1
+	Invoke-Build . ib
 }
 
 # Synopsis: Push the Invoke-Build package.
-task push_NuGet @Ask NuGetApiKey, {
+task push_NuGet @Ask {
 	Invoke-Build pushNuGet
 }
 
-# Synopsis: Get and keep the API key.
-task NuGetApiKey -If {!$NuGetApiKey} {
-	$script:NuGetApiKey = Read-Host NuGetApiKey
-}
-
 # Synopsis: Push the InvokeBuild module.
-task push_PSGallery @Ask PSGalleryApiKey, {
+task push_PSGallery @Ask {
 	Invoke-Build pushPSGallery
-}
-
-# Synopsis: Get and keep the API key.
-task PSGalleryApiKey -If {!$PSGalleryApiKey} {
-	$script:PSGalleryApiKey = Read-Host PSGalleryApiKey
 }
 
 # Synopsis: Push the ib package.
 task push_ib_tool @Ask {
-	Invoke-Build pushNuGet ib/ib.build.ps1
+	Invoke-Build pushNuGet ib
 }
 
 # Synopsis: Push and tag commits.

@@ -1,19 +1,19 @@
 ﻿
 # info is not shown by default
 task default {
-	($r = Invoke-PowerShell -Command Invoke-Build | Out-String)
+	($r = Invoke-PowerShell -nop -c Invoke-Build | Out-String)
 	assert (!$r.Contains('MyInformation'))
 }
 
 # info is shown with -InformationAction
 task with_action {
-	($r = Invoke-PowerShell -Command 'Invoke-Build -InformationAction Continue' | Out-String)
+	($r = Invoke-PowerShell -nop -c 'Invoke-Build -InformationAction Continue' | Out-String)
 	assert ($r.Contains('MyInformation'))
 }
 
 # info is not shown but collected with -InformationVariable
 task with_variable {
-	($r = Invoke-PowerShell -Command 'Invoke-Build -InformationVariable InformationVariable' | Out-String)
+	($r = Invoke-PowerShell -nop -c 'Invoke-Build -InformationVariable InformationVariable' | Out-String)
 	assert (!$r.Contains('MyInformation'))
 
 	Invoke-Build -InformationVariable InformationVariable
@@ -23,7 +23,7 @@ task with_variable {
 
 # info is shown and collected with -InformationAction and -InformationVariable
 task with_action_and_variable {
-	($r = Invoke-PowerShell -Command 'Invoke-Build -InformationAction Continue -InformationVariable InformationVariable' | Out-String)
+	($r = Invoke-PowerShell -nop -c 'Invoke-Build -InformationAction Continue -InformationVariable InformationVariable' | Out-String)
 	assert ($r.Contains('MyInformation'))
 
 	Invoke-Build -InformationAction Continue -InformationVariable InformationVariable

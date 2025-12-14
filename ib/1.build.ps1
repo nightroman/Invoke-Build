@@ -8,7 +8,7 @@ param(
 	[string]$Configuration = 'Release'
 )
 
-Set-StrictMode -Version Latest
+Set-StrictMode -Version 3
 
 # Synopsis: Remove files.
 task clean {
@@ -33,8 +33,7 @@ task nuget version, content, {
 
 # Synopsis: Push NuGet package.
 task pushNuGet nuget, {
-	if (!($NuGetApiKey = property NuGetApiKey '')) { $NuGetApiKey = Read-Host NuGetApiKey }
-	exec { nuget push "ib.$Version.nupkg" -Source nuget.org -ApiKey $NuGetApiKey }
+	exec { nuget push "ib.$Version.nupkg" -Source nuget.org -ApiKey (property NuGetApiKey) }
 }
 
 # Synopsis: Install the tool from package.

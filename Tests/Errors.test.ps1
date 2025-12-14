@@ -65,13 +65,13 @@ task ExitCodeOnSafe {
 	# 0 on build errors in exec (redundant test, in theory).
 	# This test covers real scenarios.
 	$global:LASTEXITCODE = 42
-	Invoke-PowerShell -Command Invoke-Build missing $BuildFile -Safe
+	Invoke-PowerShell -nop -c Invoke-Build missing $BuildFile -Safe
 	equals $global:LASTEXITCODE 0
 
 	# 1 on argument errors in exec.
 	# This test covers real scenarios.
 	$global:LASTEXITCODE = 42
-	Invoke-PowerShell -Command Invoke-Build missing missing -Safe
+	Invoke-PowerShell -nop -c Invoke-Build missing missing -Safe
 	equals $global:LASTEXITCODE 1
 
 	# On argument errors in sessions $LASTEXITCODE is undefined (old).
