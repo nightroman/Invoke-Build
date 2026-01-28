@@ -157,6 +157,8 @@ function Get-MSBuild15Guess {
 		elseif ($Version -eq '*') {
 			"$Program64\Microsoft Visual Studio\2026"
 			"$Program86\Microsoft Visual Studio\2026"
+			"$Program64\Microsoft Visual Studio\18"
+			"$Program86\Microsoft Visual Studio\18"
 			"$Program64\Microsoft Visual Studio\2022"
 			"$Program86\Microsoft Visual Studio\2022"
 			"$Program86\Microsoft Visual Studio\2019"
@@ -165,6 +167,8 @@ function Get-MSBuild15Guess {
 		elseif ($Version -eq '18.0') {
 			"$Program64\Microsoft Visual Studio\2026"
 			"$Program86\Microsoft Visual Studio\2026"
+			"$Program64\Microsoft Visual Studio\18"
+			"$Program86\Microsoft Visual Studio\18"
 		}
 		elseif ($Version -eq '17.0') {
 			"$Program64\Microsoft Visual Studio\2022"
