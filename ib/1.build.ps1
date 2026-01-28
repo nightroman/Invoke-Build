@@ -27,7 +27,6 @@ task content -If (!(Test-Path content)) {
 
 # Synopsis: Make NuGet package.
 task nuget version, content, {
-	$env:NoWarn = 'NU5110,NU5111'
 	exec { dotnet pack -c $Configuration -p:VersionPrefix=$Version -o . }
 }
 

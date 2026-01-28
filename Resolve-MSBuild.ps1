@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 1.7.1
+.VERSION 1.7.2
 .AUTHOR Roman Kuzmin
 .COPYRIGHT (c) Roman Kuzmin
 .TAGS Invoke-Build, MSBuild

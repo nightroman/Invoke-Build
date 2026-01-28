@@ -2,6 +2,10 @@
 
 [Issues](https://github.com/nightroman/Invoke-Build/issues) [Releases](https://github.com/nightroman/Invoke-Build/releases) [Discussions](https://github.com/nightroman/Invoke-Build/discussions)
 
+## v5.14.23
+
+`Resolve-MSBuild` - add more paths for VS 2026, #244
+
 ## v5.14.22
 
 Fix `Resolve-MSBuild` regression, #242
